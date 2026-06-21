@@ -26,7 +26,7 @@
 <div id="root"></div>
 <script>
 (() => {
-  const { useState, useEffect, useMemo } = React;
+  const { useState, useEffect, useMemo, useRef } = React;
   const SUPABASE_URL = "https://grwihhxbwfcwpvyqpdkr.supabase.co";
   const SUPABASE_KEY = "sb_publishable_x8f1dkvo-EkMdBxz98vzZA_eNTrKqGN";
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
@@ -659,6 +659,7 @@
     const [session, setSession] = useState(null);
     const [club, setClub] = useState(null);
     const [matchCount, setMatchCount] = useState(0);
+    const enteredRef = useRef(false);
     async function loadCount(id) {
       try {
         const r = await db.from("matches").select("id", { count: "exact", head: true }).eq("club_id", id);
@@ -669,9 +670,12 @@
     async function route(s) {
       setSession(s);
       if (!s) {
+        enteredRef.current = false;
         setPhase("auth");
         return;
       }
+      if (enteredRef.current) return;
+      enteredRef.current = true;
       const prof = await db.from("profiles").select("club_id").eq("id", s.user.id).maybeSingle();
       if (prof.data && prof.data.club_id) {
         const c = await db.from("clubs").select("*").eq("id", prof.data.club_id).maybeSingle();
