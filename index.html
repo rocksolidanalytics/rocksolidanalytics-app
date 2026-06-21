@@ -20,6 +20,7 @@
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body>
 <div id="root"></div>
@@ -457,7 +458,7 @@
       border: `1px solid ${C.border}`
     } }, /* @__PURE__ */ React.createElement(Jersey, { primary: d.primary, secondary: d.secondary, size: 64 }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800, color: C.white } }, d.club && d.club.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#cfd9e8", fontFamily: MONO, marginTop: 2 } }, d.county, " \xB7 ", sport && sport.label, d.club && !d.club.verified && /* @__PURE__ */ React.createElement("span", { style: { marginLeft: 8, color: C.gold } }, "\xB7 unverified")))), /* @__PURE__ */ React.createElement("div", { style: { background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14, padding: "4px 16px" } }, /* @__PURE__ */ React.createElement(Row, { k: "SPORT", v: sport && sport.label }), /* @__PURE__ */ React.createElement(Row, { k: "COUNTY", v: d.county }), /* @__PURE__ */ React.createElement(Row, { k: "CLUB", v: d.club && d.club.name }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slateD, fontFamily: MONO, letterSpacing: 1 } }, "COLOURS"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 20, height: 20, borderRadius: 5, background: d.primary, border: `1px solid ${C.borderB}` } }), /* @__PURE__ */ React.createElement("span", { style: { width: 20, height: 20, borderRadius: 5, background: d.secondary, border: `1px solid ${C.borderB}` } })))));
   }
-  function Home({ club, onSignOut }) {
+  function Home({ club, onSignOut, onImport, matchCount }) {
     const sport = SPORTS.find((s) => s.id === club.sport);
     return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, padding: "20px 18px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 22 } }, /* @__PURE__ */ React.createElement("img", { src: LOGO, alt: "", width: 30, height: 30 }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 800 } }, "Rock Solid ", /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "Analytics"))), /* @__PURE__ */ React.createElement("button", { onClick: onSignOut, style: { background: "none", border: `1px solid ${C.border}`, borderRadius: 9, color: C.slate, fontSize: 12, padding: "7px 12px", cursor: "pointer", fontFamily: MONO } }, "Sign out")), /* @__PURE__ */ React.createElement("div", { style: {
       display: "flex",
@@ -467,12 +468,183 @@
       borderRadius: 16,
       background: `linear-gradient(135deg,${club.colour_primary || C.navy},${C.bg})`,
       border: `1px solid ${C.border}`
-    } }, /* @__PURE__ */ React.createElement(Jersey, { primary: club.colour_primary, secondary: club.colour_secondary, size: 72 }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 22, fontWeight: 800 } }, club.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12.5, color: "#cfd9e8", fontFamily: MONO, marginTop: 3 } }, club.county, " \xB7 ", sport ? sport.label : club.sport, !club.verified && /* @__PURE__ */ React.createElement("span", { style: { marginLeft: 8, color: C.gold } }, "\xB7 unverified")))), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18, padding: 18, borderRadius: 14, background: C.bgCard, border: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.slateD, fontFamily: MONO, marginBottom: 8 } }, "YOU'RE LIVE"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: C.white, lineHeight: 1.55 } }, "Your account and club are saved to the database. Next on the build: importing your Performa history and the live stats dashboard.")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 24, textAlign: "center", fontSize: 10.5, color: C.slateD, fontFamily: MONO } }, "Signed in \xB7 data secured by row-level security"));
+    } }, /* @__PURE__ */ React.createElement(Jersey, { primary: club.colour_primary, secondary: club.colour_secondary, size: 72 }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 22, fontWeight: 800 } }, club.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12.5, color: "#cfd9e8", fontFamily: MONO, marginTop: 3 } }, club.county, " \xB7 ", sport ? sport.label : club.sport, !club.verified && /* @__PURE__ */ React.createElement("span", { style: { marginLeft: 8, color: C.gold } }, "\xB7 unverified")))), /* @__PURE__ */ React.createElement("button", { onClick: onImport, style: {
+      width: "100%",
+      marginTop: 18,
+      padding: 18,
+      borderRadius: 14,
+      cursor: "pointer",
+      textAlign: "left",
+      background: `linear-gradient(135deg,${C.green},${C.navy})`,
+      border: `1px solid ${C.greenB}55`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between"
+    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: C.white } }, "Import from Performa"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#cfe6d6", marginTop: 2 } }, "Upload your match CSVs to build your history")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22, color: C.white } }, "\u2191")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: 16, borderRadius: 14, background: C.bgCard, border: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.slateD, fontFamily: MONO, marginBottom: 8 } }, "YOUR DATA"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: C.white, lineHeight: 1.55 } }, matchCount > 0 ? matchCount + " match" + (matchCount === 1 ? "" : "es") + " stored under your club." : "No matches yet \u2014 import your Performa history to begin.")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 24, textAlign: "center", fontSize: 10.5, color: C.slateD, fontFamily: MONO } }, "Signed in \xB7 data secured by row-level security"));
+  }
+  function Import({ club, session, back }) {
+    const [stage, setStage] = useState("pick");
+    const [matches, setMatches] = useState([]);
+    const [err, setErr] = useState("");
+    const [progress, setProgress] = useState("");
+    const [result, setResult] = useState(null);
+    const nm = (s) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    function parseFile(name, text) {
+      const pr = Papa.parse(text.trim(), { header: true, skipEmptyLines: true });
+      const rows = pr.data.map((r) => {
+        const o = {};
+        for (const k in r) o[String(k).trim()] = typeof r[k] === "string" ? r[k].trim() : r[k];
+        return o;
+      });
+      const teamSet = [...new Set(rows.map((r) => r["Team Name"]).filter(Boolean))];
+      const cn = nm(club.name);
+      let us = teamSet.find((t) => nm(t).includes(cn) || cn.includes(nm(t))) || teamSet[0];
+      const opp = teamSet.find((t) => t !== us) || "Opponent";
+      let fDate = null;
+      const md = name.match(/(\d{8})/);
+      if (md) {
+        const d = md[1];
+        fDate = d.slice(0, 4) + "-" + d.slice(4, 6) + "-" + d.slice(6, 8);
+      }
+      const num = (v) => {
+        const n = parseFloat(v);
+        return isNaN(n) ? null : n;
+      };
+      const ev = rows.map((r) => ({
+        seq: parseInt(r["Event"]) || null,
+        period: parseInt(r["Game Period"]) || 1,
+        time_text: r["Time"] || "",
+        team: nm(r["Team Name"]) === nm(us) ? "us" : "opp",
+        event_type: r["Name"] || "",
+        outcome: r["Outcome"] || "",
+        player: r["Player"] || "",
+        x: num(r["Location X"]),
+        y: num(r["Location Y"]),
+        score: parseInt(r["Score"]) || 0,
+        psr: parseInt(r["PSR"]) || 0
+      }));
+      const sl = (t) => {
+        const a = ev.filter((e) => e.team === t);
+        const g = a.filter((e) => e.score === 3).length, tp = a.filter((e) => e.score === 2).length, p = a.filter((e) => e.score === 1).length;
+        return { g, tp, p, total: 3 * g + 2 * tp + p, notation: g + "-" + String(p + 2 * tp).padStart(2, "0") };
+      };
+      const lost = /* @__PURE__ */ new Set(["Lost clean", "Break lost"]);
+      const cnt = {};
+      ev.forEach((e) => {
+        if (e.team === "us" && e.player) {
+          const bad = e.event_type === "Kickout" && lost.has(e.outcome);
+          cnt[e.player] = cnt[e.player] || { g: 0 };
+          if (!bad) cnt[e.player].g++;
+        }
+      });
+      const players = Object.keys(cnt).filter((n) => cnt[n].g > 0).sort();
+      return {
+        fileName: name,
+        date: fDate,
+        opponent: opp,
+        us,
+        events: ev,
+        players,
+        usSL: sl("us"),
+        oppSL: sl("opp"),
+        counts: { events: ev.length, shots: ev.filter((e) => ["Shot from play", "Scoreable free"].includes(e.event_type)).length, kickouts: ev.filter((e) => e.event_type === "Kickout").length }
+      };
+    }
+    async function onFiles(list) {
+      if (!list || !list.length) return;
+      setErr("");
+      setStage("parsing");
+      try {
+        const arr = [];
+        for (const f of list) {
+          const t = await f.text();
+          arr.push(parseFile(f.name, t));
+        }
+        arr.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+        setMatches(arr);
+        setStage("preview");
+      } catch (ex) {
+        setErr(ex.message || "Could not read that file.");
+        setStage("pick");
+      }
+    }
+    async function doImport() {
+      setStage("writing");
+      setErr("");
+      let done = 0;
+      const allP = /* @__PURE__ */ new Set();
+      try {
+        for (const m of matches) {
+          setProgress("Saving " + m.opponent + "\u2026");
+          const mi = await db.from("matches").insert({
+            club_id: club.id,
+            date: m.date,
+            opponent: m.opponent,
+            source: "performa",
+            file_name: m.fileName,
+            our_score: m.usSL.notation,
+            opp_score: m.oppSL.notation,
+            our_total: m.usSL.total,
+            opp_total: m.oppSL.total,
+            created_by: session.user.id
+          }).select().single();
+          if (mi.error) throw new Error(mi.error.message);
+          const rows = m.events.map((e) => ({ match_id: mi.data.id, club_id: club.id, seq: e.seq, period: e.period, time_text: e.time_text, team: e.team, event_type: e.event_type, outcome: e.outcome, player: e.player, x: e.x, y: e.y, score: e.score, psr: e.psr }));
+          for (let i = 0; i < rows.length; i += 500) {
+            const ei = await db.from("events").insert(rows.slice(i, i + 500));
+            if (ei.error) throw new Error(ei.error.message);
+          }
+          m.players.forEach((p) => allP.add(p));
+          done++;
+        }
+        if (allP.size) {
+          setProgress("Saving players\u2026");
+          const pu = await db.from("players").upsert([...allP].map((n) => ({ club_id: club.id, name: n })), { onConflict: "club_id,name", ignoreDuplicates: true });
+          if (pu.error) throw new Error(pu.error.message);
+        }
+        setResult({ matches: done, players: allP.size });
+        setStage("done");
+      } catch (ex) {
+        setErr(ex.message || "Import failed.");
+        setStage("preview");
+      }
+    }
+    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 12, letterSpacing: 1, color: C.slate } }, "IMPORT FROM PERFORMA")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, stage === "pick" && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { style: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 12,
+      padding: "40px 20px",
+      borderRadius: 16,
+      border: `1.5px dashed ${C.greenB}55`,
+      background: C.bgCard,
+      cursor: "pointer",
+      textAlign: "center"
+    } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 34 } }, "\u2191"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 700 } }, "Choose Performa CSV files"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12.5, color: C.slate, maxWidth: 280, lineHeight: 1.5 } }, "Pick one or more match exports. Nothing is saved until you review and confirm."), /* @__PURE__ */ React.createElement("input", { type: "file", accept: ".csv,text/csv", multiple: true, onChange: (e) => onFiles(e.target.files), style: { display: "none" } })), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: "10px 12px", background: `${C.red}14`, border: `1px solid ${C.red}55`, borderRadius: 9, color: C.red, fontSize: 12.5 } }, err)), stage === "parsing" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 14, paddingTop: 60 } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.greenB }), /* @__PURE__ */ React.createElement("span", { style: { color: C.slate, fontSize: 13 } }, "Reading your files\\u2026")), stage === "preview" && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: C.slate, marginBottom: 14 } }, matches.length, " match", matches.length === 1 ? "" : "es", " ready. Check the scorelines, then import."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } }, matches.map((m, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, "v ", m.opponent), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, m.date || "\u2014")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, margin: "10px 0", fontFamily: MONO } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, fontWeight: 800, color: C.greenB } }, m.usSL.notation), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, "\\u2013"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, fontWeight: 800, color: C.white } }, m.oppSL.notation), /* @__PURE__ */ React.createElement("span", { style: { marginLeft: "auto", fontSize: 11, color: C.slate } }, m.counts.events, " events")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11.5, color: C.slate, fontFamily: MONO } }, m.counts.shots, " shots \\u00b7 ", m.counts.kickouts, " kickouts \\u00b7 ", m.players.length, " players")))), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12, fontSize: 11, color: C.slateD, lineHeight: 1.5 } }, "Imported faithfully as tagged. Player names come straight from Performa \\u2014 you can tidy the panel afterwards."), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: "10px 12px", background: `${C.red}14`, border: `1px solid ${C.red}55`, borderRadius: 9, color: C.red, fontSize: 12.5 } }, err), /* @__PURE__ */ React.createElement("button", { onClick: doImport, style: {
+      width: "100%",
+      height: 52,
+      marginTop: 18,
+      borderRadius: 12,
+      border: "none",
+      cursor: "pointer",
+      background: `linear-gradient(135deg,${C.greenB},${C.green})`,
+      color: C.bg,
+      fontSize: 15,
+      fontWeight: 800
+    } }, "Import ", matches.length, " match", matches.length === 1 ? "" : "es")), stage === "writing" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 14, paddingTop: 60 } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.greenB }), /* @__PURE__ */ React.createElement("span", { style: { color: C.slate, fontSize: 13 } }, progress || "Saving\u2026")), stage === "done" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 14, paddingTop: 40, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 56, height: 56, borderRadius: "50%", background: `${C.greenB}1a`, border: `1px solid ${C.greenB}55`, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Check, { s: 28, c: C.greenB })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, fontWeight: 800 } }, "Imported"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: C.slate, maxWidth: 280, lineHeight: 1.5 } }, result.matches, " match", result.matches === 1 ? "" : "es", " and ", result.players, " players saved under ", club.name, "."), /* @__PURE__ */ React.createElement("button", { onClick: back, style: { marginTop: 8, padding: "12px 22px", borderRadius: 11, border: "none", cursor: "pointer", background: `linear-gradient(135deg,${C.greenB},${C.green})`, color: C.bg, fontSize: 14, fontWeight: 800 } }, "Back to home"))));
   }
   function App() {
     const [phase, setPhase] = useState("loading");
     const [session, setSession] = useState(null);
     const [club, setClub] = useState(null);
+    const [matchCount, setMatchCount] = useState(0);
+    async function loadCount(id) {
+      try {
+        const r = await db.from("matches").select("id", { count: "exact", head: true }).eq("club_id", id);
+        setMatchCount(r.count || 0);
+      } catch (e) {
+      }
+    }
     async function route(s) {
       setSession(s);
       if (!s) {
@@ -484,6 +656,7 @@
         const c = await db.from("clubs").select("*").eq("id", prof.data.club_id).maybeSingle();
         if (c.data) {
           setClub(c.data);
+          loadCount(c.data.id);
           setPhase("home");
           return;
         }
@@ -501,9 +674,14 @@
     if (phase === "auth") return /* @__PURE__ */ React.createElement(Auth, null);
     if (phase === "onboarding") return /* @__PURE__ */ React.createElement(Onboarding, { session, onDone: (c) => {
       setClub(c);
+      loadCount(c.id);
       setPhase("home");
     } });
-    return /* @__PURE__ */ React.createElement(Home, { club, onSignOut: () => db.auth.signOut() });
+    if (phase === "import") return /* @__PURE__ */ React.createElement(Import, { club, session, back: () => {
+      loadCount(club.id);
+      setPhase("home");
+    } });
+    return /* @__PURE__ */ React.createElement(Home, { club, onSignOut: () => db.auth.signOut(), onImport: () => setPhase("import"), matchCount });
   }
   ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(App, null));
 })();
