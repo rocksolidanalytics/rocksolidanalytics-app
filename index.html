@@ -489,8 +489,24 @@
     const [progress, setProgress] = useState("");
     const [result, setResult] = useState(null);
     const nm = (s) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    function readText(f) {
+      return f && f.text ? f.text() : new Promise((res, rej) => {
+        try {
+          const rd = new FileReader();
+          rd.onload = () => res(String(rd.result || ""));
+          rd.onerror = () => rej(new Error("Couldn't read " + (f && f.name || "file")));
+          rd.readAsText(f);
+        } catch (e) {
+          rej(e);
+        }
+      });
+    }
     function parseFile(name, text) {
-      const pr = Papa.parse(text.trim(), { header: true, skipEmptyLines: true });
+      if (typeof Papa === "undefined") throw new Error("The CSV reader didn't load \u2014 check your connection and reload the page.");
+      const clean = String(text || "").replace(/\r\n?/g, "\n").trim();
+      if (!clean) throw new Error(name + " looks empty.");
+      const pr = Papa.parse(clean, { header: true, skipEmptyLines: true });
+      if (!pr.data || !pr.data.length) throw new Error("No rows found in " + name + ". Is it a Performa export?");
       const rows = pr.data.map((r) => {
         const o = {};
         for (const k in r) o[String(k).trim()] = typeof r[k] === "string" ? r[k].trim() : r[k];
@@ -551,13 +567,14 @@
       };
     }
     async function onFiles(list) {
-      if (!list || !list.length) return;
+      list = Array.from(list || []);
+      if (!list.length) return;
       setErr("");
       setStage("parsing");
       try {
         const arr = [];
         for (const f of list) {
-          const t = await f.text();
+          const t = await readText(f);
           arr.push(parseFile(f.name, t));
         }
         arr.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
@@ -620,7 +637,11 @@
       background: C.bgCard,
       cursor: "pointer",
       textAlign: "center"
-    } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 34 } }, "\u2191"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 700 } }, "Choose Performa CSV files"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12.5, color: C.slate, maxWidth: 280, lineHeight: 1.5 } }, "Pick one or more match exports. Nothing is saved until you review and confirm."), /* @__PURE__ */ React.createElement("input", { type: "file", accept: ".csv,text/csv", multiple: true, onChange: (e) => onFiles(e.target.files), style: { display: "none" } })), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: "10px 12px", background: `${C.red}14`, border: `1px solid ${C.red}55`, borderRadius: 9, color: C.red, fontSize: 12.5 } }, err)), stage === "parsing" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 14, paddingTop: 60 } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.greenB }), /* @__PURE__ */ React.createElement("span", { style: { color: C.slate, fontSize: 13 } }, "Reading your files\\u2026")), stage === "preview" && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: C.slate, marginBottom: 14 } }, matches.length, " match", matches.length === 1 ? "" : "es", " ready. Check the scorelines, then import."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } }, matches.map((m, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, "v ", m.opponent), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, m.date || "\u2014")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, margin: "10px 0", fontFamily: MONO } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, fontWeight: 800, color: C.greenB } }, m.usSL.notation), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, "\\u2013"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, fontWeight: 800, color: C.white } }, m.oppSL.notation), /* @__PURE__ */ React.createElement("span", { style: { marginLeft: "auto", fontSize: 11, color: C.slate } }, m.counts.events, " events")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11.5, color: C.slate, fontFamily: MONO } }, m.counts.shots, " shots \\u00b7 ", m.counts.kickouts, " kickouts \\u00b7 ", m.players.length, " players")))), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12, fontSize: 11, color: C.slateD, lineHeight: 1.5 } }, "Imported faithfully as tagged. Player names come straight from Performa \\u2014 you can tidy the panel afterwards."), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: "10px 12px", background: `${C.red}14`, border: `1px solid ${C.red}55`, borderRadius: 9, color: C.red, fontSize: 12.5 } }, err), /* @__PURE__ */ React.createElement("button", { onClick: doImport, style: {
+    } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 34 } }, "\u2191"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 700 } }, "Choose Performa CSV files"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12.5, color: C.slate, maxWidth: 280, lineHeight: 1.5 } }, "Pick one or more match exports. Nothing is saved until you review and confirm."), /* @__PURE__ */ React.createElement("input", { type: "file", accept: ".csv,text/csv", multiple: true, onChange: (e) => {
+      const fs = Array.from(e.target.files || []);
+      e.target.value = "";
+      onFiles(fs);
+    }, style: { display: "none" } })), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: "10px 12px", background: `${C.red}14`, border: `1px solid ${C.red}55`, borderRadius: 9, color: C.red, fontSize: 12.5 } }, err)), stage === "parsing" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 14, paddingTop: 60 } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.greenB }), /* @__PURE__ */ React.createElement("span", { style: { color: C.slate, fontSize: 13 } }, "Reading your files\\u2026")), stage === "preview" && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: C.slate, marginBottom: 14 } }, matches.length, " match", matches.length === 1 ? "" : "es", " ready. Check the scorelines, then import."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } }, matches.map((m, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, "v ", m.opponent), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, m.date || "\u2014")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, margin: "10px 0", fontFamily: MONO } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, fontWeight: 800, color: C.greenB } }, m.usSL.notation), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, "\\u2013"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, fontWeight: 800, color: C.white } }, m.oppSL.notation), /* @__PURE__ */ React.createElement("span", { style: { marginLeft: "auto", fontSize: 11, color: C.slate } }, m.counts.events, " events")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11.5, color: C.slate, fontFamily: MONO } }, m.counts.shots, " shots \\u00b7 ", m.counts.kickouts, " kickouts \\u00b7 ", m.players.length, " players")))), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12, fontSize: 11, color: C.slateD, lineHeight: 1.5 } }, "Imported faithfully as tagged. Player names come straight from Performa \\u2014 you can tidy the panel afterwards."), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: "10px 12px", background: `${C.red}14`, border: `1px solid ${C.red}55`, borderRadius: 9, color: C.red, fontSize: 12.5 } }, err), /* @__PURE__ */ React.createElement("button", { onClick: doImport, style: {
       width: "100%",
       height: 52,
       marginTop: 18,
