@@ -853,6 +853,16 @@
         setMatches([]);
       }
     }
+    async function addPlayer(name) {
+      name = (name || "").trim();
+      if (!name) return null;
+      const existing = players.find((p) => p.name.toLowerCase() === name.toLowerCase());
+      if (existing) return existing;
+      const r = await db.from("players").insert({ club_id: club.id, name }).select().single();
+      if (r.error) throw new Error(r.error.message);
+      setPlayers((prev) => [...prev, r.data].sort((a, b) => a.name.localeCompare(b.name)));
+      return r.data;
+    }
     useEffect(() => {
       load();
     }, []);
@@ -863,6 +873,7 @@
         session,
         match: editing,
         players,
+        addPlayer,
         allMatches: matches || [],
         back: () => setEditing(null),
         onSaved: () => {
@@ -885,12 +896,15 @@
       gap: 12
     } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, "v ", m.opponent), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontFamily: MONO, marginTop: 2 } }, m.date || "\u2014")), m.count > 0 ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.greenB, fontFamily: MONO, display: "flex", alignItems: "center", gap: 5 } }, /* @__PURE__ */ React.createElement(Check, { s: 14, c: C.greenB }), m.count) : /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slateD, fontFamily: MONO } }, "not set")))), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, color: C.red, fontSize: 12 } }, err))));
   }
-  function Teamsheet({ club, session, match, players, allMatches, back, onSaved }) {
+  function Teamsheet({ club, session, match, players, addPlayer, allMatches, back, onSaved }) {
     const [assign, setAssign] = useState({});
     const [picking, setPicking] = useState(null);
     const [busy, setBusy] = useState(false);
     const [err, setErr] = useState("");
     const [ready, setReady] = useState(false);
+    const [adding, setAdding] = useState(false);
+    const [newName, setNewName] = useState("");
+    const [addBusy, setAddBusy] = useState(false);
     useEffect(() => {
       (async () => {
         try {
@@ -921,6 +935,8 @@
         return n;
       });
       setPicking(null);
+      setAdding(false);
+      setNewName("");
     }
     async function sameAsLast() {
       setErr("");
@@ -969,8 +985,25 @@
         setBusy(false);
       }
     }
+    async function doAdd() {
+      const nm = newName.trim();
+      if (!nm) return;
+      setAddBusy(true);
+      setErr("");
+      try {
+        const p = await addPlayer(nm);
+        if (p) setSlot(picking, p.id);
+      } catch (ex) {
+        setErr(ex.message || "Could not add player.");
+      }
+      setAddBusy(false);
+    }
     const filled = Object.values(assign).filter(Boolean).length;
-    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 800 } }, "v ", match.opponent), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slate, fontFamily: MONO } }, match.date || "", " \\u00b7 ", filled, "/15")), /* @__PURE__ */ React.createElement("button", { onClick: sameAsLast, style: { background: "none", border: `1px solid ${C.border}`, borderRadius: 9, color: C.slate, fontSize: 11, padding: "7px 10px", cursor: "pointer", fontFamily: MONO } }, "Same as last")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "12px 18px 18px" } }, !ready ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 50 } }, /* @__PURE__ */ React.createElement(Spin, { s: 24, c: C.greenB })) : POS_LINES.map((line) => /* @__PURE__ */ React.createElement("div", { key: line, style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.slateD, fontFamily: MONO, margin: "6px 0 8px" } }, line.toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, POSITIONS.filter((p) => p.line === line).map((p) => /* @__PURE__ */ React.createElement("button", { key: p.slot, onClick: () => setPicking(p.slot), style: {
+    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 800 } }, "v ", match.opponent), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slate, fontFamily: MONO } }, match.date || "", " \\u00b7 ", filled, "/15")), /* @__PURE__ */ React.createElement("button", { onClick: sameAsLast, style: { background: "none", border: `1px solid ${C.border}`, borderRadius: 9, color: C.slate, fontSize: 11, padding: "7px 10px", cursor: "pointer", fontFamily: MONO } }, "Same as last")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "12px 18px 18px" } }, !ready ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 50 } }, /* @__PURE__ */ React.createElement(Spin, { s: 24, c: C.greenB })) : POS_LINES.map((line) => /* @__PURE__ */ React.createElement("div", { key: line, style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.slateD, fontFamily: MONO, margin: "6px 0 8px" } }, line.toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, POSITIONS.filter((p) => p.line === line).map((p) => /* @__PURE__ */ React.createElement("button", { key: p.slot, onClick: () => {
+      setAdding(false);
+      setNewName("");
+      setPicking(p.slot);
+    }, style: {
       width: "100%",
       textAlign: "left",
       cursor: "pointer",
@@ -995,7 +1028,10 @@
       alignItems: "center",
       justifyContent: "center",
       gap: 8
-    } }, busy ? /* @__PURE__ */ React.createElement(Spin, { s: 18, c: C.bg }) : "Save line-up")), picking !== null && /* @__PURE__ */ React.createElement("div", { onClick: () => setPicking(null), style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 100, display: "flex", alignItems: "flex-end" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "100%", maxHeight: "70vh", overflowY: "auto", background: C.bgCard, borderTop: `1px solid ${C.borderB}`, borderRadius: "16px 16px 0 0", padding: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700 } }, (POSITIONS.find((p) => p.slot === picking) || {}).label, " \\u2014 #", picking), /* @__PURE__ */ React.createElement("button", { onClick: () => setSlot(picking, null), style: { background: "none", border: "none", color: C.red, fontSize: 12, cursor: "pointer", fontFamily: MONO } }, "Clear")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, players.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: C.slate, fontSize: 13, padding: "10px 0" } }, "No players in your panel yet."), players.map((pl) => {
+    } }, busy ? /* @__PURE__ */ React.createElement(Spin, { s: 18, c: C.bg }) : "Save line-up")), picking !== null && /* @__PURE__ */ React.createElement("div", { onClick: () => {
+      setAdding(false);
+      setPicking(null);
+    }, style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 100, display: "flex", alignItems: "flex-end" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "100%", maxHeight: "70vh", overflowY: "auto", background: C.bgCard, borderTop: `1px solid ${C.borderB}`, borderRadius: "16px 16px 0 0", padding: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700 } }, (POSITIONS.find((p) => p.slot === picking) || {}).label, " \\u2014 #", picking), /* @__PURE__ */ React.createElement("button", { onClick: () => setSlot(picking, null), style: { background: "none", border: "none", color: C.red, fontSize: 12, cursor: "pointer", fontFamily: MONO } }, "Clear")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, players.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: C.slate, fontSize: 13, padding: "10px 0" } }, "No players in your panel yet."), players.map((pl) => {
       const used = assignedIds.has(pl.id) && assign[picking] !== pl.id;
       return /* @__PURE__ */ React.createElement("button", { key: pl.id, onClick: () => setSlot(picking, pl.id), disabled: used, style: {
         width: "100%",
@@ -1012,7 +1048,22 @@
         justifyContent: "space-between",
         opacity: used ? 0.5 : 1
       } }, pl.name, used && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontFamily: MONO, color: C.slateD } }, "assigned"), assign[picking] === pl.id && /* @__PURE__ */ React.createElement(Check, { s: 16, c: C.greenB }));
-    })))));
+    })), adding ? /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10, padding: 12, background: C.field, border: `1px solid ${C.borderB}`, borderRadius: 11 } }, /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        autoFocus: true,
+        value: newName,
+        placeholder: "Player name",
+        onChange: (e) => setNewName(e.target.value),
+        onKeyDown: (e) => {
+          if (e.key === "Enter") doAdd();
+        },
+        style: { width: "100%", boxSizing: "border-box", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 9, padding: "11px 12px", color: C.white, fontSize: 14, outline: "none" }
+      }
+    ), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: doAdd, disabled: !newName.trim() || addBusy, style: { flex: 1, padding: 11, borderRadius: 9, border: "none", cursor: newName.trim() ? "pointer" : "default", background: C.green, color: C.white, fontFamily: MONO, fontSize: 12, letterSpacing: 1, opacity: newName.trim() ? 1 : 0.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 } }, addBusy ? /* @__PURE__ */ React.createElement(Spin, { s: 14, c: C.white }) : "ADD & ASSIGN"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+      setAdding(false);
+      setNewName("");
+    }, style: { padding: "11px 16px", borderRadius: 9, background: "transparent", border: `1px solid ${C.border}`, color: C.slate, cursor: "pointer", fontFamily: MONO, fontSize: 12 } }, "CANCEL"))) : /* @__PURE__ */ React.createElement("button", { onClick: () => setAdding(true), style: { width: "100%", marginTop: 10, padding: 12, background: "transparent", border: `1px dashed ${C.greenB}55`, borderRadius: 11, color: C.greenB, fontFamily: MONO, fontSize: 12, letterSpacing: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 } }, /* @__PURE__ */ React.createElement(Plus, { s: 15 }), " ADD A PLAYER NOT LISTED"))));
   }
   function App() {
     const [phase, setPhase] = useState("loading");
