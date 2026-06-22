@@ -1127,8 +1127,18 @@
       }
     });
     const shots = us.filter((e) => (e.event_type === "Shot from play" || e.event_type === "Scoreable free") && e.x != null && e.y != null).map((e) => ({ x: e.x, y: e.y, score: e.score || 0, outcome: e.outcome }));
+    const bands = { inside21: { n: 0, s: 0 }, mid: { n: 0, s: 0 }, long: { n: 0, s: 0 } };
+    shots.forEach((sh) => {
+      let x = sh.x;
+      if (x < 0.5) x = 1 - x;
+      const dd = (1 - x) * 144;
+      const b = dd <= 21 ? "inside21" : dd <= 45 ? "mid" : "long";
+      bands[b].n++;
+      if (sh.score > 0) bands[b].s++;
+    });
     return {
       shots,
+      bands,
       record: { w, d, l },
       sf,
       sa,
@@ -1217,7 +1227,12 @@
       const order = ["Forwards", "Midfield", "Backs", "Goalkeeper", "Bench"];
       const max = Math.max(1, ...order.map((k) => d.sectors[k] || 0));
       return order.filter((k) => (d.sectors[k] || 0) > 0 || k !== "Bench").map((k) => /* @__PURE__ */ React.createElement(Bar, { key: k, label: k, value: d.sectors[k] || 0, max, suffix: " pts", color: k === "Forwards" ? C.greenB : k === "Midfield" ? C.blue : k === "Backs" ? C.gold : C.slate }));
-    })(), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, "by where each scorer started \xB7 goal = 3")), /* @__PURE__ */ React.createElement(Section, { title: "SHOT MAP \xB7 " + d.shots.length + " SHOTS" }, /* @__PURE__ */ React.createElement(PitchMap, { shots: d.shots }), /* @__PURE__ */ React.createElement(ShotLegend, null))), d && tab !== "season" && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slate, fontSize: 13, paddingTop: 50 } }, tab === "matches" ? "Match reports" : "Latest match", " \u2014 shot maps and per-match breakdowns are the next slice of the build.")));
+    })(), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, "by where each scorer started \xB7 goal = 3")), /* @__PURE__ */ React.createElement(Section, { title: "SHOT MAP \xB7 " + d.shots.length + " SHOTS" }, /* @__PURE__ */ React.createElement(PitchMap, { shots: d.shots }), /* @__PURE__ */ React.createElement(ShotLegend, null)), /* @__PURE__ */ React.createElement(Section, { title: "SHOT EFFICIENCY BY DISTANCE" }, [["Inside 21m", "inside21", C.greenB], ["21-45m", "mid", C.gold], ["45m+", "long", C.blue]].map(function(row) {
+      var label = row[0], key = row[1], col = row[2];
+      var b = d.bands[key];
+      var pct = b.n ? Math.round(100 * b.s / b.n) : 0;
+      return /* @__PURE__ */ React.createElement("div", { key, style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, label), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontWeight: 700 } }, pct, "%"), " ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, "  ", b.s, "/", b.n))), /* @__PURE__ */ React.createElement("div", { style: { height: 8, background: C.field, borderRadius: 5, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: pct + "%", background: col, borderRadius: 5 } })));
+    }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, "scored / shots, by distance from goal"))), d && tab !== "season" && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slate, fontSize: 13, paddingTop: 50 } }, tab === "matches" ? "Match reports" : "Latest match", " \u2014 shot maps and per-match breakdowns are the next slice of the build.")));
   }
   function Section({ title, children }) {
     return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 22 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.slateD, fontFamily: MONO, marginBottom: 10 } }, title), children);
