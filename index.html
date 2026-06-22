@@ -533,7 +533,7 @@
       border: `1px solid ${C.border}`
     } }, /* @__PURE__ */ React.createElement(Jersey, { primary: d.primary, secondary: d.secondary, size: 64 }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800, color: C.white } }, d.club && d.club.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#cfd9e8", fontFamily: MONO, marginTop: 2 } }, d.county, " \xB7 ", sport && sport.label, d.club && !d.club.verified && /* @__PURE__ */ React.createElement("span", { style: { marginLeft: 8, color: C.gold } }, "\xB7 unverified")))), /* @__PURE__ */ React.createElement("div", { style: { background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14, padding: "4px 16px" } }, /* @__PURE__ */ React.createElement(Row, { k: "SPORT", v: sport && sport.label }), /* @__PURE__ */ React.createElement(Row, { k: "COUNTY", v: d.county }), /* @__PURE__ */ React.createElement(Row, { k: "CLUB", v: d.club && d.club.name }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slateD, fontFamily: MONO, letterSpacing: 1 } }, "COLOURS"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 20, height: 20, borderRadius: 5, background: d.primary, border: `1px solid ${C.borderB}` } }), /* @__PURE__ */ React.createElement("span", { style: { width: 20, height: 20, borderRadius: 5, background: d.secondary, border: `1px solid ${C.borderB}` } })))));
   }
-  function Home({ club, onSignOut, onImport, matchCount }) {
+  function Home({ club, onSignOut, onImport, onLineups, matchCount }) {
     const sport = SPORTS.find((s) => s.id === club.sport);
     return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, padding: "20px 18px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 22 } }, /* @__PURE__ */ React.createElement("img", { src: LOGO, alt: "", width: 30, height: 30 }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 800 } }, "Rock Solid ", /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "Analytics"))), /* @__PURE__ */ React.createElement("button", { onClick: onSignOut, style: { background: "none", border: `1px solid ${C.border}`, borderRadius: 9, color: C.slate, fontSize: 12, padding: "7px 12px", cursor: "pointer", fontFamily: MONO } }, "Sign out")), /* @__PURE__ */ React.createElement("div", { style: {
       display: "flex",
@@ -555,7 +555,19 @@
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between"
-    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: C.white } }, "Import from Performa"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#cfe6d6", marginTop: 2 } }, "Upload your match CSVs to build your history")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22, color: C.white } }, "\u2191")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: 16, borderRadius: 14, background: C.bgCard, border: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.slateD, fontFamily: MONO, marginBottom: 8 } }, "YOUR DATA"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: C.white, lineHeight: 1.55 } }, matchCount > 0 ? matchCount + " match" + (matchCount === 1 ? "" : "es") + " stored under your club." : "No matches yet \u2014 import your Performa history to begin.")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 24, textAlign: "center", fontSize: 10.5, color: C.slateD, fontFamily: MONO } }, "Signed in \xB7 data secured by row-level security"));
+    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: C.white } }, "Import from Performa"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#cfe6d6", marginTop: 2 } }, "Upload your match CSVs to build your history")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22, color: C.white } }, "\u2191")), /* @__PURE__ */ React.createElement("button", { onClick: onLineups, style: {
+      width: "100%",
+      marginTop: 12,
+      padding: 18,
+      borderRadius: 14,
+      cursor: "pointer",
+      textAlign: "left",
+      background: C.bgCard,
+      border: `1px solid ${C.border}`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between"
+    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: C.white } }, "Set line-ups"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slate, marginTop: 2 } }, "Assign players to positions, match by match")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, color: C.greenB } }, "\u2630")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: 16, borderRadius: 14, background: C.bgCard, border: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.slateD, fontFamily: MONO, marginBottom: 8 } }, "YOUR DATA"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: C.white, lineHeight: 1.55 } }, matchCount > 0 ? matchCount + " match" + (matchCount === 1 ? "" : "es") + " stored under your club." : "No matches yet \u2014 import your Performa history to begin.")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 24, textAlign: "center", fontSize: 10.5, color: C.slateD, fontFamily: MONO } }, "Signed in \xB7 data secured by row-level security"));
   }
   function Import({ club, session, back }) {
     const [stage, setStage] = useState("pick");
@@ -802,6 +814,206 @@
       gap: 8
     } }, busy ? /* @__PURE__ */ React.createElement(Spin, { s: 18, c: C.bg }) : "Update password", !busy && /* @__PURE__ */ React.createElement(Arrow, { s: 18, c: C.bg }))));
   }
+  const POSITIONS = [
+    { slot: 1, code: "GK", label: "Goalkeeper", line: "Goalkeeper" },
+    { slot: 2, code: "RCB", label: "Right corner back", line: "Full-back line" },
+    { slot: 3, code: "FB", label: "Full back", line: "Full-back line" },
+    { slot: 4, code: "LCB", label: "Left corner back", line: "Full-back line" },
+    { slot: 5, code: "RHB", label: "Right half back", line: "Half-back line" },
+    { slot: 6, code: "CHB", label: "Centre half back", line: "Half-back line" },
+    { slot: 7, code: "LHB", label: "Left half back", line: "Half-back line" },
+    { slot: 8, code: "MF", label: "Midfield", line: "Midfield" },
+    { slot: 9, code: "MF", label: "Midfield", line: "Midfield" },
+    { slot: 10, code: "RHF", label: "Right half forward", line: "Half-forward line" },
+    { slot: 11, code: "CHF", label: "Centre half forward", line: "Half-forward line" },
+    { slot: 12, code: "LHF", label: "Left half forward", line: "Half-forward line" },
+    { slot: 13, code: "RCF", label: "Right corner forward", line: "Full-forward line" },
+    { slot: 14, code: "FF", label: "Full forward", line: "Full-forward line" },
+    { slot: 15, code: "LCF", label: "Left corner forward", line: "Full-forward line" }
+  ];
+  const POS_LINES = ["Goalkeeper", "Full-back line", "Half-back line", "Midfield", "Half-forward line", "Full-forward line"];
+  function Lineups({ club, session, back }) {
+    const [matches, setMatches] = useState(null);
+    const [players, setPlayers] = useState([]);
+    const [editing, setEditing] = useState(null);
+    const [err, setErr] = useState("");
+    async function load() {
+      try {
+        const m = await db.from("matches").select("id,date,opponent").eq("club_id", club.id).order("date");
+        const p = await db.from("players").select("id,name").eq("club_id", club.id).order("name");
+        const a = await db.from("appearances").select("match_id").eq("club_id", club.id);
+        const cnt = {};
+        (a.data || []).forEach((r) => {
+          cnt[r.match_id] = (cnt[r.match_id] || 0) + 1;
+        });
+        setMatches((m.data || []).map((x) => ({ ...x, count: cnt[x.id] || 0 })));
+        setPlayers(p.data || []);
+      } catch (ex) {
+        setErr(ex.message || "Could not load.");
+        setMatches([]);
+      }
+    }
+    useEffect(() => {
+      load();
+    }, []);
+    if (editing) return /* @__PURE__ */ React.createElement(
+      Teamsheet,
+      {
+        club,
+        session,
+        match: editing,
+        players,
+        allMatches: matches || [],
+        back: () => setEditing(null),
+        onSaved: () => {
+          setEditing(null);
+          load();
+        }
+      }
+    );
+    const done = (matches || []).filter((m) => m.count > 0).length;
+    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 12, letterSpacing: 1, color: C.slate } }, "LINE-UPS")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, matches === null ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 50 } }, /* @__PURE__ */ React.createElement(Spin, { s: 24, c: C.greenB })) : matches.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slate, fontSize: 13, paddingTop: 40 } }, "No matches yet \\u2014 import some first.") : /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: C.slate, marginBottom: 14 } }, done, " of ", matches.length, " line-ups set. Tap a match to assign positions."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, matches.map((m) => /* @__PURE__ */ React.createElement("button", { key: m.id, onClick: () => setEditing(m), style: {
+      width: "100%",
+      textAlign: "left",
+      cursor: "pointer",
+      padding: "14px 16px",
+      borderRadius: 12,
+      background: C.bgCard,
+      border: `1px solid ${m.count > 0 ? C.greenB + "55" : C.border}`,
+      display: "flex",
+      alignItems: "center",
+      gap: 12
+    } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, "v ", m.opponent), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontFamily: MONO, marginTop: 2 } }, m.date || "\u2014")), m.count > 0 ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.greenB, fontFamily: MONO, display: "flex", alignItems: "center", gap: 5 } }, /* @__PURE__ */ React.createElement(Check, { s: 14, c: C.greenB }), m.count) : /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slateD, fontFamily: MONO } }, "not set")))), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, color: C.red, fontSize: 12 } }, err))));
+  }
+  function Teamsheet({ club, session, match, players, allMatches, back, onSaved }) {
+    const [assign, setAssign] = useState({});
+    const [picking, setPicking] = useState(null);
+    const [busy, setBusy] = useState(false);
+    const [err, setErr] = useState("");
+    const [ready, setReady] = useState(false);
+    useEffect(() => {
+      (async () => {
+        try {
+          const a = await db.from("appearances").select("position_slot,player_id").eq("match_id", match.id);
+          const m = {};
+          (a.data || []).forEach((r) => {
+            if (r.position_slot) m[r.position_slot] = r.player_id;
+          });
+          setAssign(m);
+        } catch (ex) {
+        }
+        setReady(true);
+      })();
+    }, []);
+    const nameOf = (id) => {
+      const p = players.find((x) => x.id === id);
+      return p ? p.name : "";
+    };
+    const assignedIds = new Set(Object.values(assign).filter(Boolean));
+    function setSlot(slot, pid) {
+      setAssign((a) => {
+        const n = { ...a };
+        for (const k in n) {
+          if (n[k] === pid) delete n[k];
+        }
+        if (pid) n[slot] = pid;
+        else delete n[slot];
+        return n;
+      });
+      setPicking(null);
+    }
+    async function sameAsLast() {
+      setErr("");
+      const prior = (allMatches || []).filter((x) => x.date && match.date && x.date < match.date && x.count > 0).sort((a, b) => b.date.localeCompare(a.date))[0];
+      if (!prior) {
+        setErr("No earlier match with a line-up to copy from.");
+        return;
+      }
+      try {
+        const a = await db.from("appearances").select("position_slot,player_id").eq("match_id", prior.id);
+        const m = {};
+        (a.data || []).forEach((r) => {
+          if (r.position_slot) m[r.position_slot] = r.player_id;
+        });
+        setAssign(m);
+      } catch (ex) {
+        setErr(ex.message || "Could not copy.");
+      }
+    }
+    async function save() {
+      setBusy(true);
+      setErr("");
+      try {
+        const del = await db.from("appearances").delete().eq("match_id", match.id);
+        if (del.error) throw new Error(del.error.message);
+        const rows = Object.entries(assign).filter(([sl, pid]) => pid).map(([sl, pid]) => {
+          const pos = POSITIONS.find((p) => p.slot === Number(sl));
+          return {
+            club_id: club.id,
+            match_id: match.id,
+            player_id: pid,
+            player_name: nameOf(pid),
+            position_slot: Number(sl),
+            position: pos ? pos.code : null,
+            is_start: true,
+            created_by: session.user.id
+          };
+        });
+        if (rows.length) {
+          const ins = await db.from("appearances").insert(rows);
+          if (ins.error) throw new Error(ins.error.message);
+        }
+        onSaved();
+      } catch (ex) {
+        setErr(ex.message || "Could not save.");
+        setBusy(false);
+      }
+    }
+    const filled = Object.values(assign).filter(Boolean).length;
+    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 800 } }, "v ", match.opponent), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slate, fontFamily: MONO } }, match.date || "", " \\u00b7 ", filled, "/15")), /* @__PURE__ */ React.createElement("button", { onClick: sameAsLast, style: { background: "none", border: `1px solid ${C.border}`, borderRadius: 9, color: C.slate, fontSize: 11, padding: "7px 10px", cursor: "pointer", fontFamily: MONO } }, "Same as last")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "12px 18px 18px" } }, !ready ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 50 } }, /* @__PURE__ */ React.createElement(Spin, { s: 24, c: C.greenB })) : POS_LINES.map((line) => /* @__PURE__ */ React.createElement("div", { key: line, style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.slateD, fontFamily: MONO, margin: "6px 0 8px" } }, line.toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, POSITIONS.filter((p) => p.line === line).map((p) => /* @__PURE__ */ React.createElement("button", { key: p.slot, onClick: () => setPicking(p.slot), style: {
+      width: "100%",
+      textAlign: "left",
+      cursor: "pointer",
+      padding: "11px 14px",
+      borderRadius: 11,
+      background: C.bgCard,
+      border: `1px solid ${assign[p.slot] ? C.greenB + "55" : C.border}`,
+      display: "flex",
+      alignItems: "center",
+      gap: 12
+    } }, /* @__PURE__ */ React.createElement("span", { style: { width: 26, height: 26, borderRadius: 7, background: C.navyL, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontSize: 12, fontWeight: 700 } }, p.slot), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13.5, fontWeight: 600, color: assign[p.slot] ? C.white : C.slateD } }, assign[p.slot] ? nameOf(assign[p.slot]) : "Tap to assign"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slate, fontFamily: MONO } }, p.label))))))), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 8, padding: "10px 12px", background: `${C.red}14`, border: `1px solid ${C.red}55`, borderRadius: 9, color: C.red, fontSize: 12.5 } }, err)), /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 18px", borderTop: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("button", { onClick: save, disabled: busy, style: {
+      width: "100%",
+      height: 50,
+      borderRadius: 12,
+      border: "none",
+      cursor: busy ? "default" : "pointer",
+      background: `linear-gradient(135deg,${C.greenB},${C.green})`,
+      color: C.bg,
+      fontSize: 15,
+      fontWeight: 800,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8
+    } }, busy ? /* @__PURE__ */ React.createElement(Spin, { s: 18, c: C.bg }) : "Save line-up")), picking !== null && /* @__PURE__ */ React.createElement("div", { onClick: () => setPicking(null), style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 100, display: "flex", alignItems: "flex-end" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "100%", maxHeight: "70vh", overflowY: "auto", background: C.bgCard, borderTop: `1px solid ${C.borderB}`, borderRadius: "16px 16px 0 0", padding: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700 } }, (POSITIONS.find((p) => p.slot === picking) || {}).label, " \\u2014 #", picking), /* @__PURE__ */ React.createElement("button", { onClick: () => setSlot(picking, null), style: { background: "none", border: "none", color: C.red, fontSize: 12, cursor: "pointer", fontFamily: MONO } }, "Clear")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, players.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: C.slate, fontSize: 13, padding: "10px 0" } }, "No players in your panel yet."), players.map((pl) => {
+      const used = assignedIds.has(pl.id) && assign[picking] !== pl.id;
+      return /* @__PURE__ */ React.createElement("button", { key: pl.id, onClick: () => setSlot(picking, pl.id), disabled: used, style: {
+        width: "100%",
+        textAlign: "left",
+        cursor: used ? "default" : "pointer",
+        padding: "11px 14px",
+        borderRadius: 10,
+        background: assign[picking] === pl.id ? `${C.greenB}14` : C.field,
+        border: `1px solid ${assign[picking] === pl.id ? C.greenB : C.border}`,
+        color: used ? C.slateD : C.white,
+        fontSize: 14,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        opacity: used ? 0.5 : 1
+      } }, pl.name, used && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontFamily: MONO, color: C.slateD } }, "assigned"), assign[picking] === pl.id && /* @__PURE__ */ React.createElement(Check, { s: 16, c: C.greenB }));
+    })))));
+  }
   function App() {
     const [phase, setPhase] = useState("loading");
     const [session, setSession] = useState(null);
@@ -876,7 +1088,8 @@
       loadCount(club.id);
       setPhase("home");
     } });
-    return /* @__PURE__ */ React.createElement(Home, { club, onSignOut: () => db.auth.signOut(), onImport: () => setPhase("import"), matchCount });
+    if (phase === "lineups") return /* @__PURE__ */ React.createElement(Lineups, { club, session, back: () => setPhase("home") });
+    return /* @__PURE__ */ React.createElement(Home, { club, onSignOut: () => db.auth.signOut(), onImport: () => setPhase("import"), onLineups: () => setPhase("lineups"), matchCount });
   }
   ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(App, null));
 })();
