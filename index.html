@@ -930,6 +930,7 @@
     const [adding, setAdding] = useState(false);
     const [newName, setNewName] = useState("");
     const [addBusy, setAddBusy] = useState(false);
+    const [history, setHistory] = useState({});
     useEffect(() => {
       (async () => {
         try {
@@ -939,6 +940,19 @@
             if (r.position_slot) m[r.position_slot] = r.player_id;
           });
           setAssign(m);
+          const all = await db.from("appearances").select("player_id,position_slot").eq("club_id", club.id).neq("match_id", match.id);
+          const h = {};
+          (all.data || []).forEach((r) => {
+            if (!r.player_id || !r.position_slot) return;
+            const e = h[r.player_id] || (h[r.player_id] = { slotCounts: {}, total: 0, topSlot: null, topN: 0 });
+            e.slotCounts[r.position_slot] = (e.slotCounts[r.position_slot] || 0) + 1;
+            e.total++;
+            if (e.slotCounts[r.position_slot] > e.topN) {
+              e.topN = e.slotCounts[r.position_slot];
+              e.topSlot = r.position_slot;
+            }
+          });
+          setHistory(h);
         } catch (ex) {
         }
         setReady(true);
@@ -949,6 +963,23 @@
       return p ? p.name : "";
     };
     const assignedIds = new Set(Object.values(assign).filter(Boolean));
+    function slotInfo(sl) {
+      return POSITIONS.find((x) => x.slot === Number(sl)) || {};
+    }
+    function rankPlayers(slot) {
+      const sl = Number(slot);
+      const slLine = slotInfo(sl).line || null;
+      return players.map(function(pl) {
+        const h = history[pl.id] || { slotCounts: {}, total: 0, topSlot: null };
+        const here = h.slotCounts[sl] || 0;
+        const topLine = h.topSlot ? slotInfo(h.topSlot).line : null;
+        const score = here > 0 ? 2e3 + here : topLine && topLine === slLine ? 1e3 + h.total : h.total || 0;
+        const hint = here > 0 ? here + "\xD7 here" : h.topSlot ? "usually " + (slotInfo(h.topSlot).code || slotInfo(h.topSlot).label || "") : "new";
+        return { pl, score, hint, here };
+      }).sort(function(a, b) {
+        return b.score - a.score || a.pl.name.localeCompare(b.pl.name);
+      });
+    }
     function setSlot(slot, pid) {
       setAssign((a) => {
         const n = { ...a };
@@ -1056,23 +1087,26 @@
     } }, busy ? /* @__PURE__ */ React.createElement(Spin, { s: 18, c: C.bg }) : "Save line-up")), picking !== null && /* @__PURE__ */ React.createElement("div", { onClick: () => {
       setAdding(false);
       setPicking(null);
-    }, style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 100, display: "flex", alignItems: "flex-end" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "100%", maxHeight: "70vh", overflowY: "auto", background: C.bgCard, borderTop: `1px solid ${C.borderB}`, borderRadius: "16px 16px 0 0", padding: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700 } }, (POSITIONS.find((p) => p.slot === picking) || {}).label, " \u2014 #", picking), /* @__PURE__ */ React.createElement("button", { onClick: () => setSlot(picking, null), style: { background: "none", border: "none", color: C.red, fontSize: 12, cursor: "pointer", fontFamily: MONO } }, "Clear")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, players.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: C.slate, fontSize: 13, padding: "10px 0" } }, "No players in your panel yet."), players.map((pl) => {
+    }, style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 100, display: "flex", alignItems: "flex-end" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "100%", maxHeight: "70vh", overflowY: "auto", background: C.bgCard, borderTop: `1px solid ${C.borderB}`, borderRadius: "16px 16px 0 0", padding: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700 } }, (POSITIONS.find((p) => p.slot === picking) || {}).label, " \u2014 #", picking), /* @__PURE__ */ React.createElement("button", { onClick: () => setSlot(picking, null), style: { background: "none", border: "none", color: C.red, fontSize: 12, cursor: "pointer", fontFamily: MONO } }, "Clear")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, players.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: C.slate, fontSize: 13, padding: "10px 0" } }, "No players in your panel yet."), rankPlayers(picking).map((rk) => {
+      const pl = rk.pl;
       const used = assignedIds.has(pl.id) && assign[picking] !== pl.id;
+      const sel = assign[picking] === pl.id;
       return /* @__PURE__ */ React.createElement("button", { key: pl.id, onClick: () => setSlot(picking, pl.id), disabled: used, style: {
         width: "100%",
         textAlign: "left",
         cursor: used ? "default" : "pointer",
         padding: "11px 14px",
         borderRadius: 10,
-        background: assign[picking] === pl.id ? `${C.greenB}14` : C.field,
-        border: `1px solid ${assign[picking] === pl.id ? C.greenB : C.border}`,
+        background: sel ? `${C.greenB}14` : C.field,
+        border: `1px solid ${sel ? C.greenB : rk.here > 0 ? C.greenB + "66" : C.border}`,
         color: used ? C.slateD : C.white,
         fontSize: 14,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
+        gap: 10,
         opacity: used ? 0.5 : 1
-      } }, pl.name, used && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontFamily: MONO, color: C.slateD } }, "assigned"), assign[picking] === pl.id && /* @__PURE__ */ React.createElement(Check, { s: 16, c: C.greenB }));
+      } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1 } }, pl.name), used ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontFamily: MONO, color: C.slateD } }, "assigned") : /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontFamily: MONO, color: rk.here > 0 ? C.greenB : C.slateD } }, rk.hint), sel && /* @__PURE__ */ React.createElement(Check, { s: 16, c: C.greenB }));
     })), adding ? /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10, padding: 12, background: C.field, border: `1px solid ${C.borderB}`, borderRadius: 11 } }, /* @__PURE__ */ React.createElement(
       "input",
       {
