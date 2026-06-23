@@ -1747,6 +1747,86 @@
       });
     }
     var BREAKS = [{ key: "shots", label: "SHOTS", types: ["Shot from play"] }, { key: "frees", label: "FREES", types: ["Scoreable free"] }, { key: "tackles", label: "TACKLES", types: ["Tackle"] }, { key: "turnovers", label: "TURNOVERS", types: ["Possession lost"] }, { key: "kickouts", label: "KICKOUTS", types: ["Kickout"] }];
+    function parseTL(t2) {
+      var p = String(t2 || "").split(":").map(Number);
+      if (p.some(isNaN)) return null;
+      return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p.length === 2 ? p[0] * 60 + p[1] : null;
+    }
+    function liveBands(tm) {
+      var b = { inside21: { n: 0, s: 0 }, mid: { n: 0, s: 0 }, long: { n: 0, s: 0 } };
+      liveShots(tm).forEach(function(sh) {
+        var x = sh.x;
+        if (x < 0.5) x = 1 - x;
+        var dd = (1 - x) * 144;
+        var k = dd <= 21 ? "inside21" : dd <= 45 ? "mid" : "long";
+        b[k].n++;
+        if (sh.score > 0) b[k].s++;
+      });
+      return b;
+    }
+    function liveKoGrid(tm) {
+      function bl() {
+        return { left: { n: 0, w: 0 }, centre: { n: 0, w: 0 }, right: { n: 0, w: 0 } };
+      }
+      var g = { short: bl(), mid: bl(), long: bl() };
+      liveKoPts(tm).forEach(function(p) {
+        var dist = (1 - p.x) * 144;
+        var row = dist < 45 ? "short" : dist <= 65 ? "mid" : "long";
+        var col = p.y < 1 / 3 ? "left" : p.y < 2 / 3 ? "centre" : "right";
+        g[row][col].n++;
+        if (p.won) g[row][col].w++;
+      });
+      return g;
+    }
+    function liveKoSL(tm) {
+      var arr = tagged.slice().sort(function(a, b) {
+        return (a.seq || 0) - (b.seq || 0);
+      });
+      var trig = null, out = [];
+      arr.forEach(function(r) {
+        var isT = (r.event_type === "Shot from play" || r.event_type === "Scoreable free") && ((r.score || 0) > 0 || (r.outcome || "").toLowerCase().indexOf("wide") >= 0);
+        if (isT) {
+          trig = r;
+        } else if (r.event_type === "Kickout") {
+          var spd = null;
+          if (trig && String(trig.period) === String(r.period)) {
+            var t1 = parseTL(trig.time_text), t2 = parseTL(r.time_text);
+            if (t1 != null && t2 != null) {
+              var dd = t2 - t1;
+              if (dd > 0 && dd <= 120) spd = dd;
+            }
+          }
+          if (r.team === tm && r.x != null) {
+            var flip = tm === "us" ? String(r.period) === "2" : String(r.period) !== "2";
+            var x = r.x;
+            if (flip) x = 1 - x;
+            out.push({ x, won: r.outcome === "Won clean" || r.outcome === "Break won", spd });
+          }
+          trig = null;
+        }
+      });
+      var sp = out.filter(function(k) {
+        return k.spd != null;
+      }).map(function(k) {
+        return k.spd;
+      }).sort(function(a, b) {
+        return a - b;
+      });
+      var med = sp.length ? sp.length % 2 ? sp[(sp.length - 1) / 2] : Math.round((sp[sp.length / 2 - 1] + sp[sp.length / 2]) / 2) : 0;
+      function bl() {
+        return { fast: { n: 0, w: 0 }, slow: { n: 0, w: 0 } };
+      }
+      var g = { short: bl(), mid: bl(), long: bl() };
+      out.forEach(function(k) {
+        if (k.spd == null) return;
+        var dist = (1 - k.x) * 144;
+        var row = dist < 45 ? "short" : dist <= 65 ? "mid" : "long";
+        var c = k.spd <= med ? "fast" : "slow";
+        g[row][c].n++;
+        if (k.won) g[row][c].w++;
+      });
+      return { grid: g, med };
+    }
     if (statsOpen) return /* @__PURE__ */ React.createElement("div", { style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", fontFamily: MONO } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderBottom: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontSize: 11, letterSpacing: 1, color: C.greenB } }, "LIVE STATS \xB7 ", running ? fmtFull(dispSec).slice(3) : "--:--", " \xB7 ", period === 1 ? "1ST" : "2ND"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setStatsOpen(false);
     }, style: { background: "none", border: "1px solid " + C.border, borderRadius: 8, color: C.white, padding: "6px 13px", cursor: "pointer", fontSize: 13 } }, "\u2715")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflow: "auto", padding: "12px 14px 16px" } }, /* @__PURE__ */ React.createElement(CompareBars, { rows: liveCompare(), club }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, margin: "16px 0 4px", background: C.bgCard, padding: 4, borderRadius: 11, border: "1px solid " + C.border } }, [["us", club.name], ["opp", match.opponent || "Opposition"]].map(function(tt) {
@@ -1755,7 +1835,14 @@
       }, style: { flex: 1, padding: "8px 0", borderRadius: 8, border: "none", cursor: "pointer", background: stTeam === tt[0] ? C.greenB : "transparent", color: stTeam === tt[0] ? C.bg : C.slate, fontWeight: 700, fontSize: 12.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, tt[1]);
     })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "SCORERS"), liveScorers(stTeam).length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slateD } }, "No scores yet.") : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5 } }, liveScorers(stTeam).map(function(sc, i) {
       return /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 8, padding: "8px 11px", borderRadius: 8, background: C.bgCard, border: "1px solid " + C.border, fontSize: 12.5 } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1 } }, sc.name), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700, color: C.greenB } }, sc.g, "-", pad2(sc.p)));
-    })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "SHOT MAP \xB7 ", liveShots(stTeam).length, " SHOTS"), /* @__PURE__ */ React.createElement(PitchMap, { shots: liveShots(stTeam) }), /* @__PURE__ */ React.createElement(ShotLegend, null), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "KICKOUT MAP"), /* @__PURE__ */ React.createElement(KickoutMap, { pts: liveKoPts(stTeam) }), /* @__PURE__ */ React.createElement(KickoutLegend, null), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "BY PLAYER \xB7 TAP TO EXPAND"), BREAKS.map(function(b) {
+    })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "SHOT MAP \xB7 ", liveShots(stTeam).length, " SHOTS"), /* @__PURE__ */ React.createElement(PitchMap, { shots: liveShots(stTeam) }), /* @__PURE__ */ React.createElement(ShotLegend, null), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "KICKOUT MAP"), /* @__PURE__ */ React.createElement(KickoutMap, { pts: liveKoPts(stTeam) }), /* @__PURE__ */ React.createElement(KickoutLegend, null), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "SHOT EFFICIENCY BY DISTANCE"), [["Inside 21m", "inside21", C.greenB], ["21-45m", "mid", C.gold], ["45m+", "long", C.blue]].map(function(row) {
+      var b = liveBands(stTeam)[row[1]];
+      var pct = b.n ? Math.round(100 * b.s / b.n) : 0;
+      return /* @__PURE__ */ React.createElement("div", { key: row[1], style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, row[0]), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontWeight: 700 } }, pct, "%"), " ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 11 } }, " ", b.s, "/", b.n))), /* @__PURE__ */ React.createElement("div", { style: { height: 8, background: C.field, borderRadius: 5, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: pct + "%", background: row[2], borderRadius: 5 } })));
+    }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "KICKOUT WIN % BY ZONE"), /* @__PURE__ */ React.createElement(ZoneGrid, { grid: liveKoGrid(stTeam), unit: "KOs" }), (function() {
+      var sl = liveKoSL(stTeam);
+      return /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, marginBottom: 8 } }, "KICKOUT WIN % \xB7 SPEED \xD7 LENGTH"), /* @__PURE__ */ React.createElement(ZoneGrid, { grid: sl.grid, unit: "KOs", cols: [["FAST", "fast"], ["SLOW", "slow"]] }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slateD, marginTop: 6 } }, "fast = quicker than median restart (", sl.med, "s)"));
+    })(), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "BY PLAYER \xB7 TAP TO EXPAND"), BREAKS.map(function(b) {
       var rows = breakdown(b.types, stTeam);
       var open = openSec === b.key;
       var tot = rows.reduce(function(a, r) {
