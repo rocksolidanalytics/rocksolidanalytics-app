@@ -715,6 +715,7 @@
             opp_score: m.oppSL.notation,
             our_total: m.usSL.total,
             opp_total: m.oppSL.total,
+            status: "final",
             created_by: session.user.id
           }).select().single();
           if (mi.error) throw new Error(mi.error.message);
@@ -1876,7 +1877,7 @@
         try {
           let matches = await fetchAll("matches", "id,date,opponent,our_score,opp_score,our_total,opp_total,status");
           matches = matches.filter(function(m) {
-            return m.status !== "scheduled" && m.our_score != null && String(m.our_score).trim() !== "";
+            return m.our_score != null && String(m.our_score).trim() !== "";
           });
           const events = await fetchAll("events", "match_id,team,event_type,outcome,player,score,x,y,period,seq,time_text");
           const apps = await fetchAll("appearances", "match_id,player_name,position_slot");
