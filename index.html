@@ -1164,23 +1164,34 @@
       return { shots, bands };
     }
     const shUs = shotData(us), shOpp = shotData(opp);
-    const usSc = shUs.shots.filter(function(s) {
-      return s.score > 0;
-    }).length;
-    const opSc = shOpp.shots.filter(function(s) {
-      return s.score > 0;
-    }).length;
-    const usWide = shUs.shots.filter(function(s) {
-      return (s.outcome || "").toLowerCase().indexOf("wide") >= 0;
-    }).length;
-    const opWide = shOpp.shots.filter(function(s) {
-      return (s.outcome || "").toLowerCase().indexOf("wide") >= 0;
-    }).length;
+    function countShots(evs) {
+      return evs.filter(function(e) {
+        return e.event_type === "Shot from play" || e.event_type === "Scoreable free";
+      }).length;
+    }
+    function countScored(evs) {
+      return evs.filter(function(e) {
+        return (e.event_type === "Shot from play" || e.event_type === "Scoreable free") && (e.score || 0) > 0;
+      }).length;
+    }
+    function countWide(evs) {
+      return evs.filter(function(e) {
+        return (e.event_type === "Shot from play" || e.event_type === "Scoreable free") && (e.outcome || "").toLowerCase().indexOf("wide") >= 0;
+      }).length;
+    }
+    function countTO(evs) {
+      return evs.filter(function(e) {
+        return e.event_type === "Possession lost" && (e.outcome || "").toLowerCase().indexOf("shot") < 0;
+      }).length;
+    }
+    const usAll = countShots(us), opAll = countShots(opp);
+    const usPoss = usAll + countTO(us), opPoss = opAll + countTO(opp);
     const compare = [
       { label: "Score (pts)", us: sf, opp: sa },
-      { label: "Shots", us: shUs.shots.length, opp: shOpp.shots.length },
-      { label: "Accuracy", us: shUs.shots.length ? Math.round(100 * usSc / shUs.shots.length) : 0, opp: shOpp.shots.length ? Math.round(100 * opSc / shOpp.shots.length) : 0, pct: true },
-      { label: "Wides", us: usWide, opp: opWide },
+      { label: "Shots", us: usAll, opp: opAll },
+      { label: "Accuracy", us: usAll ? Math.round(100 * countScored(us) / usAll) : 0, opp: opAll ? Math.round(100 * countScored(opp) / opAll) : 0, pct: true },
+      { label: "Wides", us: countWide(us), opp: countWide(opp) },
+      { label: "Shots / 10 Poss", us: usPoss ? Math.round(100 * usAll / usPoss) / 10 : 0, opp: opPoss ? Math.round(100 * opAll / opPoss) / 10 : 0 },
       { label: "Kickouts won", us: ko.length ? Math.round(100 * koWon / ko.length) : 0, opp: oko.length ? Math.round(100 * okoWon / oko.length) : 0, pct: true }
     ];
     return {
