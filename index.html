@@ -1425,11 +1425,11 @@
   }
   var EV_TYPE = { kickout: "Kickout", shot: "Shot from play", free: "Scoreable free", poss: "Possession lost", tackle: "Tackle" };
   var TAG_EVENTS = [
-    { id: "kickout", l: "Kickout", pitch: true, outcomes: ["Won Clean", "Break Won", "Break Lost", "Lost Clean"], col: C.blue },
-    { id: "shot", l: "Shot", pitch: true, outcomes: ["Point", "2-Pointer", "Goal", "Wide", "Blocked", "Dropped Short", "Saved"], col: C.greenB },
-    { id: "free", l: "Free", pitch: true, outcomes: ["Point", "2-Pointer", "Goal", "Wide", "Dropped Short", "Saved"], col: C.gold },
-    { id: "poss", l: "Turnover", pitch: false, outcomes: ["In Contact", "Kick Pass", "Hand Pass", "Handling", "Intercepted", "Foul"], col: C.red },
-    { id: "tackle", l: "Tackle", pitch: false, outcomes: ["Contact Made", "Block", "Foul"], col: C.slate }
+    { id: "kickout", l: "KICKOUT", pitch: true, outcomes: ["Won Clean", "Break Won", "Break Lost", "Lost Clean"] },
+    { id: "shot", l: "SHOT", pitch: true, outcomes: ["Point", "2-Pointer", "Goal", "Wide", "Blocked", "Dropped Short", "Saved"] },
+    { id: "free", l: "FREE", pitch: true, outcomes: ["Point", "2-Pointer", "Goal", "Wide", "Dropped Short", "Saved"] },
+    { id: "poss", l: "TURNOVER", pitch: false, outcomes: ["In Contact", "Kick Pass", "Hand Pass", "Handling", "Intercepted", "Foul"] },
+    { id: "tackle", l: "TACKLE", pitch: false, outcomes: ["Contact Made", "Block", "Foul"] }
   ];
   function mapOutcome(evid, oc) {
     if (evid === "kickout") {
@@ -1448,61 +1448,58 @@
     if (oc === "Point") return 1;
     return 0;
   }
-  function fmtClock(sec) {
-    var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
-    return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+  function pad2(n) {
+    return String(n).padStart(2, "0");
   }
-  function TagPitch({ onTap, active, tagged }) {
-    var W = 300, H = 466;
-    var m = function(d) {
-      return d / 145 * H;
-    };
-    var ln = "rgba(255,255,255,0.22)";
-    var cx = W / 2;
-    function goal(top) {
-      var y0 = top ? 0 : H;
-      var dir = top ? 1 : -1;
-      return /* @__PURE__ */ React.createElement("g", null, /* @__PURE__ */ React.createElement("rect", { x: cx - 0.22 * W, y: top ? 0 : H - m(13), width: 0.44 * W, height: m(13), fill: "none", stroke: ln, strokeWidth: "1" }), /* @__PURE__ */ React.createElement("rect", { x: cx - 0.1 * W, y: top ? 0 : H - m(4.5), width: 0.2 * W, height: m(4.5), fill: "none", stroke: ln, strokeWidth: "1" }), /* @__PURE__ */ React.createElement("line", { x1: cx - 0.07 * W, y1: y0 + dir * 2, x2: cx + 0.07 * W, y2: y0 + dir * 2, stroke: "#fff", strokeWidth: "3" }), /* @__PURE__ */ React.createElement("line", { x1: "0", y1: top ? m(21) : H - m(21), x2: W, y2: top ? m(21) : H - m(21), stroke: ln, strokeWidth: "1" }), /* @__PURE__ */ React.createElement("line", { x1: "0", y1: top ? m(45) : H - m(45), x2: W, y2: top ? m(45) : H - m(45), stroke: ln, strokeWidth: "1" }));
-    }
+  function fmtFull(sec) {
+    return pad2(Math.floor(sec / 3600)) + ":" + pad2(Math.floor(sec % 3600 / 60)) + ":" + pad2(sec % 60);
+  }
+  function TagPitch({ active, onTap }) {
+    var W = 360, H = 220, L = 8, R = 352, T = 8, B = 212, MX = 180, MY = 110, PL = R - L;
+    var L13 = L + 0.093 * PL, L20 = L + 0.143 * PL, L45 = L + 0.321 * PL, L65 = L + 0.464 * PL;
+    var R13 = R - 0.093 * PL, R20 = R - 0.143 * PL, R45 = R - 0.321 * PL, R65 = R - 0.464 * PL;
+    var GI = 40, GO = 58, GD = 9, LN = "rgba(255,255,255,0.55)", LN2 = "rgba(255,255,255,0.3)", LN3 = "rgba(255,255,255,0.18)";
     return /* @__PURE__ */ React.createElement(
       "svg",
       {
         viewBox: "0 0 " + W + " " + H,
+        style: { width: "100%", height: "100%", display: "block", cursor: active ? "crosshair" : "default" },
         onClick: function(e) {
           if (!active) return;
           var r = e.currentTarget.getBoundingClientRect();
-          var sx = (e.clientX - r.left) / r.width, sy = (e.clientY - r.top) / r.height;
-          onTap({ x: Math.max(0, Math.min(1, sy)), y: Math.max(0, Math.min(1, sx)) });
-        },
-        style: { width: "100%", maxWidth: 330, display: "block", margin: "0 auto", background: "#0a4d22", borderRadius: 12, border: "1px solid " + C.border, cursor: active ? "crosshair" : "default" }
+          onTap({ x: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), y: Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)) });
+        }
       },
-      /* @__PURE__ */ React.createElement("rect", { x: "1", y: "1", width: W - 2, height: H - 2, fill: "none", stroke: ln, strokeWidth: "1.5" }),
-      goal(true),
-      goal(false),
-      /* @__PURE__ */ React.createElement("line", { x1: "0", y1: H / 2, x2: W, y2: H / 2, stroke: ln, strokeWidth: "1", strokeDasharray: "5 5" }),
-      /* @__PURE__ */ React.createElement("circle", { cx, cy: H / 2, r: "26", fill: "none", stroke: ln, strokeWidth: "1" }),
-      (tagged || []).filter(function(t) {
-        return t.x != null;
-      }).slice(0, 40).map(function(t, i) {
-        var col = t.score === 3 ? "#b06cff" : t.score > 0 ? C.greenB : t.event_type === "Kickout" ? C.blue : C.red;
-        return /* @__PURE__ */ React.createElement("circle", { key: i, cx: t.y * W, cy: t.x * H, r: "4", fill: col + "cc", stroke: col, strokeWidth: "1" });
-      })
+      /* @__PURE__ */ React.createElement("rect", { x: "0", y: "0", width: W, height: H, fill: "#0a4d22" }),
+      /* @__PURE__ */ React.createElement("rect", { x: L, y: T, width: R - L, height: B - T, fill: "none", stroke: LN, strokeWidth: "2", rx: "2" }),
+      /* @__PURE__ */ React.createElement("line", { x1: MX, y1: T, x2: MX, y2: B, stroke: LN2, strokeWidth: "1.5", strokeDasharray: "8,5" }),
+      /* @__PURE__ */ React.createElement("line", { x1: L13, y1: T, x2: L13, y2: B, stroke: LN3, strokeWidth: "0.8" }),
+      /* @__PURE__ */ React.createElement("line", { x1: R13, y1: T, x2: R13, y2: B, stroke: LN3, strokeWidth: "0.8" }),
+      /* @__PURE__ */ React.createElement("line", { x1: L20, y1: T, x2: L20, y2: B, stroke: LN, strokeWidth: "1.5" }),
+      /* @__PURE__ */ React.createElement("line", { x1: R20, y1: T, x2: R20, y2: B, stroke: LN, strokeWidth: "1.5" }),
+      /* @__PURE__ */ React.createElement("line", { x1: L45, y1: T, x2: L45, y2: B, stroke: LN2, strokeWidth: "1", strokeDasharray: "6,4" }),
+      /* @__PURE__ */ React.createElement("line", { x1: R45, y1: T, x2: R45, y2: B, stroke: LN2, strokeWidth: "1", strokeDasharray: "6,4" }),
+      /* @__PURE__ */ React.createElement("line", { x1: L65, y1: T, x2: L65, y2: B, stroke: LN3, strokeWidth: "0.8", strokeDasharray: "4,6" }),
+      /* @__PURE__ */ React.createElement("line", { x1: R65, y1: T, x2: R65, y2: B, stroke: LN3, strokeWidth: "0.8", strokeDasharray: "4,6" }),
+      /* @__PURE__ */ React.createElement("rect", { x: L, y: MY - GI / 2, width: GD, height: GI, fill: "none", stroke: LN, strokeWidth: "1.5" }),
+      /* @__PURE__ */ React.createElement("rect", { x: L, y: MY - GO / 2, width: GD + 9, height: GO, fill: "none", stroke: LN2, strokeWidth: "1.2" }),
+      /* @__PURE__ */ React.createElement("rect", { x: R - GD, y: MY - GI / 2, width: GD, height: GI, fill: "none", stroke: LN, strokeWidth: "1.5" }),
+      /* @__PURE__ */ React.createElement("rect", { x: R - GD - 9, y: MY - GO / 2, width: GD + 9, height: GO, fill: "none", stroke: LN2, strokeWidth: "1.2" })
     );
   }
   function Tagger({ club, session, match, back }) {
+    const [land, setLand] = useState(true);
     const [clock, setClock] = useState(0);
     const [running, setRunning] = useState(false);
     const [period, setPeriod] = useState(1);
     const [tagged, setTagged] = useState([]);
     const [nameMap, setNameMap] = useState({});
     const [flash, setFlash] = useState(null);
-    const [, setUi] = useState(0);
-    const tx = useRef({ ev: null, team: "us", loc: null, outcome: null });
-    const lastTap = useRef(0);
-    const seqRef = useRef(1);
-    const iv = useRef(null);
+    const [, bump] = useState(0);
+    const tx = useRef({ ev: null, team: "h", loc: null, outcome: null });
+    const lastTap = useRef(0), seqRef = useRef(1), iv = useRef(null);
     function sync() {
-      setUi(function(x) {
+      bump(function(x) {
         return x + 1;
       });
     }
@@ -1510,8 +1507,20 @@
       setFlash(t2);
       setTimeout(function() {
         setFlash(null);
-      }, 1400);
+      }, 1300);
     }
+    useEffect(function() {
+      function chk() {
+        setLand(window.innerWidth >= window.innerHeight);
+      }
+      chk();
+      window.addEventListener("resize", chk);
+      window.addEventListener("orientationchange", chk);
+      return function() {
+        window.removeEventListener("resize", chk);
+        window.removeEventListener("orientationchange", chk);
+      };
+    }, []);
     useEffect(function() {
       db.from("appearances").select("position_slot,player_name").eq("match_id", match.id).then(function(r) {
         var mp = {};
@@ -1535,61 +1544,53 @@
         clearInterval(iv.current);
       };
     }, [running]);
+    var dispSec = period === 2 ? clock + 1800 : clock;
     function activate(ev, tm) {
-      if (tx.current.ev && tx.current.outcome) {
-        commit(null);
-      }
       tx.current = { ev, team: tm, loc: null, outcome: null };
       sync();
     }
     function onEventTap(ev) {
+      if (!running) setRunning(true);
       var now = Date.now(), t2 = tx.current;
-      if (t2.ev && t2.ev.id === ev.id && !t2.outcome && now - lastTap.current < 340) {
-        t2.team = t2.team === "us" ? "opp" : "us";
-        sync();
-      } else if (t2.ev && t2.ev.id === ev.id && !t2.outcome) {
-        tx.current = { ev: null, team: t2.team, loc: null, outcome: null };
+      if (t2.ev && t2.ev.id === ev.id && !t2.outcome && now - lastTap.current < 300) {
+        t2.team = t2.team === "h" ? "a" : "h";
         sync();
       } else {
-        activate(ev, "us");
+        activate(ev, t2.ev && t2.ev.id === ev.id && now - lastTap.current < 300 ? "a" : "h");
       }
       lastTap.current = now;
     }
     function chooseOutcome(oc) {
       var t2 = tx.current;
       if (!t2.ev) return;
-      if (t2.ev.pitch && !t2.loc) {
-        say("Tap the pitch first");
-        return;
-      }
       t2.outcome = oc;
       sync();
     }
-    function commit(playerNum) {
+    function commit(num) {
       var t2 = tx.current;
       if (!t2.ev || !t2.outcome) return;
+      var team = t2.team === "h" ? "us" : "opp";
+      var pname = num == null ? null : t2.team === "h" ? nameMap[num] || "#" + num : "#" + num;
       var seq = seqRef.current++;
-      var pname = playerNum == null ? null : t2.team === "us" ? nameMap[playerNum] || "#" + playerNum : "#" + playerNum;
       var row = {
         club_id: club.id,
         match_id: match.id,
-        team: t2.team,
+        team,
         event_type: EV_TYPE[t2.ev.id],
         outcome: mapOutcome(t2.ev.id, t2.outcome),
         player: pname,
         x: t2.loc ? t2.loc.x : null,
         y: t2.loc ? t2.loc.y : null,
         period: String(period),
-        time_text: fmtClock(clock),
+        time_text: fmtFull(dispSec),
         seq,
         score: scoreOf(t2.ev.id, t2.outcome)
       };
-      var tmp = "tmp" + seq;
-      var local = Object.assign({}, row, { _id: tmp, _err: false });
+      var tmp = "tmp" + seq, local = Object.assign({}, row, { _id: tmp, _err: false });
       setTagged(function(prev) {
         return [local].concat(prev);
       });
-      say("\u2713 " + t2.ev.l + " \xB7 " + t2.outcome + (pname ? " \xB7 " + pname : ""));
+      say("\u2713 " + EV_TYPE[t2.ev.id] + " \xB7 " + t2.outcome + (pname ? " \xB7 " + pname : ""));
       db.from("events").insert(row).select("id").single().then(function(r) {
         if (r.error) {
           setTagged(function(prev) {
@@ -1611,13 +1612,14 @@
     function undo() {
       var last = tagged[0];
       if (!last) return;
-      setTagged(function(prev) {
-        return prev.slice(1);
+      setTagged(function(p) {
+        return p.slice(1);
       });
       if (last._id && String(last._id).indexOf("tmp") !== 0) {
         db.from("events").delete().eq("id", last._id).then(function() {
         });
       }
+      say("\u21A9 removed");
     }
     function score(tm) {
       var g = 0, p = 0;
@@ -1629,74 +1631,64 @@
       });
       return { g, p };
     }
-    function notation(o) {
-      return o.g + "-" + String(o.p).padStart(2, "0");
+    function nota(o) {
+      return o.g + "-" + pad2(o.p);
     }
     async function endMatch() {
+      if (!window.confirm("End match and save the final score?")) return;
       var u = score("us"), o = score("opp");
-      await db.from("matches").update({ status: "final", our_score: notation(u), opp_score: notation(o), our_total: u.g * 3 + u.p, opp_total: o.g * 3 + o.p }).eq("id", match.id);
+      await db.from("matches").update({ status: "final", our_score: nota(u), opp_score: nota(o), our_total: u.g * 3 + u.p, opp_total: o.g * 3 + o.p }).eq("id", match.id);
       back();
     }
-    var t = tx.current;
-    var us = score("us"), op = score("opp");
+    if (!land) return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 30, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 46, marginBottom: 14 } }, "\\u21bb"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800, marginBottom: 8 } }, "Turn your phone sideways"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: C.slate, maxWidth: 260, lineHeight: 1.5 } }, "The tagger runs in landscape so the pitch fills the screen and everything stays in thumb reach."), /* @__PURE__ */ React.createElement("button", { onClick: back, style: { marginTop: 24, padding: "11px 22px", borderRadius: 11, border: "1px solid " + C.border, background: "none", color: C.slate, fontSize: 13, cursor: "pointer" } }, "Back"));
+    var t = tx.current, us = score("us"), op = score("opp");
+    var tc = t.team === "h" ? C.greenB : C.gold;
+    var showPitch = !!t.ev && t.ev.pitch && !t.loc && !t.outcome;
+    var showOut = !!t.ev && !t.outcome && (!t.ev.pitch || !!t.loc);
+    var showPl = !!t.outcome;
+    var idle = !t.ev && !t.outcome;
     var failed = tagged.filter(function(x) {
       return x._err;
     }).length;
-    function pillBtn(lbl, on, bg, fg) {
-      return { padding: "8px 0", borderRadius: 9, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 12, background: on ? bg : C.field, color: on ? fg : C.slate };
-    }
-    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 14px", borderBottom: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", alignItems: "baseline", gap: 10, fontFamily: MONO } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.greenB } }, club.name), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, fontWeight: 800 } }, notation(us)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: C.slateD } }, "-"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, fontWeight: 800 } }, notation(op)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.gold } }, match.opponent))), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+    return /* @__PURE__ */ React.createElement("div", { style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", fontFamily: MONO, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", padding: "6px 10px", borderBottom: "1px solid " + C.border, gap: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 18 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, color: C.greenB, letterSpacing: 1 } }, club.name.toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 19, fontWeight: 900 } }, nota(us), " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slate } }, "(", us.g * 3 + us.p, ")"))), /* @__PURE__ */ React.createElement("div", { onClick: function() {
       setRunning(function(r) {
         return !r;
       });
-    }, style: { background: running ? C.red + "22" : C.greenB + "22", border: "1px solid " + (running ? C.red : C.greenB), borderRadius: 9, color: running ? C.red : C.greenB, cursor: "pointer", fontFamily: MONO, fontSize: 13, fontWeight: 800, padding: "6px 10px", minWidth: 96 } }, running ? "\u25AE\u25AE " : "\u25B6 ", fmtClock(clock))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
-      setPeriod(1);
-    }, style: pillBtn("1ST", period === 1, C.greenB, C.bg) }, "1ST HALF"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+    }, style: { textAlign: "center", cursor: "pointer", minWidth: 92 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, fontWeight: 900, color: running ? C.greenB : C.slate } }, running ? fmtFull(dispSec).slice(3) : "\u25B6 START"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, color: running ? C.greenB : C.slate } }, running ? period === 1 ? "1ST HALF" : "2ND HALF" : "TAP TO START")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, color: C.gold, letterSpacing: 1 } }, (match.opponent || "OPP").toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 19, fontWeight: 900 } }, nota(op), " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slate } }, "(", op.g * 3 + op.p, ")")))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "3px 12px", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 12, fontSize: 8.5 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "\\u25cf TAP = ", club.name.split(" ")[0].toUpperCase()), /* @__PURE__ */ React.createElement("span", { style: { color: C.gold } }, "\\u25cf\\u25cf DBL = OPP")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center" } }, period === 1 && /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setPeriod(2);
-      setClock(function(c) {
-        return c < 1800 ? 1800 : c;
-      });
-    }, style: pillBtn("2ND", period === 2, C.greenB, C.bg) }, "2ND HALF"), /* @__PURE__ */ React.createElement("button", { onClick: endMatch, style: { flex: 1, padding: "8px 0", borderRadius: 9, border: "1px solid " + C.gold + "66", cursor: "pointer", fontWeight: 700, fontSize: 12, background: C.gold + "18", color: C.gold } }, "END MATCH"))), flash && /* @__PURE__ */ React.createElement("div", { style: { background: flash.indexOf("\u2713") === 0 ? C.green : C.navyL, padding: "7px 14px", textAlign: "center", fontSize: 12.5, fontFamily: MONO } }, flash), failed > 0 && /* @__PURE__ */ React.createElement("div", { style: { background: C.red + "22", padding: "6px 14px", textAlign: "center", fontSize: 11.5, color: C.red, fontFamily: MONO } }, failed, " tag(s) not saved \\u00b7 check signal"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "10px 12px 18px" } }, /* @__PURE__ */ React.createElement(TagPitch, { active: !!(t.ev && t.ev.pitch && !t.outcome), onTap: function(loc) {
-      tx.current.loc = loc;
-      sync();
-    }, tagged }), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", fontSize: 10.5, fontFamily: MONO, marginTop: 5, color: t.ev && t.ev.pitch && !t.loc ? C.gold : t.loc ? C.greenB : C.slateD, letterSpacing: 1, minHeight: 14 } }, t.ev && t.ev.pitch && !t.loc ? "\u2191 TAP PITCH TO MARK" : t.loc ? "\u2713 LOCATION SET" : ""), t.ev && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", fontSize: 11, fontFamily: MONO, marginBottom: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, "tagging "), /* @__PURE__ */ React.createElement("span", { style: { color: t.team === "us" ? C.greenB : C.gold, fontWeight: 800 } }, t.team === "us" ? club.name : match.opponent), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, " \\u00b7 double-tap event to switch")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 5 } }, TAG_EVENTS.map(function(ev) {
+      setClock(0);
+      setRunning(true);
+    }, style: { fontSize: 9, color: C.blue, background: "none", border: "1px solid " + C.border, borderRadius: 6, padding: "3px 8px", cursor: "pointer" } }, "2ND HALF"), /* @__PURE__ */ React.createElement("button", { onClick: endMatch, style: { fontSize: 9, color: C.gold, background: "none", border: "1px solid " + C.gold + "55", borderRadius: 6, padding: "3px 8px", cursor: "pointer" } }, "END"), /* @__PURE__ */ React.createElement("button", { onClick: undo, disabled: tagged.length === 0, style: { fontSize: 9, color: tagged.length ? C.red : C.slate, background: "none", border: "none", cursor: tagged.length ? "pointer" : "default", opacity: tagged.length ? 1 : 0.4, padding: "3px 4px" } }, "\\u21a9 UNDO"))), flash && /* @__PURE__ */ React.createElement("div", { style: { background: flash.indexOf("\u2713") === 0 ? C.green : C.navyL, padding: "4px", textAlign: "center", fontSize: 10 } }, flash), failed > 0 && /* @__PURE__ */ React.createElement("div", { style: { background: C.red + "22", padding: "3px", textAlign: "center", fontSize: 9, color: C.red } }, failed, " not saved \\u00b7 check signal"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, padding: "5px 8px" } }, TAG_EVENTS.map(function(ev) {
       var on = t.ev && t.ev.id === ev.id;
       return /* @__PURE__ */ React.createElement("button", { key: ev.id, onClick: function() {
         onEventTap(ev);
       }, style: {
-        padding: "12px 2px",
+        flex: 1,
+        padding: "11px 2px",
         borderRadius: 8,
         cursor: "pointer",
-        fontSize: 11.5,
+        fontSize: 10.5,
         fontWeight: 700,
-        background: on ? t.team === "us" ? ev.col : C.gold : C.bgCard,
-        border: "1px solid " + (on ? t.team === "us" ? ev.col : C.gold : C.border),
+        background: on ? tc : C.bgCard,
+        border: "1px solid " + (on ? tc : C.border),
         color: on ? C.bg : C.white
       } }, ev.l);
-    })), t.ev && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 } }, t.ev.outcomes.map(function(oc) {
-      var on = t.outcome === oc;
+    })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, overflow: "auto", padding: "4px 8px 8px", display: "flex", flexDirection: "column" } }, showPitch && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: tc, textAlign: "center", marginBottom: 4 } }, t.team === "h" ? club.name : match.opponent, " \\u00b7 ", t.ev.l, " \\u2014 TAP PITCH FOR LOCATION"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, borderRadius: 10, overflow: "hidden", border: "1px solid " + C.border, maxHeight: "100%" } }, /* @__PURE__ */ React.createElement(TagPitch, { active: true, onTap: function(loc) {
+      tx.current.loc = loc;
+      sync();
+    } }))), showOut && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: tc, textAlign: "center", margin: "4px 0 8px" } }, t.team === "h" ? club.name.toUpperCase() : "OPPOSITION", " \\u2014 ", t.ev.l, t.loc ? " @ LOCATION SET" : "", " \\u2014 SELECT OUTCOME"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(" + Math.min(t.ev.outcomes.length, 4) + ",1fr)", gap: 6 } }, t.ev.outcomes.map(function(oc) {
       return /* @__PURE__ */ React.createElement("button", { key: oc, onClick: function() {
         chooseOutcome(oc);
-      }, style: {
-        flex: "1 0 28%",
-        padding: "11px 4px",
-        borderRadius: 8,
-        cursor: "pointer",
-        fontSize: 12,
-        fontWeight: 700,
-        background: on ? C.greenB : C.field,
-        border: "1px solid " + (on ? C.greenB : C.border),
-        color: on ? C.bg : C.white
-      } }, oc);
-    })), t.outcome && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, marginBottom: 7 } }, "PLAYER (OPTIONAL)"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 5 } }, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(function(n) {
-      var nm = t.team === "us" ? nameMap[n] : null;
+      }, style: { padding: "16px 4px", background: C.bgCard, border: "1px solid " + tc + "55", borderRadius: 10, color: tc, cursor: "pointer", fontSize: 12.5, fontWeight: 700 } }, oc);
+    }))), showPl && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: tc, textAlign: "center", margin: "4px 0 8px" } }, t.ev.l, ": ", t.outcome, " \\u2014 TAP PLAYER #"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(8,1fr)", gap: 5 } }, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(function(n) {
+      var nm = t.team === "h" ? nameMap[n] : null;
       return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
         commit(n);
-      }, style: { padding: "8px 2px", borderRadius: 8, cursor: "pointer", background: C.bgCard, border: "1px solid " + C.border, color: C.white } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 800, fontFamily: MONO } }, n), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, color: C.slate, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nm.split(" ").slice(-1)[0]));
-    })), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+      }, style: { padding: "10px 2px", background: tc + "14", border: "1px solid " + tc + "44", borderRadius: 8, color: tc, cursor: "pointer", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, n), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nm.split(" ").slice(-1)[0]));
+    }), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       commit(null);
-    }, style: { width: "100%", marginTop: 8, padding: 12, borderRadius: 9, border: "1px solid " + C.greenB, background: C.greenB + "18", color: C.greenB, fontWeight: 800, fontSize: 13, cursor: "pointer" } }, "\\u2713 Log without player")), tagged.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO } }, "LAST EVENTS \\u00b7 ", tagged.length), /* @__PURE__ */ React.createElement("button", { onClick: undo, style: { background: "none", border: "1px solid " + C.border, borderRadius: 8, color: C.slate, fontSize: 11, padding: "5px 10px", cursor: "pointer", fontFamily: MONO } }, "\\u21b6 Undo")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5 } }, tagged.slice(0, 8).map(function(r, i) {
-      return /* @__PURE__ */ React.createElement("div", { key: r._id || i, style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8, background: C.bgCard, border: "1px solid " + (r._err ? C.red + "55" : C.border), fontSize: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, color: C.slateD, fontSize: 10.5 } }, r.time_text), /* @__PURE__ */ React.createElement("span", { style: { width: 6, height: 6, borderRadius: "50%", background: r.team === "us" ? C.greenB : C.gold } }), /* @__PURE__ */ React.createElement("span", { style: { flex: 1 } }, r.event_type, " \\u00b7 ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, r.outcome), r.player ? " \xB7 " + r.player : ""), r._err && /* @__PURE__ */ React.createElement("span", { style: { color: C.red, fontSize: 10 } }, "!"));
+    }, style: { padding: "10px 2px", background: C.field, border: "1px solid " + C.border, borderRadius: 8, color: C.slate, cursor: "pointer", fontSize: 10, fontWeight: 700 } }, "NONE"))), idle && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflow: "auto" } }, tagged.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 11, paddingTop: 30 } }, "Tap an event to begin \\u00b7 single = ", club.name.split(" ")[0], ", double = opposition") : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4 } }, tagged.slice(0, 30).map(function(r, i) {
+      return /* @__PURE__ */ React.createElement("div", { key: r._id || i, style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderRadius: 7, background: C.bgCard, border: "1px solid " + (r._err ? C.red + "55" : C.border), fontSize: 11 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 9.5, minWidth: 54 } }, r.time_text), /* @__PURE__ */ React.createElement("span", { style: { width: 6, height: 6, borderRadius: "50%", background: r.team === "us" ? C.greenB : C.gold } }), /* @__PURE__ */ React.createElement("span", { style: { flex: 1 } }, r.event_type, " \\u00b7 ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, r.outcome), r.player ? " \xB7 " + r.player : ""), r._err && /* @__PURE__ */ React.createElement("span", { style: { color: C.red } }, "!"));
     })))));
   }
   function NewMatch({ club, session, back, onTag }) {
