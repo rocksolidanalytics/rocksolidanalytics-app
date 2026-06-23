@@ -1221,6 +1221,7 @@
             if (t1 != null && t2 != null && String(trig.period) === String(e.period)) {
               var dd = t2 - t1;
               if (dd > 0 && dd <= 120) {
+                e._spd = dd;
                 (e.team === "us" ? koSp.us : koSp.opp).push(dd);
               }
             }
@@ -1235,6 +1236,34 @@
       }, 0) / a.length) / 10 : 0;
     }
     const koSpeed = { us: avgN(koSp.us), opp: avgN(koSp.opp) };
+    function median(a) {
+      if (!a.length) return 0;
+      var b = a.slice().sort(function(x, y) {
+        return x - y;
+      });
+      var m = Math.floor(b.length / 2);
+      return b.length % 2 ? b[m] : Math.round((b[m - 1] + b[m]) / 2);
+    }
+    const koMed = { us: median(koSp.us), opp: median(koSp.opp) };
+    function speedLenGrid(evs, side, thr) {
+      var g = { short: { fast: { n: 0, w: 0 }, slow: { n: 0, w: 0 } }, mid: { fast: { n: 0, w: 0 }, slow: { n: 0, w: 0 } }, long: { fast: { n: 0, w: 0 }, slow: { n: 0, w: 0 } } };
+      evs.filter(function(e) {
+        return e.event_type === "Kickout" && e.x != null && e._spd != null;
+      }).forEach(function(e) {
+        var flip = side === "us" ? String(e.period) === "2" : String(e.period) !== "2";
+        var x = e.x;
+        if (flip) {
+          x = 1 - x;
+        }
+        var dist = (1 - x) * 144;
+        var row = dist < 45 ? "short" : dist <= 65 ? "mid" : "long";
+        var sp = e._spd <= thr ? "fast" : "slow";
+        g[row][sp].n++;
+        if (KO_WON.has(e.outcome)) g[row][sp].w++;
+      });
+      return g;
+    }
+    const koSpeedGrid = { us: speedLenGrid(us, "us", koMed.us), opp: speedLenGrid(opp, "opp", koMed.opp) };
     var accU = usAll ? Math.round(100 * countScored(us) / usAll) : 0;
     var prU = usPoss ? Math.round(100 * usAll / usPoss) / 10 : 0, prO = opPoss ? Math.round(100 * opAll / opPoss) / 10 : 0;
     var koU = ko.length ? Math.round(100 * koWon / ko.length) : 0, koO = oko.length ? Math.round(100 * okoWon / oko.length) : 0;
@@ -1253,6 +1282,8 @@
       compare,
       notes,
       koSpeed,
+      koSpeedGrid,
+      koMed,
       shots: { us: shUs.shots, opp: shOpp.shots },
       bands: { us: shUs.bands, opp: shOpp.bands },
       koGrid: { us: koUs.grid, opp: koOpp.grid },
@@ -1319,9 +1350,9 @@
     }
     return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 16, marginTop: 10, justifyContent: "center" } }, it(C.greenB, "Won"), it(C.red, "Lost"));
   }
-  function ZoneGrid({ grid, unit }) {
-    var rows = [["SHORT", "short"], ["MID", "mid"], ["LONG", "long"]];
-    var cols = [["LEFT", "left"], ["CENTRE", "centre"], ["RIGHT", "right"]];
+  function ZoneGrid({ grid, unit, rows, cols }) {
+    rows = rows || [["SHORT", "short"], ["MID", "mid"], ["LONG", "long"]];
+    cols = cols || [["LEFT", "left"], ["CENTRE", "centre"], ["RIGHT", "right"]];
     function colOf(pct, n) {
       return n === 0 ? C.slateD : pct >= 60 ? C.greenB : pct >= 40 ? C.gold : C.red;
     }
@@ -1409,7 +1440,7 @@
         fontWeight: 700,
         fontSize: 13
       } }, t[1]);
-    })), /* @__PURE__ */ React.createElement(Section, { title: (team === "us" ? "BRAY" : "OPPOSITION") + " KICKOUT MAP" }, /* @__PURE__ */ React.createElement(KickoutMap, { pts: d.koPts[team] }), /* @__PURE__ */ React.createElement(KickoutLegend, null)), /* @__PURE__ */ React.createElement(Section, { title: (team === "us" ? "BRAY" : "OPPOSITION") + " KICKOUT WIN % BY ZONE" }, /* @__PURE__ */ React.createElement(ZoneGrid, { grid: d.koGrid[team], unit: "KOs" }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: C.slateD, fontFamily: MONO, marginTop: 8 } }, "own kickouts \xB7 <45m / 45-65m / 65m+ from own goal x channel \xB7 2nd-half ends aligned")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 4, marginBottom: 16, background: C.bgCard, padding: 4, borderRadius: 11, border: `1px solid ${C.border}` } }, [["us", "Bray Emmets"], ["opp", "Opposition"]].map(function(t) {
+    })), /* @__PURE__ */ React.createElement(Section, { title: (team === "us" ? "BRAY" : "OPPOSITION") + " KICKOUT MAP" }, /* @__PURE__ */ React.createElement(KickoutMap, { pts: d.koPts[team] }), /* @__PURE__ */ React.createElement(KickoutLegend, null)), /* @__PURE__ */ React.createElement(Section, { title: (team === "us" ? "BRAY" : "OPPOSITION") + " KICKOUT WIN % BY ZONE" }, /* @__PURE__ */ React.createElement(ZoneGrid, { grid: d.koGrid[team], unit: "KOs" }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: C.slateD, fontFamily: MONO, marginTop: 8 } }, "own kickouts \xB7 <45m / 45-65m / 65m+ from own goal x channel \xB7 2nd-half ends aligned")), /* @__PURE__ */ React.createElement(Section, { title: (team === "us" ? "BRAY" : "OPPOSITION") + " KICKOUT WIN % \xB7 SPEED \xD7 LENGTH" }, /* @__PURE__ */ React.createElement(ZoneGrid, { grid: d.koSpeedGrid[team], unit: "KOs", cols: [["FAST", "fast"], ["SLOW", "slow"]] }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: C.slateD, fontFamily: MONO, marginTop: 8 } }, "fast = quicker than the median restart (", d.koMed[team], "s) \xB7 length from own goal")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 4, marginBottom: 16, background: C.bgCard, padding: 4, borderRadius: 11, border: `1px solid ${C.border}` } }, [["us", "Bray Emmets"], ["opp", "Opposition"]].map(function(t) {
       return /* @__PURE__ */ React.createElement("button", { key: t[0], onClick: () => setShotTeam(t[0]), style: {
         flex: 1,
         padding: "9px 0",
