@@ -1459,7 +1459,7 @@
     var W = 224, H = 360, L = 8, R = 216, T = 8, B = 352, MX = 112, PL = B - T;
     var T13 = T + 0.093 * PL, T20 = T + 0.143 * PL, T45 = T + 0.321 * PL, T65 = T + 0.464 * PL;
     var B13 = B - 0.093 * PL, B20 = B - 0.143 * PL, B45 = B - 0.321 * PL, B65 = B - 0.464 * PL;
-    var GI = 40, GO = 58, GD = 9, LN = "rgba(255,255,255,0.55)", LN2 = "rgba(255,255,255,0.3)", LN3 = "rgba(255,255,255,0.18)";
+    var rD = 13 / 145 * PL, GI = 40, GO = 58, GD = 9, LN = "rgba(255,255,255,0.55)", LN2 = "rgba(255,255,255,0.3)", LN3 = "rgba(255,255,255,0.18)";
     return /* @__PURE__ */ React.createElement(
       "svg",
       {
@@ -1486,7 +1486,9 @@
       /* @__PURE__ */ React.createElement("rect", { x: MX - GI / 2, y: T, width: GI, height: GD, fill: "none", stroke: LN, strokeWidth: "1.5" }),
       /* @__PURE__ */ React.createElement("rect", { x: MX - GO / 2, y: T, width: GO, height: GD + 9, fill: "none", stroke: LN2, strokeWidth: "1.2" }),
       /* @__PURE__ */ React.createElement("rect", { x: MX - GI / 2, y: B - GD, width: GI, height: GD, fill: "none", stroke: LN, strokeWidth: "1.5" }),
-      /* @__PURE__ */ React.createElement("rect", { x: MX - GO / 2, y: B - GD - 9, width: GO, height: GD + 9, fill: "none", stroke: LN2, strokeWidth: "1.2" })
+      /* @__PURE__ */ React.createElement("rect", { x: MX - GO / 2, y: B - GD - 9, width: GO, height: GD + 9, fill: "none", stroke: LN2, strokeWidth: "1.2" }),
+      /* @__PURE__ */ React.createElement("path", { d: "M " + (MX - rD) + " " + T20 + " A " + rD + " " + rD + " 0 0 0 " + (MX + rD) + " " + T20, fill: "none", stroke: LN2, strokeWidth: "1.2" }),
+      /* @__PURE__ */ React.createElement("path", { d: "M " + (MX - rD) + " " + B20 + " A " + rD + " " + rD + " 0 0 1 " + (MX + rD) + " " + B20, fill: "none", stroke: LN2, strokeWidth: "1.2" })
     );
   }
   function Tagger({ club, session, match, back }) {
