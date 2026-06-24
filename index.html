@@ -534,7 +534,7 @@
       border: `1px solid ${C.border}`
     } }, /* @__PURE__ */ React.createElement(Jersey, { primary: d.primary, secondary: d.secondary, size: 64 }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800, color: C.white } }, d.club && d.club.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#cfd9e8", fontFamily: MONO, marginTop: 2 } }, d.county, " \xB7 ", sport && sport.label, d.club && !d.club.verified && /* @__PURE__ */ React.createElement("span", { style: { marginLeft: 8, color: C.gold } }, "\xB7 unverified")))), /* @__PURE__ */ React.createElement("div", { style: { background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14, padding: "4px 16px" } }, /* @__PURE__ */ React.createElement(Row, { k: "SPORT", v: sport && sport.label }), /* @__PURE__ */ React.createElement(Row, { k: "COUNTY", v: d.county }), /* @__PURE__ */ React.createElement(Row, { k: "CLUB", v: d.club && d.club.name }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slateD, fontFamily: MONO, letterSpacing: 1 } }, "COLOURS"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 20, height: 20, borderRadius: 5, background: d.primary, border: `1px solid ${C.borderB}` } }), /* @__PURE__ */ React.createElement("span", { style: { width: 20, height: 20, borderRadius: 5, background: d.secondary, border: `1px solid ${C.borderB}` } })))));
   }
-  function Home({ club, onSignOut, onImport, onLineups, onStats, onNewMatch, matchCount }) {
+  function Home({ club, onSignOut, onImport, onLineups, onStats, onNewMatch, onVideoHub, matchCount }) {
     const sport = SPORTS.find((s) => s.id === club.sport);
     return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, padding: "20px 18px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 22 } }, /* @__PURE__ */ React.createElement("img", { src: LOGO, alt: "", width: 30, height: 30 }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 800 } }, "Rock Solid ", /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "Analytics"))), /* @__PURE__ */ React.createElement("button", { onClick: onSignOut, style: { background: "none", border: `1px solid ${C.border}`, borderRadius: 9, color: C.slate, fontSize: 12, padding: "7px 12px", cursor: "pointer", fontFamily: MONO } }, "Sign out")), /* @__PURE__ */ React.createElement("div", { style: {
       display: "flex",
@@ -592,7 +592,19 @@
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between"
-    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: C.white } }, "Set line-ups"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slate, marginTop: 2 } }, "Assign players to positions, match by match")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, color: C.greenB } }, "\u2630")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: 16, borderRadius: 14, background: C.bgCard, border: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.slateD, fontFamily: MONO, marginBottom: 8 } }, "YOUR DATA"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: C.white, lineHeight: 1.55 } }, matchCount > 0 ? matchCount + " match" + (matchCount === 1 ? "" : "es") + " stored under your club." : "No matches yet \u2014 import your Performa history to begin.")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 24, textAlign: "center", fontSize: 10.5, color: C.slateD, fontFamily: MONO } }, "Signed in \xB7 data secured by row-level security"));
+    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: C.white } }, "Set line-ups"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slate, marginTop: 2 } }, "Assign players to positions, match by match")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, color: C.greenB } }, "\u2630")), /* @__PURE__ */ React.createElement("button", { onClick: onVideoHub, style: {
+      width: "100%",
+      marginTop: 12,
+      padding: 18,
+      borderRadius: 14,
+      cursor: "pointer",
+      textAlign: "left",
+      background: C.bgCard,
+      border: "1px solid " + C.border,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between"
+    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: C.white } }, "Video tagger"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slate, marginTop: 2 } }, "Tag a match back from footage into your dashboards")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20 } }, "\u{1F3AC}")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: 16, borderRadius: 14, background: C.bgCard, border: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.slateD, fontFamily: MONO, marginBottom: 8 } }, "YOUR DATA"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: C.white, lineHeight: 1.55 } }, matchCount > 0 ? matchCount + " match" + (matchCount === 1 ? "" : "es") + " stored under your club." : "No matches yet \u2014 import your Performa history to begin.")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 24, textAlign: "center", fontSize: 10.5, color: C.slateD, fontFamily: MONO } }, "Signed in \xB7 data secured by row-level security"));
   }
   function Import({ club, session, back }) {
     const [stage, setStage] = useState("pick");
@@ -2007,6 +2019,34 @@
       }, style: { padding: "9px 12px", borderRadius: 9, cursor: "pointer", fontSize: 12.5, fontWeight: 600, border: "1px solid " + (weather === w ? C.greenB : C.border), background: weather === w ? C.greenB + "22" : C.field, color: weather === w ? C.greenB : C.slate } }, w);
     })), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18, color: C.red, fontSize: 12.5 } }, err), /* @__PURE__ */ React.createElement("button", { onClick: create, disabled: busy || !opponent.trim(), style: { width: "100%", marginTop: 24, marginBottom: 10, padding: 16, borderRadius: 13, border: "none", cursor: busy || !opponent.trim() ? "default" : "pointer", background: busy || !opponent.trim() ? C.field : C.greenB, color: busy || !opponent.trim() ? C.slateD : C.bg, fontWeight: 800, fontSize: 15 } }, busy ? "Creating\u2026" : "Create & pick squad \u2192")));
   }
+  function VideoHub({ club, session, onPick, onNew, back }) {
+    const [matches, setMatches] = useState(null);
+    const [err, setErr] = useState("");
+    useEffect(function() {
+      (async function() {
+        try {
+          const m = await db.from("matches").select("id,date,opponent,status,our_score").eq("club_id", club.id).order("date");
+          const a = await db.from("appearances").select("match_id").eq("club_id", club.id);
+          const cnt = {};
+          (a.data || []).forEach(function(r) {
+            cnt[r.match_id] = (cnt[r.match_id] || 0) + 1;
+          });
+          setMatches((m.data || []).map(function(x) {
+            return Object.assign({}, x, { lineup: cnt[x.id] || 0 });
+          }));
+        } catch (ex) {
+          setErr(ex.message || "Could not load.");
+          setMatches([]);
+        }
+      })();
+    }, []);
+    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 12, letterSpacing: 1, color: C.slate } }, "VIDEO TAGGER")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: C.slate, lineHeight: 1.5, marginBottom: 16 } }, "Tag a match back from footage. Pick a game below, or set up a new one \u2014 events flow into the same dashboards as live and Performa data."), /* @__PURE__ */ React.createElement("button", { onClick: onNew, style: { width: "100%", padding: 16, borderRadius: 13, cursor: "pointer", textAlign: "left", background: C.greenB + "18", border: "1px solid " + C.greenB + "66", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.greenB } }, "New match to tag"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slate, marginTop: 2 } }, "Set up opponent, squad, then tag from video")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22, color: C.greenB } }, "+")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.slateD, fontFamily: MONO, marginBottom: 10 } }, "OR TAG AN EXISTING MATCH"), matches === null ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 30 } }, /* @__PURE__ */ React.createElement(Spin, { s: 22, c: C.greenB })) : matches.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slate, fontSize: 13, paddingTop: 20 } }, "No matches yet \u2014 start a new one above.") : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 9 } }, matches.map(function(m) {
+      var scored = m.our_score != null && String(m.our_score).trim() !== "";
+      return /* @__PURE__ */ React.createElement("button", { key: m.id, onClick: function() {
+        onPick(m);
+      }, style: { textAlign: "left", borderRadius: 12, background: C.bgCard, border: "1px solid " + C.border, padding: "13px 15px", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700, color: C.white } }, "v ", m.opponent), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontFamily: MONO, marginTop: 2 } }, m.date || "\u2014", m.lineup > 0 ? "  \xB7  squad set" : "", scored ? "  \xB7  " + m.our_score : "")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, color: C.greenB } }, "\u25B6"));
+    })), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, color: C.red, fontSize: 12 } }, err)));
+  }
   function VideoTagger({ club, session, match, back }) {
     const [tagged, setTagged] = useState([]);
     const [nameMap, setNameMap] = useState({});
@@ -2518,12 +2558,16 @@
       loadCount(club.id);
       setPhase("home");
     } });
+    if (phase === "videohub") return /* @__PURE__ */ React.createElement(VideoHub, { club, session, onPick: (m) => {
+      setTagMatch(m);
+      setPhase("video");
+    }, onNew: () => setPhase("newmatch"), back: () => setPhase("home") });
     if (phase === "video") return /* @__PURE__ */ React.createElement(VideoTagger, { club, session, match: tagMatch, back: () => {
       loadCount(club.id);
       setPhase("home");
     } });
     if (phase === "stats") return /* @__PURE__ */ React.createElement(Stats, { club, back: () => setPhase("home") });
-    return /* @__PURE__ */ React.createElement(Home, { club, onSignOut: () => db.auth.signOut(), onImport: () => setPhase("import"), onLineups: () => setPhase("lineups"), onStats: () => setPhase("stats"), onNewMatch: () => setPhase("newmatch"), matchCount });
+    return /* @__PURE__ */ React.createElement(Home, { club, onSignOut: () => db.auth.signOut(), onImport: () => setPhase("import"), onLineups: () => setPhase("lineups"), onStats: () => setPhase("stats"), onNewMatch: () => setPhase("newmatch"), onVideoHub: () => setPhase("videohub"), matchCount });
   }
   ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(App, null));
 })();
