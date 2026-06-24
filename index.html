@@ -2209,6 +2209,47 @@
       }, style: { padding: "9px 12px", borderRadius: 9, cursor: "pointer", fontSize: 12.5, fontWeight: 600, border: "1px solid " + (weather === w ? C.greenB : C.border), background: weather === w ? C.greenB + "22" : C.field, color: weather === w ? C.greenB : C.slate } }, w);
     })), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18, color: C.red, fontSize: 12.5 } }, err), /* @__PURE__ */ React.createElement("button", { onClick: create, disabled: busy || !opponent.trim(), style: { width: "100%", marginTop: 24, marginBottom: 10, padding: 16, borderRadius: 13, border: "none", cursor: busy || !opponent.trim() ? "default" : "pointer", background: busy || !opponent.trim() ? C.field : C.greenB, color: busy || !opponent.trim() ? C.slateD : C.bg, fontWeight: 800, fontSize: 15 } }, busy ? "Creating\u2026" : "Create & pick squad \u2192")));
   }
+  var TEMPLATES = {
+    football: {
+      sport: "football",
+      label: "GAA Football",
+      restart: "Kickout",
+      modules: { shotMap: true, kickoutMap: true, twoPoint: true },
+      events: [
+        { id: "shot", name: "Shot from play", location: true, outcomes: [{ label: "Point", score: 1 }, { label: "Goal", score: 3 }, { label: "2 Pointer", score: 2 }, { label: "Wide", score: 0 }, { label: "Short", score: 0 }, { label: "Blocked", score: 0 }, { label: "Save", score: 0 }, { label: "Woodwork", score: 0 }] },
+        { id: "free", name: "Scoreable free", location: true, outcomes: [{ label: "Point", score: 1 }, { label: "2 Pointer", score: 2 }, { label: "Wide", score: 0 }, { label: "Short", score: 0 }] },
+        { id: "kickout", name: "Kickout", location: true, outcomes: [{ label: "Won clean", score: 0 }, { label: "Break won", score: 0 }, { label: "Break lost", score: 0 }, { label: "Lost clean", score: 0 }, { label: "Sideline ball", score: 0 }] },
+        { id: "tackle", name: "Tackle", location: false, outcomes: [{ label: "Tackle", score: 0 }, { label: "Block", score: 0 }] },
+        { id: "turnover", name: "Possession lost", location: false, outcomes: [{ label: "Foul", score: 0 }, { label: "Hand pass", score: 0 }, { label: "Handling", score: 0 }, { label: "In Contact", score: 0 }, { label: "Kick pass", score: 0 }, { label: "Shot Short", score: 0 }, { label: "Solo", score: 0 }] },
+        { id: "freeconc", name: "Free conceded", location: false, outcomes: [{ label: "Attacking third", score: 0 }, { label: "Middle third", score: 0 }, { label: "Defensive third", score: 0 }] },
+        { id: "booking", name: "Bookings", location: false, outcomes: [{ label: "Yellow", score: 0 }, { label: "Red", score: 0 }] },
+        { id: "sub", name: "Substitution", location: false, outcomes: [] }
+      ]
+    },
+    camogie: {
+      sport: "camogie",
+      label: "Camogie",
+      restart: "Puck Out",
+      modules: { shotMap: true, puckoutMap: true, twoPoint: false, dc: true },
+      events: [
+        { id: "shot", name: "Shot", location: true, outcomes: [{ label: "Point From Play", score: 1 }, { label: "Goal From Play", score: 3 }, { label: "Point From Free", score: 1 }, { label: "Miss From Play", score: 0 }, { label: "Miss From Free", score: 0 }, { label: "Blocked/hooked", score: 0 }] },
+        { id: "puckout", name: "Puck Out", location: true, outcomes: [{ label: "Won Long", score: 0 }, { label: "Won Short", score: 0 }, { label: "Lost Long", score: 0 }, { label: "Lost Short", score: 0 }] },
+        { id: "ruck", name: "Ruck", location: false, outcomes: [{ label: "Ruck Won", score: 0 }, { label: "Ruck Lost", score: 0 }] },
+        { id: "contact", name: "Contact", location: false, outcomes: [{ label: "hook", score: 0 }, { label: "block", score: 0 }, { label: "pressure", score: 0 }, { label: "scoreable free won", score: 0 }, { label: "scoreable free conceded", score: 0 }] },
+        { id: "turnover", name: "Turnover", location: true, outcomes: [{ label: "Turnover won", score: 0 }, { label: "Turnover lost handling", score: 0 }, { label: "Turnover lost handpass", score: 0 }, { label: "Turnover lost strike", score: 0 }] },
+        { id: "delivery", name: "Delivery", location: true, outcomes: [{ label: "Carried in", score: 0 }, { label: "Delivery retained", score: 0 }, { label: "Delivery lost", score: 0 }] },
+        { id: "stickiness", name: "Stickiness", location: true, outcomes: [{ label: "retained", score: 0 }, { label: "lost", score: 0 }] },
+        { id: "sfree", name: "Scoreable free", location: true, outcomes: [{ label: "Won", score: 0 }] },
+        { id: "scoresrc", name: "Score Source", location: false, annotation: true, outcomes: [{ label: "Point Turnover", score: 0 }, { label: "Goal Turnover", score: 0 }, { label: "Point Own Puck Out", score: 0 }, { label: "Point Opposition Puck Out", score: 0 }] },
+        { id: "assist", name: "Event Assist", location: false, annotation: true, outcomes: [{ label: "Point Assist", score: 0 }] },
+        { id: "pga", name: "Post game analysis", location: false, annotation: true, outcomes: [{ label: "Positive", score: 0 }, { label: "Work on", score: 0 }] }
+      ]
+    }
+  };
+  function templateFor(club) {
+    var sp = club && club.sport || "football";
+    return TEMPLATES[sp] || TEMPLATES.football;
+  }
   function newCE() {
     return { id: "ce_" + Math.random().toString(36).slice(2, 8), name: "", location: false, outcomes: [{ label: "", score: 0 }] };
   }
@@ -2296,7 +2337,14 @@
     var card = { background: C.bgCard, border: "1px solid " + C.border, borderRadius: 12, padding: 13, marginBottom: 12 };
     var fld = { width: "100%", padding: "10px 12px", borderRadius: 9, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box" };
     var SCORES = [["\u2014", 0], ["1 pt", 1], ["2 pt", 2], ["Goal", 3]];
-    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 12, letterSpacing: 1, color: C.slate } }, isMatch ? "CUSTOM EVENTS \xB7 THIS MATCH" : "TAGGING TEMPLATE")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: C.slate, lineHeight: 1.5, marginBottom: 6 } }, isMatch ? "Bespoke events for " + club.name + " v " + (match.opponent || "opponent") + ". Starts from your club template \u2014 tweak it just for this game." : "Your club's bespoke events. These appear in both taggers, on top of the standard five, for every match unless a match overrides them."), isMatch && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: override ? C.gold : C.slateD, fontFamily: MONO, marginBottom: 14 } }, override ? "\u25CF This match has its own list" : "\u25CB Inheriting club default"), events === null ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 30 } }, /* @__PURE__ */ React.createElement(Spin, { s: 22, c: C.greenB })) : /* @__PURE__ */ React.createElement("div", null, events.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 12.5, padding: "14px 0" } }, "No custom events yet."), events.map(function(e, ei) {
+    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 12, letterSpacing: 1, color: C.slate } }, isMatch ? "CUSTOM EVENTS \xB7 THIS MATCH" : "TAGGING TEMPLATE")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: C.slate, lineHeight: 1.5, marginBottom: 6 } }, isMatch ? "Bespoke events for " + club.name + " v " + (match.opponent || "opponent") + ". Starts from your club template \u2014 tweak it just for this game." : "Your club's bespoke events. These appear in both taggers, on top of the standard five, for every match unless a match overrides them."), isMatch && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: override ? C.gold : C.slateD, fontFamily: MONO, marginBottom: 14 } }, override ? "\u25CF This match has its own list" : "\u25CB Inheriting club default"), (function() {
+      var tpl = templateFor(club);
+      return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18, marginTop: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, marginBottom: 8 } }, "STANDARD ", tpl.label.toUpperCase(), " EVENTS \xB7 BUILT IN"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, tpl.events.map(function(ce) {
+        return /* @__PURE__ */ React.createElement("div", { key: ce.id, style: { background: C.field, border: "1px solid " + C.border, borderRadius: 9, padding: "9px 12px", opacity: ce.annotation ? 0.6 : 1 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: C.white } }, ce.name), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, fontFamily: MONO, color: C.slateD } }, ce.location ? "\u25CF loc" : "", ce.annotation ? " \xB7 note" : "")), ce.outcomes.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, marginTop: 4 } }, ce.outcomes.map(function(o) {
+          return o.label + (o.score ? " (" + o.score + ")" : "");
+        }).join(" \xB7 ")));
+      })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: C.slateD, marginTop: 8, lineHeight: 1.5 } }, "These come with your sport (", tpl.label, ") and can\u2019t be edited here. Numbers in brackets are the score that outcome adds. Add anything extra below."));
+    })(), events === null ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 30 } }, /* @__PURE__ */ React.createElement(Spin, { s: 22, c: C.greenB })) : /* @__PURE__ */ React.createElement("div", null, events.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 12.5, padding: "14px 0" } }, "No custom events yet."), events.map(function(e, ei) {
       return /* @__PURE__ */ React.createElement("div", { key: e.id, style: card }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("input", { value: e.name, placeholder: "Event name (e.g. Mark)", onChange: function(ev) {
         var v = ev.target.value;
         sync(function(c) {
