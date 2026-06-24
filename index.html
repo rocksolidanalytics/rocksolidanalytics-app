@@ -1311,17 +1311,25 @@
     return "Forwards";
   }
   function computeBenchmark(matches, events, club) {
-    var oppOf = {};
+    function keyOf(n) {
+      return (n || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+    }
+    var oppOf = {}, disp = {};
     matches.forEach(function(m) {
-      oppOf[m.id] = m.opponent || "Opponent";
+      var raw = (m.opponent || "Opponent").trim();
+      var k = keyOf(raw) || "opponent";
+      oppOf[m.id] = k;
+      if (!disp[k] || raw.length > (disp[k] || "").length) disp[k] = raw;
     });
-    var brayName = club.name, T = {};
-    function ens(n) {
-      return T[n] || (T[n] = { name: n, evs: [], gs: {} });
+    var brayKey = keyOf(club.name) || "us";
+    disp[brayKey] = club.name;
+    var T = {};
+    function ens(k) {
+      return T[k] || (T[k] = { key: k, evs: [], gs: {} });
     }
     events.forEach(function(e) {
-      var n = e.team === "us" ? brayName : oppOf[e.match_id] || "Opponent";
-      var t = ens(n);
+      var k = e.team === "us" ? brayKey : oppOf[e.match_id] || "opponent";
+      var t = ens(k);
       t.evs.push(e);
       t.gs[e.match_id] = 1;
     });
@@ -1357,7 +1365,7 @@
         }
       });
       return {
-        name: t.name,
+        name: disp[t.key] || t.key,
         games,
         koWin: ko.length ? koW / ko.length : null,
         shotEff: shots.length ? scored / shots.length : null,
@@ -1366,11 +1374,11 @@
         tpConv: tpA ? tpM / tpA : null
       };
     }
-    var rows = Object.keys(T).map(function(n) {
-      return met(T[n]);
+    var rows = Object.keys(T).map(function(k) {
+      return met(T[k]);
     });
     rows.forEach(function(r) {
-      if (r.name === brayName) r.games = matches.length || r.games;
+      if (keyOf(r.name) === brayKey) r.games = matches.length || r.games;
     });
     return rows;
   }
