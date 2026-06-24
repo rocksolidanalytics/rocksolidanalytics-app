@@ -618,12 +618,85 @@
       justifyContent: "space-between"
     } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: C.white } }, "Tagging template"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slate, marginTop: 2 } }, "Add your own bespoke events & outcomes")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, color: C.greenB } }, "\u2699")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: 16, borderRadius: 14, background: C.bgCard, border: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.slateD, fontFamily: MONO, marginBottom: 8 } }, "YOUR DATA"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: C.white, lineHeight: 1.55 } }, matchCount > 0 ? matchCount + " match" + (matchCount === 1 ? "" : "es") + " stored under your club." : "No matches yet \u2014 import your Performa history to begin.")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 24, textAlign: "center", fontSize: 10.5, color: C.slateD, fontFamily: MONO } }, "Signed in \xB7 data secured by row-level security"));
   }
+  function nrmL(v) {
+    return (v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  }
+  function importCanon(tpl) {
+    var ev = {}, oc = {};
+    (tpl.events || []).forEach(function(e) {
+      ev[nrmL(e.name)] = e.name;
+      (e.outcomes || []).forEach(function(o) {
+        oc[nrmL(o.label)] = o.label;
+      });
+    });
+    return {
+      events: ev,
+      outcomes: oc,
+      eventNames: (tpl.events || []).map(function(e) {
+        return e.name;
+      }),
+      outcomeLabels: Object.keys(oc).map(function(k) {
+        return oc[k];
+      })
+    };
+  }
+  function mkResolver(canonMap, userMap) {
+    return function(raw) {
+      var k = nrmL(raw);
+      if (canonMap[k]) return canonMap[k];
+      if (userMap && userMap[k] !== void 0) return userMap[k];
+      return "__keep";
+    };
+  }
+  function applyMapTo(arr, evR, ocR, tpl) {
+    var shotNames = (tpl.events || []).filter(function(ev) {
+      return (ev.outcomes || []).some(function(o) {
+        return (o.score || 0) > 0;
+      });
+    }).map(function(ev) {
+      return ev.name;
+    });
+    var restartName = tpl.restart;
+    return arr.map(function(m) {
+      var evs = [];
+      m.events.forEach(function(e) {
+        var et = evR(e.event_type);
+        if (et === "__ignore") return;
+        var oc = ocR(e.outcome);
+        evs.push(Object.assign({}, e, { event_type: et === "__keep" ? e.event_type : et, outcome: oc === "__keep" || oc === "__ignore" ? e.outcome : oc }));
+      });
+      var counts = {
+        events: evs.length,
+        shots: evs.filter(function(e) {
+          return shotNames.indexOf(e.event_type) >= 0;
+        }).length,
+        kickouts: evs.filter(function(e) {
+          return e.event_type === restartName;
+        }).length
+      };
+      return Object.assign({}, m, { events: evs, counts });
+    });
+  }
   function Import({ club, session, back }) {
     const [stage, setStage] = useState("pick");
     const [matches, setMatches] = useState([]);
     const [err, setErr] = useState("");
     const [progress, setProgress] = useState("");
     const [result, setResult] = useState(null);
+    const [savedMap, setSavedMap] = useState({ events: {}, outcomes: {} });
+    const [canon, setCanon] = useState(null);
+    const [rawParsed, setRawParsed] = useState([]);
+    const [umEvents, setUmEvents] = useState([]);
+    const [umOut, setUmOut] = useState([]);
+    const [emap, setEmap] = useState({});
+    const [omap, setOmap] = useState({});
+    useEffect(function() {
+      db.from("clubs").select("import_map").eq("id", club.id).single().then(function(r) {
+        var im = r.data && r.data.import_map;
+        if (im && typeof im === "object") setSavedMap({ events: im.events || {}, outcomes: im.outcomes || {} });
+      }).catch(function() {
+      });
+    }, []);
     const nm = (s) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
     function readText(f) {
       return f && f.text ? f.text() : new Promise((res, rej) => {
@@ -714,12 +787,67 @@
           arr.push(parseFile(f.name, t));
         }
         arr.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
-        setMatches(arr);
-        setStage("preview");
+        const tpl = templateFor(club);
+        const cn = importCanon(tpl);
+        setCanon(cn);
+        const sm = savedMap || { events: {}, outcomes: {} };
+        const noOut = new Set((tpl.events || []).filter((e) => !(e.outcomes && e.outcomes.length)).map((e) => nrmL(e.name)));
+        const evRaw = {}, ocRaw = {};
+        arr.forEach((m) => m.events.forEach((e) => {
+          if (e.event_type) evRaw[e.event_type] = 1;
+          if (e.outcome) {
+            const canonEv = cn.events[nrmL(e.event_type)];
+            if (!(canonEv && noOut.has(nrmL(canonEv)))) ocRaw[e.outcome] = 1;
+          }
+        }));
+        const umE = Object.keys(evRaw).filter((r) => {
+          const k = nrmL(r);
+          return !cn.events[k] && (sm.events || {})[k] === void 0;
+        });
+        const umO = Object.keys(ocRaw).filter((r) => {
+          const k = nrmL(r);
+          return !cn.outcomes[k] && (sm.outcomes || {})[k] === void 0;
+        });
+        if (umE.length || umO.length) {
+          const e0 = {};
+          umE.forEach((r) => e0[r] = "__keep");
+          const o0 = {};
+          umO.forEach((r) => o0[r] = "__keep");
+          setUmEvents(umE);
+          setUmOut(umO);
+          setEmap(e0);
+          setOmap(o0);
+          setRawParsed(arr);
+          setStage("mapping");
+        } else {
+          const evR = mkResolver(cn.events, sm.events || {}), ocR = mkResolver(cn.outcomes, sm.outcomes || {});
+          setMatches(applyMapTo(arr, evR, ocR, tpl));
+          setStage("preview");
+        }
       } catch (ex) {
         setErr(ex.message || "Could not read that file.");
         setStage("pick");
       }
+    }
+    function continueMapping() {
+      const tpl = templateFor(club);
+      const sm = savedMap || { events: {}, outcomes: {} };
+      const newE = Object.assign({}, sm.events || {});
+      Object.keys(emap).forEach((raw) => {
+        newE[nrmL(raw)] = emap[raw];
+      });
+      const newO = Object.assign({}, sm.outcomes || {});
+      Object.keys(omap).forEach((raw) => {
+        newO[nrmL(raw)] = omap[raw];
+      });
+      const merged = { events: newE, outcomes: newO };
+      setSavedMap(merged);
+      db.from("clubs").update({ import_map: merged }).eq("id", club.id).then(() => {
+      }).catch(() => {
+      });
+      const evR = mkResolver(canon.events, newE), ocR = mkResolver(canon.outcomes, newO);
+      setMatches(applyMapTo(rawParsed, evR, ocR, tpl));
+      setStage("preview");
     }
     async function doImport() {
       setStage("writing");
@@ -778,7 +906,29 @@
       const fs = Array.from(e.target.files || []);
       e.target.value = "";
       onFiles(fs);
-    }, style: { display: "none" } })), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: "10px 12px", background: `${C.red}14`, border: `1px solid ${C.red}55`, borderRadius: 9, color: C.red, fontSize: 12.5 } }, err)), stage === "parsing" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 14, paddingTop: 60 } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.greenB }), /* @__PURE__ */ React.createElement("span", { style: { color: C.slate, fontSize: 13 } }, "Reading your files\u2026")), stage === "preview" && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: C.slate, marginBottom: 14 } }, matches.length, " match", matches.length === 1 ? "" : "es", " ready. Check the scorelines, then import."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } }, matches.map((m, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, "v ", m.opponent), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, m.date || "\u2014")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, margin: "10px 0", fontFamily: MONO } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, fontWeight: 800, color: C.greenB } }, m.usSL.notation), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, "\u2013"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, fontWeight: 800, color: C.white } }, m.oppSL.notation), /* @__PURE__ */ React.createElement("span", { style: { marginLeft: "auto", fontSize: 11, color: C.slate } }, m.counts.events, " events")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11.5, color: C.slate, fontFamily: MONO } }, m.counts.shots, " shots \xB7 ", m.counts.kickouts, " kickouts \xB7 ", m.players.length, " players")))), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12, fontSize: 11, color: C.slateD, lineHeight: 1.5 } }, "Imported faithfully as tagged. Player names come straight from Performa \u2014 you can tidy the panel afterwards."), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: "10px 12px", background: `${C.red}14`, border: `1px solid ${C.red}55`, borderRadius: 9, color: C.red, fontSize: 12.5 } }, err), /* @__PURE__ */ React.createElement("button", { onClick: doImport, style: {
+    }, style: { display: "none" } })), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: "10px 12px", background: `${C.red}14`, border: `1px solid ${C.red}55`, borderRadius: 9, color: C.red, fontSize: 12.5 } }, err)), stage === "parsing" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 14, paddingTop: 60 } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.greenB }), /* @__PURE__ */ React.createElement("span", { style: { color: C.slate, fontSize: 13 } }, "Reading your files\u2026")), stage === "mapping" && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13.5, fontWeight: 700, marginBottom: 4 } }, "Match up a few labels"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12.5, color: C.slate, lineHeight: 1.5, marginBottom: 16 } }, "These don\u2019t match your ", templateFor(club).label, " template. Point each one at a standard event, keep it as its own, or ignore it. I\u2019ll remember your choices for next time."), umEvents.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, marginBottom: 8 } }, "EVENT TYPES"), umEvents.map(function(raw) {
+      return /* @__PURE__ */ React.createElement("div", { key: raw, style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 9, background: C.bgCard, border: "1px solid " + C.border, borderRadius: 10, padding: "10px 12px" } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 13, fontWeight: 600 } }, raw), /* @__PURE__ */ React.createElement("select", { value: emap[raw] || "__keep", onChange: function(e) {
+        var v = e.target.value;
+        setEmap(function(p) {
+          var c = Object.assign({}, p);
+          c[raw] = v;
+          return c;
+        });
+      }, style: { background: C.field, color: C.white, border: "1px solid " + C.border, borderRadius: 8, padding: "7px 8px", fontSize: 12.5, maxWidth: 160 } }, /* @__PURE__ */ React.createElement("option", { value: "__keep" }, "Keep as its own"), /* @__PURE__ */ React.createElement("option", { value: "__ignore" }, "Ignore"), (canon ? canon.eventNames : []).map(function(n) {
+        return /* @__PURE__ */ React.createElement("option", { key: n, value: n }, "\u2192 " + n);
+      })));
+    }), umOut.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, margin: "16px 0 8px" } }, "OUTCOMES"), umOut.map(function(raw) {
+      return /* @__PURE__ */ React.createElement("div", { key: raw, style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 9, background: C.bgCard, border: "1px solid " + C.border, borderRadius: 10, padding: "10px 12px" } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 13, fontWeight: 600 } }, raw), /* @__PURE__ */ React.createElement("select", { value: omap[raw] || "__keep", onChange: function(e) {
+        var v = e.target.value;
+        setOmap(function(p) {
+          var c = Object.assign({}, p);
+          c[raw] = v;
+          return c;
+        });
+      }, style: { background: C.field, color: C.white, border: "1px solid " + C.border, borderRadius: 8, padding: "7px 8px", fontSize: 12.5, maxWidth: 160 } }, /* @__PURE__ */ React.createElement("option", { value: "__keep" }, "Keep as-is"), /* @__PURE__ */ React.createElement("option", { value: "__ignore" }, "Ignore"), (canon ? canon.outcomeLabels : []).map(function(n) {
+        return /* @__PURE__ */ React.createElement("option", { key: n, value: n }, "\u2192 " + n);
+      })));
+    }), /* @__PURE__ */ React.createElement("button", { onClick: continueMapping, style: { marginTop: 20, width: "100%", padding: 15, borderRadius: 12, border: "none", cursor: "pointer", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 15 } }, "Continue")), stage === "preview" && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: C.slate, marginBottom: 14 } }, matches.length, " match", matches.length === 1 ? "" : "es", " ready. Check the scorelines, then import."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } }, matches.map((m, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, "v ", m.opponent), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, m.date || "\u2014")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, margin: "10px 0", fontFamily: MONO } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, fontWeight: 800, color: C.greenB } }, m.usSL.notation), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, "\u2013"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, fontWeight: 800, color: C.white } }, m.oppSL.notation), /* @__PURE__ */ React.createElement("span", { style: { marginLeft: "auto", fontSize: 11, color: C.slate } }, m.counts.events, " events")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11.5, color: C.slate, fontFamily: MONO } }, m.counts.shots, " shots \xB7 ", m.counts.kickouts, " kickouts \xB7 ", m.players.length, " players")))), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12, fontSize: 11, color: C.slateD, lineHeight: 1.5 } }, "Imported faithfully as tagged. Player names come straight from Performa \u2014 you can tidy the panel afterwards."), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: "10px 12px", background: `${C.red}14`, border: `1px solid ${C.red}55`, borderRadius: 9, color: C.red, fontSize: 12.5 } }, err), /* @__PURE__ */ React.createElement("button", { onClick: doImport, style: {
       width: "100%",
       height: 52,
       marginTop: 18,
