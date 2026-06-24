@@ -2651,6 +2651,7 @@
     const [date, setDate] = useState(match.date || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10));
     const [referee, setRef] = useState(match.referee || "");
     const [weather, setWx] = useState(match.weather || "Dry");
+    const [venueType, setVenueType] = useState(match.venue_type || "");
     const [busy, setBusy] = useState(false);
     const [loaded, setLoaded] = useState(false);
     const [err, setErr] = useState("");
@@ -2669,6 +2670,7 @@
           setDate(m.date || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10));
           setRef(m.referee || "");
           setWx(m.weather || "Dry");
+          setVenueType(m.venue_type || "");
         }
         setLoaded(true);
       });
@@ -2684,7 +2686,8 @@
           venue: venue.trim() || null,
           date,
           referee: referee.trim() || null,
-          weather
+          weather,
+          venue_type: venueType || null
         }).eq("id", match.id);
         if (r.error) throw new Error(r.error.message);
         if (onSaved) onSaved();
@@ -2704,7 +2707,12 @@
       setRound(e.target.value);
     }, placeholder: competition === "Championship" ? "e.g. Quarter-final" : "e.g. Round 5", style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "VENUE"), /* @__PURE__ */ React.createElement("input", { value: venue, onChange: function(e) {
       setVenue(e.target.value);
-    }, placeholder: "e.g. Bray", style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "DATE"), /* @__PURE__ */ React.createElement("input", { type: "date", value: date, onChange: function(e) {
+    }, placeholder: "e.g. Bray", style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "HOME / AWAY / NEUTRAL"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, [["H", "Home"], ["A", "Away"], ["N", "Neutral"]].map(function(o) {
+      var on = venueType === o[0];
+      return /* @__PURE__ */ React.createElement("button", { key: o[0], onClick: function() {
+        setVenueType(o[0]);
+      }, style: { flex: 1, padding: "11px 4px", borderRadius: 9, cursor: "pointer", fontSize: 13, fontWeight: 700, background: on ? C.greenB : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.bg : C.slate } }, o[1]);
+    })), /* @__PURE__ */ React.createElement("div", { style: lab }, "DATE"), /* @__PURE__ */ React.createElement("input", { type: "date", value: date, onChange: function(e) {
       setDate(e.target.value);
     }, style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "REFEREE"), /* @__PURE__ */ React.createElement("input", { value: referee, onChange: function(e) {
       setRef(e.target.value);
@@ -3177,6 +3185,96 @@
       return /* @__PURE__ */ React.createElement("div", { key: o.name, style: { background: C.bgCard, border: "1px solid " + C.border, borderRadius: 14, padding: 15 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 13 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15.5, fontWeight: 800 } }, o.name), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, o.games, " game", o.games === 1 ? "" : "s")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginBottom: 13 } }, Stat("RECORD", o.w + "-" + o.d + "-" + o.l, winp + "% win"), Stat("FREES / GM", freesPg, (diff >= 0 ? "+" : "") + diff + " for Bray"), Stat("AVG TOTAL", avgTot, "pts/game")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, Stat("CARDS", o.ylUs + o.ylOpp + "Y " + (o.rdUs + o.rdOpp) + "R", o.ylUs + o.rdUs + " Bray / " + (o.ylOpp + o.rdOpp) + " opp"), Stat("FREES \u2192 PTS", o.fpUs + " / " + o.fpOpp, "Bray / opp"), Stat("FREES F/A", o.freeFor + " / " + o.freeAg, "for / against")));
     })));
   }
+  function groupMetrics(ms, byMatch) {
+    var g = { games: ms.length, w: 0, d: 0, l: 0, sf: 0, sa: 0 };
+    var shots = 0, scored = 0, ko = 0, koW = 0, tov = 0;
+    ms.forEach(function(m) {
+      var a = m.our_total || 0, b = m.opp_total || 0;
+      g.sf += a;
+      g.sa += b;
+      if (a > b) g.w++;
+      else if (a < b) g.l++;
+      else g.d++;
+      (byMatch[m.id] || []).forEach(function(e) {
+        if (e.team !== "us") return;
+        if (e.event_type === "Shot from play" || e.event_type === "Scoreable free") {
+          shots++;
+          if ((e.score || 0) > 0) scored++;
+        } else if (e.event_type === "Kickout") {
+          ko++;
+          if (KO_WON.has(e.outcome)) koW++;
+        } else if (e.event_type === "Possession lost" && String(e.outcome || "").toLowerCase().indexOf("shot") < 0) tov++;
+      });
+    });
+    g.shotEff = shots ? scored / shots : null;
+    g.koWin = ko ? koW / ko : null;
+    g.avgFor = g.games ? g.sf / g.games : 0;
+    g.avgAg = g.games ? g.sa / g.games : 0;
+    return g;
+  }
+  function MiniStat({ label, val, sub }) {
+    return /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 1, color: C.slateD, fontFamily: MONO } }, label), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.white, marginTop: 2, whiteSpace: "nowrap" } }, val), sub ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: C.slate, whiteSpace: "nowrap" } }, sub) : null);
+  }
+  function CondCard({ title, g }) {
+    var winp = g.games ? Math.round(100 * g.w / g.games) : 0;
+    return /* @__PURE__ */ React.createElement("div", { style: { background: C.bgCard, border: "1px solid " + C.border, borderRadius: 13, padding: 14, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 11 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 800 } }, title), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, g.games, " game", g.games === 1 ? "" : "s")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 9 } }, /* @__PURE__ */ React.createElement(MiniStat, { label: "RECORD", val: g.w + "-" + g.d + "-" + g.l, sub: winp + "% win" }), /* @__PURE__ */ React.createElement(MiniStat, { label: "SHOT EFF", val: g.shotEff != null ? Math.round(g.shotEff * 100) + "%" : "\u2013" }), /* @__PURE__ */ React.createElement(MiniStat, { label: "KO WIN", val: g.koWin != null ? Math.round(g.koWin * 100) + "%" : "\u2013" }), /* @__PURE__ */ React.createElement(MiniStat, { label: "AVG", val: Math.round(g.avgFor) + "-" + Math.round(g.avgAg), sub: "for-ag" })));
+  }
+  function VenueView({ matches, byMatch }) {
+    var labels = { H: "Home", A: "Away", N: "Neutral" };
+    var buckets = { H: [], A: [], N: [] }, untag = 0;
+    matches.forEach(function(m) {
+      var v = m.venue_type;
+      if (v === "H" || v === "A" || v === "N") buckets[v].push(m);
+      else untag++;
+    });
+    var grounds = {};
+    matches.forEach(function(m) {
+      var g = (m.venue || "").trim();
+      if (g) (grounds[g] = grounds[g] || []).push(m);
+    });
+    var multi = Object.keys(grounds).filter(function(g) {
+      return grounds[g].length > 1;
+    }).sort();
+    var any = buckets.H.length + buckets.A.length + buckets.N.length;
+    return /* @__PURE__ */ React.createElement("div", null, any === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 13, paddingTop: 30, lineHeight: 1.6 } }, "No home/away set yet.", /* @__PURE__ */ React.createElement("br", null), "Mark H / A / N on each match via \\u270e details.") : /* @__PURE__ */ React.createElement("div", null, ["H", "A", "N"].map(function(k) {
+      if (!buckets[k].length) return null;
+      return /* @__PURE__ */ React.createElement(CondCard, { key: k, title: labels[k], g: groupMetrics(buckets[k], byMatch) });
+    }), untag > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: C.slateD, marginTop: 2 } }, untag, " match", untag === 1 ? "" : "es", " not marked H/A/N yet.")), multi.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, marginBottom: 10 } }, "BY GROUND"), multi.map(function(g) {
+      return /* @__PURE__ */ React.createElement(CondCard, { key: g, title: g, g: groupMetrics(grounds[g], byMatch) });
+    })));
+  }
+  function WeatherView({ matches, byMatch }) {
+    var wet = [], dry = [];
+    matches.forEach(function(m) {
+      var w = m.weather || "";
+      if (/rain/i.test(w)) wet.push(m);
+      else if (/dry/i.test(w)) dry.push(m);
+    });
+    var byType = {};
+    matches.forEach(function(m) {
+      var w = (m.weather || "").trim();
+      if (w) (byType[w] = byType[w] || []).push(m);
+    });
+    var types = Object.keys(byType).sort();
+    var have = wet.length + dry.length;
+    return /* @__PURE__ */ React.createElement("div", null, have === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 13, paddingTop: 30, lineHeight: 1.6 } }, "No weather set yet.", /* @__PURE__ */ React.createElement("br", null), "Add it via each match\\u2019s \\u270e details.") : /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, marginBottom: 10 } }, "WET vs DRY"), dry.length > 0 && /* @__PURE__ */ React.createElement(CondCard, { title: "Dry", g: groupMetrics(dry, byMatch) }), wet.length > 0 && /* @__PURE__ */ React.createElement(CondCard, { title: "Wet", g: groupMetrics(wet, byMatch) })), types.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, marginBottom: 10 } }, "BY CONDITION"), types.map(function(t) {
+      return /* @__PURE__ */ React.createElement(CondCard, { key: t, title: t, g: groupMetrics(byType[t], byMatch) });
+    })));
+  }
+  function Conditions({ matches, events, club }) {
+    const [sub, setSub] = useState("refs");
+    var byMatch = {};
+    (events || []).forEach(function(e) {
+      (byMatch[e.match_id] = byMatch[e.match_id] || []).push(e);
+    });
+    var TABS = [["refs", "Referees"], ["venue", "Venue"], ["weather", "Weather"]];
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, marginBottom: 16, background: C.bgCard, border: "1px solid " + C.border, borderRadius: 10, padding: 4 } }, TABS.map(function(t) {
+      var on = sub === t[0];
+      return /* @__PURE__ */ React.createElement("button", { key: t[0], onClick: function() {
+        setSub(t[0]);
+      }, style: { flex: 1, padding: "8px 4px", borderRadius: 7, cursor: "pointer", fontSize: 12.5, fontWeight: 700, background: on ? C.greenB : "transparent", border: "none", color: on ? C.bg : C.slate } }, t[1]);
+    })), sub === "refs" && /* @__PURE__ */ React.createElement(RefView, { matches, events, club }), sub === "venue" && /* @__PURE__ */ React.createElement(VenueView, { matches, byMatch }), sub === "weather" && /* @__PURE__ */ React.createElement(WeatherView, { matches, byMatch }));
+  }
   function Stats({ club, back }) {
     const [d, setD] = useState(null);
     const [err, setErr] = useState("");
@@ -3198,7 +3296,7 @@
     useEffect(() => {
       (async () => {
         try {
-          let matches = await fetchAll("matches", "id,date,opponent,our_score,opp_score,our_total,opp_total,status,referee");
+          let matches = await fetchAll("matches", "id,date,opponent,our_score,opp_score,our_total,opp_total,status,referee,venue,venue_type,weather");
           matches = matches.filter(function(m) {
             return m.our_score != null && String(m.our_score).trim() !== "";
           });
@@ -3228,7 +3326,7 @@
       fontSize: 12.5,
       borderBottom: `2px solid ${tab === id ? C.greenB : "transparent"}`
     } }, label);
-    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px 0", borderBottom: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, club.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slate, fontFamily: MONO } }, "2026 SEASON \xB7 ", sport ? sport.label.toUpperCase() : ""))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex" } }, /* @__PURE__ */ React.createElement(Tab, { id: "season", label: "All League" }), /* @__PURE__ */ React.createElement(Tab, { id: "matches", label: "Match Reports" }), /* @__PURE__ */ React.createElement(Tab, { id: "bench", label: "Benchmark" }), /* @__PURE__ */ React.createElement(Tab, { id: "refs", label: "Referees" }))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, err && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 12px", background: `${C.red}14`, border: `1px solid ${C.red}55`, borderRadius: 9, color: C.red, fontSize: 12.5 } }, err), !d && !err && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 60 } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.greenB })), d && tab === "season" && /* @__PURE__ */ React.createElement(DashView, { d, club, scope: "season" }), d && tab === "bench" && (d.benchmark && d.benchmark.length > 1 ? /* @__PURE__ */ React.createElement(Benchmark, { rows: d.benchmark, club }) : /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 13, paddingTop: 40, lineHeight: 1.6 } }, "Not enough teams yet.", /* @__PURE__ */ React.createElement("br", null), "Tag a couple of matches and the benchmark fills out.")), d && tab === "refs" && /* @__PURE__ */ React.createElement(RefView, { matches: d.matches, events: d._events, club }), d && tab === "matches" && (selMatch ? /* @__PURE__ */ React.createElement(DashView, { key: selMatch.id, d: matchStats(selMatch), club, scope: "match", match: selMatch, onBack: function() {
+    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px 0", borderBottom: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, club.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slate, fontFamily: MONO } }, "2026 SEASON \xB7 ", sport ? sport.label.toUpperCase() : ""))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex" } }, /* @__PURE__ */ React.createElement(Tab, { id: "season", label: "All League" }), /* @__PURE__ */ React.createElement(Tab, { id: "matches", label: "Match Reports" }), /* @__PURE__ */ React.createElement(Tab, { id: "bench", label: "Benchmark" }), /* @__PURE__ */ React.createElement(Tab, { id: "cond", label: "Conditions" }))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, err && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 12px", background: `${C.red}14`, border: `1px solid ${C.red}55`, borderRadius: 9, color: C.red, fontSize: 12.5 } }, err), !d && !err && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 60 } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.greenB })), d && tab === "season" && /* @__PURE__ */ React.createElement(DashView, { d, club, scope: "season" }), d && tab === "bench" && (d.benchmark && d.benchmark.length > 1 ? /* @__PURE__ */ React.createElement(Benchmark, { rows: d.benchmark, club }) : /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 13, paddingTop: 40, lineHeight: 1.6 } }, "Not enough teams yet.", /* @__PURE__ */ React.createElement("br", null), "Tag a couple of matches and the benchmark fills out.")), d && tab === "cond" && /* @__PURE__ */ React.createElement(Conditions, { matches: d.matches, events: d._events, club }), d && tab === "matches" && (selMatch ? /* @__PURE__ */ React.createElement(DashView, { key: selMatch.id, d: matchStats(selMatch), club, scope: "match", match: selMatch, onBack: function() {
       setSelMatch(null);
     } }) : /* @__PURE__ */ React.createElement(MatchList, { matches: d.matches, onPick: setSelMatch }))));
   }
