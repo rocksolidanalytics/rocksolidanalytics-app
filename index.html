@@ -1503,6 +1503,79 @@
       /* @__PURE__ */ React.createElement("path", { d: "M " + (MX - rD) + " " + B20 + " A " + rD + " " + rD + " 0 0 1 " + (MX + rD) + " " + B20, fill: "none", stroke: LN2, strokeWidth: "1.2" })
     );
   }
+  function lsKey(mid) {
+    return "rsa_tag_" + mid;
+  }
+  function lsLoad(mid) {
+    try {
+      var r = window.localStorage.getItem(lsKey(mid));
+      return r ? JSON.parse(r) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  function lsSave(mid, arr) {
+    try {
+      window.localStorage.setItem(lsKey(mid), JSON.stringify(arr));
+    } catch (e) {
+    }
+  }
+  function lsClear(mid) {
+    try {
+      window.localStorage.removeItem(lsKey(mid));
+    } catch (e) {
+    }
+  }
+  function cleanRow(o) {
+    var r = {};
+    for (var k in o) {
+      if (Object.prototype.hasOwnProperty.call(o, k) && String(k).charAt(0) !== "_") r[k] = o[k];
+    }
+    return r;
+  }
+  function syncAllPending() {
+    if (typeof window !== "undefined" && window.__rsaTagging) return Promise.resolve();
+    if (typeof navigator !== "undefined" && navigator.onLine === false) return Promise.resolve();
+    var keys = [];
+    try {
+      for (var i = 0; i < window.localStorage.length; i++) {
+        var k = window.localStorage.key(i);
+        if (k && k.indexOf("rsa_tag_") === 0) keys.push(k);
+      }
+    } catch (e) {
+      return Promise.resolve();
+    }
+    return keys.reduce(function(p, key) {
+      return p.then(function() {
+        var arr;
+        try {
+          arr = JSON.parse(window.localStorage.getItem(key)) || [];
+        } catch (e) {
+          return;
+        }
+        var pend = arr.filter(function(x) {
+          return x._pending;
+        });
+        if (!pend.length) return;
+        return pend.reduce(function(q, entry) {
+          return q.then(function() {
+            return db.from("events").insert(cleanRow(entry)).select("id").single().then(function(r) {
+              if (!r.error) {
+                entry._id = r.data.id;
+                entry._pending = false;
+              }
+            }).catch(function() {
+            });
+          });
+        }, Promise.resolve()).then(function() {
+          try {
+            window.localStorage.setItem(key, JSON.stringify(arr));
+          } catch (e) {
+          }
+        });
+      });
+    }, Promise.resolve());
+  }
   function Tagger({ club, session, match, back }) {
     const [clock, setClock] = useState(0);
     const [running, setRunning] = useState(false);
@@ -1512,11 +1585,12 @@
     const [flash, setFlash] = useState(null);
     const [statsOpen, setStatsOpen] = useState(false);
     const [halfEnded, setHalfEnded] = useState(false);
+    const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine !== false : true);
     const [stTeam, setStTeam] = useState("us");
     const [openSec, setOpenSec] = useState(null);
     const [, bump] = useState(0);
     const tx = useRef({ ev: null, team: "h", loc: null, outcome: null });
-    const lastTap = useRef(0), seqRef = useRef(1), iv = useRef(null);
+    const lastTap = useRef(0), seqRef = useRef(1), iv = useRef(null), taggedRef = useRef([]), flushing = useRef(false);
     function sync() {
       bump(function(x) {
         return x + 1;
@@ -1551,6 +1625,71 @@
         clearInterval(iv.current);
       };
     }, [running]);
+    function flush() {
+      if (flushing.current) return Promise.resolve();
+      if (typeof navigator !== "undefined" && navigator.onLine === false) return Promise.resolve();
+      flushing.current = true;
+      var pend = taggedRef.current.filter(function(x) {
+        return x._pending;
+      });
+      return pend.reduce(function(p, entry) {
+        return p.then(function() {
+          var tmp = entry._id;
+          return db.from("events").insert(cleanRow(entry)).select("id").single().then(function(r) {
+            if (!r.error) {
+              taggedRef.current = taggedRef.current.map(function(x) {
+                return x._id === tmp ? Object.assign({}, x, { _id: r.data.id, _pending: false }) : x;
+              });
+              setTagged(function(prev) {
+                return prev.map(function(x) {
+                  return x._id === tmp ? Object.assign({}, x, { _id: r.data.id, _pending: false }) : x;
+                });
+              });
+            }
+          }).catch(function() {
+          });
+        });
+      }, Promise.resolve()).then(function() {
+        flushing.current = false;
+      }).catch(function() {
+        flushing.current = false;
+      });
+    }
+    useEffect(function() {
+      taggedRef.current = tagged;
+      lsSave(match.id, tagged);
+    }, [tagged]);
+    useEffect(function() {
+      if (typeof window !== "undefined") window.__rsaTagging = (window.__rsaTagging || 0) + 1;
+      var saved = lsLoad(match.id);
+      if (saved && saved.length) {
+        taggedRef.current = saved;
+        setTagged(saved);
+        var mx = 0;
+        saved.forEach(function(e) {
+          if ((e.seq || 0) > mx) mx = e.seq;
+        });
+        seqRef.current = mx + 1;
+      }
+      var goOn = function() {
+        setOnline(true);
+        flush();
+      };
+      var goOff = function() {
+        setOnline(false);
+      };
+      window.addEventListener("online", goOn);
+      window.addEventListener("offline", goOff);
+      var ivp = setInterval(flush, 8e3);
+      var t0 = setTimeout(flush, 700);
+      return function() {
+        if (typeof window !== "undefined") window.__rsaTagging = Math.max(0, (window.__rsaTagging || 1) - 1);
+        window.removeEventListener("online", goOn);
+        window.removeEventListener("offline", goOff);
+        clearInterval(ivp);
+        clearTimeout(t0);
+      };
+    }, []);
     var dispSec = period === 2 ? clock + 1800 : clock;
     function activate(ev, tm) {
       tx.current = { ev, team: tm, loc: null, outcome: null };
@@ -1593,26 +1732,13 @@
         seq,
         score: scoreOf(t2.ev.id, t2.outcome)
       };
-      var tmp = "tmp" + seq, local = Object.assign({}, row, { _id: tmp, _err: false });
+      var tmp = "tmp" + seq, local = Object.assign({}, row, { _id: tmp, _pending: true });
+      taggedRef.current = [local].concat(taggedRef.current);
       setTagged(function(prev) {
         return [local].concat(prev);
       });
       say("\u2713 " + EV_TYPE[t2.ev.id] + " \xB7 " + t2.outcome + (pname ? " \xB7 " + pname : ""));
-      db.from("events").insert(row).select("id").single().then(function(r) {
-        if (r.error) {
-          setTagged(function(prev) {
-            return prev.map(function(x) {
-              return x._id === tmp ? Object.assign({}, x, { _err: true }) : x;
-            });
-          });
-        } else {
-          setTagged(function(prev) {
-            return prev.map(function(x) {
-              return x._id === tmp ? Object.assign({}, x, { _id: r.data.id }) : x;
-            });
-          });
-        }
-      });
+      flush();
       tx.current = { ev: null, team: t2.team, loc: null, outcome: null };
       sync();
     }
@@ -1642,9 +1768,20 @@
       return o.g + "-" + pad2(o.p);
     }
     async function endMatch() {
-      if (!window.confirm("End match and save the final score?")) return;
+      var pendN = taggedRef.current.filter(function(x) {
+        return x._pending;
+      }).length;
+      if (pendN > 0) {
+        await flush();
+        pendN = taggedRef.current.filter(function(x) {
+          return x._pending;
+        }).length;
+      }
+      var emsg = pendN > 0 ? pendN + " event(s) aren\u2019t synced yet (no signal). They\u2019re safe on this device and will upload when you\u2019re back online. Finish anyway?" : "End match and save the final score?";
+      if (!window.confirm(emsg)) return;
       var u = score("us"), o = score("opp");
       await db.from("matches").update({ status: "final", our_score: nota(u), opp_score: nota(o), our_total: u.g * 3 + u.p, opp_total: o.g * 3 + o.p }).eq("id", match.id);
+      if (pendN === 0) lsClear(match.id);
       back();
     }
     var t = tx.current, us = score("us"), op = score("opp");
@@ -1653,8 +1790,8 @@
     var showOut = !!t.ev && !t.outcome && (!t.ev.pitch || !!t.loc);
     var showPl = !!t.outcome;
     var idle = !t.ev && !t.outcome;
-    var failed = tagged.filter(function(x) {
-      return x._err;
+    var pending = tagged.filter(function(x) {
+      return x._pending;
     }).length;
     var teamName = t.team === "h" ? club.name : match.opponent || "Opposition";
     function liveCompare() {
@@ -1876,7 +2013,7 @@
       setRunning(function(r) {
         return !r;
       });
-    }, style: { textAlign: "center", cursor: "pointer", minWidth: 78 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 900, color: running ? C.greenB : C.slate } }, running ? fmtFull(dispSec).slice(3) : "\u25B6"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, color: running ? C.greenB : C.slate } }, running ? period === 1 ? "1ST HALF" : "2ND HALF" : "START")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, color: C.gold, letterSpacing: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, (match.opponent || "OPP").toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, fontWeight: 900 } }, nota(op), " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slate } }, "(", op.g * 3 + op.p, ")")))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 12px", gap: 6, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, fontSize: 8.5 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "\u25CF TAP = ", club.name.split(" ")[0].toUpperCase()), /* @__PURE__ */ React.createElement("span", { style: { color: C.gold } }, "\u25CF\u25CF DBL = OPP")), /* @__PURE__ */ React.createElement("button", { onClick: undo, disabled: tagged.length === 0, style: { fontSize: 9, color: tagged.length ? C.red : C.slate, background: "none", border: "none", cursor: tagged.length ? "pointer" : "default", opacity: tagged.length ? 1 : 0.4, padding: "3px 4px" } }, "\u21A9 UNDO")), flash && /* @__PURE__ */ React.createElement("div", { style: { background: flash.indexOf("\u2713") === 0 ? C.green : C.navyL, padding: "5px", textAlign: "center", fontSize: 11 } }, flash), failed > 0 && /* @__PURE__ */ React.createElement("div", { style: { background: C.red + "22", padding: "4px", textAlign: "center", fontSize: 9.5, color: C.red } }, failed, " not saved \xB7 check signal"), halfEnded && /* @__PURE__ */ React.createElement("div", { style: { background: C.gold + "22", padding: "5px", textAlign: "center", fontSize: 10.5, color: C.gold } }, "HALF TIME \xB7 tap START 2ND HALF when ready"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, padding: "6px 8px" } }, TAG_EVENTS.map(function(ev) {
+    }, style: { textAlign: "center", cursor: "pointer", minWidth: 78 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 900, color: running ? C.greenB : C.slate } }, running ? fmtFull(dispSec).slice(3) : "\u25B6"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, color: running ? C.greenB : C.slate } }, running ? period === 1 ? "1ST HALF" : "2ND HALF" : "START")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, color: C.gold, letterSpacing: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, (match.opponent || "OPP").toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, fontWeight: 900 } }, nota(op), " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slate } }, "(", op.g * 3 + op.p, ")")))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 12px", gap: 6, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, fontSize: 8.5 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "\u25CF TAP = ", club.name.split(" ")[0].toUpperCase()), /* @__PURE__ */ React.createElement("span", { style: { color: C.gold } }, "\u25CF\u25CF DBL = OPP")), /* @__PURE__ */ React.createElement("button", { onClick: undo, disabled: tagged.length === 0, style: { fontSize: 9, color: tagged.length ? C.red : C.slate, background: "none", border: "none", cursor: tagged.length ? "pointer" : "default", opacity: tagged.length ? 1 : 0.4, padding: "3px 4px" } }, "\u21A9 UNDO")), flash && /* @__PURE__ */ React.createElement("div", { style: { background: flash.indexOf("\u2713") === 0 ? C.green : C.navyL, padding: "5px", textAlign: "center", fontSize: 11 } }, flash), pending > 0 && /* @__PURE__ */ React.createElement("div", { style: { background: (online ? C.gold : C.slateD) + "22", padding: "4px", textAlign: "center", fontSize: 9.5, color: online ? C.gold : C.slate } }, online ? "\u27F3 syncing " + pending + "\u2026" : "\u25CF " + pending + " saved on device \xB7 waiting for signal"), halfEnded && /* @__PURE__ */ React.createElement("div", { style: { background: C.gold + "22", padding: "5px", textAlign: "center", fontSize: 10.5, color: C.gold } }, "HALF TIME \xB7 tap START 2ND HALF when ready"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, padding: "6px 8px" } }, TAG_EVENTS.map(function(ev) {
       var on = t.ev && t.ev.id === ev.id;
       return /* @__PURE__ */ React.createElement("button", { key: ev.id, onClick: function() {
         onEventTap(ev);
@@ -1906,7 +2043,7 @@
     }), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       commit(null);
     }, style: { padding: "12px 2px", background: C.field, border: "1px solid " + C.border, borderRadius: 9, color: C.slate, cursor: "pointer", fontSize: 11, fontWeight: 700 } }, "NONE"))), idle && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, overflow: "auto" } }, tagged.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 11.5, paddingTop: 40, lineHeight: 1.6 } }, "Tap an event to begin.", /* @__PURE__ */ React.createElement("br", null), "Single tap = ", club.name.split(" ")[0], " \xB7 double tap = opposition") : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5 } }, tagged.slice(0, 40).map(function(r, i) {
-      return /* @__PURE__ */ React.createElement("div", { key: r._id || i, style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8, background: C.bgCard, border: "1px solid " + (r._err ? C.red + "55" : C.border), fontSize: 11.5 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 9.5, minWidth: 54 } }, r.time_text), /* @__PURE__ */ React.createElement("span", { style: { width: 6, height: 6, borderRadius: "50%", background: r.team === "us" ? C.greenB : C.gold } }), /* @__PURE__ */ React.createElement("span", { style: { flex: 1 } }, r.event_type, " \xB7 ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, r.outcome), r.player ? " \xB7 " + r.player : ""), r._err && /* @__PURE__ */ React.createElement("span", { style: { color: C.red } }, "!"));
+      return /* @__PURE__ */ React.createElement("div", { key: r._id || i, style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8, background: C.bgCard, border: "1px solid " + (r._pending ? C.gold + "55" : C.border), fontSize: 11.5 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 9.5, minWidth: 54 } }, r.time_text), /* @__PURE__ */ React.createElement("span", { style: { width: 6, height: 6, borderRadius: "50%", background: r.team === "us" ? C.greenB : C.gold } }), /* @__PURE__ */ React.createElement("span", { style: { flex: 1 } }, r.event_type, " \xB7 ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, r.outcome), r.player ? " \xB7 " + r.player : ""), r._pending && /* @__PURE__ */ React.createElement("span", { style: { color: C.gold } }, "\u25CF"));
     })))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, padding: "8px", borderTop: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setStatsOpen(true);
     }, style: { flex: 1, padding: "15px 4px", borderRadius: 11, border: "1px solid " + C.blue + "66", background: C.blue + "18", color: C.blue, fontWeight: 800, fontSize: 13.5, cursor: "pointer" } }, "VIEW STATS"), /* @__PURE__ */ React.createElement("button", { onClick: halfBtn.fn, style: { flex: 1, padding: "15px 4px", borderRadius: 11, border: "none", background: halfBtn.bg, color: C.bg, fontWeight: 800, fontSize: 13.5, cursor: "pointer" } }, halfBtn.l)));
@@ -2517,6 +2654,18 @@
         setTimeout(() => route(s), 0);
       });
       return () => sub.subscription.unsubscribe();
+    }, []);
+    useEffect(function() {
+      syncAllPending();
+      var on = function() {
+        syncAllPending();
+      };
+      window.addEventListener("online", on);
+      var iv = setInterval(syncAllPending, 3e4);
+      return function() {
+        window.removeEventListener("online", on);
+        clearInterval(iv);
+      };
     }, []);
     if (phase === "loading")
       return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.greenB }));
