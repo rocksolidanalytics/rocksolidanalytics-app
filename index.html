@@ -1310,6 +1310,103 @@
     if (slot <= 9) return "Midfield";
     return "Forwards";
   }
+  function computeBenchmark(matches, events, club) {
+    var oppOf = {};
+    matches.forEach(function(m) {
+      oppOf[m.id] = m.opponent || "Opponent";
+    });
+    var brayName = club.name, T = {};
+    function ens(n) {
+      return T[n] || (T[n] = { name: n, evs: [], gs: {} });
+    }
+    events.forEach(function(e) {
+      var n = e.team === "us" ? brayName : oppOf[e.match_id] || "Opponent";
+      var t = ens(n);
+      t.evs.push(e);
+      t.gs[e.match_id] = 1;
+    });
+    function met(t) {
+      var evs = t.evs, games = Object.keys(t.gs).length || 1;
+      var ko = evs.filter(function(e) {
+        return e.event_type === "Kickout";
+      });
+      var koW = ko.filter(function(e) {
+        return KO_WON.has(e.outcome);
+      }).length;
+      var shots = evs.filter(function(e) {
+        return e.event_type === "Shot from play" || e.event_type === "Scoreable free";
+      });
+      var scored = shots.filter(function(e) {
+        return (e.score || 0) > 0;
+      }).length;
+      var tov = evs.filter(function(e) {
+        return e.event_type === "Possession lost" && String(e.outcome || "").toLowerCase().indexOf("shot") < 0;
+      }).length;
+      var tack = evs.filter(function(e) {
+        return e.event_type === "Tackle";
+      }).length;
+      var tpA = 0, tpM = 0;
+      shots.forEach(function(e) {
+        if (e.x == null) return;
+        var x = e.x;
+        if (x < 0.5) x = 1 - x;
+        var dist = (1 - x) * 144;
+        if (dist >= 40) {
+          tpA++;
+          if ((e.score || 0) === 2) tpM++;
+        }
+      });
+      return {
+        name: t.name,
+        games,
+        koWin: ko.length ? koW / ko.length : null,
+        shotEff: shots.length ? scored / shots.length : null,
+        tovPg: tov / games,
+        tackPg: tack / games,
+        tpConv: tpA ? tpM / tpA : null
+      };
+    }
+    var rows = Object.keys(T).map(function(n) {
+      return met(T[n]);
+    });
+    rows.forEach(function(r) {
+      if (r.name === brayName) r.games = matches.length || r.games;
+    });
+    return rows;
+  }
+  function Benchmark({ rows, club }) {
+    var METRICS = [
+      { key: "koWin", label: "Kickout win %", pct: true, better: "high" },
+      { key: "shotEff", label: "Shot efficiency", pct: true, better: "high" },
+      { key: "tovPg", label: "Turnovers / game", pct: false, better: "low", dp: 1 },
+      { key: "tackPg", label: "Tackles / game", pct: false, better: "high", dp: 1 },
+      { key: "tpConv", label: "2-pt conversion", pct: true, better: "high" }
+    ];
+    const [mi, setMi] = useState(0);
+    var m = METRICS[mi];
+    var data = (rows || []).filter(function(r) {
+      return r[m.key] != null;
+    });
+    data.sort(function(a, b) {
+      return m.better === "high" ? b[m.key] - a[m.key] : a[m.key] - b[m.key];
+    });
+    var vals = data.map(function(r) {
+      return r[m.key];
+    });
+    var maxv = Math.max.apply(null, (m.pct ? vals.concat([1]) : vals).concat([1e-4]));
+    return /* @__PURE__ */ React.createElement("div", { style: { marginTop: 24 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, marginBottom: 6 } }, "COMPETITOR BENCHMARK"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slateD, marginBottom: 11, lineHeight: 1.5 } }, "Each opponent\u2019s figures from their game(s) against you, alongside your season average."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 } }, METRICS.map(function(mm, i) {
+      var on = i === mi;
+      return /* @__PURE__ */ React.createElement("button", { key: mm.key, onClick: function() {
+        setMi(i);
+      }, style: { padding: "7px 10px", borderRadius: 8, cursor: "pointer", fontSize: 11, fontWeight: 700, background: on ? C.greenB : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.bg : C.slate } }, mm.label);
+    })), m.better === "low" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slateD, marginBottom: 8, fontFamily: MONO } }, "lower is better"), data.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slateD, padding: "10px 0" } }, "Not enough data tagged for this metric yet.") : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 7 } }, data.map(function(r) {
+      var isUs = r.name === club.name;
+      var val = r[m.key];
+      var w = maxv > 0 ? val / maxv * 100 : 0;
+      var disp = m.pct ? Math.round(val * 100) + "%" : val.toFixed(m.dp || 1);
+      return /* @__PURE__ */ React.createElement("div", { key: r.name, style: { display: "flex", alignItems: "center", gap: 9 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 92, fontSize: 11, fontWeight: isUs ? 800 : 600, color: isUs ? C.greenB : C.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, r.name), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, height: 15, background: C.field, borderRadius: 5, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: w + "%", background: isUs ? C.greenB : C.slateD, borderRadius: 5 } })), /* @__PURE__ */ React.createElement("span", { style: { width: 40, textAlign: "right", fontSize: 12, fontWeight: 700, color: isUs ? C.greenB : C.slate } }, disp));
+    })));
+  }
   function computeStats(matches, events, apps, club) {
     let w = 0, d = 0, l = 0, sf = 0, sa = 0;
     matches.forEach((m) => {
@@ -1526,7 +1623,8 @@
       ko: { won: koWon, total: ko.length, pct: ko.length ? Math.round(100 * koWon / ko.length) : 0 },
       oko: { won: okoWon, total: oko.length, pct: oko.length ? Math.round(100 * okoWon / oko.length) : 0 },
       sectors,
-      played: matches.length
+      played: matches.length,
+      benchmark: computeBenchmark(matches, events, club)
     };
   }
   function Bar({ label, value, max, suffix, color }) {
@@ -3012,7 +3110,7 @@
       var b = d.bands[shotTeam][key];
       var pct = b.n ? Math.round(100 * b.s / b.n) : 0;
       return /* @__PURE__ */ React.createElement("div", { key, style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, label), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontWeight: 700 } }, pct, "%"), " ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, "  ", b.s, "/", b.n))), /* @__PURE__ */ React.createElement("div", { style: { height: 8, background: C.field, borderRadius: 5, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: pct + "%", background: col, borderRadius: 5 } })));
-    }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, "scored / shots, by distance from goal")));
+    }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, "scored / shots, by distance from goal")), !isMatch && d.benchmark && d.benchmark.length > 1 && /* @__PURE__ */ React.createElement(Benchmark, { rows: d.benchmark, club }));
   }
   function Stats({ club, back }) {
     const [d, setD] = useState(null);
