@@ -1515,6 +1515,26 @@
       /* @__PURE__ */ React.createElement("path", { d: "M " + (MX - rD) + " " + B20 + " A " + rD + " " + rD + " 0 0 1 " + (MX + rD) + " " + B20, fill: "none", stroke: LN2, strokeWidth: "1.2" })
     );
   }
+  function evType(ev) {
+    return ev.custom ? ev.name : EV_TYPE[ev.id];
+  }
+  function evOutcomeStr(ev, label) {
+    return ev.custom ? label : mapOutcome(ev.id, label);
+  }
+  function evLabels(ev) {
+    return (ev.outcomes || []).map(function(o) {
+      return typeof o === "string" ? o : o.label;
+    });
+  }
+  function evScore(ev, label) {
+    if (ev.custom) {
+      var m = (ev.outcomes || []).filter(function(x) {
+        return (typeof x === "string" ? x : x.label) === label;
+      });
+      return m[0] && typeof m[0] !== "string" ? Number(m[0].score) || 0 : 0;
+    }
+    return scoreOf(ev.id, label);
+  }
   function lsKey(mid) {
     return "rsa_tag_" + mid;
   }
@@ -1598,6 +1618,7 @@
     const [statsOpen, setStatsOpen] = useState(false);
     const [halfEnded, setHalfEnded] = useState(false);
     const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine !== false : true);
+    const [customEvents, setCustomEvents] = useState([]);
     const [stTeam, setStTeam] = useState("us");
     const [openSec, setOpenSec] = useState(null);
     const [, bump] = useState(0);
@@ -1702,6 +1723,15 @@
         clearTimeout(t0);
       };
     }, []);
+    useEffect(function() {
+      var clubList = club && Array.isArray(club.custom_events) ? club.custom_events : [];
+      db.from("matches").select("*").eq("id", match.id).single().then(function(r) {
+        var mce = r.data ? r.data.custom_events : null;
+        setCustomEvents(Array.isArray(mce) ? mce : clubList);
+      }).catch(function() {
+        setCustomEvents(clubList);
+      });
+    }, []);
     var dispSec = period === 2 ? clock + 1800 : clock;
     function activate(ev, tm) {
       tx.current = { ev, team: tm, loc: null, outcome: null };
@@ -1734,15 +1764,15 @@
         club_id: club.id,
         match_id: match.id,
         team,
-        event_type: EV_TYPE[t2.ev.id],
-        outcome: mapOutcome(t2.ev.id, t2.outcome),
+        event_type: evType(t2.ev),
+        outcome: evOutcomeStr(t2.ev, t2.outcome),
         player: pname,
         x: t2.loc ? t2.loc.x : null,
         y: t2.loc ? t2.loc.y : null,
         period: String(period),
         time_text: fmtFull(dispSec),
         seq,
-        score: scoreOf(t2.ev.id, t2.outcome)
+        score: evScore(t2.ev, t2.outcome)
       };
       var tmp = "tmp" + seq, local = Object.assign({}, row, { _id: tmp, _pending: true });
       taggedRef.current = [local].concat(taggedRef.current);
@@ -1798,10 +1828,13 @@
     }
     var t = tx.current, us = score("us"), op = score("opp");
     var tc = t.team === "h" ? C.greenB : C.gold;
-    var showPitch = !!t.ev && t.ev.pitch && !t.loc && !t.outcome;
-    var showOut = !!t.ev && !t.outcome && (!t.ev.pitch || !!t.loc);
+    var showPitch = !!t.ev && t.ev.pitch && !t.loc && !t.outcome && !t.skip;
+    var showOut = !!t.ev && !t.outcome && (!t.ev.pitch || !!t.loc || t.skip);
     var showPl = !!t.outcome;
     var idle = !t.ev && !t.outcome;
+    var customEvts = (customEvents || []).map(function(d) {
+      return Object.assign({}, d, { custom: true, l: (d.name || "").toUpperCase(), pitch: !!d.location });
+    });
     var pending = tagged.filter(function(x) {
       return x._pending;
     }).length;
@@ -2040,10 +2073,18 @@
         border: "1px solid " + (on ? tc : C.border),
         color: on ? C.bg : C.white
       } }, ev.l);
-    })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, padding: "4px 8px 8px", display: "flex", flexDirection: "column", overflow: "hidden" } }, showPitch && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: tc, textAlign: "center", margin: "2px 0 5px" } }, teamName, " \xB7 ", t.ev.l, " \u2014 TAP PITCH FOR LOCATION"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(TagPitch, { active: true, onTap: function(loc) {
+    })), customEvts.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, padding: "0 8px 4px", flexWrap: "wrap" } }, customEvts.map(function(ev) {
+      var on = t.ev && t.ev.id === ev.id;
+      return /* @__PURE__ */ React.createElement("button", { key: ev.id, onClick: function() {
+        onEventTap(ev);
+      }, style: { flex: "1 0 30%", padding: "9px 2px", borderRadius: 8, cursor: "pointer", fontSize: 9, fontWeight: 700, background: on ? tc : C.field, border: "1px dashed " + (on ? tc : C.borderB), color: on ? C.bg : C.slate } }, ev.l);
+    })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, padding: "4px 8px 8px", display: "flex", flexDirection: "column", overflow: "hidden" } }, showPitch && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", margin: "2px 2px 5px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: tc } }, teamName, " \xB7 ", t.ev.l, " \u2014 TAP PITCH", t.ev.custom ? " (optional)" : " FOR LOCATION"), t.ev.custom && /* @__PURE__ */ React.createElement("button", { onClick: function() {
+      tx.current.skip = true;
+      sync();
+    }, style: { background: "none", border: "1px solid " + C.border, borderRadius: 7, color: C.slate, fontSize: 10, fontWeight: 700, padding: "3px 9px", cursor: "pointer" } }, "Skip \u203A")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(TagPitch, { active: true, onTap: function(loc) {
       tx.current.loc = loc;
       sync();
-    } }))), showOut && /* @__PURE__ */ React.createElement("div", { style: { overflow: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: tc, textAlign: "center", margin: "6px 0 10px" } }, teamName.toUpperCase(), " \u2014 ", t.ev.l, t.loc ? " @ LOCATION SET" : "", " \u2014 SELECT OUTCOME"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 7 } }, t.ev.outcomes.map(function(oc) {
+    } }))), showOut && /* @__PURE__ */ React.createElement("div", { style: { overflow: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: tc, textAlign: "center", margin: "6px 0 10px" } }, teamName.toUpperCase(), " \u2014 ", t.ev.l, t.loc ? " @ LOCATION SET" : "", " \u2014 SELECT OUTCOME"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 7 } }, evLabels(t.ev).map(function(oc) {
       return /* @__PURE__ */ React.createElement("button", { key: oc, onClick: function() {
         chooseOutcome(oc);
       }, style: { padding: "18px 4px", background: C.bgCard, border: "1px solid " + tc + "55", borderRadius: 10, color: tc, cursor: "pointer", fontSize: 13, fontWeight: 700 } }, oc);
@@ -2415,6 +2456,7 @@
     const [curT, setCurT] = useState(0);
     const [playing, setPlaying] = useState(false);
     const [existing, setExisting] = useState(0);
+    const [customEvents, setCustomEvents] = useState([]);
     const tx = useRef({ ev: null, team: "h", loc: null, outcome: null, vt: 0, gt: null, skip: false });
     const lastTap = useRef(0), seqRef = useRef(1), vRef = useRef(null), fileRef = useRef(null);
     function sync() {
@@ -2444,6 +2486,15 @@
           if ((e.seq || 0) > mx) mx = e.seq;
         });
         seqRef.current = mx + 1;
+      });
+    }, []);
+    useEffect(function() {
+      var clubList = club && Array.isArray(club.custom_events) ? club.custom_events : [];
+      db.from("matches").select("*").eq("id", match.id).single().then(function(r) {
+        var mce = r.data ? r.data.custom_events : null;
+        setCustomEvents(Array.isArray(mce) ? mce : clubList);
+      }).catch(function() {
+        setCustomEvents(clubList);
       });
     }, []);
     useEffect(function() {
@@ -2559,15 +2610,15 @@
         club_id: club.id,
         match_id: match.id,
         team,
-        event_type: EV_TYPE[t2.ev.id],
-        outcome: mapOutcome(t2.ev.id, t2.outcome),
+        event_type: evType(t2.ev),
+        outcome: evOutcomeStr(t2.ev, t2.outcome),
         player: pname,
         x: t2.loc ? t2.loc.x : null,
         y: t2.loc ? t2.loc.y : null,
         period: String(per),
         time_text: fmtFull(gsec),
         seq,
-        score: scoreOf(t2.ev.id, t2.outcome)
+        score: evScore(t2.ev, t2.outcome)
       };
       var tmp = "tmp" + seq, local = Object.assign({}, row, { _id: tmp, _err: false, _vt: t2.vt });
       setTagged(function(prev) {
@@ -2649,6 +2700,9 @@
     var showOut = !!t.ev && !t.outcome && (!t.ev.pitch || !!t.loc || t.skip);
     var showPl = !!t.outcome;
     var idle = !t.ev && !t.outcome;
+    var customEvts = (customEvents || []).map(function(d) {
+      return Object.assign({}, d, { custom: true, l: (d.name || "").toUpperCase(), pitch: !!d.location });
+    });
     var failed = tagged.filter(function(x) {
       return x._err;
     }).length;
@@ -2677,13 +2731,18 @@
       return /* @__PURE__ */ React.createElement("button", { key: ev.id, onClick: function() {
         onEventTap(ev);
       }, style: { flex: 1, padding: "11px 1px", borderRadius: 8, cursor: "pointer", fontSize: 9.5, fontWeight: 700, background: on ? tc : C.bgCard, border: "1px solid " + (on ? tc : C.border), color: on ? C.bg : C.white } }, ev.l);
+    })), customEvts.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, padding: "0 8px 4px", flexWrap: "wrap" } }, customEvts.map(function(ev) {
+      var on = t.ev && t.ev.id === ev.id;
+      return /* @__PURE__ */ React.createElement("button", { key: ev.id, onClick: function() {
+        onEventTap(ev);
+      }, style: { flex: "1 0 30%", padding: "9px 2px", borderRadius: 8, cursor: "pointer", fontSize: 9, fontWeight: 700, background: on ? tc : C.field, border: "1px dashed " + (on ? tc : C.borderB), color: on ? C.bg : C.slate } }, ev.l);
     })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "2px 12px 4px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "\u25CF"), " TAP = ", club.name.split(" ")[0].toUpperCase(), "  ", /* @__PURE__ */ React.createElement("span", { style: { color: C.gold } }, "\u25CF\u25CF"), " DBL = OPP"), /* @__PURE__ */ React.createElement("button", { onClick: undo, style: { background: "none", border: "none", color: tagged.length ? C.slate : C.slateD, cursor: "pointer", fontSize: 10, fontFamily: MONO, fontWeight: 700 } }, "\u21A9 UNDO")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, padding: "2px 8px 6px", display: "flex", flexDirection: "column", overflow: "hidden" } }, showPitch && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", margin: "2px 2px 4px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: tc } }, teamName, " \xB7 ", t.ev.l, " \u2014 TAP PITCH (optional)"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       tx.current.skip = true;
       sync();
     }, style: { background: "none", border: "1px solid " + C.border, borderRadius: 7, color: C.slate, fontSize: 10.5, fontWeight: 700, padding: "4px 10px", cursor: "pointer" } }, "Skip location \u203A")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(TagPitch, { active: true, onTap: function(loc) {
       tx.current.loc = loc;
       sync();
-    } }))), showOut && /* @__PURE__ */ React.createElement("div", { style: { overflow: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: tc, textAlign: "center", margin: "6px 0 10px" } }, teamName.toUpperCase(), " \u2014 ", t.ev.l, t.loc ? " @ LOCATION SET" : t.ev.pitch ? " \xB7 NO LOCATION" : "", " \u2014 SELECT OUTCOME"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 7 } }, t.ev.outcomes.map(function(oc) {
+    } }))), showOut && /* @__PURE__ */ React.createElement("div", { style: { overflow: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: tc, textAlign: "center", margin: "6px 0 10px" } }, teamName.toUpperCase(), " \u2014 ", t.ev.l, t.loc ? " @ LOCATION SET" : t.ev.pitch ? " \xB7 NO LOCATION" : "", " \u2014 SELECT OUTCOME"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 7 } }, evLabels(t.ev).map(function(oc) {
       return /* @__PURE__ */ React.createElement("button", { key: oc, onClick: function() {
         chooseOutcome(oc);
       }, style: { padding: "18px 4px", background: C.bgCard, border: "1px solid " + tc + "55", borderRadius: 10, color: tc, cursor: "pointer", fontSize: 13, fontWeight: 700 } }, oc);
