@@ -1833,6 +1833,7 @@
         out.push({ id: id++, team: 1, num: p[0], x: p[1], y: 360 - p[2] });
       });
     });
+    out.push({ id: "ball", team: "ball", num: 0, x: 112, y: 184 });
     return out;
   }
   function TacticalPad({ club, back }) {
@@ -1881,8 +1882,13 @@
         style: { position: "relative", width: "100%", maxWidth: 420, aspectRatio: "224 / 360", touchAction: "none", borderRadius: 10, overflow: "hidden", boxShadow: "0 10px 40px rgba(0,0,0,0.45)" }
       },
       /* @__PURE__ */ React.createElement(PitchSVG, null, tokens.filter(function(t) {
-        return show[t.team];
+        return t.team === "ball" || show[t.team];
       }).map(function(t) {
+        if (t.team === "ball") {
+          return /* @__PURE__ */ React.createElement("g", { key: t.id, onPointerDown: function(e) {
+            down(t.id, e);
+          }, style: { cursor: "grab" } }, /* @__PURE__ */ React.createElement("ellipse", { cx: t.x, cy: t.y + 5.6, rx: "5", ry: "1.6", fill: "#000", opacity: "0.28" }), /* @__PURE__ */ React.createElement("circle", { cx: t.x, cy: t.y, r: "6", fill: "#f4f6f8", stroke: "#0c1118", strokeWidth: "1" }), /* @__PURE__ */ React.createElement("circle", { cx: t.x - 1.7, cy: t.y - 1.9, r: "1.9", fill: "#ffffff", opacity: "0.95" }), /* @__PURE__ */ React.createElement("path", { d: "M " + (t.x - 4.3) + " " + (t.y + 0.8) + " Q " + t.x + " " + (t.y - 3.4) + " " + (t.x + 4.3) + " " + (t.y + 0.8), stroke: "#9fb0c4", strokeWidth: "0.7", fill: "none" }));
+        }
         var col = t.team === 0 ? brayCol : oppCol;
         return /* @__PURE__ */ React.createElement("g", { key: t.id, onPointerDown: function(e) {
           down(t.id, e);
