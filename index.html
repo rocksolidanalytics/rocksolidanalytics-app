@@ -3518,7 +3518,7 @@
       });
     }, []);
     if (rows === null) return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 40 } }, /* @__PURE__ */ React.createElement(Spin, { s: 22, c: C.greenB }));
-    if (err) return /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 12.5, lineHeight: 1.7, padding: "36px 18px 0" } }, "The national comparison isn\u2019t switched on yet.", /* @__PURE__ */ React.createElement("br", null), "It needs the ranking function added to the database \u2014 once that\u2019s in, your rankings appear here automatically.");
+    if (err) return /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 12.5, lineHeight: 1.7, padding: "36px 18px 0" } }, "The national comparison isn\u2019t switched on yet.", /* @__PURE__ */ React.createElement("br", null), "It needs the ranking function added to the database \u2014 once that\u2019s in, your rankings appear here automatically.", /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, fontSize: 10, color: C.slateD, fontFamily: MONO, opacity: 0.7, wordBreak: "break-word" } }, String(err)));
     var by = {};
     (rows || []).forEach(function(r) {
       by[r.metric] = r;
@@ -3589,16 +3589,14 @@
         var on = tab === id;
         return /* @__PURE__ */ React.createElement("button", { onClick: () => setTab(id), style: {
           flex: 1,
-          margin: "1px 3px 7px",
-          padding: "7px 5px",
+          padding: "10px 6px",
+          background: "none",
+          border: "none",
           cursor: "pointer",
-          fontSize: 12,
+          color: C.greenB,
           fontWeight: 800,
-          background: "#fff",
-          border: "1.5px solid " + C.greenB,
-          borderRadius: 9,
-          color: on ? C.green : C.navy,
-          boxShadow: on ? "0 1px 9px rgba(52,201,103,0.40)" : "0 1px 4px rgba(0,0,0,0.18)"
+          fontSize: 12.5,
+          borderBottom: `2px solid ${on ? C.greenB : "transparent"}`
         } }, label);
       }
       return /* @__PURE__ */ React.createElement("button", { onClick: () => setTab(id), style: {
