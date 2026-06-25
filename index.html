@@ -1887,40 +1887,7 @@
     )), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", fontSize: 11, color: C.slateD, padding: "0 18px 18px" } }, "Drag the jerseys to set up a shape. Toggle a team off to focus on one."));
   }
   function TagPitch({ active, onTap }) {
-    var W = 224, H = 360, L = 8, R = 216, T = 8, B = 352, MX = 112, PL = B - T;
-    var T13 = T + 0.093 * PL, T20 = T + 0.143 * PL, T45 = T + 0.321 * PL, T65 = T + 0.464 * PL;
-    var B13 = B - 0.093 * PL, B20 = B - 0.143 * PL, B45 = B - 0.321 * PL, B65 = B - 0.464 * PL;
-    var rD = 13 / 145 * PL, GI = 40, GO = 58, GD = 9, LN = "rgba(255,255,255,0.55)", LN2 = "rgba(255,255,255,0.3)", LN3 = "rgba(255,255,255,0.18)";
-    return /* @__PURE__ */ React.createElement(
-      "svg",
-      {
-        viewBox: "0 0 " + W + " " + H,
-        preserveAspectRatio: "xMidYMid meet",
-        style: { width: "100%", height: "100%", display: "block", cursor: active ? "crosshair" : "default" },
-        onClick: function(e) {
-          if (!active) return;
-          var r = e.currentTarget.getBoundingClientRect();
-          onTap({ x: Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)), y: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) });
-        }
-      },
-      /* @__PURE__ */ React.createElement("rect", { x: "0", y: "0", width: W, height: H, fill: "#0a4d22" }),
-      /* @__PURE__ */ React.createElement("rect", { x: L, y: T, width: R - L, height: B - T, fill: "none", stroke: LN, strokeWidth: "2", rx: "2" }),
-      /* @__PURE__ */ React.createElement("line", { x1: L, y1: (T + B) / 2, x2: R, y2: (T + B) / 2, stroke: LN2, strokeWidth: "1.5", strokeDasharray: "8,5" }),
-      /* @__PURE__ */ React.createElement("line", { x1: L, y1: T13, x2: R, y2: T13, stroke: LN3, strokeWidth: "0.8" }),
-      /* @__PURE__ */ React.createElement("line", { x1: L, y1: B13, x2: R, y2: B13, stroke: LN3, strokeWidth: "0.8" }),
-      /* @__PURE__ */ React.createElement("line", { x1: L, y1: T20, x2: R, y2: T20, stroke: LN, strokeWidth: "1.5" }),
-      /* @__PURE__ */ React.createElement("line", { x1: L, y1: B20, x2: R, y2: B20, stroke: LN, strokeWidth: "1.5" }),
-      /* @__PURE__ */ React.createElement("line", { x1: L, y1: T45, x2: R, y2: T45, stroke: LN2, strokeWidth: "1", strokeDasharray: "6,4" }),
-      /* @__PURE__ */ React.createElement("line", { x1: L, y1: B45, x2: R, y2: B45, stroke: LN2, strokeWidth: "1", strokeDasharray: "6,4" }),
-      /* @__PURE__ */ React.createElement("line", { x1: L, y1: T65, x2: R, y2: T65, stroke: LN3, strokeWidth: "0.8", strokeDasharray: "4,6" }),
-      /* @__PURE__ */ React.createElement("line", { x1: L, y1: B65, x2: R, y2: B65, stroke: LN3, strokeWidth: "0.8", strokeDasharray: "4,6" }),
-      /* @__PURE__ */ React.createElement("rect", { x: MX - GI / 2, y: T, width: GI, height: GD, fill: "none", stroke: LN, strokeWidth: "1.5" }),
-      /* @__PURE__ */ React.createElement("rect", { x: MX - GO / 2, y: T, width: GO, height: GD + 9, fill: "none", stroke: LN2, strokeWidth: "1.2" }),
-      /* @__PURE__ */ React.createElement("rect", { x: MX - GI / 2, y: B - GD, width: GI, height: GD, fill: "none", stroke: LN, strokeWidth: "1.5" }),
-      /* @__PURE__ */ React.createElement("rect", { x: MX - GO / 2, y: B - GD - 9, width: GO, height: GD + 9, fill: "none", stroke: LN2, strokeWidth: "1.2" }),
-      /* @__PURE__ */ React.createElement("path", { d: "M " + (MX - rD) + " " + T20 + " A " + rD + " " + rD + " 0 0 0 " + (MX + rD) + " " + T20, fill: "none", stroke: LN2, strokeWidth: "1.2" }),
-      /* @__PURE__ */ React.createElement("path", { d: "M " + (MX - rD) + " " + B20 + " A " + rD + " " + rD + " 0 0 1 " + (MX + rD) + " " + B20, fill: "none", stroke: LN2, strokeWidth: "1.2" })
-    );
+    return /* @__PURE__ */ React.createElement(PitchSVG, { active, onTap: active ? onTap : void 0 });
   }
   function evType(ev) {
     return ev.custom ? ev.name : EV_TYPE[ev.id];
