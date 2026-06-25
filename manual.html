@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Rock Solid Analytics — User Manual</title>
+<style>
+  :root{ color-scheme:dark;
+    --bg:#070c18; --card:#0d1525; --field:#0a1222; --bd:#172238; --bd2:#1f3157;
+    --navy:#0B1C35; --green:#1e5c38; --greenB:#34c967; --blue:#4a9eff; --gold:#f0c040;
+    --red:#e0584d; --slate:#7a90aa; --slateD:#536176; --white:#eef2f8; --mono:ui-monospace,Menlo,Consolas,monospace; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);}
+  body{font-family:system-ui,-apple-system,sans-serif;color:var(--white);-webkit-font-smoothing:antialiased;line-height:1.6;}
+  .wrap{max-width:840px;margin:0 auto;padding:0 18px 80px;}
+  a{color:var(--greenB);text-decoration:none;}
+  header{padding:42px 0 26px;border-bottom:1px solid var(--bd);margin-bottom:8px;}
+  .brand{font-size:12px;letter-spacing:3px;color:var(--greenB);font-weight:800;font-family:var(--mono);}
+  h1{font-size:34px;margin:10px 0 6px;letter-spacing:-0.5px;}
+  .sub{color:var(--slate);font-size:15px;}
+  .pill{display:inline-block;font-size:9.5px;letter-spacing:1px;font-weight:800;font-family:var(--mono);
+    padding:3px 8px;border-radius:20px;vertical-align:middle;margin-left:10px;border:1px solid;}
+  .p-all{color:var(--white);border-color:var(--bd2);background:#101a2e;}
+  .p-an{color:var(--greenB);border-color:#1f6b3f;background:#0c2418;}
+  .p-co{color:var(--blue);border-color:#2a4a73;background:#0c1830;}
+  nav.toc{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:18px 20px;margin:26px 0 34px;}
+  nav.toc .lbl{font-size:10px;letter-spacing:2px;color:var(--slateD);font-family:var(--mono);margin-bottom:12px;}
+  nav.toc ol{margin:0;padding-left:20px;columns:2;column-gap:28px;}
+  nav.toc li{margin:5px 0;break-inside:avoid;}
+  nav.toc a{color:var(--white);font-size:13.5px;}
+  nav.toc a:hover{color:var(--greenB);}
+  section{padding:30px 0;border-top:1px solid var(--bd);scroll-margin-top:14px;}
+  h2{font-size:22px;margin:0 0 4px;display:flex;align-items:center;flex-wrap:wrap;gap:2px;}
+  h2 .n{color:var(--greenB);font-family:var(--mono);font-size:16px;margin-right:12px;font-weight:800;}
+  h3{font-size:15px;color:var(--gold);margin:24px 0 8px;letter-spacing:0.2px;}
+  p{margin:10px 0;color:#d4def0;}
+  .lead{color:var(--slate);font-size:14.5px;margin-top:4px;}
+  ol.steps{counter-reset:s;list-style:none;padding:0;margin:14px 0;}
+  ol.steps>li{counter-increment:s;position:relative;padding:10px 0 10px 44px;border-bottom:1px solid #101a2c;}
+  ol.steps>li:last-child{border-bottom:none;}
+  ol.steps>li::before{content:counter(s);position:absolute;left:0;top:9px;width:28px;height:28px;border-radius:8px;
+    background:var(--field);border:1px solid var(--bd2);color:var(--greenB);font-weight:800;font-family:var(--mono);
+    display:flex;align-items:center;justify-content:center;font-size:13px;}
+  ul.dot{list-style:none;padding:0;margin:12px 0;}
+  ul.dot>li{position:relative;padding:5px 0 5px 20px;color:#d4def0;}
+  ul.dot>li::before{content:"";position:absolute;left:2px;top:13px;width:6px;height:6px;border-radius:50%;background:var(--greenB);}
+  .callout{border-radius:12px;padding:13px 16px;margin:16px 0;font-size:14px;border:1px solid;border-left-width:4px;}
+  .tip{background:#0c2418;border-color:#1f6b3f;}
+  .tip b{color:var(--greenB);}
+  .note{background:#231c08;border-color:#6b5410;}
+  .note b{color:var(--gold);}
+  .warn{background:#2a1210;border-color:#7a2a24;}
+  .warn b{color:var(--red);}
+  code{font-family:var(--mono);background:var(--field);border:1px solid var(--bd);border-radius:6px;padding:1px 6px;font-size:12.5px;color:#cfe0ff;}
+  .kv{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:6px 16px;margin:14px 0;}
+  .kv .row{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid #101a2c;font-size:14px;}
+  .kv .row:last-child{border-bottom:none;}
+  .kv .row .k{color:var(--white);font-weight:700;}
+  .kv .row .v{color:var(--slate);text-align:right;}
+  .tabcard{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin:12px 0;}
+  .tabcard .t{font-weight:800;font-size:14.5px;}
+  .tabcard.t-all .t{color:var(--white);} .tabcard.t-rep .t{color:var(--white);}
+  .tabcard.t-ben .t{color:var(--blue);} .tabcard.t-con .t{color:var(--gold);} .tabcard.t-vs .t{color:var(--greenB);}
+  .tabcard p{margin:6px 0 0;font-size:13.5px;color:var(--slate);}
+  footer{margin-top:48px;padding-top:24px;border-top:1px solid var(--bd);color:var(--slateD);font-size:12.5px;text-align:center;}
+  .top{position:fixed;right:16px;bottom:16px;background:var(--greenB);color:#04140a;font-weight:800;border:none;
+    border-radius:50%;width:46px;height:46px;font-size:18px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.5);display:none;}
+  @media(max-width:560px){ nav.toc ol{columns:1;} h1{font-size:27px;} .v{font-size:12.5px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">ROCK SOLID ANALYTICS</div>
+  <h1>User Manual</h1>
+  <div class="sub">Everything you need to set up, tag, and read your GAA match data — for analysts and coaches.</div>
+</header>
+
+<nav class="toc">
+  <div class="lbl">CONTENTS</div>
+  <ol>
+    <li><a href="#about">What it is</a></li>
+    <li><a href="#setup">Getting set up</a></li>
+    <li><a href="#home">The home screen</a></li>
+    <li><a href="#before">Before a match</a></li>
+    <li><a href="#import">Importing data</a></li>
+    <li><a href="#live">Tagging live</a></li>
+    <li><a href="#video">Tagging from video</a></li>
+    <li><a href="#clips">Video clips</a></li>
+    <li><a href="#custom">Custom events</a></li>
+    <li><a href="#mirror">Live scoreboard</a></li>
+    <li><a href="#dash">Your dashboards</a></li>
+    <li><a href="#tactic">Tactical pad</a></li>
+    <li><a href="#conv">GAA conventions</a></li>
+    <li><a href="#tips">Tips &amp; fixes</a></li>
+  </ol>
+</nav>
+
+<section id="about">
+  <h2><span class="n">01</span>What it is <span class="pill p-all">EVERYONE</span></h2>
+  <p class="lead">Rock Solid Analytics turns what happens on the pitch into clear, shareable insight.</p>
+  <p>It does four things: you <b>tag</b> a match (live on the sideline, or later from video), it builds <b>dashboards</b> that show how your team is performing, it puts a <b>live scoreboard</b> online for supporters, and it lets you <b>compare</b> yourself anonymously against other clubs of your grade.</p>
+  <p>It runs in any phone or laptop browser — there's nothing to install. For quick access, open it once and use your browser's <b>"Add to Home screen"</b> so it sits like an app.</p>
+</section>
+
+<section id="setup">
+  <h2><span class="n">02</span>Getting set up <span class="pill p-all">EVERYONE</span></h2>
+  <p>The first time you sign in, you'll set your club up once:</p>
+  <ol class="steps">
+    <li>Choose your <b>sport</b> (football, hurling, camogie, ladies football).</li>
+    <li>Pick your <b>county</b>, then find your <b>club</b> in the list.</li>
+    <li>Set your <b>colours</b> — these drive the scoreboard and pitch markers.</li>
+    <li>Choose your <b>grade</b>: Senior, Intermediate or Junior.</li>
+  </ol>
+  <div class="note"><b>Grade matters.</b> The anonymous cross-club ranking (the <i>vs Others</i> tab) only compares you against clubs of the <i>same sport and grade</i>. Getting this right means you're measured against the correct field.</div>
+</section>
+
+<section id="home">
+  <h2><span class="n">03</span>The home screen <span class="pill p-all">EVERYONE</span></h2>
+  <p>Everything starts from the home screen. The main cards:</p>
+  <div class="kv">
+    <div class="row"><span class="k">Import data</span><span class="v">Load existing match CSVs</span></div>
+    <div class="row"><span class="k">Edit match information</span><span class="v">Line-ups, details, referee, venue, weather</span></div>
+    <div class="row"><span class="k">New match</span><span class="v">Tag a game live</span></div>
+    <div class="row"><span class="k">Video tagger</span><span class="v">Tag a game back from footage</span></div>
+    <div class="row"><span class="k">Live mirror</span><span class="v">Big-screen live scoreboard</span></div>
+    <div class="row"><span class="k">Tactical pad</span><span class="v">Drag jerseys to explain a setup</span></div>
+    <div class="row"><span class="k">Tagging template</span><span class="v">Add your own custom events</span></div>
+    <div class="row"><span class="k">Stats / dashboards</span><span class="v">All your analysis</span></div>
+  </div>
+</section>
+
+<section id="before">
+  <h2><span class="n">04</span>Before a match <span class="pill p-an">ANALYST</span></h2>
+  <p>Open <b>Edit match information</b> to manage everything around a game — not just line-ups. For each match you can set the opponent, competition and round, the <b>referee</b>, the <b>venue</b>, whether it's <b>Home / Away / Neutral</b>, the <b>weather</b>, and assign players to positions for the squad.</p>
+  <p>These details aren't admin for its own sake — they power the <b>Conditions</b> dashboard (your record by referee, venue and weather), so the more you fill in, the richer that analysis becomes.</p>
+  <div class="tip"><b>Tip.</b> Keep opponent names spelled consistently. Several screens pool repeat fixtures by name — "Tinahely" tagged two different ways would show as two teams instead of one combined record.</div>
+</section>
+
+<section id="import">
+  <h2><span class="n">05</span>Importing existing data <span class="pill p-an">ANALYST</span></h2>
+  <p>If you already tag in Performa, you can bring your history straight in.</p>
+  <ol class="steps">
+    <li>Export the match as a <b>CSV</b> from Performa.</li>
+    <li>On the home screen choose <b>Import data</b> and select the file.</li>
+    <li>The first time a new kind of label appears, you'll be asked to <b>match it up</b> once (e.g. which event a label means). Your choices are remembered for next time.</li>
+    <li>Check the preview, then save — the match drops into your dashboards.</li>
+  </ol>
+  <div class="note"><b>Other formats.</b> Cleanly structured exports import smoothly. Very different or summary-only spreadsheets may not convert to match-by-match detail — when in doubt, send a sample through and check the preview before saving.</div>
+</section>
+
+<section id="live">
+  <h2><span class="n">06</span>Tagging a match live <span class="pill p-an">ANALYST</span></h2>
+  <p>This is the heart of it — capturing the game from the sideline as it happens.</p>
+  <ol class="steps">
+    <li>Start a <b>New match</b> and confirm the basics (opponent, competition).</li>
+    <li>Hold the phone in <b>landscape</b>. The match clock runs on its own.</li>
+    <li>To log something, tap the <b>event</b> (shot, kickout, free, turnover, tackle…), tap <b>where</b> it happened on the pitch, choose the <b>outcome</b>, then the <b>player number</b>.</li>
+    <li>Use <b>Stop clock</b> for stoppages, and <b>View stats</b> any time to see the game so far.</li>
+    <li>When the game ends, finish the match — the final score is worked out from everything you tagged.</li>
+  </ol>
+  <div class="tip"><b>No signal? No problem.</b> Every tag is saved to your phone the instant you make it, and syncs up automatically when signal returns. A pitch with no coverage won't lose you a single event — the indicator shows what's saved on the device and what's still waiting to sync.</div>
+</section>
+
+<section id="video">
+  <h2><span class="n">07</span>Tagging from video <span class="pill p-an">ANALYST</span></h2>
+  <p>Couldn't tag live, or want to add detail? Tag the game back from footage.</p>
+  <ol class="steps">
+    <li>Open the <b>Video tagger</b> and load a video — a file from the phone, or a Dropbox link.</li>
+    <li>Set the two <b>sync points</b>: mark the <b>throw-in</b> (0:00) and the <b>start of the second half</b> (30:00). The app then knows the game time of every moment.</li>
+    <li>Tag exactly as you would live: event → location → outcome → player.</li>
+    <li>Finish — the score recalculates from all the tags.</li>
+  </ol>
+  <div class="tip"><b>Keep it on the device.</b> When you finish, you'll be asked whether to keep the video stored in the app (up to two at a time). Say yes and it's there for clips at training — no re-loading, works offline.</div>
+</section>
+
+<section id="clips">
+  <h2><span class="n">08</span>Video clips at training <span class="pill p-an">ANALYST</span> <span class="pill p-co">COACH</span></h2>
+  <p>Any match kept on the device becomes a clip library. Open it from the <b>"On this device"</b> list in the Video tagger.</p>
+  <ul class="dot">
+    <li><b>Filter</b> the tagged events by team, event, outcome or player — "show me all his shots", "every turnover we conceded".</li>
+    <li><b>Tap a moment</b> and the video jumps straight to it with a short lead-in, so you can show it instantly.</li>
+  </ul>
+  <div class="note"><b>Two things to know.</b> Clips only work for matches tagged <i>from video</i> (live-only games have no footage attached), and the video lives on the device that tagged it — the tags sync everywhere, the footage doesn't.</div>
+</section>
+
+<section id="custom">
+  <h2><span class="n">09</span>Custom events <span class="pill p-an">ANALYST</span></h2>
+  <p>Beyond the standard events, you can track things specific to how your club thinks about the game. Open <b>Tagging template</b> to add your own — give each one a name, decide whether it needs a pitch location, and add outcomes (which can carry a score if relevant).</p>
+  <p>Set a <b>club default</b> that appears in every game, and tweak it <b>per match</b> when you need something one-off. Your custom events show as a second row of buttons in the tagger and feed the scoreboard if they score — but they stay out of cross-club benchmarking, so comparisons remain fair.</p>
+</section>
+
+<section id="mirror">
+  <h2><span class="n">10</span>The live scoreboard <span class="pill p-all">EVERYONE</span></h2>
+  <p>The <b>Live mirror</b> is a clean, big-screen scoreboard of the game in progress — score, scorers and the latest events — refreshing itself every few seconds. Cast it to a screen at the clubhouse, or share it with supporters.</p>
+  <h3>Sharing it with supporters</h3>
+  <ol class="steps">
+    <li>Open <b>Live mirror</b> and tap <b>Share</b> to grab your club's public link.</li>
+    <li>Anyone who opens that link sees the live scoreboard — <b>no login, no app</b>.</li>
+    <li>The link is <b>permanent</b>: pin it in the club WhatsApp once and it works for every game.</li>
+  </ol>
+  <div class="tip"><b>How it flows on match day.</b> Share the link once, ever. Then just set up the new game and start tagging — the link automatically shows whichever match is currently live, populating in real time as you tag.</div>
+  <div class="note"><b>One live game at a time.</b> A match shows as live until you finish it. Finish each game before starting the next and the link always points at the right one.</div>
+</section>
+
+<section id="dash">
+  <h2><span class="n">11</span>Your dashboards <span class="pill p-all">EVERYONE</span></h2>
+  <p>Open <b>Stats</b> to see your analysis, organised into tabs:</p>
+  <div class="tabcard t-all"><div class="t">All League</div><p>The season overview — record, scoring, shot and kickout maps, player stats, and the headline trends across all your games.</p></div>
+  <div class="tabcard t-rep"><div class="t">Match Reports</div><p>The detail on any single game — shot maps, kickouts, timelines and the story of how it unfolded.</p></div>
+  <div class="tabcard t-ben"><div class="t">Benchmark</div><p>How each team you've played compares — kickout win %, shot efficiency, turnovers, tackles and 2-point conversion — with you highlighted. Repeat fixtures are pooled into one combined record.</p></div>
+  <div class="tabcard t-con"><div class="t">Conditions</div><p>Your record and key metrics broken down by <b>Referee</b>, <b>Venue</b> (home/away/neutral) and <b>Weather</b> (wet vs dry) — the context around results.</p></div>
+  <div class="tabcard t-vs"><div class="t">vs Others</div><p>The one nobody else has. An <b>anonymous</b> ranking against every club of your sport and grade using the app — core metrics, each line (backs, midfield, forwards, bench) and the goalkeeper — showing your rank and the field average. You only ever see your own position, never another club's figures.</p></div>
+  <div class="note"><b>For coaches.</b> You don't need to tag anything to use these — once your analyst has the data in, the dashboards, the live scoreboard and the tactical pad are all yours to read.</div>
+</section>
+
+<section id="tactic">
+  <h2><span class="n">12</span>Tactical pad <span class="pill p-co">COACH</span></h2>
+  <p>A blank pitch with a full set of <b>1–15 jerseys for each team</b> that you can drag around to explain a shape, a press, a kickout setup — whatever you need to show. Toggle a team off to focus on one, and reset to the starting formation any time. Quick, visual, and right there on your phone.</p>
+</section>
+
+<section id="conv">
+  <h2><span class="n">13</span>GAA conventions <span class="pill p-an">ANALYST</span></h2>
+  <p>So everyone tags consistently, the app follows standard GAA conventions:</p>
+  <div class="kv">
+    <div class="row"><span class="k">Score notation</span><span class="v">Goals&#8209;Points (e.g. 1&#8209;08), frees shown in brackets</span></div>
+    <div class="row"><span class="k">Scoring values</span><span class="v">Goal = 3 · 2&#8209;Pointer = 2 · Point = 1</span></div>
+    <div class="row"><span class="k">2&#8209;point zone</span><span class="v">Beyond the 40m arc (sideline to sideline)</span></div>
+    <div class="row"><span class="k">Kickouts</span><span class="v">Taken from the 21m line</span></div>
+    <div class="row"><span class="k">Second-half clock</span><span class="v">Continues from 30:00</span></div>
+  </div>
+  <p class="lead">The pitch you tap to place an event is the same premium pitch used everywhere in the app, so a shot you place lands in the same spot on the report map.</p>
+</section>
+
+<section id="tips">
+  <h2><span class="n">14</span>Tips &amp; fixes <span class="pill p-all">EVERYONE</span></h2>
+  <ul class="dot">
+    <li><b>Not seeing a new feature?</b> Your browser may be showing a cached version — pull down to refresh, or add <code>?v=</code> with a new number to the address.</li>
+    <li><b>Live tagging offline</b> is fully supported — tags save to the phone and sync when signal returns. Wait for the "synced" state before closing if you can.</li>
+    <li><b>Video clips are per-device</b> — the footage stays on the phone that tagged it; tags and stats sync everywhere.</li>
+    <li><b>Keep opponent and venue names consistent</b> so repeat fixtures and grounds pool correctly.</li>
+    <li><b>Finish a game when it's over</b> — that locks the result and clears it from the live scoreboard, keeping the public link pointed at the current match.</li>
+    <li><b>vs Others looks empty?</b> It fills in as more clubs of your grade join — until then you'll see yourself at the top of a field of one.</li>
+  </ul>
+</section>
+
+<footer>
+  Rock Solid Analytics — GAA match tagging &amp; analytics.<br/>
+  Questions or something not behaving? Flag it to your club's analyst.
+</footer>
+
+</div>
+<button class="top" id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+<script>
+  document.querySelectorAll('nav.toc a').forEach(function(a){
+    a.addEventListener('click',function(e){ var t=document.querySelector(a.getAttribute('href')); if(t){ e.preventDefault(); t.scrollIntoView({behavior:'smooth'}); } });
+  });
+  var btn=document.getElementById('topBtn');
+  window.addEventListener('scroll',function(){ btn.style.display = window.scrollY>600?'block':'none'; });
+</script>
+</body>
+</html>
