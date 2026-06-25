@@ -3181,6 +3181,25 @@
         window.removeEventListener("orientationchange", on);
       };
     }, []);
+    const posSaveRef = useRef(0);
+    const resumeRef = useRef({ applied: false });
+    function saveSync(patch) {
+      try {
+        var cur = JSON.parse(window.localStorage.getItem("rsa_vsync_" + match.id) || "{}");
+        window.localStorage.setItem("rsa_vsync_" + match.id, JSON.stringify(Object.assign(cur, patch)));
+      } catch (e) {
+      }
+    }
+    useEffect(function() {
+      try {
+        var sv = JSON.parse(window.localStorage.getItem("rsa_vsync_" + match.id) || "null");
+        if (sv) {
+          if (sv.throwIn != null) setThrowIn(sv.throwIn);
+          if (sv.halfStart != null) setHalfStart(sv.halfStart);
+        }
+      } catch (e) {
+      }
+    }, []);
     useEffect(function() {
       if (lockerHas(match.id)) {
         setVideoError(false);
@@ -3236,7 +3255,12 @@
       var v = vRef.current;
       if (!v) return;
       var onTime = function() {
-        setCurT(v.currentTime);
+        var t2 = v.currentTime;
+        setCurT(t2);
+        if (Math.abs(t2 - (posSaveRef.current || 0)) >= 3) {
+          posSaveRef.current = t2;
+          saveSync({ pos: t2 });
+        }
       };
       var onPlay = function() {
         setPlaying(true);
@@ -3246,6 +3270,16 @@
       var onLoad = function() {
         setVideoLoaded(true);
         setVideoError(false);
+        if (!resumeRef.current.applied) {
+          resumeRef.current.applied = true;
+          try {
+            var sv = JSON.parse(window.localStorage.getItem("rsa_vsync_" + match.id) || "null");
+            if (sv && sv.pos > 1) {
+              v.currentTime = sv.pos;
+            }
+          } catch (e) {
+          }
+        }
       };
       var onErr = function() {
         setVideoError(true);
@@ -3303,15 +3337,19 @@
       var v = vRef.current;
       if (!v) return;
       v.pause();
-      setThrowIn(v.currentTime);
-      say("\u2713 Throw-in @ " + fmtClip(v.currentTime));
+      var t2 = v.currentTime;
+      setThrowIn(t2);
+      saveSync({ throwIn: t2 });
+      say("\u2713 Throw-in @ " + fmtClip(t2));
     }
     function markHalf() {
       var v = vRef.current;
       if (!v) return;
       v.pause();
-      setHalfStart(v.currentTime);
-      say("\u2713 2nd half @ " + fmtClip(v.currentTime));
+      var t2 = v.currentTime;
+      setHalfStart(t2);
+      saveSync({ halfStart: t2 });
+      say("\u2713 2nd half @ " + fmtClip(t2));
     }
     function onEventTap(ev) {
       if (throwIn == null) {
@@ -3428,6 +3466,10 @@
       }
       var u = sc("us"), o = sc("opp");
       await db.from("matches").update({ status: "final", our_score: nota(u), opp_score: nota(o), our_total: u.g * 3 + u.p, opp_total: o.g * 3 + o.p }).eq("id", match.id);
+      try {
+        window.localStorage.removeItem("rsa_vsync_" + match.id);
+      } catch (e) {
+      }
       if (localFileRef.current && lockerOK() && !lockerHas(match.id)) {
         setDropId(null);
         setShowKeep(true);
