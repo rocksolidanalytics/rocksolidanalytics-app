@@ -3378,6 +3378,68 @@
       t2.outcome = oc;
       sync();
     }
+    const swipeRef = useRef({ x: 0, y: 0, sw: false, did: false });
+    const [editRow, setEditRow] = useState(null);
+    function findDef(etype) {
+      var d = TAG_EVENTS.filter(function(e) {
+        return EV_TYPE[e.id] === etype;
+      })[0];
+      if (d) return d;
+      var c = (customEvents || []).filter(function(e) {
+        return e.name === etype;
+      })[0];
+      if (c) return Object.assign({ custom: true }, c);
+      return null;
+    }
+    function openEdit(r) {
+      var def = findDef(r.event_type);
+      if (!def) {
+        say("Can't edit this type");
+        return;
+      }
+      var labels = evLabels(def);
+      var lab = labels.filter(function(L) {
+        return evOutcomeStr(def, L) === r.outcome;
+      })[0] || labels[0];
+      setEditRow({ id: r._id, def, time_text: r.time_text, period: r.period, _vt: r._vt, team: r.team, label: lab, player: r.player });
+    }
+    function setEK(patch) {
+      setEditRow(function(p) {
+        return p ? Object.assign({}, p, patch) : p;
+      });
+    }
+    function saveEdit() {
+      var er = editRow;
+      if (!er) return;
+      var outcome = evOutcomeStr(er.def, er.label), score2 = evScore(er.def, er.label);
+      var fields = { team: er.team, outcome, player: er.player, score: score2 };
+      setTagged(function(prev) {
+        return prev.map(function(x) {
+          return x._id === er.id ? Object.assign({}, x, fields) : x;
+        });
+      });
+      if (String(er.id).indexOf("tmp") !== 0) {
+        db.from("events").update(fields).eq("id", er.id).then(function() {
+        });
+      }
+      setEditRow(null);
+      say("\u2713 Updated");
+    }
+    function delEdit() {
+      var er = editRow;
+      if (!er) return;
+      setTagged(function(prev) {
+        return prev.filter(function(x) {
+          return x._id !== er.id;
+        });
+      });
+      if (String(er.id).indexOf("tmp") !== 0) {
+        db.from("events").delete().eq("id", er.id).then(function() {
+        });
+      }
+      setEditRow(null);
+      say("\u2713 Deleted");
+    }
     function commit(num) {
       var t2 = tx.current;
       if (!t2.ev || !t2.outcome) return;
@@ -3575,10 +3637,66 @@
       commit(null);
     }, style: { padding: "12px 2px", background: C.field, border: "1px solid " + C.border, borderRadius: 9, color: C.slate, cursor: "pointer", fontSize: 11, fontWeight: 700 } }, "NONE"))), idle && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, overflow: "auto" } }, tagged.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 11.5, paddingTop: 8, lineHeight: 1.6 } }, throwIn == null ? "Scrub to the throw-in and tap \u2691 Mark throw-in to set the clock." : "Pause on a moment, then tap an event. Single tap = " + club.name.split(" ")[0] + ", double = opposition.") : tagged.map(function(r) {
       var good = (r.score || 0) > 0 || ["Won clean", "Break won", "Contact Made", "Block"].indexOf(r.outcome) >= 0;
-      return /* @__PURE__ */ React.createElement("div", { key: r._id, onClick: function() {
-        jump(r._vt);
-      }, style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 6px", borderBottom: "1px solid " + C.border, cursor: "pointer", opacity: r._err ? 0.6 : 1 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 11, fontWeight: 700, color: C.slateD, minWidth: 38 } }, (r.time_text || "").slice(3)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 8.5, fontWeight: 700, fontFamily: MONO, color: r.period === "1" ? C.greenB : C.gold, border: "1px solid " + (r.period === "1" ? C.greenB : C.gold) + "55", borderRadius: 6, padding: "1px 5px" } }, r.period === "1" ? "H1" : "H2"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { color: r.team === "us" ? C.greenB : C.gold, fontWeight: 700 } }, r.event_type), " ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, "\xB7 ", r.outcome), r.player ? /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, " \xB7 ", r.player) : null, r.x == null ? /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 10 } }, " \xB7 no loc") : null), r._err ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.red, fontFamily: MONO } }, "not saved") : null);
-    }))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, padding: "8px 10px", borderTop: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, tagged.length, " tagged", existing > 0 ? " \xB7 " + existing + " earlier" : ""), failed > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, color: C.red, fontFamily: MONO } }, failed, " not saved \xB7 check signal")), /* @__PURE__ */ React.createElement("button", { onClick: finish, style: { flex: 1.3, padding: "13px", borderRadius: 11, border: "none", cursor: "pointer", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 14 } }, "\u2713 Finish & save")))), flash && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", left: "50%", bottom: 78, transform: "translateX(-50%)", background: "#000d", color: C.white, padding: "8px 16px", borderRadius: 20, fontSize: 12.5, fontWeight: 600, zIndex: 50, whiteSpace: "nowrap", maxWidth: "92vw", overflow: "hidden", textOverflow: "ellipsis" } }, flash), showKeep && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, background: "#000a", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { background: C.bgCard, border: "1px solid " + C.border, borderRadius: 16, padding: 20, maxWidth: 360, width: "100%" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, marginBottom: 6 } }, "Keep this video on the device?"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12.5, color: C.slate, lineHeight: 1.5, marginBottom: 16 } }, "Stored privately in the app so you can pull up clips at training without re-loading. Works offline; never uploaded."), lockerIndex().length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.gold, fontFamily: MONO, marginBottom: 8 } }, "DEVICE IS FULL (2/2) \xB7 PICK ONE TO REPLACE"), lockerIndex().map(function(it) {
+      return /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          key: r._id,
+          onTouchStart: function(e) {
+            var tt = e.touches[0];
+            swipeRef.current = { x: tt.clientX, y: tt.clientY, sw: false, did: false };
+          },
+          onTouchMove: function(e) {
+            var tt = e.touches[0];
+            var dx = tt.clientX - swipeRef.current.x, dy = tt.clientY - swipeRef.current.y;
+            if (dx < -40 && Math.abs(dx) > Math.abs(dy)) swipeRef.current.sw = true;
+          },
+          onTouchEnd: function() {
+            if (swipeRef.current.sw) {
+              swipeRef.current.did = true;
+              openEdit(r);
+            }
+          },
+          onClick: function() {
+            if (swipeRef.current.did) {
+              swipeRef.current.did = false;
+              return;
+            }
+            jump(r._vt);
+          },
+          style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 6px", borderBottom: "1px solid " + C.border, cursor: "pointer", opacity: r._err ? 0.6 : 1 }
+        },
+        /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 11, fontWeight: 700, color: C.slateD, minWidth: 38 } }, (r.time_text || "").slice(3)),
+        /* @__PURE__ */ React.createElement("span", { style: { fontSize: 8.5, fontWeight: 700, fontFamily: MONO, color: r.period === "1" ? C.greenB : C.gold, border: "1px solid " + (r.period === "1" ? C.greenB : C.gold) + "55", borderRadius: 6, padding: "1px 5px" } }, r.period === "1" ? "H1" : "H2"),
+        /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { color: r.team === "us" ? C.greenB : C.gold, fontWeight: 700 } }, r.event_type), " ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, "\xB7 ", r.outcome), r.player ? /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, " \xB7 ", r.player) : null, r.x == null ? /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 10 } }, " \xB7 no loc") : null),
+        r._err ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.red, fontFamily: MONO } }, "not saved") : null
+      );
+    }))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, padding: "8px 10px", borderTop: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, tagged.length, " tagged", tagged.length > 0 ? " \xB7 swipe a tag to edit" : ""), failed > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, color: C.red, fontFamily: MONO } }, failed, " not saved \xB7 check signal")), /* @__PURE__ */ React.createElement("button", { onClick: finish, style: { flex: 1.3, padding: "13px", borderRadius: 11, border: "none", cursor: "pointer", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 14 } }, "\u2713 Finish & save")))), editRow && /* @__PURE__ */ React.createElement("div", { onClick: function() {
+      setEditRow(null);
+    }, style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 60, display: "flex", alignItems: "flex-end" } }, /* @__PURE__ */ React.createElement("div", { onClick: function(e) {
+      e.stopPropagation();
+    }, style: { background: C.bgCard, borderTop: "1px solid " + C.borderB, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, width: "100%", maxHeight: "82vh", overflowY: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 800, fontSize: 15 } }, evType(editRow.def), " ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontFamily: MONO, fontSize: 12 } }, (editRow.time_text || "").slice(3))), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+      setEditRow(null);
+    }, style: { background: "none", border: "none", color: C.slate, fontSize: 22, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: C.slateD, marginBottom: 5 } }, "TEAM"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 12 } }, ["us", "opp"].map(function(tm) {
+      var on = editRow.team === tm;
+      var cc = tm === "us" ? C.greenB : C.gold;
+      return /* @__PURE__ */ React.createElement("button", { key: tm, onClick: function() {
+        setEK({ team: tm });
+      }, style: { flex: 1, padding: "9px", borderRadius: 9, border: "1px solid " + (on ? cc : C.border), background: on ? cc + "22" : C.field, color: on ? cc : C.slate, fontWeight: 700, fontSize: 12, cursor: "pointer" } }, tm === "us" ? club.name.split(" ")[0] : match.opponent || "OPP");
+    })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: C.slateD, marginBottom: 5 } }, "OUTCOME"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 } }, evLabels(editRow.def).map(function(L) {
+      var on = editRow.label === L;
+      return /* @__PURE__ */ React.createElement("button", { key: L, onClick: function() {
+        setEK({ label: L });
+      }, style: { padding: "7px 10px", borderRadius: 8, border: "1px solid " + (on ? C.blue : C.border), background: on ? C.blue + "22" : C.field, color: on ? C.blue : C.slate, fontSize: 12, fontWeight: 600, cursor: "pointer" } }, L);
+    })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: C.slateD, marginBottom: 5 } }, "PLAYER"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6 } }, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(function(n) {
+      var lab = editRow.team === "us" ? nameMap[n] || "#" + n : "#" + n;
+      var on = editRow.player === lab;
+      var cc = editRow.team === "us" ? C.greenB : C.gold;
+      return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
+        setEK({ player: lab });
+      }, style: { padding: "9px 2px", background: on ? cc + "33" : cc + "11", border: "1px solid " + (on ? cc : cc + "33"), borderRadius: 8, color: cc, textAlign: "center", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, n));
+    }), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+      setEK({ player: null });
+    }, style: { padding: "9px 2px", background: editRow.player == null ? C.slate + "33" : C.field, border: "1px solid " + C.border, borderRadius: 8, color: C.slate, fontSize: 10, fontWeight: 700, cursor: "pointer" } }, "NONE")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 14 } }, /* @__PURE__ */ React.createElement("button", { onClick: delEdit, style: { flex: 1, padding: "12px", borderRadius: 10, border: "1px solid " + C.red, background: C.red + "18", color: C.red, fontWeight: 700, cursor: "pointer" } }, "Delete"), /* @__PURE__ */ React.createElement("button", { onClick: saveEdit, style: { flex: 2, padding: "12px", borderRadius: 10, border: "none", background: C.greenB, color: "#04140a", fontWeight: 800, cursor: "pointer" } }, "Save")))), flash && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", left: "50%", bottom: 78, transform: "translateX(-50%)", background: "#000d", color: C.white, padding: "8px 16px", borderRadius: 20, fontSize: 12.5, fontWeight: 600, zIndex: 50, whiteSpace: "nowrap", maxWidth: "92vw", overflow: "hidden", textOverflow: "ellipsis" } }, flash), showKeep && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, background: "#000a", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { background: C.bgCard, border: "1px solid " + C.border, borderRadius: 16, padding: 20, maxWidth: 360, width: "100%" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, marginBottom: 6 } }, "Keep this video on the device?"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12.5, color: C.slate, lineHeight: 1.5, marginBottom: 16 } }, "Stored privately in the app so you can pull up clips at training without re-loading. Works offline; never uploaded."), lockerIndex().length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.gold, fontFamily: MONO, marginBottom: 8 } }, "DEVICE IS FULL (2/2) \xB7 PICK ONE TO REPLACE"), lockerIndex().map(function(it) {
       var on = dropId === it.matchId;
       return /* @__PURE__ */ React.createElement("button", { key: it.matchId, onClick: function() {
         setDropId(it.matchId);
