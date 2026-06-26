@@ -3242,8 +3242,21 @@
           if ((e.seq || 0) > mx) mx = e.seq;
         });
         seqRef.current = mx + 1;
+        var sv2 = null;
+        try {
+          sv2 = JSON.parse(window.localStorage.getItem("rsa_vsync_" + match.id) || "null");
+        } catch (e2) {
+        }
         var mapped = rows.map(function(e) {
-          return Object.assign({}, e, { _id: e.id, _vt: e.video_ts != null ? e.video_ts : 0, _err: false, period: e.period == null ? "1" : String(e.period) });
+          var vt = e.video_ts != null ? e.video_ts : 0;
+          if (e.video_ts == null && sv2) {
+            var pp = String(e.time_text || "").split(":").map(Number);
+            var gs = pp.length === 3 ? pp[0] * 3600 + pp[1] * 60 + pp[2] : pp.length === 2 ? pp[0] * 60 + pp[1] : 0;
+            var per2 = e.period == null ? 1 : Number(e.period);
+            if (per2 === 2 && sv2.halfStart != null) vt = sv2.halfStart + (gs - 1800);
+            else if (sv2.throwIn != null) vt = sv2.throwIn + gs;
+          }
+          return Object.assign({}, e, { _id: e.id, _vt: vt, _err: false, period: e.period == null ? "1" : String(e.period) });
         });
         mapped.reverse();
         setTagged(mapped);
@@ -3466,7 +3479,8 @@
         period: String(per),
         time_text: fmtFull(gsec),
         seq,
-        score: evScore(t2.ev, t2.outcome)
+        score: evScore(t2.ev, t2.outcome),
+        video_ts: t2.vt != null ? t2.vt : null
       };
       var tmp = "tmp" + seq, local = Object.assign({}, row, { _id: tmp, _err: false, _vt: t2.vt });
       setTagged(function(prev) {
