@@ -3256,7 +3256,7 @@
             if (per2 === 2 && sv2.halfStart != null) vt = sv2.halfStart + (gs - 1800);
             else if (sv2.throwIn != null) vt = sv2.throwIn + gs;
           }
-          return Object.assign({}, e, { _id: e.id, _vt: vt, _err: false, period: e.period == null ? "1" : String(e.period) });
+          return Object.assign({}, e, { _id: e.id, _vt: vt, _err: false, _saved: e.video_ts != null, period: e.period == null ? "1" : String(e.period) });
         });
         mapped.reverse();
         setTagged(mapped);
@@ -3395,6 +3395,43 @@
     }
     const swipeRef = useRef({ x: 0, y: 0, sw: false, did: false });
     const [editRow, setEditRow] = useState(null);
+    const taggedRef = useRef([]);
+    useEffect(function() {
+      taggedRef.current = tagged;
+    }, [tagged]);
+    function stampVideoTimes(tIn, hStart) {
+      if (tIn == null) return;
+      var rows = taggedRef.current || [];
+      var changed = {};
+      rows.forEach(function(r) {
+        if (r._saved || String(r._id).indexOf("tmp") === 0) return;
+        var pp = String(r.time_text || "").split(":").map(Number);
+        var gs = pp.length === 3 ? pp[0] * 3600 + pp[1] * 60 + pp[2] : pp.length === 2 ? pp[0] * 60 + pp[1] : 0;
+        var per2 = r.period == null ? 1 : Number(r.period);
+        var vt = null;
+        if (per2 === 2) {
+          if (hStart != null) vt = hStart + (gs - 1800);
+        } else {
+          vt = tIn + gs;
+        }
+        if (vt == null || vt < 0) return;
+        changed[r._id] = vt;
+        db.from("events").update({ video_ts: vt }).eq("id", r._id).then(function() {
+        });
+      });
+      var ids = Object.keys(changed);
+      if (ids.length) {
+        setTagged(function(prev) {
+          return prev.map(function(r) {
+            return changed[r._id] != null ? Object.assign({}, r, { _vt: changed[r._id], _saved: true }) : r;
+          });
+        });
+        say("\u2713 Linked " + ids.length + " events to video");
+      }
+    }
+    useEffect(function() {
+      if (throwIn != null) stampVideoTimes(throwIn, halfStart);
+    }, [throwIn, halfStart, tagged.length]);
     function findDef(etype) {
       var d = TAG_EVENTS.filter(function(e) {
         return EV_TYPE[e.id] === etype;
@@ -3482,7 +3519,7 @@
         score: evScore(t2.ev, t2.outcome),
         video_ts: t2.vt != null ? t2.vt : null
       };
-      var tmp = "tmp" + seq, local = Object.assign({}, row, { _id: tmp, _err: false, _vt: t2.vt });
+      var tmp = "tmp" + seq, local = Object.assign({}, row, { _id: tmp, _err: false, _vt: t2.vt, _saved: true });
       setTagged(function(prev) {
         return [local].concat(prev);
       });
