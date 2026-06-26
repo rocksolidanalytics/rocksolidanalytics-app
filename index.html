@@ -2916,6 +2916,15 @@
     const [outcome, setOutcome] = useState("all");
     const [player, setPlayer] = useState("all");
     const [sel, setSel] = useState(null);
+    const [mode, setMode] = useState("filters");
+    const [open, setOpen] = useState({});
+    function tog(k) {
+      setOpen(function(o) {
+        var n = Object.assign({}, o);
+        n[k] = !n[k];
+        return n;
+      });
+    }
     useEffect(function() {
       lockerURL(match.id).then(function(u) {
         setSrc(u || "");
@@ -2960,8 +2969,24 @@
     var noTs = (evs || []).length > 0 && (evs || []).every(function(e) {
       return e.video_ts == null;
     });
+    var tree = {};
+    (evs || []).forEach(function(e) {
+      if (e.video_ts == null) return;
+      var ev = e.event_type || "Other", oc = e.outcome || "\u2014", pl = e.player || "Unassigned";
+      tree[ev] = tree[ev] || { n: 0, o: {} };
+      tree[ev].n++;
+      tree[ev].o[oc] = tree[ev].o[oc] || { n: 0, p: {} };
+      tree[ev].o[oc].n++;
+      tree[ev].o[oc].p[pl] = tree[ev].o[oc].p[pl] || [];
+      tree[ev].o[oc].p[pl].push(e);
+    });
     var sty = { background: C.field, border: "1px solid " + C.border, borderRadius: 8, color: C.white, padding: "8px 10px", fontSize: 12, flex: 1, minWidth: 0 };
-    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 16px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", fontSize: 14, fontWeight: 700 } }, "\u2039 Back"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 800 } }, "Clips \xB7 v ", match.opponent || "Match")), /* @__PURE__ */ React.createElement("div", { style: { position: "sticky", top: 0, zIndex: 5, background: C.bg, padding: "10px 12px 6px" } }, src === null ? /* @__PURE__ */ React.createElement("div", { style: { height: "34vh", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Spin, { s: 22, c: C.greenB })) : src === "" ? /* @__PURE__ */ React.createElement("div", { style: { height: 120, display: "flex", alignItems: "center", justifyContent: "center", color: C.slateD, fontSize: 12.5, textAlign: "center", lineHeight: 1.5 } }, "This video isn\u2019t on this device.") : /* @__PURE__ */ React.createElement("video", { ref: vRef, src, controls: true, playsInline: true, style: { width: "100%", maxHeight: "36vh", background: "#000", borderRadius: 10 } })), /* @__PURE__ */ React.createElement("div", { style: { padding: "4px 12px 10px", display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, [["all", "All"], ["us", "Bray"], ["opp", "Opp"]].map(function(o) {
+    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 16px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", fontSize: 14, fontWeight: 700 } }, "\u2039 Back"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 800 } }, "Clips \xB7 v ", match.opponent || "Match")), /* @__PURE__ */ React.createElement("div", { style: { position: "sticky", top: 0, zIndex: 5, background: C.bg, padding: "10px 12px 6px" } }, src === null ? /* @__PURE__ */ React.createElement("div", { style: { height: "34vh", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Spin, { s: 22, c: C.greenB })) : src === "" ? /* @__PURE__ */ React.createElement("div", { style: { height: 120, display: "flex", alignItems: "center", justifyContent: "center", color: C.slateD, fontSize: 12.5, textAlign: "center", lineHeight: 1.5 } }, "This video isn\u2019t on this device.") : /* @__PURE__ */ React.createElement("video", { ref: vRef, src, controls: true, playsInline: true, style: { width: "100%", maxHeight: "36vh", background: "#000", borderRadius: 10 } })), /* @__PURE__ */ React.createElement("div", { style: { padding: "4px 12px 10px", display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, [["filters", "Filters"], ["folders", "Folders"]].map(function(o) {
+      var on = mode === o[0];
+      return /* @__PURE__ */ React.createElement("button", { key: o[0], onClick: function() {
+        setMode(o[0]);
+      }, style: { flex: 1, padding: "7px 4px", borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 800, background: on ? C.blue : C.bgCard, border: "1px solid " + (on ? C.blue : C.border), color: on ? C.bg : C.slate } }, o[1]);
+    })), mode === "filters" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, [["all", "All"], ["us", "Bray"], ["opp", "Opp"]].map(function(o) {
       var on = team === o[0];
       return /* @__PURE__ */ React.createElement("button", { key: o[0], onClick: function() {
         setTeam(o[0]);
@@ -2979,7 +3004,33 @@
       setOutcome(e.target.value);
     }, style: Object.assign({}, sty, { flex: "none" }) }, /* @__PURE__ */ React.createElement("option", { value: "all" }, "All outcomes"), uniq("outcome").map(function(v) {
       return /* @__PURE__ */ React.createElement("option", { key: v, value: v }, v);
-    }))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "0 12px 24px" } }, evs === null ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 20 } }, /* @__PURE__ */ React.createElement(Spin, { s: 20, c: C.greenB })) : noTs ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 12, paddingTop: 20, lineHeight: 1.6 } }, "This match was tagged before clip timestamps were saved.", /* @__PURE__ */ React.createElement("br", null), "Newly video-tagged matches will be clip-ready.") : list.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 12.5, paddingTop: 20 } }, "No events match these filters.") : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slateD, fontFamily: MONO, margin: "2px 0 4px" } }, list.length, " clip", list.length === 1 ? "" : "s"), list.map(function(e) {
+    })))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "0 12px 24px" } }, evs === null ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 20 } }, /* @__PURE__ */ React.createElement(Spin, { s: 20, c: C.greenB })) : noTs ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 12, paddingTop: 20, lineHeight: 1.6 } }, "This match was tagged before clip timestamps were saved.", /* @__PURE__ */ React.createElement("br", null), "Newly video-tagged matches will be clip-ready.") : mode === "folders" ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4, paddingTop: 6 } }, Object.keys(tree).sort().map(function(ev) {
+      var EG = tree[ev];
+      var o1 = open[ev];
+      return /* @__PURE__ */ React.createElement("div", { key: ev }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
+        tog(ev);
+      }, style: { width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 8, padding: "11px 12px", borderRadius: 10, cursor: "pointer", background: C.bgCard, border: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.blue, fontSize: 11, width: 10 } }, o1 ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 14, fontWeight: 800, color: C.white } }, ev), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, EG.n)), o1 && Object.keys(EG.o).sort().map(function(oc) {
+        var k2 = ev + "|" + oc;
+        var OG = EG.o[oc];
+        var o2 = open[k2];
+        return /* @__PURE__ */ React.createElement("div", { key: k2 }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
+          tog(k2);
+        }, style: { width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 8, padding: "9px 12px 9px 26px", cursor: "pointer", background: "none", border: "none" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slate, fontSize: 10, width: 10 } }, o2 ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 13, fontWeight: 600, color: C.slate } }, oc), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10.5, color: C.slateD, fontFamily: MONO } }, OG.n)), o2 && Object.keys(OG.p).sort().map(function(pl) {
+          var k3 = k2 + "|" + pl;
+          var arr = OG.p[pl];
+          var o3 = open[k3];
+          return /* @__PURE__ */ React.createElement("div", { key: k3 }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
+            tog(k3);
+          }, style: { width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 8, padding: "8px 12px 8px 42px", cursor: "pointer", background: "none", border: "none" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 10, width: 10 } }, o3 ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 12.5, color: C.slate } }, pl), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, color: C.slateD, fontFamily: MONO } }, arr.length)), o3 && arr.map(function(e) {
+            var on = sel === e.id;
+            var tc = e.team === "us" ? C.greenB : C.slate;
+            return /* @__PURE__ */ React.createElement("button", { key: e.id, onClick: function() {
+              play(e);
+            }, style: { width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 9, padding: "8px 12px 8px 56px", borderRadius: 8, cursor: "pointer", background: on ? C.greenB + "22" : "none", border: "1px solid " + (on ? C.greenB : "transparent") } }, /* @__PURE__ */ React.createElement("span", { style: { width: 6, height: 6, borderRadius: "50%", background: tc, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 11.5, color: C.white, fontFamily: MONO } }, e.time_text || ""), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10.5, color: C.gold, fontFamily: MONO } }, "\u25B6 " + fmt(e.video_ts)));
+          }));
+        }));
+      }));
+    })) : list.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 12.5, paddingTop: 20 } }, "No events match these filters.") : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slateD, fontFamily: MONO, margin: "2px 0 4px" } }, list.length, " clip", list.length === 1 ? "" : "s"), list.map(function(e) {
       var on = sel === e.id;
       var hasv = e.video_ts != null;
       var tc = e.team === "us" ? C.greenB : C.slate;
