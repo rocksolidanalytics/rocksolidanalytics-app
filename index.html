@@ -3232,14 +3232,19 @@
         });
         setNameMap(mp);
       });
-      db.from("events").select("seq").eq("match_id", match.id).then(function(r) {
+      db.from("events").select("id,team,event_type,outcome,player,x,y,period,time_text,seq,score,video_ts").eq("match_id", match.id).order("seq", { ascending: true }).then(function(r) {
         var rows = r.data || [];
-        setExisting(rows.length);
+        setExisting(0);
         var mx = 0;
         rows.forEach(function(e) {
           if ((e.seq || 0) > mx) mx = e.seq;
         });
         seqRef.current = mx + 1;
+        var mapped = rows.map(function(e) {
+          return Object.assign({}, e, { _id: e.id, _vt: e.video_ts != null ? e.video_ts : 0, _err: false });
+        });
+        mapped.reverse();
+        setTagged(mapped);
       });
     }, []);
     useEffect(function() {
