@@ -3446,6 +3446,15 @@
     }
     const swipeRef = useRef({ x: 0, y: 0, sw: false, did: false });
     const [editRow, setEditRow] = useState(null);
+    const [listMode, setListMode] = useState("list");
+    const [treeOpen, setTreeOpen] = useState({});
+    function togTree(k) {
+      setTreeOpen(function(o) {
+        var n = Object.assign({}, o);
+        n[k] = !n[k];
+        return n;
+      });
+    }
     const taggedRef = useRef([]);
     useEffect(function() {
       taggedRef.current = tagged;
@@ -3739,7 +3748,52 @@
       }, style: { padding: "12px 2px", background: ptc + "14", border: "1px solid " + ptc + "44", borderRadius: 9, color: ptc, cursor: "pointer", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, n), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nm.split(" ").slice(-1)[0]));
     }), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       commit(null);
-    }, style: { padding: "12px 2px", background: C.field, border: "1px solid " + C.border, borderRadius: 9, color: C.slate, cursor: "pointer", fontSize: 11, fontWeight: 700 } }, "NONE"))), idle && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, overflow: "auto" } }, tagged.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 11.5, paddingTop: 8, lineHeight: 1.6 } }, throwIn == null ? "Scrub to the throw-in and tap \u2691 Mark throw-in to set the clock." : "Pause on a moment, then tap an event. Single tap = " + club.name.split(" ")[0] + ", double = opposition.") : tagged.map(function(r) {
+    }, style: { padding: "12px 2px", background: C.field, border: "1px solid " + C.border, borderRadius: 9, color: C.slate, cursor: "pointer", fontSize: 11, fontWeight: 700 } }, "NONE"))), idle && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, overflow: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "2px 0 8px" } }, [["list", "List"], ["folders", "Folders"]].map(function(o) {
+      var on = listMode === o[0];
+      return /* @__PURE__ */ React.createElement("button", { key: o[0], onClick: function() {
+        setListMode(o[0]);
+      }, style: { flex: 1, padding: "6px 4px", borderRadius: 7, cursor: "pointer", fontSize: 11, fontWeight: 800, background: on ? C.blue : C.bgCard, border: "1px solid " + (on ? C.blue : C.border), color: on ? C.bg : C.slate } }, o[1]);
+    })), listMode === "folders" ? (function() {
+      var tr = {};
+      tagged.forEach(function(e) {
+        if (e._vt == null) return;
+        var ev = e.event_type || "Other", oc = e.outcome || "\u2014", pl = e.player || "Unassigned";
+        tr[ev] = tr[ev] || { n: 0, o: {} };
+        tr[ev].n++;
+        tr[ev].o[oc] = tr[ev].o[oc] || { n: 0, p: {} };
+        tr[ev].o[oc].n++;
+        tr[ev].o[oc].p[pl] = tr[ev].o[oc].p[pl] || [];
+        tr[ev].o[oc].p[pl].push(e);
+      });
+      var keys = Object.keys(tr).sort();
+      if (keys.length === 0) return /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 11.5, paddingTop: 14, lineHeight: 1.6 } }, "No clips yet. Set the sync points, then tag (or open a tagged game) and they appear here.");
+      return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 3 } }, keys.map(function(ev) {
+        var EG = tr[ev];
+        var o1 = treeOpen[ev];
+        return /* @__PURE__ */ React.createElement("div", { key: ev }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
+          togTree(ev);
+        }, style: { width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 8, padding: "10px 10px", borderRadius: 9, cursor: "pointer", background: C.bgCard, border: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.blue, fontSize: 11, width: 10 } }, o1 ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 13.5, fontWeight: 800, color: C.white } }, ev), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, EG.n)), o1 && Object.keys(EG.o).sort().map(function(oc) {
+          var k2 = ev + "|" + oc;
+          var OG = EG.o[oc];
+          var o2 = treeOpen[k2];
+          return /* @__PURE__ */ React.createElement("div", { key: k2 }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
+            togTree(k2);
+          }, style: { width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 8, padding: "8px 10px 8px 24px", cursor: "pointer", background: "none", border: "none" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slate, fontSize: 10, width: 10 } }, o2 ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 12.5, fontWeight: 600, color: C.slate } }, oc), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10.5, color: C.slateD, fontFamily: MONO } }, OG.n)), o2 && Object.keys(OG.p).sort().map(function(pl) {
+            var k3 = k2 + "|" + pl;
+            var arr = OG.p[pl];
+            var o3 = treeOpen[k3];
+            return /* @__PURE__ */ React.createElement("div", { key: k3 }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
+              togTree(k3);
+            }, style: { width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 8, padding: "7px 10px 7px 40px", cursor: "pointer", background: "none", border: "none" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 10, width: 10 } }, o3 ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 12, color: C.slate } }, pl), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, color: C.slateD, fontFamily: MONO } }, arr.length)), o3 && arr.map(function(e) {
+              var tc2 = e.team === "us" ? C.greenB : C.slate;
+              return /* @__PURE__ */ React.createElement("button", { key: e._id, onClick: function() {
+                jump(e._vt);
+              }, style: { width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 9, padding: "7px 10px 7px 54px", borderRadius: 7, cursor: "pointer", background: "none", border: "1px solid transparent" } }, /* @__PURE__ */ React.createElement("span", { style: { width: 6, height: 6, borderRadius: "50%", background: tc2, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 11.5, color: C.white, fontFamily: MONO } }, (e.time_text || "").slice(3)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10.5, color: C.gold, fontFamily: MONO } }, "\u25B6"));
+            }));
+          }));
+        }));
+      }));
+    })() : tagged.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 11.5, paddingTop: 8, lineHeight: 1.6 } }, throwIn == null ? "Scrub to the throw-in and tap \u2691 Mark throw-in to set the clock." : "Pause on a moment, then tap an event. Single tap = " + club.name.split(" ")[0] + ", double = opposition.") : tagged.map(function(r) {
       var good = (r.score || 0) > 0 || ["Won clean", "Break won", "Contact Made", "Block"].indexOf(r.outcome) >= 0;
       return /* @__PURE__ */ React.createElement(
         "div",
