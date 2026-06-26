@@ -3382,7 +3382,12 @@
       var t2 = tx.current;
       if (!t2.ev || !t2.outcome) return;
       var team = t2.team === "h" ? "us" : "opp";
-      var pname = num == null ? null : t2.team === "h" ? nameMap[num] || "#" + num : "#" + num;
+      var credH = t2.team === "h";
+      if (t2.ev && t2.ev.id === "kickout") {
+        var _koW = t2.outcome === "Won Clean" || t2.outcome === "Break Won";
+        credH = t2.team === "h" ? _koW : !_koW;
+      }
+      var pname = num == null ? null : credH ? nameMap[num] || "#" + num : "#" + num;
       var gt = t2.gt, per = gt ? gt.period : 1, gsec = gt ? Math.round(gt.secs) : 0;
       var seq = seqRef.current++;
       var row = {
@@ -3505,6 +3510,12 @@
     }
     var t = tx.current, us = score("us"), op = score("opp");
     var tc = t.team === "h" ? C.greenB : C.gold;
+    var credHome = t.team === "h";
+    if (t.ev && t.ev.id === "kickout" && t.outcome) {
+      var _kw = t.outcome === "Won Clean" || t.outcome === "Break Won";
+      credHome = t.team === "h" ? _kw : !_kw;
+    }
+    var ptc = credHome ? C.greenB : C.gold;
     var showPitch = !!t.ev && t.ev.pitch && !t.loc && !t.outcome && !t.skip;
     var showOut = !!t.ev && !t.outcome && (!t.ev.pitch || !!t.loc || t.skip);
     var showPl = !!t.outcome;
@@ -3555,11 +3566,11 @@
       return /* @__PURE__ */ React.createElement("button", { key: oc, onClick: function() {
         chooseOutcome(oc);
       }, style: { padding: "18px 4px", background: C.bgCard, border: "1px solid " + tc + "55", borderRadius: 10, color: tc, cursor: "pointer", fontSize: 13, fontWeight: 700 } }, oc);
-    }))), showPl && /* @__PURE__ */ React.createElement("div", { style: { overflow: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: tc, textAlign: "center", margin: "6px 0 10px" } }, t.ev.l, ": ", t.outcome, " \u2014 TAP PLAYER #"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6 } }, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(function(n) {
-      var nm = t.team === "h" ? nameMap[n] : null;
+    }))), showPl && /* @__PURE__ */ React.createElement("div", { style: { overflow: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: ptc, textAlign: "center", margin: "6px 0 10px" } }, t.ev.l, ": ", t.outcome, " \u2014 TAP ", credHome ? club.name.split(" ")[0] : match.opponent || "OPP", " PLAYER #"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6 } }, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(function(n) {
+      var nm = credHome ? nameMap[n] : null;
       return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
         commit(n);
-      }, style: { padding: "12px 2px", background: tc + "14", border: "1px solid " + tc + "44", borderRadius: 9, color: tc, cursor: "pointer", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, n), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nm.split(" ").slice(-1)[0]));
+      }, style: { padding: "12px 2px", background: ptc + "14", border: "1px solid " + ptc + "44", borderRadius: 9, color: ptc, cursor: "pointer", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, n), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nm.split(" ").slice(-1)[0]));
     }), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       commit(null);
     }, style: { padding: "12px 2px", background: C.field, border: "1px solid " + C.border, borderRadius: 9, color: C.slate, cursor: "pointer", fontSize: 11, fontWeight: 700 } }, "NONE"))), idle && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, overflow: "auto" } }, tagged.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 11.5, paddingTop: 8, lineHeight: 1.6 } }, throwIn == null ? "Scrub to the throw-in and tap \u2691 Mark throw-in to set the clock." : "Pause on a moment, then tap an event. Single tap = " + club.name.split(" ")[0] + ", double = opposition.") : tagged.map(function(r) {
