@@ -3651,10 +3651,6 @@
       }
       var u = sc("us"), o = sc("opp");
       await db.from("matches").update({ status: "final", our_score: nota(u), opp_score: nota(o), our_total: u.g * 3 + u.p, opp_total: o.g * 3 + o.p }).eq("id", match.id);
-      try {
-        window.localStorage.removeItem("rsa_vsync_" + match.id);
-      } catch (e) {
-      }
       if (localFileRef.current && lockerOK() && !lockerHas(match.id)) {
         setDropId(null);
         setShowKeep(true);
