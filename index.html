@@ -1551,12 +1551,31 @@
     }
     const usAll = countShots(us), opAll = countShots(opp);
     const usPoss = usAll + countTO(us), opPoss = opAll + countTO(opp);
+    function nTackle(evs) {
+      return evs.filter(function(e) {
+        return e.event_type === "Tackle";
+      }).length;
+    }
+    function nFoul(evs) {
+      return evs.filter(function(e) {
+        return (e.outcome || "") === "Foul" || e.event_type === "Free conceded";
+      }).length;
+    }
+    function nTOWon(evs) {
+      return evs.filter(function(e) {
+        return e.event_type === "Possession lost" && ((e.outcome || "") === "Intercepted" || (e.outcome || "") === "In Contact");
+      }).length;
+    }
+    const usTk = nTackle(us), opTk = nTackle(opp);
+    const usDwr = usTk - nFoul(us) + nTOWon(opp), opDwr = opTk - nFoul(opp) + nTOWon(us);
     const compare = [
       { label: "Score (pts)", us: sf, opp: sa },
       { label: "Shots", us: usAll, opp: opAll },
       { label: "Accuracy", us: usAll ? Math.round(100 * countScored(us) / usAll) : 0, opp: opAll ? Math.round(100 * countScored(opp) / opAll) : 0, pct: true },
       { label: "Wides", us: countWide(us), opp: countWide(opp) },
       { label: "Shots / 10 Poss", us: usPoss ? Math.round(100 * usAll / usPoss) / 10 : 0, opp: opPoss ? Math.round(100 * opAll / opPoss) / 10 : 0 },
+      { label: "Tackles", us: usTk, opp: opTk },
+      { label: "Def. work rate", us: usDwr, opp: opDwr },
       { label: "Kickouts won", us: ko.length ? Math.round(100 * koWon / ko.length) : 0, opp: oko.length ? Math.round(100 * okoWon / oko.length) : 0, pct: true }
     ];
     function isTrig(e) {
