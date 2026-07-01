@@ -1665,24 +1665,18 @@
           if (X !== "us" && X !== "opp") return;
           scoreTot[X]++;
           var src = scoreSourceOf(arr, i, X);
-          if (src !== "unclear") {
-            scoreSrc[X][src] = (scoreSrc[X][src] || 0) + 1;
+          var _b = scoreSrc[X][src] || (scoreSrc[X][src] = { g: 0, p: 0, n: 0 });
+          var _sv = e.score || 0;
+          _b.n++;
+          if (_sv === 3) {
+            _b.g++;
+          } else {
+            _b.p += _sv;
           }
         }
       });
     });
-    function _srcCell(src, X) {
-      var n = scoreSrc[X][src] || 0, tot = scoreTot[X] || 0;
-      return { n, pct: tot ? Math.round(100 * n / tot) : 0 };
-    }
-    var srcRows = [
-      { label: "Own kickout", us: _srcCell("ownKO", "us"), opp: _srcCell("ownKO", "opp") },
-      { label: "Opp kickout", us: _srcCell("oppKO", "us"), opp: _srcCell("oppKO", "opp") },
-      { label: "Turnover \xB7 kick pass", us: _srcCell("toKick", "us"), opp: _srcCell("toKick", "opp") },
-      { label: "Turnover \xB7 hand pass", us: _srcCell("toHand", "us"), opp: _srcCell("toHand", "opp") },
-      { label: "Turnover \xB7 in contact", us: _srcCell("toContact", "us"), opp: _srcCell("toContact", "opp") },
-      { label: "Turnover \xB7 other", us: _srcCell("toOther", "us"), opp: _srcCell("toOther", "opp") }
-    ];
+    var srcData = { us: scoreSrc.us, opp: scoreSrc.opp, tot: { us: scoreTot.us, opp: scoreTot.opp } };
     function median(a) {
       if (!a.length) return 0;
       var b = a.slice().sort(function(x, y) {
@@ -1738,7 +1732,7 @@
       koSpeed,
       koSpeedGrid,
       koMed,
-      srcRows,
+      srcData,
       shots: { us: shUs.shots, opp: shOpp.shots },
       bands: { us: shUs.bands, opp: shOpp.bands },
       koGrid: { us: koUs.grid, opp: koOpp.grid },
@@ -1793,10 +1787,34 @@
       return /* @__PURE__ */ React.createElement("div", { key: r.label, style: { marginBottom: 13 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontWeight: 800, fontFamily: MONO, fontSize: 14, width: 48 } }, r.us, r.pct ? "%" : ""), /* @__PURE__ */ React.createElement("span", { style: { color: C.slate, fontSize: 10, letterSpacing: 1, fontFamily: MONO } }, r.label.toUpperCase()), /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontWeight: 800, fontFamily: MONO, fontSize: 14, width: 48, textAlign: "right" } }, r.opp, r.pct ? "%" : "")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", height: 7, gap: 3 } }, /* @__PURE__ */ React.createElement("div", { style: { flexGrow: r.us + 0.01, flexBasis: 0, background: C.greenB, borderRadius: 4, minWidth: 3 } }), /* @__PURE__ */ React.createElement("div", { style: { flexGrow: r.opp + 0.01, flexBasis: 0, background: C.blue, borderRadius: 4, minWidth: 3 } })));
     }));
   }
-  function ScoreSourceBars({ rows, club }) {
-    return /* @__PURE__ */ React.createElement("div", { style: { padding: 14, borderRadius: 14, background: C.bgCard, border: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB, fontWeight: 800, fontSize: 13 } }, club.name), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontFamily: MONO, fontSize: 9, letterSpacing: 1 } }, "% OF SCORES \\u00b7 N"), /* @__PURE__ */ React.createElement("span", { style: { color: C.blue, fontWeight: 800, fontSize: 13 } }, "Opposition")), rows.map(function(r) {
-      return /* @__PURE__ */ React.createElement("div", { key: r.label, style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontWeight: 800, fontFamily: MONO, fontSize: 13, width: 60 } }, r.us.pct, "% ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 9.5, fontWeight: 700 } }, "\\u00b7", r.us.n)), /* @__PURE__ */ React.createElement("span", { style: { color: C.slate, fontSize: 9, letterSpacing: 0.5, fontFamily: MONO, textAlign: "center", flex: 1 } }, r.label.toUpperCase()), /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontWeight: 800, fontFamily: MONO, fontSize: 13, width: 60, textAlign: "right" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 9.5, fontWeight: 700 } }, r.opp.n, "\\u00b7"), " ", r.opp.pct, "%")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", height: 7, gap: 3 } }, /* @__PURE__ */ React.createElement("div", { style: { flexGrow: r.us.pct + 0.01, flexBasis: 0, background: C.greenB, borderRadius: 4, minWidth: 3 } }), /* @__PURE__ */ React.createElement("div", { style: { flexGrow: r.opp.pct + 0.01, flexBasis: 0, background: C.blue, borderRadius: 4, minWidth: 3 } })));
-    }));
+  function ScoreSourcePanel({ data, club }) {
+    var META = [
+      { k: "ownKO", label: "Own kickout", color: C.greenB },
+      { k: "oppKO", label: "Opp kickout", color: C.blue },
+      { k: "toKick", label: "Turnover \xB7 kick pass", color: C.gold },
+      { k: "toHand", label: "Turnover \xB7 hand pass", color: "#b06cff" },
+      { k: "toContact", label: "Turnover \xB7 in contact", color: "#3fb6a8" },
+      { k: "toOther", label: "Turnover \xB7 other", color: C.slate },
+      { k: "unclear", label: "Tagging unclear", color: C.slateD }
+    ];
+    function gp(o) {
+      o = o || { g: 0, p: 0 };
+      return o.g + "-" + (o.p < 10 ? "0" + o.p : "" + o.p);
+    }
+    function block(side, name, nameColor) {
+      var src = data[side] || {}, tot = data.tot && data.tot[side] || 0;
+      return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 7 } }, /* @__PURE__ */ React.createElement("span", { style: { color: nameColor, fontWeight: 800, fontSize: 13 } }, name), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontFamily: MONO, fontSize: 9.5, letterSpacing: 1 } }, tot, " SCORES")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", height: 11, gap: 2, borderRadius: 5, overflow: "hidden", marginBottom: 10, background: C.field } }, META.map(function(m) {
+        var n = (src[m.k] || {}).n || 0;
+        if (!n) return null;
+        return /* @__PURE__ */ React.createElement("div", { key: m.k, style: { flexGrow: n, flexBasis: 0, background: m.color } });
+      })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, META.map(function(m) {
+        var o = src[m.k];
+        var n = (o || {}).n || 0;
+        if (!n) return null;
+        return /* @__PURE__ */ React.createElement("div", { key: m.k, style: { display: "flex", alignItems: "center", gap: 9 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 10, height: 10, borderRadius: 3, background: m.color, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, color: C.slate, fontSize: 11.5 } }, m.label), /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontFamily: MONO, fontWeight: 700, fontSize: 12.5 } }, gp(o)), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontFamily: MONO, fontSize: 10, width: 24, textAlign: "right" } }, "\\u00b7", n));
+      }), tot === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: C.slateD, fontSize: 11, fontStyle: "italic" } }, "No scores tagged.")));
+    }
+    return /* @__PURE__ */ React.createElement("div", { style: { padding: 16, borderRadius: 14, background: C.bgCard, border: "1px solid " + C.border } }, block("us", club.name, C.greenB), /* @__PURE__ */ React.createElement("div", { style: { height: 1, background: C.border, margin: "16px 0" } }), block("opp", "Opposition", C.blue));
   }
   function KickoutMap({ pts }) {
     var W = 300, H = 420, cx = W / 2;
@@ -4090,7 +4108,7 @@
       { v: d.sf + d.sa ? Math.round(100 * d.sf / (d.sf + d.sa)) + "%" : "0%", l: "SCORE SHARE", c: C.greenB }
     ].map(function(card, i) {
       return /* @__PURE__ */ React.createElement("div", { key: i, style: { flexGrow: 1, flexBasis: "28%", minWidth: 92, padding: "16px 8px", borderRadius: 12, background: C.bgCard, border: "1px solid " + C.border, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 21, fontWeight: 800, fontFamily: MONO, color: card.c } }, card.v), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, color: C.slateD, fontFamily: MONO, letterSpacing: 1, marginTop: 4 } }, card.l));
-    }))), /* @__PURE__ */ React.createElement(Section, { title: isMatch ? "MATCH COMPARISON" : "SEASON COMPARISON \xB7 VS OPPOSITION" }, /* @__PURE__ */ React.createElement(CompareBars, { rows: d.compare, club })), /* @__PURE__ */ React.createElement(Section, { title: "SOURCE OF SCORES" }, /* @__PURE__ */ React.createElement(ScoreSourceBars, { rows: d.srcRows, club }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: C.slateD, fontFamily: MONO, marginTop: 6, lineHeight: 1.5 } }, "% of each team\\u2019s scores by where the passage began (count after the dot). Frees trace back to the kickout or turnover that won the ball."), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: C.slate, fontFamily: MONO, marginTop: 5, lineHeight: 1.5 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.gold, fontWeight: 700 } }, "Turnover \xB7 other"), " = interceptions, handling & solo errors, short / dropped kicks won, and possession won straight from a free.")), !isMatch && /* @__PURE__ */ React.createElement(Section, { title: "RESULTS" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, d.matches.map(function(m) {
+    }))), /* @__PURE__ */ React.createElement(Section, { title: isMatch ? "MATCH COMPARISON" : "SEASON COMPARISON \xB7 VS OPPOSITION" }, /* @__PURE__ */ React.createElement(CompareBars, { rows: d.compare, club })), /* @__PURE__ */ React.createElement(Section, { title: "SOURCE OF SCORES" }, /* @__PURE__ */ React.createElement(ScoreSourcePanel, { data: d.srcData, club }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: C.slateD, fontFamily: MONO, marginTop: 6, lineHeight: 1.5 } }, "Each team\\u2019s scores by where the passage began, as goals-points (count after the dot). Frees trace back to the kickout or turnover that won the ball."), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: C.slate, fontFamily: MONO, marginTop: 5, lineHeight: 1.5 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.gold, fontWeight: 700 } }, "Turnover \xB7 other"), " = interceptions, handling & solo errors, short / dropped kicks won, and possession won straight from a free.")), !isMatch && /* @__PURE__ */ React.createElement(Section, { title: "RESULTS" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, d.matches.map(function(m) {
       var w2 = (m.our_total || 0) > (m.opp_total || 0), dr = (m.our_total || 0) === (m.opp_total || 0);
       return /* @__PURE__ */ React.createElement("div", { key: m.id, style: { display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, background: C.bgCard, border: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("span", { style: { width: 18, height: 18, borderRadius: 5, background: dr ? C.gold : w2 ? C.greenB : C.red, color: C.bg, fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO } }, dr ? "D" : w2 ? "W" : "L"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 13.5 } }, m.opponent), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 13, fontWeight: 700 } }, m.our_score, " ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, "-"), " ", m.opp_score));
     }))), /* @__PURE__ */ React.createElement(Section, { title: "TOP SCORERS" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 7 } }, d.scorers.slice(0, 12).map(function(sc, i) {
