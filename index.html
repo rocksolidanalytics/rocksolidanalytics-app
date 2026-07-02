@@ -616,9 +616,9 @@
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between"
-    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: C.navy } }, "Video tagger"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.green, fontWeight: 600, marginTop: 2 } }, "Tag a match back from footage into your dashboards")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20 } }, "\u{1F3AC}")), /* @__PURE__ */ React.createElement("button", { onClick: onLive, style: {
-      width: "100%",
-      marginTop: 12,
+    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: C.navy } }, "Video tagger"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.green, fontWeight: 600, marginTop: 2 } }, "Tag a match back from footage into your dashboards")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20 } }, "\u{1F3AC}")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: onLive, style: {
+      flex: 1,
+      minWidth: 0,
       padding: 18,
       borderRadius: 14,
       cursor: "pointer",
@@ -628,7 +628,18 @@
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between"
-    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: C.gold } }, "Live mirror"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slate, fontWeight: 600, marginTop: 2 } }, "Big-screen scoreboard for the game in progress")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20 } }, "\u{1F4FA}")), /* @__PURE__ */ React.createElement("button", { onClick: onTactic, style: {
+    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: C.gold } }, "Live mirror"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slate, fontWeight: 600, marginTop: 2 } }, "Big-screen scoreboard for the game in progress")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20 } }, "\u{1F4FA}")), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+      var u = window.location.origin + window.location.pathname + "?live=" + club.id;
+      if (navigator.share) {
+        navigator.share({ title: "Live scoreboard \xB7 " + (club.name || ""), url: u }).catch(function() {
+        });
+      } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(u);
+        alert("Link copied \u2014 paste it into WhatsApp.");
+      } else {
+        prompt("Copy this link:", u);
+      }
+    }, style: { width: 76, flexShrink: 0, borderRadius: 14, cursor: "pointer", background: C.gold + "14", border: "1px solid " + C.gold + "66", color: C.gold, fontSize: 10.5, fontWeight: 800, fontFamily: MONO, letterSpacing: 1 } }, "SHARE", /* @__PURE__ */ React.createElement("br", null), "LINK")), /* @__PURE__ */ React.createElement("button", { onClick: onTactic, style: {
       width: "100%",
       marginTop: 12,
       padding: 18,
@@ -3341,6 +3352,24 @@
     const [err, setErr] = useState("");
     const [scoutNew, setScoutNew] = useState(false);
     const [scoutDash, setScoutDash] = useState(null);
+    const [delScout, setDelScout] = useState(null);
+    async function delScoutMatch(m) {
+      setErr("");
+      try {
+        await db.from("events").delete().eq("match_id", m.id);
+        await db.from("appearances").delete().eq("match_id", m.id);
+        const r = await db.from("matches").delete().eq("id", m.id).eq("scouting", true);
+        if (r.error) throw new Error(r.error.message);
+        setDelScout(null);
+        setMatches(function(prev) {
+          return (prev || []).filter(function(x) {
+            return x.id !== m.id;
+          });
+        });
+      } catch (ex) {
+        setErr(ex.message || "Could not delete.");
+      }
+    }
     const [sA, setSA] = useState(""), [sB, setSB] = useState(""), [sAs, setSAs] = useState(""), [sBs, setSBs] = useState(""), [sDate, setSDate] = useState(""), [sBusy, setSBusy] = useState(false);
     function parseSquad(txt) {
       return (txt || "").split("\n").map(function(l, idx) {
@@ -3424,11 +3453,17 @@
     })), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.gold, fontFamily: MONO, marginBottom: 8 } }, "OPPOSITION SCOUTING"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setScoutNew(true);
     }, style: { width: "100%", padding: 14, borderRadius: 13, cursor: "pointer", textAlign: "left", background: C.gold + "14", border: "1px solid " + C.gold + "55", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: C.gold } }, "New scouting match"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11.5, color: C.slate, marginTop: 2 } }, "Tag a future opponent\\u2019s game \\u2014 kept out of Bray\\u2019s stats")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, color: C.gold } }, "+")), sm.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11.5, color: C.slate, background: C.bgCard, border: "1px dashed " + C.border, borderRadius: 8, padding: "10px 12px", lineHeight: 1.5 } }, "No scouting games yet. Add one to analyse an opponent without touching your own numbers.") : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, sm.map(function(m) {
-      return /* @__PURE__ */ React.createElement("div", { key: m.id, style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
+      return delScout === m.id ? /* @__PURE__ */ React.createElement("div", { key: m.id, style: { display: "flex", alignItems: "center", gap: 8, borderRadius: 12, background: C.bgCard, border: "1px solid " + C.red + "66", padding: "12px 14px" } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 12, color: C.red, lineHeight: 1.4 } }, "Delete this scouting match & all its tags?"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+        delScoutMatch(m);
+      }, style: { padding: "8px 14px", borderRadius: 8, border: "none", cursor: "pointer", background: C.red, color: C.white, fontWeight: 700, fontSize: 12 } }, "Delete"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+        setDelScout(null);
+      }, style: { padding: "8px 12px", borderRadius: 8, border: "1px solid " + C.border, background: "none", color: C.slate, cursor: "pointer", fontSize: 12 } }, "Keep")) : /* @__PURE__ */ React.createElement("div", { key: m.id, style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
         onPick(m);
       }, style: { flex: 1, textAlign: "left", borderRadius: 12, background: C.bgCard, border: "1px solid " + C.gold + "33", padding: "12px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 10, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: C.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, m.opponent, m.video_tagged ? /* @__PURE__ */ React.createElement("span", { style: { marginLeft: 7, fontSize: 12 } }, "\u{1F4F9}") : null), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.gold, fontFamily: MONO, marginTop: 2, letterSpacing: 1 } }, "SCOUTING", m.date ? "  \xB7  " + m.date : "")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, color: C.gold } }, "\u25B6")), /* @__PURE__ */ React.createElement("button", { onClick: function() {
         setScoutDash(m);
-      }, style: { width: 72, flexShrink: 0, borderRadius: 12, background: C.gold + "14", border: "1px solid " + C.gold + "55", color: C.gold, cursor: "pointer", fontSize: 10.5, fontWeight: 800, fontFamily: MONO, letterSpacing: 1 } }, "STATS"));
+      }, style: { width: 72, flexShrink: 0, borderRadius: 12, background: C.gold + "14", border: "1px solid " + C.gold + "55", color: C.gold, cursor: "pointer", fontSize: 10.5, fontWeight: 800, fontFamily: MONO, letterSpacing: 1 } }, "STATS"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+        setDelScout(m.id);
+      }, style: { width: 34, flexShrink: 0, borderRadius: 12, background: "none", border: "1px solid " + C.border, color: C.slateD, cursor: "pointer", fontSize: 13 } }, "\u2715"));
     }))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.slateD, fontFamily: MONO, marginBottom: 10 } }, "OR TAG AN EXISTING MATCH"), matches === null ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 30 } }, /* @__PURE__ */ React.createElement(Spin, { s: 22, c: C.greenB })) : bm.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slate, fontSize: 13, paddingTop: 20 } }, "No matches yet \u2014 start a new one above.") : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 9 } }, bm.map(function(m) {
       var scored = m.our_score != null && String(m.our_score).trim() !== "";
       return /* @__PURE__ */ React.createElement("button", { key: m.id, onClick: function() {
