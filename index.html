@@ -1975,13 +1975,14 @@
       }));
     }));
   }
-  var EV_TYPE = { kickout: "Kickout", shot: "Shot from play", free: "Scoreable free", poss: "Possession lost", tackle: "Tackle" };
+  var EV_TYPE = { kickout: "Kickout", shot: "Shot from play", free: "Scoreable free", poss: "Possession lost", tackle: "Tackle", card: "Bookings" };
   var TAG_EVENTS = [
     { id: "kickout", l: "KICKOUT", pitch: true, outcomes: ["Won Clean", "Break Won", "Break Lost", "Lost Clean"] },
     { id: "shot", l: "SHOT", pitch: true, outcomes: ["Point", "2-Pointer", "Goal", "Wide", "Blocked", "Dropped Short", "Saved"] },
     { id: "free", l: "FREE", pitch: true, outcomes: ["Point", "2-Pointer", "Goal", "Wide", "Dropped Short", "Saved"] },
     { id: "poss", l: "TURNOVER", pitch: false, outcomes: ["In Contact", "Kick Pass", "Hand Pass", "Handling", "Intercepted", "Foul"] },
-    { id: "tackle", l: "TACKLE", pitch: false, outcomes: ["Contact Made", "Block", "Foul"] }
+    { id: "tackle", l: "TACKLE", pitch: false, outcomes: ["Contact Made", "Block", "Foul"] },
+    { id: "card", l: "CARD", pitch: false, outcomes: ["Yellow", "Black", "Red"] }
   ];
   function mapOutcome(evid, oc) {
     if (evid === "kickout") {
@@ -2274,6 +2275,8 @@
     const [period, setPeriod] = useState(1);
     const [tagged, setTagged] = useState([]);
     const [nameMap, setNameMap] = useState({});
+    const [subOpen, setSubOpen] = useState(false);
+    const [subOff, setSubOff] = useState(null);
     const [flash, setFlash] = useState(null);
     const [statsOpen, setStatsOpen] = useState(false);
     const [halfEnded, setHalfEnded] = useState(false);
@@ -2393,6 +2396,68 @@
       });
     }, []);
     var dispSec = period === 2 ? clock + 1800 : clock;
+    function t2s(tt) {
+      var p = String(tt || "").split(":").map(Number);
+      return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p.length === 2 ? p[0] * 60 + p[1] : 0;
+    }
+    function rosterState() {
+      var rev = {};
+      Object.keys(nameMap).forEach(function(k) {
+        if (nameMap[k]) rev[nameMap[k]] = Number(k);
+      });
+      var active = {};
+      for (var n2 = 1; n2 <= 15; n2++) active[n2] = true;
+      var cards = {};
+      tagged.slice().reverse().forEach(function(r) {
+        if (r.team !== "us") return;
+        if (r.event_type === "Substitution") {
+          var m2 = /Off #(\d+).*On #(\d+)/.exec(r.outcome || "");
+          if (m2) {
+            delete active[Number(m2[1])];
+            active[Number(m2[2])] = true;
+          }
+          return;
+        }
+        if (r.event_type !== "Bookings") return;
+        var num = null;
+        if (r.player) {
+          var mm2 = /^#(\d+)$/.exec(r.player);
+          num = mm2 ? Number(mm2[1]) : rev[r.player];
+        }
+        if (num == null) return;
+        var c2 = cards[num] = cards[num] || { y: 0, red: false, blackAt: null };
+        if (r.outcome === "Yellow") {
+          c2.y++;
+          if (c2.y >= 2) c2.red = true;
+        } else if (r.outcome === "Red") c2.red = true;
+        else if (r.outcome === "Black") c2.blackAt = t2s(r.time_text);
+      });
+      return { active, cards };
+    }
+    function addRow(evtType, outcome, pname) {
+      var seq2 = seqRef.current++;
+      var row2 = {
+        club_id: club.id,
+        match_id: match.id,
+        team: "us",
+        event_type: evtType,
+        outcome,
+        player: pname,
+        x: null,
+        y: null,
+        period: String(period),
+        time_text: fmtFull(dispSec),
+        seq: seq2,
+        score: 0,
+        video_ts: null
+      };
+      var tmp2 = "tmp" + seq2, local2 = Object.assign({}, row2, { _id: tmp2, _pending: true });
+      taggedRef.current = [local2].concat(taggedRef.current);
+      setTagged(function(prev) {
+        return [local2].concat(prev);
+      });
+      flush();
+    }
     function activate(ev, tm) {
       var p = tx.current;
       if (p && p.ev && p.outcome) {
@@ -2794,7 +2859,23 @@
       setRunning(function(r) {
         return !r;
       });
-    }, style: { textAlign: "center", cursor: "pointer", minWidth: 78 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 900, color: running ? C.greenB : C.slate } }, running ? fmtFull(dispSec).slice(3) : "\u25B6"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, color: running ? C.greenB : C.slate } }, running ? period === 1 ? "1ST HALF" : "2ND HALF" : "START")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, color: C.gold, letterSpacing: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, (match.opponent || "OPP").toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, fontWeight: 900 } }, nota(op), " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slate } }, "(", op.g * 3 + op.p, ")")))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 12px", gap: 6, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, fontSize: 8.5 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "\u25CF TAP = ", club.name.split(" ")[0].toUpperCase()), /* @__PURE__ */ React.createElement("span", { style: { color: C.gold } }, "\u25CF\u25CF DBL = OPP")), /* @__PURE__ */ React.createElement("button", { onClick: undo, disabled: tagged.length === 0, style: { fontSize: 9, color: tagged.length ? C.red : C.slate, background: "none", border: "none", cursor: tagged.length ? "pointer" : "default", opacity: tagged.length ? 1 : 0.4, padding: "3px 4px" } }, "\u21A9 UNDO")), flash && /* @__PURE__ */ React.createElement("div", { style: { background: flash.indexOf("\u2713") === 0 ? C.green : C.navyL, padding: "5px", textAlign: "center", fontSize: 11 } }, flash), pending > 0 && /* @__PURE__ */ React.createElement("div", { style: { background: (online ? C.gold : C.slateD) + "22", padding: "4px", textAlign: "center", fontSize: 9.5, color: online ? C.gold : C.slate } }, online ? "\u27F3 syncing " + pending + "\u2026" : "\u25CF " + pending + " saved on device \xB7 waiting for signal"), halfEnded && /* @__PURE__ */ React.createElement("div", { style: { background: C.gold + "22", padding: "5px", textAlign: "center", fontSize: 10.5, color: C.gold } }, "HALF TIME \xB7 tap START 2ND HALF when ready"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", gap: 6, padding: "4px 6px 8px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5, width: 94, flexShrink: 0, overflowY: "auto" } }, TAG_EVENTS.map(function(ev) {
+    }, style: { textAlign: "center", cursor: "pointer", minWidth: 78 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 900, color: running ? C.greenB : C.slate } }, running ? fmtFull(dispSec).slice(3) : "\u25B6"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, color: running ? C.greenB : C.slate } }, running ? period === 1 ? "1ST HALF" : "2ND HALF" : "START")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, color: C.gold, letterSpacing: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, (match.opponent || "OPP").toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, fontWeight: 900 } }, nota(op), " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slate } }, "(", op.g * 3 + op.p, ")")))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 12px", gap: 6, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, fontSize: 8.5 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "\u25CF TAP = ", club.name.split(" ")[0].toUpperCase()), /* @__PURE__ */ React.createElement("span", { style: { color: C.gold } }, "\u25CF\u25CF DBL = OPP")), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+      setSubOpen(true);
+      setSubOff(null);
+    }, style: { fontSize: 9, color: C.blue, background: "none", border: "1px solid " + C.blue + "44", borderRadius: 7, cursor: "pointer", padding: "3px 8px", marginRight: 6, fontWeight: 800 } }, "\u21C4 SUB"), /* @__PURE__ */ React.createElement("button", { onClick: undo, disabled: tagged.length === 0, style: { fontSize: 9, color: tagged.length ? C.red : C.slate, background: "none", border: "none", cursor: tagged.length ? "pointer" : "default", opacity: tagged.length ? 1 : 0.4, padding: "3px 4px" } }, "\u21A9 UNDO")), (function() {
+      var rs = rosterState();
+      var bins = Object.keys(rs.cards).map(Number).map(function(n2) {
+        var c2 = rs.cards[n2];
+        var left = c2.blackAt != null ? Math.max(0, 600 - (dispSec - c2.blackAt)) : 0;
+        return { n: n2, left };
+      }).filter(function(x) {
+        return x.left > 0;
+      });
+      if (!bins.length) return null;
+      return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, padding: "4px 10px", background: "#141003", borderBottom: "1px solid " + C.gold + "33", alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 8.5, color: C.gold, fontFamily: MONO, fontWeight: 800, letterSpacing: 1 } }, "SIN BIN"), bins.map(function(b2) {
+        return /* @__PURE__ */ React.createElement("span", { key: b2.n, style: { fontSize: 10, color: C.gold, fontWeight: 800 } }, "#", b2.n, nameMap[b2.n] ? " " + nameMap[b2.n].split(" ").slice(-1)[0] : "", " \xB7 ", Math.floor(b2.left / 60) + ":" + String(b2.left % 60).padStart(2, "0"));
+      }));
+    })(), flash && /* @__PURE__ */ React.createElement("div", { style: { background: flash.indexOf("\u2713") === 0 ? C.green : C.navyL, padding: "5px", textAlign: "center", fontSize: 11 } }, flash), pending > 0 && /* @__PURE__ */ React.createElement("div", { style: { background: (online ? C.gold : C.slateD) + "22", padding: "4px", textAlign: "center", fontSize: 9.5, color: online ? C.gold : C.slate } }, online ? "\u27F3 syncing " + pending + "\u2026" : "\u25CF " + pending + " saved on device \xB7 waiting for signal"), halfEnded && /* @__PURE__ */ React.createElement("div", { style: { background: C.gold + "22", padding: "5px", textAlign: "center", fontSize: 10.5, color: C.gold } }, "HALF TIME \xB7 tap START 2ND HALF when ready"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", gap: 6, padding: "4px 6px 8px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5, width: 94, flexShrink: 0, overflowY: "auto" } }, TAG_EVENTS.map(function(ev) {
       var on = t.ev && t.ev.id === ev.id;
       return /* @__PURE__ */ React.createElement("button", { key: ev.id, onClick: function() {
         onEventTap(ev);
@@ -2804,7 +2885,33 @@
       return /* @__PURE__ */ React.createElement("button", { key: ev.id, onClick: function() {
         onEventTap(ev);
       }, style: { width: "100%", padding: "11px 2px", borderRadius: 9, cursor: "pointer", fontSize: 9.5, fontWeight: 700, background: on ? tc : C.field, border: "1px dashed " + (on ? tc : C.borderB), color: on ? C.bg : C.slate } }, ev.l);
-    })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" } }, editRow && (function() {
+    })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" } }, subOpen && (function() {
+      var rs = rosterState();
+      var act = Object.keys(rs.active).map(Number).sort(function(a2, b2) {
+        return a2 - b2;
+      });
+      var bench = [];
+      for (var n3 = 1; n3 <= 30; n3++) {
+        if (!rs.active[n3] && !(rs.cards[n3] && rs.cards[n3].red)) bench.push(n3);
+      }
+      return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 60, background: "#05070aee", display: "flex", flexDirection: "column", padding: "14px 14px 18px", overflow: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: C.white } }, "Substitution"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, subOff ? "OFF #" + subOff + " \u2014 now pick who comes ON" : "Pick who goes OFF")), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+        setSubOpen(false);
+        setSubOff(null);
+      }, style: { background: "none", border: "1px solid " + C.border, borderRadius: 9, color: C.slate, fontSize: 12, fontWeight: 700, padding: "7px 13px", cursor: "pointer" } }, "Cancel")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6 } }, (subOff ? bench : act).map(function(n) {
+        var nm = nameMap[n];
+        return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
+          if (!subOff) {
+            setSubOff(n);
+            return;
+          }
+          var onNm = nameMap[n] || "#" + n;
+          addRow("Substitution", "Off #" + subOff + " \xB7 On #" + n, onNm);
+          say("\u21C4 #" + subOff + " off \xB7 #" + n + " on");
+          setSubOpen(false);
+          setSubOff(null);
+        }, style: { padding: "12px 2px", background: C.bgCard, border: "1px solid " + (subOff ? C.greenB : C.red) + "55", borderRadius: 9, color: subOff ? C.greenB : C.red, cursor: "pointer", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800 } }, n), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nm.split(" ").slice(-1)[0]));
+      })));
+    })(), editRow && (function() {
       var def = findDefLT(editRow.event_type);
       var labels = def ? evLabels(def) : [];
       var curOcSel = edOut;
@@ -2851,12 +2958,25 @@
       window.__ltCredH = credH;
       var wn = credH ? club.name : match.opponent || "Opposition";
       return /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: tc, textAlign: "center", margin: "6px 0 10px" } }, t.ev.l, ": ", t.outcome, " \u2014 TAP ", wn.split(" ")[0].toUpperCase(), " PLAYER #", credH !== (t.team === "h") ? /* @__PURE__ */ React.createElement("span", { style: { display: "block", color: C.gold, marginTop: 3 } }, "kickout won by ", wn.split(" ")[0], " \u2014 credit their winner") : null);
-    })(), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6 } }, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(function(n) {
-      var nm = window.__ltCredH ? nameMap[n] : null;
-      return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
-        commit(n);
-      }, style: { padding: "12px 2px", background: tc + "14", border: "1px solid " + tc + "44", borderRadius: 9, color: tc, cursor: "pointer", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, n), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nm.split(" ").slice(-1)[0]));
-    }), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+    })(), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6 } }, (function() {
+      var rs = window.__ltCredH ? rosterState() : null;
+      var nums = rs ? Object.keys(rs.active).map(Number).concat(Object.keys(rs.cards).map(Number).filter(function(n2) {
+        return rs.cards[n2].red && !rs.active[n2];
+      })).filter(function(v, i2, a2) {
+        return a2.indexOf(v) === i2;
+      }).sort(function(a2, b2) {
+        return a2 - b2;
+      }) : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+      return nums.map(function(n) {
+        var nm = window.__ltCredH ? nameMap[n] : null;
+        var cd = rs ? rs.cards[n] : null;
+        var binLeft = cd && cd.blackAt != null ? Math.max(0, 600 - (dispSec - cd.blackAt)) : 0;
+        var off = cd && (cd.red || binLeft > 0);
+        return /* @__PURE__ */ React.createElement("button", { key: n, onClick: off ? void 0 : function() {
+          commit(n);
+        }, style: { padding: "12px 2px", background: off ? C.field : tc + "14", border: "1px solid " + (off ? C.border : tc + "44"), borderRadius: 9, color: off ? C.slateD : tc, cursor: off ? "default" : "pointer", textAlign: "center", opacity: off ? 0.45 : 1, position: "relative" } }, cd && cd.y > 0 && !cd.red && /* @__PURE__ */ React.createElement("span", { style: { position: "absolute", top: 4, right: 5, width: 7, height: 9, borderRadius: 1.5, background: "#f6c945" } }), cd && cd.red && /* @__PURE__ */ React.createElement("span", { style: { position: "absolute", top: 4, right: 5, width: 7, height: 9, borderRadius: 1.5, background: C.red } }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, n), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nm.split(" ").slice(-1)[0]), binLeft > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, color: C.gold, fontWeight: 800 } }, Math.floor(binLeft / 60) + ":" + String(binLeft % 60).padStart(2, "0")));
+      });
+    })(), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       commit(null);
     }, style: { padding: "12px 2px", background: C.field, border: "1px solid " + C.border, borderRadius: 9, color: C.slate, cursor: "pointer", fontSize: 11, fontWeight: 700 } }, "NONE"))), idle && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, overflow: "auto" } }, tagged.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 11.5, paddingTop: 40, lineHeight: 1.6 } }, "Tap an event to begin.", /* @__PURE__ */ React.createElement("br", null), "Single tap = ", club.name.split(" ")[0], " \xB7 double tap = opposition") : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5 } }, tagged.slice(0, 40).map(function(r, i) {
       return /* @__PURE__ */ React.createElement("div", { key: r._id || i, onClick: function() {
