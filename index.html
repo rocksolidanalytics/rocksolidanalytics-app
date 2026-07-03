@@ -575,7 +575,7 @@
       }, style: { padding: "6px 10px", borderRadius: 8, cursor: "pointer", fontSize: 11.5, fontWeight: 700, background: on ? C.greenB : C.field, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.bg : C.slate } }, gr);
     }))), /* @__PURE__ */ React.createElement(Row, { k: "SPORT", v: sport && sport.label }), /* @__PURE__ */ React.createElement(Row, { k: "COUNTY", v: d.county }), /* @__PURE__ */ React.createElement(Row, { k: "CLUB", v: d.club && d.club.name }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slateD, fontFamily: MONO, letterSpacing: 1 } }, "COLOURS"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 20, height: 20, borderRadius: 5, background: d.primary, border: `1px solid ${C.borderB}` } }), /* @__PURE__ */ React.createElement("span", { style: { width: 20, height: 20, borderRadius: 5, background: d.secondary, border: `1px solid ${C.borderB}` } })))));
   }
-  function Home({ club, onSignOut, onImport, onLineups, onStats, onNewMatch, onVideoHub, onTemplate, onLive, onTactic, onHelp, matchCount, role }) {
+  function Home({ club, onSignOut, onImport, onLineups, onStats, onNewMatch, onVideoHub, onTemplate, onLive, onTactic, onHelp, onSquad, matchCount, role }) {
     var isPlayer = role === "player";
     const sport = SPORTS.find((s) => s.id === club.sport);
     return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, padding: "20px 18px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 22 } }, /* @__PURE__ */ React.createElement("img", { src: LOGO, alt: "", width: 30, height: 30 }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 800 } }, "Rock Solid ", /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "Analytics"))), /* @__PURE__ */ React.createElement("button", { onClick: onSignOut, style: { background: "none", border: `1px solid ${C.border}`, borderRadius: 9, color: C.slate, fontSize: 12, padding: "7px 12px", cursor: "pointer", fontFamily: MONO } }, "Sign out")), /* @__PURE__ */ React.createElement("div", { style: {
@@ -634,7 +634,7 @@
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between"
-    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: C.white } }, "Edit match information"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slate, marginTop: 2 } }, "Line-ups, details, referee, venue and weather")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, color: C.greenB } }, "\u2630")), !isPlayer && /* @__PURE__ */ React.createElement("button", { onClick: onVideoHub, style: {
+    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: C.white } }, "Edit match information"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slate, marginTop: 2 } }, "Line-ups, details, referee, venue and weather")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, color: C.greenB } }, "\u2630")), !isPlayer && /* @__PURE__ */ React.createElement("button", { onClick: onSquad, style: { width: "100%", marginTop: 12, padding: 15, borderRadius: 14, cursor: "pointer", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.white } }, "Squad"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slate, fontWeight: 600, marginTop: 2 } }, "Add players \xB7 set preferred positions")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18 } }, "\u{1F465}")), !isPlayer && /* @__PURE__ */ React.createElement("button", { onClick: onVideoHub, style: {
       width: "100%",
       marginTop: 12,
       padding: 18,
@@ -3039,7 +3039,7 @@
       });
     }, style: { width: "100%", padding: 13, borderRadius: 11, border: "1px solid " + C.greenB + "66", background: C.greenB + "14", color: C.greenB, fontWeight: 800, fontSize: 14, cursor: "pointer" } }, "+ Add custom event")), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, color: C.red, fontSize: 12 } }, err), /* @__PURE__ */ React.createElement("button", { onClick: save, disabled: busy || events === null, style: { marginTop: 20, width: "100%", padding: 15, borderRadius: 12, border: "none", cursor: busy ? "default" : "pointer", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 15, opacity: busy || events === null ? 0.6 : 1 } }, busy ? "Saving\u2026" : isMatch ? "Save for this match" : "Save template"), isMatch && override && /* @__PURE__ */ React.createElement("button", { onClick: resetToClub, disabled: busy, style: { marginTop: 10, width: "100%", padding: 12, borderRadius: 11, border: "1px solid " + C.border, cursor: "pointer", background: "none", color: C.slate, fontWeight: 600, fontSize: 13 } }, "Reset to club default"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: C.slateD, marginTop: 14, lineHeight: 1.5 } }, "Scores: \u2014 keeps it a pure stat; 1 pt / 2 pt / Goal make that outcome count on the scoreboard. Custom events stay out of the standard shot & kickout maps.")));
   }
-  function EditMatch({ club, match, back, onSaved }) {
+  function SquadScreen({ club, back }) {
     const [squad, setSquad] = useState(null);
     const [sqEdit, setSqEdit] = useState(null);
     const [sqNew, setSqNew] = useState("");
@@ -3074,6 +3074,25 @@
       }
       setSqBusy(false);
     }
+    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, "Squad"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slate, fontFamily: MONO } }, squad ? squad.length + " PLAYERS" : "\u2026"))), /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 520, margin: "0 auto", padding: "16px 16px 40px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11.5, color: C.slateD, marginBottom: 12, lineHeight: 1.5 } }, "Preferred position feeds team selection suggestions. Actual positions are still set per match on the teamsheet."), squad === null && /* @__PURE__ */ React.createElement("div", { style: { color: C.slateD, fontSize: 12 } }, "Loading squad\\u2026"), squad && squad.map(function(p) {
+      var pi = POSITIONS.find(function(x) {
+        return x.slot === Number(p.preferred_slot);
+      }) || null;
+      return /* @__PURE__ */ React.createElement("div", { key: p.id, style: { marginBottom: 6 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, background: C.bgCard, border: "1px solid " + C.border, borderRadius: 10, padding: "9px 12px" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, color: C.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, p.name), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+        setSqEdit(sqEdit === p.id ? null : p.id);
+      }, style: { flexShrink: 0, padding: "5px 11px", borderRadius: 8, cursor: "pointer", background: pi ? C.greenB + "18" : C.field, border: "1px solid " + (pi ? C.greenB + "66" : C.border), color: pi ? C.greenB : C.slateD, fontSize: 11, fontWeight: 800, fontFamily: MONO } }, pi ? "No." + pi.slot + " " + pi.code : "SET POS")), sqEdit === p.id && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 5, padding: "8px 2px 2px" } }, POSITIONS.map(function(x) {
+        var on = Number(p.preferred_slot) === x.slot;
+        return /* @__PURE__ */ React.createElement("button", { key: x.slot, onClick: function() {
+          setPref(p.id, on ? null : x.slot);
+        }, style: { padding: "8px 2px", borderRadius: 8, cursor: "pointer", background: on ? C.greenB + "22" : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.greenB : C.slate, fontSize: 10, fontWeight: 800 } }, x.slot, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, opacity: 0.75 } }, x.code));
+      }), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+        setPref(p.id, null);
+      }, style: { padding: "8px 2px", borderRadius: 8, cursor: "pointer", background: C.field, border: "1px solid " + C.border, color: C.slateD, fontSize: 9.5, fontWeight: 800 } }, "NONE")));
+    }), squad && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 10 } }, /* @__PURE__ */ React.createElement("input", { value: sqNew, onChange: function(e) {
+      setSqNew(e.target.value);
+    }, placeholder: "Add a player\u2026", style: { flex: 1, minWidth: 0, background: C.field, border: "1px solid " + C.border, borderRadius: 10, color: C.white, fontSize: 13.5, padding: "11px 12px" } }), /* @__PURE__ */ React.createElement("button", { onClick: addPlayer, disabled: sqBusy || !sqNew.trim(), style: { padding: "0 16px", borderRadius: 10, border: "none", cursor: "pointer", background: sqBusy || !sqNew.trim() ? C.bgCard : C.greenB, color: sqBusy || !sqNew.trim() ? C.slateD : C.bg, fontWeight: 800, fontSize: 12.5 } }, "ADD"))));
+  }
+  function EditMatch({ club, match, back, onSaved }) {
     const [opponent, setOpp] = useState(match.opponent || "");
     const [competition, setComp] = useState(match.competition || "League");
     const [round, setRound] = useState(match.round || "");
@@ -3153,23 +3172,7 @@
       }, style: { padding: "11px 4px", borderRadius: 9, cursor: "pointer", fontSize: 12, fontWeight: 600, background: on ? C.greenB : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.bg : C.slate } }, w);
     })), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16, color: C.red, fontSize: 12 } }, err), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       if (window.__rsaEditCustom) window.__rsaEditCustom();
-    }, style: { marginTop: 18, width: "100%", padding: 13, borderRadius: 11, border: "1px solid " + C.border, cursor: "pointer", background: C.bgCard, color: C.white, fontWeight: 700, fontSize: 13.5, display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", null, "Custom events for this match"), /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, "\u203A")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginTop: 26 } }, "SQUAD"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11.5, color: C.slateD, marginTop: 4, marginBottom: 8, lineHeight: 1.5 } }, "Preferred position feeds team selection suggestions. Actual positions are still set per match on the teamsheet."), squad === null && /* @__PURE__ */ React.createElement("div", { style: { color: C.slateD, fontSize: 12 } }, "Loading squad\u2026"), squad && squad.map(function(p) {
-      var pi = POSITIONS.find(function(x) {
-        return x.slot === Number(p.preferred_slot);
-      }) || null;
-      return /* @__PURE__ */ React.createElement("div", { key: p.id, style: { marginBottom: 6 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, background: C.bgCard, border: "1px solid " + C.border, borderRadius: 10, padding: "9px 12px" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, color: C.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, p.name), /* @__PURE__ */ React.createElement("button", { onClick: function() {
-        setSqEdit(sqEdit === p.id ? null : p.id);
-      }, style: { flexShrink: 0, padding: "5px 11px", borderRadius: 8, cursor: "pointer", background: pi ? C.greenB + "18" : C.field, border: "1px solid " + (pi ? C.greenB + "66" : C.border), color: pi ? C.greenB : C.slateD, fontSize: 11, fontWeight: 800, fontFamily: MONO } }, pi ? "No." + pi.slot + " " + pi.code : "SET POS")), sqEdit === p.id && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 5, padding: "8px 2px 2px" } }, POSITIONS.map(function(x) {
-        var on = Number(p.preferred_slot) === x.slot;
-        return /* @__PURE__ */ React.createElement("button", { key: x.slot, onClick: function() {
-          setPref(p.id, on ? null : x.slot);
-        }, style: { padding: "8px 2px", borderRadius: 8, cursor: "pointer", background: on ? C.greenB + "22" : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.greenB : C.slate, fontSize: 10, fontWeight: 800 } }, x.slot, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, opacity: 0.75 } }, x.code));
-      }), /* @__PURE__ */ React.createElement("button", { onClick: function() {
-        setPref(p.id, null);
-      }, style: { padding: "8px 2px", borderRadius: 8, cursor: "pointer", background: C.field, border: "1px solid " + C.border, color: C.slateD, fontSize: 9.5, fontWeight: 800 } }, "NONE")));
-    }), squad && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 10 } }, /* @__PURE__ */ React.createElement("input", { value: sqNew, onChange: function(e) {
-      setSqNew(e.target.value);
-    }, placeholder: "Add a player\u2026", style: { flex: 1, minWidth: 0, background: C.field, border: "1px solid " + C.border, borderRadius: 10, color: C.white, fontSize: 13.5, padding: "11px 12px" } }), /* @__PURE__ */ React.createElement("button", { onClick: addPlayer, disabled: sqBusy || !sqNew.trim(), style: { padding: "0 16px", borderRadius: 10, border: "none", cursor: "pointer", background: sqBusy || !sqNew.trim() ? C.bgCard : C.greenB, color: sqBusy || !sqNew.trim() ? C.slateD : C.bg, fontWeight: 800, fontSize: 12.5 } }, "ADD")), /* @__PURE__ */ React.createElement("button", { onClick: save, disabled: busy, style: { marginTop: 20, width: "100%", padding: 15, borderRadius: 12, border: "none", cursor: busy ? "default" : "pointer", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 15, opacity: busy ? 0.6 : 1 } }, busy ? "Saving\u2026" : "Save details")));
+    }, style: { marginTop: 18, width: "100%", padding: 13, borderRadius: 11, border: "1px solid " + C.border, cursor: "pointer", background: C.bgCard, color: C.white, fontWeight: 700, fontSize: 13.5, display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", null, "Custom events for this match"), /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, "\u203A")), /* @__PURE__ */ React.createElement("button", { onClick: save, disabled: busy, style: { marginTop: 14, width: "100%", padding: 15, borderRadius: 12, border: "none", cursor: busy ? "default" : "pointer", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 15, opacity: busy ? 0.6 : 1 } }, busy ? "Saving\u2026" : "Save details")));
   }
   function lockerOK() {
     return typeof navigator !== "undefined" && navigator.storage && typeof navigator.storage.getDirectory === "function";
@@ -4954,6 +4957,7 @@
     if (phase === "live") return /* @__PURE__ */ React.createElement(LiveMirror, { club, back: () => setPhase("home") });
     if (phase === "tactic") return /* @__PURE__ */ React.createElement(TacticalPad, { club, back: () => setPhase("home") });
     if (phase === "help") return /* @__PURE__ */ React.createElement(HelpCenter, { club, session, back: () => setPhase("home") });
+    if (phase === "squad") return /* @__PURE__ */ React.createElement(SquadScreen, { club, back: () => setPhase("home") });
     if (phase === "video") return /* @__PURE__ */ React.createElement(VideoTagger, { club, session, match: tagMatch, back: () => {
       loadCount(club.id);
       setPhase("home");
@@ -4962,7 +4966,7 @@
     return /* @__PURE__ */ React.createElement(Home, { club, onSignOut: () => db.auth.signOut(), onImport: () => setPhase("import"), onLineups: () => setPhase("lineups"), onStats: () => setPhase("stats"), onNewMatch: () => setPhase("newmatch"), onVideoHub: () => setPhase("videohub"), onTemplate: () => {
       setTplMatch(null);
       setPhase("template");
-    }, onLive: () => setPhase("live"), onTactic: () => setPhase("tactic"), onHelp: () => setPhase("help"), role, matchCount });
+    }, onLive: () => setPhase("live"), onTactic: () => setPhase("tactic"), onHelp: () => setPhase("help"), onSquad: () => setPhase("squad"), role, matchCount });
   }
   ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(App, null));
 })();
