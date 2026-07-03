@@ -2276,6 +2276,12 @@
     const [tagged, setTagged] = useState([]);
     const [nameMap, setNameMap] = useState({});
     const [subOpen, setSubOpen] = useState(false);
+    const [squad, setSquad] = useState([]);
+    useEffect(function() {
+      db.from("players").select("id,name").eq("club_id", club.id).order("name").then(function(r) {
+        if (!r.error) setSquad(r.data || []);
+      });
+    }, []);
     const [subOff, setSubOff] = useState(null);
     const [flash, setFlash] = useState(null);
     const [statsOpen, setStatsOpen] = useState(false);
@@ -2433,6 +2439,23 @@
         else if (r.outcome === "Black") c2.blackAt = t2s(r.time_text);
       });
       return { active, cards };
+    }
+    function doSub(offN, onN, onName, playerId) {
+      addRow("Substitution", "Off #" + offN + " \xB7 On #" + onN, onName || "#" + onN);
+      if (onName) {
+        setNameMap(function(m3) {
+          var n4 = Object.assign({}, m3);
+          n4[onN] = onName;
+          return n4;
+        });
+      }
+      if (playerId) {
+        db.from("appearances").insert({ club_id: club.id, match_id: match.id, player_id: playerId, player_name: onName, position_slot: onN, position: null, is_start: false }).then(function() {
+        });
+      }
+      say("\u21C4 #" + offN + " off \xB7 " + (onName || "#" + onN) + " on");
+      setSubOpen(false);
+      setSubOff(null);
     }
     function addRow(evtType, outcome, pname) {
       var seq2 = seqRef.current++;
@@ -2904,13 +2927,25 @@
             setSubOff(n);
             return;
           }
-          var onNm = nameMap[n] || "#" + n;
-          addRow("Substitution", "Off #" + subOff + " \xB7 On #" + n, onNm);
-          say("\u21C4 #" + subOff + " off \xB7 #" + n + " on");
-          setSubOpen(false);
-          setSubOff(null);
+          doSub(subOff, n, nameMap[n] || null, null);
         }, style: { padding: "12px 2px", background: C.bgCard, border: "1px solid " + (subOff ? C.greenB : C.red) + "55", borderRadius: 9, color: subOff ? C.greenB : C.red, cursor: "pointer", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800 } }, n), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nm.split(" ").slice(-1)[0]));
-      })));
+      })), subOff && (function() {
+        var used = {};
+        Object.keys(nameMap).forEach(function(k3) {
+          if (nameMap[k3]) used[nameMap[k3]] = 1;
+        });
+        var avail = squad.filter(function(p3) {
+          return !used[p3.name];
+        });
+        if (!avail.length) return null;
+        var nextN = 16;
+        while (nameMap[nextN] || rs.active[nextN]) nextN++;
+        return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: C.slate, fontFamily: MONO, fontWeight: 700, margin: "16px 0 6px" } }, "OR PICK BY NAME \xB7 GETS #", nextN), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5 } }, avail.map(function(p3) {
+          return /* @__PURE__ */ React.createElement("button", { key: p3.id, onClick: function() {
+            doSub(subOff, nextN, p3.name, p3.id);
+          }, style: { textAlign: "left", padding: "11px 13px", background: C.bgCard, border: "1px solid " + C.greenB + "44", borderRadius: 9, color: C.greenB, cursor: "pointer", fontSize: 13, fontWeight: 700 } }, p3.name);
+        })));
+      })());
     })(), editRow && (function() {
       var def = findDefLT(editRow.event_type);
       var labels = def ? evLabels(def) : [];
