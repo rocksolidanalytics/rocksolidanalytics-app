@@ -2724,6 +2724,7 @@
     const [date, setDate] = useState((/* @__PURE__ */ new Date()).toISOString().slice(0, 10));
     const [referee, setRef] = useState("");
     const [weather, setWx] = useState("Dry");
+    const [venueType, setVenueType] = useState("");
     const [busy, setBusy] = useState(false);
     const [err, setErr] = useState("");
     const [match, setMatch] = useState(null);
@@ -2764,6 +2765,7 @@
           competition,
           round: round.trim() || null,
           venue: venue.trim() || null,
+          venue_type: venueType || null,
           referee: referee.trim() || null,
           weather,
           status: "scheduled",
@@ -2813,7 +2815,12 @@
       setRound(e.target.value);
     }, placeholder: "Optional", style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "VENUE"), /* @__PURE__ */ React.createElement("input", { value: venue, onChange: function(e) {
       setVenue(e.target.value);
-    }, placeholder: "Optional", style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "DATE"), /* @__PURE__ */ React.createElement("input", { type: "date", value: date, onChange: function(e) {
+    }, placeholder: "Optional", style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "HOME / AWAY"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, [["H", "Home"], ["A", "Away"], ["N", "Neutral"]].map(function(v) {
+      var on = venueType === v[0];
+      return /* @__PURE__ */ React.createElement("button", { key: v[0], onClick: function() {
+        setVenueType(on ? "" : v[0]);
+      }, style: { flex: 1, padding: "10px 4px", borderRadius: 9, cursor: "pointer", fontSize: 12.5, fontWeight: 700, border: "1px solid " + (on ? C.greenB : C.border), background: on ? C.greenB + "22" : C.field, color: on ? C.greenB : C.slate } }, v[1]);
+    })), /* @__PURE__ */ React.createElement("div", { style: lab }, "DATE"), /* @__PURE__ */ React.createElement("input", { type: "date", value: date, onChange: function(e) {
       setDate(e.target.value);
     }, style: fld }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginTop: 26 } }, "DETAILS"), /* @__PURE__ */ React.createElement("div", { style: lab }, "REFEREE"), /* @__PURE__ */ React.createElement("input", { value: referee, onChange: function(e) {
       setRef(e.target.value);
