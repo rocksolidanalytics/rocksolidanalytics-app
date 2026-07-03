@@ -2394,6 +2394,10 @@
     }, []);
     var dispSec = period === 2 ? clock + 1800 : clock;
     function activate(ev, tm) {
+      var p = tx.current;
+      if (p && p.ev && p.outcome) {
+        commit(null);
+      }
       tx.current = { ev, team: tm, loc: null, outcome: null };
       sync();
     }
@@ -3998,6 +4002,10 @@
         t2.team = t2.team === "h" ? "a" : "h";
         sync();
       } else {
+        if (t2.ev && t2.outcome) {
+          commit(null);
+          t2 = tx.current;
+        }
         var v = vRef.current, vt = v ? v.currentTime : curT;
         if (v) {
           if (!t2.ev) wasPlayingRef.current = !v.paused;
