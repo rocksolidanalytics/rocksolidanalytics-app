@@ -4160,10 +4160,19 @@
         say("Mark throw-in first");
         return;
       }
-      var now = Date.now(), t2 = tx.current, dbl = t2.ev && t2.ev.id === ev.id && now - lastTap.current < 300;
+      var now = Date.now(), t2 = tx.current, dbl = t2.ev && t2.ev.id === ev.id && now - lastTap.current < 420;
+      function armHold() {
+        if (!land) return;
+        setStripHold(true);
+        if (holdRef.current) clearTimeout(holdRef.current);
+        holdRef.current = setTimeout(function() {
+          setStripHold(false);
+        }, 420);
+      }
       if (dbl && !t2.outcome) {
         t2.team = t2.team === "h" ? "a" : "h";
         sync();
+        armHold();
       } else {
         if (t2.ev && t2.outcome) {
           commit(null);
@@ -4176,6 +4185,7 @@
         }
         tx.current = { ev, team: "h", loc: null, outcome: null, vt, gt: vidToGame(vt), skip: false };
         sync();
+        armHold();
       }
       lastTap.current = now;
     }
@@ -4191,6 +4201,8 @@
     const [subsOpen, setSubsOpen] = useState(false);
     const [attackLeft, setAttackLeft] = useState(true);
     const [dockOpen, setDockOpen] = useState(false);
+    const [stripHold, setStripHold] = useState(false);
+    const holdRef = useRef(null);
     const [treeOpen, setTreeOpen] = useState({});
     function togTree(k) {
       setTreeOpen(function(o) {
@@ -4500,16 +4512,17 @@
     var dockX = !land || dockOpen;
     return /* @__PURE__ */ React.createElement("div", { style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", overflow: "hidden" } }, !land && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", padding: "8px 10px", borderBottom: "1px solid " + C.border, gap: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 18 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, letterSpacing: 1, color: C.greenB, fontFamily: MONO } }, nmH.toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 19, fontWeight: 800, lineHeight: 1.1 } }, nota(us), " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slateD } }, "(", us.g * 3 + us.p, ")"))), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", minWidth: 78 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: curGame ? C.greenB : C.slateD, fontFamily: MONO, lineHeight: 1.1 } }, curGame ? fmtClip(curGame.secs) : "--:--"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8, letterSpacing: 1, color: C.slateD, fontFamily: MONO } }, curGame ? curGame.period === 1 ? "1ST HALF" : "2ND HALF" : "BEFORE KO", " \xB7 ", fmtClip(curT))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, letterSpacing: 1, color: C.gold, fontFamily: MONO, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nmA.toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 19, fontWeight: 800, lineHeight: 1.1 } }, nota(op), " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slateD } }, "(", op.g * 3 + op.p, ")"))))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: land ? "row" : "column", overflow: "hidden", position: "relative" } }, land && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 8, left: 8, zIndex: 6, display: "flex", alignItems: "center", gap: 7 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "rgba(7,12,24,0.82)", border: "1px solid " + C.border, borderRadius: 8, color: C.slate, cursor: "pointer", display: "flex", padding: 5 } }, /* @__PURE__ */ React.createElement(Back, { s: 15 })), /* @__PURE__ */ React.createElement("div", { style: { background: "rgba(7,12,24,0.86)", border: "1px solid " + C.border, borderRadius: 8, padding: "5px 11px", fontFamily: MONO, fontSize: 12, fontWeight: 800, display: "flex", gap: 8, alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.gold } }, curGame ? "H" + curGame.period + " " : "", fmtClip(curT)), /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, nmH.split(" ")[0].slice(0, 3).toUpperCase(), " ", nota(us)), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, ":"), /* @__PURE__ */ React.createElement("span", { style: { color: "#ffd75e" } }, nota(op), " ", nmA.split(" ")[0].slice(0, 3).toUpperCase()))), land && !dockOpen && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 8, right: 8, zIndex: 6, display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement("button", { onClick: undo, disabled: tagged.length === 0, style: { background: "rgba(7,12,24,0.82)", border: "1px solid " + C.border, borderRadius: 8, color: C.slate, fontSize: 12, fontWeight: 800, padding: "6px 11px", cursor: "pointer" } }, "\u21A9"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setDockOpen(true);
-    }, style: { background: "rgba(7,12,24,0.82)", border: "1px solid " + C.border, borderRadius: 8, color: C.slate, fontSize: 12, fontWeight: 800, padding: "6px 11px", cursor: "pointer" } }, "\u2261")), land && t.ev && t.ev.pitch && !t.loc && !t.outcome && !t.skip && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: "50%", bottom: 78, transform: "translateX(-50%)", zIndex: 5, width: "min(58vw, 500px, calc((100dvh - 148px) * 1.55))", background: "rgba(7,12,24,0.88)", border: "1px solid " + C.border, borderRadius: 12, padding: "8px 10px" } }, /* @__PURE__ */ React.createElement(DirPitch, null)), land && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: 8, right: 8, bottom: 8, zIndex: 5, background: "rgba(7,12,24,0.86)", border: "1px solid " + C.border, borderRadius: 12, padding: "7px 8px", overflowX: "auto", backdropFilter: "blur(2px)" } }, (function() {
+    }, style: { background: "rgba(7,12,24,0.82)", border: "1px solid " + C.border, borderRadius: 8, color: C.slate, fontSize: 12, fontWeight: 800, padding: "6px 11px", cursor: "pointer" } }, "\u2261")), land && !stripHold && t.ev && t.ev.pitch && !t.loc && !t.outcome && !t.skip && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: "50%", bottom: 78, transform: "translateX(-50%)", zIndex: 5, width: "min(58vw, 500px, calc((100dvh - 148px) * 1.55))", background: "rgba(7,12,24,0.88)", border: "1px solid " + C.border, borderRadius: 12, padding: "8px 10px" } }, /* @__PURE__ */ React.createElement(DirPitch, null)), land && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: 8, right: 8, bottom: 8, zIndex: 5, background: "rgba(7,12,24,0.86)", border: "1px solid " + C.border, borderRadius: 12, padding: "7px 8px", overflowX: "auto", backdropFilter: "blur(2px)" } }, (function() {
       var tc2 = t.team === "h" ? C.greenB : "#ffd75e";
       function cancel() {
         tx.current = { ev: null, team: t.team, loc: null, outcome: null, vt: null, gt: null, skip: false };
         sync();
       }
-      if (!t.ev) return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 8.5, color: C.slateD, fontFamily: MONO, whiteSpace: "nowrap", padding: "0 4px" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "\u25CF"), " TAP=", nmH.split(" ")[0].slice(0, 3).toUpperCase(), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { style: { color: "#ffd75e" } }, "\u25CF\u25CF"), " DBL=", nmA.split(" ")[0].slice(0, 3).toUpperCase()), TAG_EVENTS.concat(customEvts).map(function(ev) {
+      if (!t.ev || stripHold) return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 8.5, color: C.slateD, fontFamily: MONO, whiteSpace: "nowrap", padding: "0 4px" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "\u25CF"), " TAP=", nmH.split(" ")[0].slice(0, 3).toUpperCase(), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { style: { color: "#ffd75e" } }, "\u25CF\u25CF"), " DBL=", nmA.split(" ")[0].slice(0, 3).toUpperCase()), TAG_EVENTS.concat(customEvts).map(function(ev) {
+        var on2 = t.ev && t.ev.id === ev.id;
         return /* @__PURE__ */ React.createElement("button", { key: ev.id, onClick: function() {
           onEventTap(ev);
-        }, style: { flexShrink: 0, minWidth: 92, padding: "13px 8px", borderRadius: 9, cursor: "pointer", fontSize: 11.5, fontWeight: 800, background: C.bgCard, border: "1px " + (ev.custom ? "dashed" : "solid") + " " + C.border, color: C.white } }, ev.l);
+        }, style: { flexShrink: 0, minWidth: 92, padding: "13px 8px", borderRadius: 9, cursor: "pointer", fontSize: 11.5, fontWeight: 800, background: on2 ? tc2 : C.bgCard, border: "1px " + (ev.custom ? "dashed" : "solid") + " " + (on2 ? tc2 : C.border), color: on2 ? C.bg : C.white } }, ev.l, on2 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, marginTop: 2 } }, t.team === "h" ? nmH.split(" ")[0].slice(0, 3).toUpperCase() : nmA.split(" ")[0].slice(0, 3).toUpperCase(), " \xB7 TAP AGAIN = SWITCH"));
       }));
       if (t.ev && t.ev.pitch && !t.loc && !t.outcome && !t.skip) return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: tc2, fontWeight: 800 } }, t.ev.l, " \xB7 TAP THE PITCH \u2191"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
         tx.current.skip = true;
