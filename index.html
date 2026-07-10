@@ -5236,6 +5236,22 @@
       setPhase("onboarding");
     }
     useEffect(() => {
+      var demoP = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("demo") : null;
+      if (demoP) {
+        enteredRef.current = true;
+        setSession({ user: { id: "00000000-0000-4000-a000-0000000000de", email: "demo@rocksolid" } });
+        setRole("analyst");
+        db.from("clubs").select("*").eq("id", "dddddddd-0000-4000-a000-000000000001").maybeSingle().then(function(c) {
+          if (c.data) {
+            setClub(c.data);
+            loadCount(c.data.id);
+            setPhase("home");
+          } else {
+            setPhase("auth");
+          }
+        });
+        return;
+      }
       if (/type=recovery/.test(window.location.hash)) {
         recoveryRef.current = true;
         setPhase("reset");
