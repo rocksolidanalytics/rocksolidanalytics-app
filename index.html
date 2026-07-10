@@ -5239,17 +5239,32 @@
       var demoP = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("demo") : null;
       if (demoP) {
         enteredRef.current = true;
-        setSession({ user: { id: "00000000-0000-4000-a000-0000000000de", email: "demo@rocksolid" } });
-        setRole("analyst");
-        db.from("clubs").select("*").eq("id", "dddddddd-0000-4000-a000-000000000001").maybeSingle().then(function(c) {
-          if (c.data) {
-            setClub(c.data);
-            loadCount(c.data.id);
-            setPhase("home");
-          } else {
-            setPhase("auth");
+        (async function() {
+          try {
+            var sess = (await db.auth.getSession()).data.session;
+            if (!sess) {
+              var ar = await db.auth.signInAnonymously();
+              if (ar.error || !ar.data || !ar.data.session) {
+                setPhase("demoUnavailable");
+                return;
+              }
+              sess = ar.data.session;
+            }
+            setSession(sess);
+            try { await db.rpc("join_club", { code: "DEMO26" }); } catch (e) {}
+            var c = await db.from("clubs").select("*").eq("id", "dddddddd-0000-4000-a000-000000000001").maybeSingle();
+            if (c.data) {
+              setRole("analyst");
+              setClub(c.data);
+              loadCount(c.data.id);
+              setPhase("home");
+            } else {
+              setPhase("demoUnavailable");
+            }
+          } catch (e) {
+            setPhase("demoUnavailable");
           }
-        });
+        })();
         return;
       }
       if (/type=recovery/.test(window.location.hash)) {
@@ -5284,6 +5299,8 @@
     if (liveParam) return /* @__PURE__ */ React.createElement(PublicLiveMirror, { clubId: liveParam });
     if (phase === "loading")
       return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.greenB }));
+    if (phase === "demoUnavailable")
+      return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center", fontFamily: "-apple-system,Segoe UI,Roboto,sans-serif" } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 340 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800, marginBottom: 8 } }, "Demo is warming up"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13.5, color: C.slate, lineHeight: 1.6 } }, "The demo isn't quite ready yet. Please try again shortly \u2014 or sign up and create your own club to start tagging."), /* @__PURE__ */ React.createElement("a", { href: window.location.pathname, style: { display: "inline-block", marginTop: 16, background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 14, padding: "11px 18px", borderRadius: 11, textDecoration: "none" } }, "Go to the app")));
     if (phase === "auth") return /* @__PURE__ */ React.createElement(Auth, null);
     if (phase === "reset") return /* @__PURE__ */ React.createElement(SetPassword, { onReset: async () => {
       recoveryRef.current = false;
