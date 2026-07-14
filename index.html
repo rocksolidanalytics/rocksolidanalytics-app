@@ -2020,11 +2020,17 @@
     function tap(e) {
       if (!onTap) return;
       var r = e.currentTarget.getBoundingClientRect();
-      onTap({ x: Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)), y: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) });
+      onTap(snapZone({ x: Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)), y: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) }));
     }
     var stripes = [], bands = 12;
     for (var i = 0; i < bands; i++) {
       stripes.push(/* @__PURE__ */ React.createElement("rect", { key: i, x: L, y: T + PL / bands * i, width: R - L, height: PL / bands, fill: i % 2 ? "#0d5e2b" : "#0b5325" }));
+    }
+    for (var zc = 1; zc < 5; zc++) {
+      stripes.push(/* @__PURE__ */ React.createElement("line", { key: "zc" + zc, x1: L + (R - L) * zc / 5, y1: T, x2: L + (R - L) * zc / 5, y2: B, stroke: "rgba(255,255,255,0.10)", strokeWidth: 1 }));
+    }
+    for (var zr = 1; zr < 7; zr++) {
+      stripes.push(/* @__PURE__ */ React.createElement("line", { key: "zr" + zr, x1: L, y1: T + PL * zr / 7, x2: R, y2: T + PL * zr / 7, stroke: "rgba(255,255,255,0.10)", strokeWidth: 1 }));
     }
     function endMarks(top) {
       var e = top ? T : B, s = top ? 1 : -1;
@@ -2141,11 +2147,17 @@
     function tap(e) {
       if (!onTap) return;
       var r = e.currentTarget.getBoundingClientRect();
-      onTap({ x: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), y: Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)) });
+      onTap(snapZone({ x: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), y: Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)) }));
     }
     var stripes = [], bands = 12;
     for (var i = 0; i < bands; i++) {
       stripes.push(/* @__PURE__ */ React.createElement("rect", { key: i, x: L + PL / bands * i, y: T, width: PL / bands, height: B - T, fill: i % 2 ? "#0d5e2b" : "#0b5325" }));
+    }
+    for (var zx = 1; zx < 7; zx++) {
+      stripes.push(/* @__PURE__ */ React.createElement("line", { key: "zx" + zx, x1: L + PL * zx / 7, y1: T, x2: L + PL * zx / 7, y2: B, stroke: "rgba(255,255,255,0.10)", strokeWidth: 1 }));
+    }
+    for (var zy = 1; zy < 5; zy++) {
+      stripes.push(/* @__PURE__ */ React.createElement("line", { key: "zy" + zy, x1: L, y1: T + (B - T) * zy / 5, x2: R, y2: T + (B - T) * zy / 5, stroke: "rgba(255,255,255,0.10)", strokeWidth: 1 }));
     }
     function endMarks(left) {
       var e = left ? L : R, s = left ? 1 : -1;
@@ -2183,6 +2195,7 @@
   function evOutcomeStr(ev, label) {
     return ev.custom ? label : mapOutcome(ev.id, label);
   }
+  function snapZone(p) { function q(v, n) { v = Math.max(0, Math.min(0.999999, v)); return (Math.floor(v * n) + 0.5) / n; } return { x: q(p.x, 7), y: q(p.y, 5) }; }
   function evLabels(ev) {
     return (ev.outcomes || []).map(function(o) {
       return typeof o === "string" ? o : o.label;
