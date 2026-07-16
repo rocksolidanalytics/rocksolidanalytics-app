@@ -3396,8 +3396,12 @@
   }
   function SquadScreen({ club, back }) {
     const [act, setAct] = useState(null);
+    const [actErr, setActErr] = useState(null);
     useEffect(function() {
-      db.rpc("club_activity").then(function(r) { if (!r.error && r.data) setAct(r.data); }, function() {});
+      db.rpc("club_activity").then(function(r) {
+        if (r.error) { setActErr(r.error.message || "Could not load activity"); return; }
+        if (r.data) setAct(r.data);
+      }, function(e) { setActErr(String(e && e.message || e)); });
     }, []);
     const [squad, setSquad] = useState(null);
     const [sqEdit, setSqEdit] = useState(null);
@@ -3434,6 +3438,7 @@
       setSqBusy(false);
     }
     return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, "Squad"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: C.slate, fontFamily: MONO } }, squad ? squad.length + " PLAYERS" : "\u2026"))), /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 520, margin: "0 auto", padding: "16px 16px 40px" } }, /* @__PURE__ */ React.createElement("div", null, (function() {
+      if (actErr) return /* @__PURE__ */ React.createElement("div", { style: { background: C.red + "14", border: "1px solid " + C.red + "55", borderRadius: 10, padding: "10px 12px", marginBottom: 14, fontSize: 11, color: C.red, fontFamily: MONO, lineHeight: 1.5 } }, "ACTIVITY ERROR: " + actErr);
       if (!act) return null;
       var players = act.filter(function(a) { return a.role === "player"; });
       if (!players.length) return null;
