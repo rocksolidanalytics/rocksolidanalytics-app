@@ -2742,6 +2742,7 @@
       if (!window.confirm(emsg)) return;
       var u = score("us"), o = score("opp");
       await db.from("matches").update({ status: "final", our_score: nota(u), opp_score: nota(o), our_total: u.g * 3 + u.p, opp_total: o.g * 3 + o.p }).eq("id", match.id);
+      db.from("matches").update({ h2_added_secs: Math.max(0, clock - 1800) }).eq("id", match.id).then(function() {}).catch(function() {});
       if (pendN === 0) lsClear(match.id);
       back();
     }
@@ -2806,6 +2807,7 @@
     var halfBtn = period === 1 && !halfEnded ? { l: "END 1ST HALF", bg: C.gold, fn: function() {
       setRunning(false);
       setHalfEnded(true);
+      db.from("matches").update({ h1_added_secs: Math.max(0, clock - 1800) }).eq("id", match.id).then(function() {}).catch(function() {});
     } } : period === 1 && halfEnded ? { l: "START 2ND HALF", bg: C.greenB, fn: function() {
       setPeriod(2);
       setClock(0);
@@ -4965,8 +4967,13 @@
     (matches || []).forEach(function(m) {
       var r = (m.referee || "").trim();
       if (!r) return;
-      var o = refs[r] || (refs[r] = { name: r, games: 0, w: 0, d: 0, l: 0, sf: 0, sa: 0, freeFor: 0, freeAg: 0, ylUs: 0, ylOpp: 0, rdUs: 0, rdOpp: 0, fpUs: 0, fpOpp: 0 });
+      var o = refs[r] || (refs[r] = { name: r, games: 0, w: 0, d: 0, l: 0, sf: 0, sa: 0, freeFor: 0, freeAg: 0, ylUs: 0, ylOpp: 0, rdUs: 0, rdOpp: 0, fpUs: 0, fpOpp: 0, tkUs: 0, tkOpp: 0, tfUs: 0, tfOpp: 0, h1a: 0, h2a: 0, adN: 0 });
       o.games++;
+      if (m.h1_added_secs != null || m.h2_added_secs != null) {
+        o.h1a += m.h1_added_secs || 0;
+        o.h2a += m.h2_added_secs || 0;
+        o.adN++;
+      }
       var a = m.our_total || 0, b = m.opp_total || 0;
       o.sf += a;
       o.sa += b;
@@ -4993,6 +5000,15 @@
             if (e.team === "us") o.fpUs += v;
             else o.fpOpp += v;
           }
+        } else if (e.event_type === "Tackle") {
+          var fl = /foul/i.test(e.outcome || "");
+          if (e.team === "us") {
+            o.tkUs++;
+            if (fl) o.tfUs++;
+          } else {
+            o.tkOpp++;
+            if (fl) o.tfOpp++;
+          }
         }
       });
     });
@@ -5005,12 +5021,19 @@
     function Stat(label, val, sub, vc) {
       return /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 1, color: C.slateD, fontFamily: MONO } }, label), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: vc || C.white, marginTop: 2, whiteSpace: "nowrap" } }, val), sub ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: C.slate, whiteSpace: "nowrap" } }, sub) : null);
     }
-    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slateD, marginBottom: 14, lineHeight: 1.5 } }, "How games go under each referee \u2014 your record, frees for and against, cards and points from frees. Often small samples, so read as tendencies."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } }, list.map(function(o) {
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slateD, marginBottom: 14, lineHeight: 1.5 } }, "How games go under each referee \u2014 record, frees, points from frees, cards, tackle discipline and added time played. Often small samples, so read as tendencies."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } }, list.map(function(o) {
       var winp = o.games ? Math.round(100 * o.w / o.games) : 0;
       var freesPg = ((o.freeFor + o.freeAg) / o.games).toFixed(1);
       var diff = o.freeFor - o.freeAg;
       var avgTot = Math.round((o.sf + o.sa) / o.games);
-      return /* @__PURE__ */ React.createElement("div", { key: o.name, style: { background: C.bgCard, border: "1px solid " + C.border, borderLeft: "4px solid " + winColor(winp), borderRadius: 14, padding: "15px 15px 15px 14px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 13 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 800 } }, o.name), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, o.games, " game", o.games === 1 ? "" : "s")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginBottom: 13 } }, Stat("RECORD", o.w + "-" + o.d + "-" + o.l, winp + "% win", winColor(winp)), Stat("FREES / GM", freesPg, (diff >= 0 ? "+" : "") + diff + " for Bray"), Stat("AVG TOTAL", avgTot, "pts/game")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, Stat("CARDS", o.ylUs + o.ylOpp + "Y " + (o.rdUs + o.rdOpp) + "R", o.ylUs + o.rdUs + " Bray / " + (o.ylOpp + o.rdOpp) + " opp"), Stat("FREES \u2192 PTS", o.fpUs + " / " + o.fpOpp, "Bray / opp"), Stat("FREES F/A", o.freeFor + " / " + o.freeAg, "for / against")));
+      var tfpU = o.tkUs ? Math.round(100 * o.tfUs / o.tkUs) + "%" : "\u2014";
+      var tfpO = o.tkOpp ? Math.round(100 * o.tfOpp / o.tkOpp) + "%" : "\u2014";
+      function fmtAd(x) {
+        var v2 = Math.round(x);
+        return "+" + Math.floor(v2 / 60) + ":" + String(v2 % 60).padStart(2, "0");
+      }
+      var adVal = o.adN ? fmtAd(o.h1a / o.adN) + " / " + fmtAd(o.h2a / o.adN) : "\u2014";
+      return /* @__PURE__ */ React.createElement("div", { key: o.name, style: { background: C.bgCard, border: "1px solid " + C.border, borderLeft: "4px solid " + winColor(winp), borderRadius: 14, padding: "15px 15px 15px 14px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 13 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 800 } }, o.name), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, o.games, " game", o.games === 1 ? "" : "s")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginBottom: 13 } }, Stat("RECORD", o.w + "-" + o.d + "-" + o.l, winp + "% win", winColor(winp)), Stat("FREES / GM", freesPg, (diff >= 0 ? "+" : "") + diff + " for Bray"), Stat("AVG TOTAL", avgTot, "pts/game")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, Stat("CARDS", o.ylUs + o.ylOpp + "Y " + (o.rdUs + o.rdOpp) + "R", o.ylUs + o.rdUs + " Bray / " + (o.ylOpp + o.rdOpp) + " opp"), Stat("FREES \u2192 PTS", o.fpUs + " / " + o.fpOpp, "Bray / opp"), Stat("FREES F/A", o.freeFor + " / " + o.freeAg, "for / against")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginTop: 13 } }, Stat("TACKLE FOULS", tfpU + " / " + tfpO, "% of tackles \u2014 Bray / opp"), Stat("ADDED TIME", adVal, "1st / 2nd half avg")));
     })));
   }
   function groupMetrics(ms, byMatch) {
