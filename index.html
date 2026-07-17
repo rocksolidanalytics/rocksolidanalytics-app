@@ -1639,7 +1639,9 @@
       { label: "Accuracy", us: usAll ? Math.round(100 * countScored(us) / usAll) : 0, opp: opAll ? Math.round(100 * countScored(opp) / opAll) : 0, pct: true },
       { label: "Wides", us: countWide(us), opp: countWide(opp) },
       { label: "Shots / 10 Poss", us: usPoss ? Math.round(100 * usAll / usPoss) / 10 : 0, opp: opPoss ? Math.round(100 * opAll / opPoss) / 10 : 0 },
+      { label: "Possession", us: usPoss + opPoss ? Math.round(100 * usPoss / (usPoss + opPoss)) : 0, opp: usPoss + opPoss ? Math.round(100 * opPoss / (usPoss + opPoss)) : 0, pct: true },
       { label: "Tackles", us: usTk, opp: opTk },
+      { label: "Tackles / 10 opp poss", us: opPoss ? Math.round(100 * usTk / opPoss) / 10 : 0, opp: usPoss ? Math.round(100 * opTk / usPoss) / 10 : 0 },
       { label: "Def. work rate", us: usDwr, opp: opDwr },
       { label: "Kickouts won", us: ko.length ? Math.round(100 * koWon / ko.length) : 0, opp: oko.length ? Math.round(100 * okoWon / oko.length) : 0, pct: true }
     ];
