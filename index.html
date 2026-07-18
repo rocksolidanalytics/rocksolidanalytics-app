@@ -4980,10 +4980,16 @@
       if (a > b) o.w++;
       else if (a < b) o.l++;
       else o.d++;
+      var mt = { tkUs: 0, tkOpp: 0, tfUs: 0, tfOpp: 0, fcUs: 0, fcOpp: 0 };
       (byMatch[m.id] || []).forEach(function(e) {
         if (e.event_type === "Free conceded") {
-          if (e.team === "us") o.freeAg++;
-          else o.freeFor++;
+          if (e.team === "us") {
+            o.freeAg++;
+            mt.fcUs++;
+          } else {
+            o.freeFor++;
+            mt.fcOpp++;
+          }
         } else if (e.event_type === "Bookings") {
           var yl = /yellow/i.test(e.outcome || "");
           var rd = /red/i.test(e.outcome || "");
@@ -5003,14 +5009,19 @@
         } else if (e.event_type === "Tackle") {
           var fl = /foul/i.test(e.outcome || "");
           if (e.team === "us") {
-            o.tkUs++;
-            if (fl) o.tfUs++;
+            mt.tkUs++;
+            if (fl) mt.tfUs++;
           } else {
-            o.tkOpp++;
-            if (fl) o.tfOpp++;
+            mt.tkOpp++;
+            if (fl) mt.tfOpp++;
           }
         }
       });
+      var legacy = mt.fcUs + mt.fcOpp > 0;
+      o.tkUs += mt.tkUs;
+      o.tkOpp += mt.tkOpp;
+      o.tfUs += legacy ? mt.fcUs : mt.tfUs;
+      o.tfOpp += legacy ? mt.fcOpp : mt.tfOpp;
     });
     var list = Object.keys(refs).map(function(k) {
       return refs[k];
