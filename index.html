@@ -2806,7 +2806,9 @@
       });
       var usP = usSh + f("us", isTO), opP = opSh + f("opp", isTO);
       var isTk = function(r) { return r.event_type === "Tackle"; };
+      var isTkF = function(r) { return r.event_type === "Tackle" && /foul/i.test(r.outcome || ""); };
       var usTk = f("us", isTk), opTk = f("opp", isTk);
+      var usTkF = f("us", isTkF), opTkF = f("opp", isTkF);
       return [
         { label: "Score (pts)", us: us.g * 3 + us.p, opp: op.g * 3 + op.p },
         { label: "Shots", us: usSh, opp: opSh },
@@ -2820,7 +2822,8 @@
         { label: "Kickouts won", us: usKo ? Math.round(100 * f("us", koWon) / usKo) : 0, opp: opKo ? Math.round(100 * f("opp", koWon) / opKo) : 0, pct: true },
         { label: "Possession", us: usP + opP ? Math.round(100 * usP / (usP + opP)) : 0, opp: usP + opP ? Math.round(100 * opP / (usP + opP)) : 0, pct: true },
         { label: "Tackles", us: usTk, opp: opTk },
-        { label: "Tackles / 10 opp poss", us: opP ? Math.round(100 * usTk / opP) / 10 : 0, opp: usP ? Math.round(100 * opTk / usP) / 10 : 0 }
+        { label: "Tackles / 10 opp poss", us: opP ? Math.round(100 * usTk / opP) / 10 : 0, opp: usP ? Math.round(100 * opTk / usP) / 10 : 0 },
+        { label: "Tackle foul % \u00B7 lower is better", us: usTk ? Math.round(100 * usTkF / usTk) : 0, opp: opTk ? Math.round(100 * opTkF / opTk) : 0, pct: true }
       ];
     }
     var halfBtn = period === 1 && !halfEnded ? { l: "END 1ST HALF", bg: C.gold, fn: function() {
