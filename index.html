@@ -1636,7 +1636,25 @@
         return e.event_type === "Possession lost" && ((e.outcome || "") === "Intercepted" || (e.outcome || "") === "In Contact");
       }).length;
     }
+    function nTkFoul(evs) {
+      var byM = {};
+      evs.forEach(function(e) {
+        var k = e.match_id == null ? "_" : e.match_id;
+        (byM[k] = byM[k] || []).push(e);
+      });
+      var n = 0;
+      Object.keys(byM).forEach(function(k) {
+        var fc = 0, tf = 0;
+        byM[k].forEach(function(e) {
+          if (e.event_type === "Free conceded") fc++;
+          else if (e.event_type === "Tackle" && /foul/i.test(e.outcome || "")) tf++;
+        });
+        n += fc > 0 ? fc : tf;
+      });
+      return n;
+    }
     const usTk = nTackle(us), opTk = nTackle(opp);
+    const usTkF = nTkFoul(us), opTkF = nTkFoul(opp);
     const usDwr = usTk - nFoul(us) + nTOWon(opp), opDwr = opTk - nFoul(opp) + nTOWon(us);
     const compare = [
       { label: "Score (pts)", us: sf, opp: sa },
@@ -1648,6 +1666,7 @@
       { label: "Possession", us: usPoss + opPoss ? Math.round(100 * usPoss / (usPoss + opPoss)) : 0, opp: usPoss + opPoss ? Math.round(100 * opPoss / (usPoss + opPoss)) : 0, pct: true },
       { label: "Tackles", us: usTk, opp: opTk },
       { label: "Tackles / 10 opp poss", us: opPoss ? Math.round(100 * usTk / opPoss) / 10 : 0, opp: usPoss ? Math.round(100 * opTk / usPoss) / 10 : 0 },
+      { label: "Tackle foul % \u00B7 lower is better", us: usTk ? Math.round(100 * usTkF / usTk) : 0, opp: opTk ? Math.round(100 * opTkF / opTk) : 0, pct: true },
       { label: "Def. work rate", us: usDwr, opp: opDwr },
       { label: "Kickouts won", us: ko.length ? Math.round(100 * koWon / ko.length) : 0, opp: oko.length ? Math.round(100 * okoWon / oko.length) : 0, pct: true }
     ];
@@ -4959,6 +4978,12 @@
   );
   }
   function RefView({ matches, events, club }) {
+    function fmtShortDate(x) {
+      if (!x) return "\u2014";
+      var dd = new Date(x);
+      if (isNaN(dd)) return String(x).slice(0, 10);
+      return dd.getDate() + " " + ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][dd.getMonth()];
+    }
     var byMatch = {};
     (events || []).forEach(function(e) {
       (byMatch[e.match_id] = byMatch[e.match_id] || []).push(e);
@@ -4967,7 +4992,7 @@
     (matches || []).forEach(function(m) {
       var r = (m.referee || "").trim();
       if (!r) return;
-      var o = refs[r] || (refs[r] = { name: r, games: 0, w: 0, d: 0, l: 0, sf: 0, sa: 0, freeFor: 0, freeAg: 0, ylUs: 0, ylOpp: 0, rdUs: 0, rdOpp: 0, fpUs: 0, fpOpp: 0, tkUs: 0, tkOpp: 0, tfUs: 0, tfOpp: 0, h1a: 0, h2a: 0, adN: 0 });
+      var o = refs[r] || (refs[r] = { name: r, games: 0, w: 0, d: 0, l: 0, sf: 0, sa: 0, freeFor: 0, freeAg: 0, ylUs: 0, ylOpp: 0, rdUs: 0, rdOpp: 0, fpUs: 0, fpOpp: 0, tkUs: 0, tkOpp: 0, tfUs: 0, tfOpp: 0, h1a: 0, h2a: 0, adN: 0, ms: [] });
       o.games++;
       if (m.h1_added_secs != null || m.h2_added_secs != null) {
         o.h1a += m.h1_added_secs || 0;
@@ -4980,6 +5005,7 @@
       if (a > b) o.w++;
       else if (a < b) o.l++;
       else o.d++;
+      o.ms.push({ raw: m.date || "", dt: fmtShortDate(m.date), opp: (m.opponent || "").trim() || "Unknown", sc: (m.our_score || "") + " - " + (m.opp_score || ""), res: a > b ? "W" : a < b ? "L" : "D" });
       var mt = { tkUs: 0, tkOpp: 0, tfUs: 0, tfOpp: 0, fcUs: 0, fcOpp: 0 };
       (byMatch[m.id] || []).forEach(function(e) {
         if (e.event_type === "Free conceded") {
@@ -5044,7 +5070,11 @@
         return "+" + Math.floor(v2 / 60) + ":" + String(v2 % 60).padStart(2, "0");
       }
       var adVal = o.adN ? fmtAd(o.h1a / o.adN) + " / " + fmtAd(o.h2a / o.adN) : "\u2014";
-      return /* @__PURE__ */ React.createElement("div", { key: o.name, style: { background: C.bgCard, border: "1px solid " + C.border, borderLeft: "4px solid " + winColor(winp), borderRadius: 14, padding: "15px 15px 15px 14px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 13 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 800 } }, o.name), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, o.games, " game", o.games === 1 ? "" : "s")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginBottom: 13 } }, Stat("RECORD", o.w + "-" + o.d + "-" + o.l, winp + "% win", winColor(winp)), Stat("FREES / GM", freesPg, (diff >= 0 ? "+" : "") + diff + " for Bray"), Stat("AVG TOTAL", avgTot, "pts/game")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, Stat("CARDS", o.ylUs + o.ylOpp + "Y " + (o.rdUs + o.rdOpp) + "R", o.ylUs + o.rdUs + " Bray / " + (o.ylOpp + o.rdOpp) + " opp"), Stat("FREES \u2192 PTS", o.fpUs + " / " + o.fpOpp, "Bray / opp"), Stat("FREES F/A", o.freeFor + " / " + o.freeAg, "for / against")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginTop: 13 } }, Stat("TACKLE FOULS", tfpU + " / " + tfpO, "% of tackles \u2014 Bray / opp"), Stat("ADDED TIME", adVal, "1st / 2nd half avg")));
+      return /* @__PURE__ */ React.createElement("div", { key: o.name, style: { background: C.bgCard, border: "1px solid " + C.border, borderLeft: "4px solid " + winColor(winp), borderRadius: 14, padding: "15px 15px 15px 14px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 13 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 800 } }, o.name), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, o.games, " game", o.games === 1 ? "" : "s")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginBottom: 13 } }, Stat("RECORD", o.w + "-" + o.d + "-" + o.l, winp + "% win", winColor(winp)), Stat("FREES / GM", freesPg, (diff >= 0 ? "+" : "") + diff + " for Bray"), Stat("AVG TOTAL", avgTot, "pts/game")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, Stat("CARDS", o.ylUs + o.ylOpp + "Y " + (o.rdUs + o.rdOpp) + "R", o.ylUs + o.rdUs + " Bray / " + (o.ylOpp + o.rdOpp) + " opp"), Stat("FREES \u2192 PTS", o.fpUs + " / " + o.fpOpp, "Bray / opp"), Stat("FREES F/A", o.freeFor + " / " + o.freeAg, "for / against")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginTop: 13 } }, Stat("TACKLE FOULS", tfpU + " / " + tfpO, "% of tackles \u2014 Bray / opp"), Stat("ADDED TIME", adVal, "1st / 2nd half avg")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, borderTop: "1px solid " + C.border, paddingTop: 11, display: "flex", flexDirection: "column", gap: 7 } }, o.ms.slice().sort(function(p, q) {
+        return String(q.raw).localeCompare(String(p.raw));
+      }).map(function(mm, ix) {
+        return /* @__PURE__ */ React.createElement("div", { key: ix, style: { display: "flex", alignItems: "center", gap: 8, fontSize: 11 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontFamily: MONO, fontSize: 9, width: 42, flexShrink: 0 } }, mm.dt), /* @__PURE__ */ React.createElement("span", { style: { color: C.white, flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, mm.opp), /* @__PURE__ */ React.createElement("span", { style: { color: C.slate, fontFamily: MONO, fontSize: 10, flexShrink: 0 } }, mm.sc), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 800, fontFamily: MONO, fontSize: 10, width: 10, textAlign: "right", flexShrink: 0, color: mm.res === "W" ? C.greenB : mm.res === "L" ? C.red : C.gold } }, mm.res));
+      })));
     })));
   }
   function groupMetrics(ms, byMatch) {
