@@ -4621,9 +4621,9 @@
       credHome = t.team === "h" ? _kw : !_kw;
     }
     var ptc = credHome ? C.greenB : C.gold;
-    var showPitch = !!t.ev && t.ev.pitch && !t.loc && !t.outcome && !t.skip;
-    var showOut = !!t.ev && !t.outcome && (!t.ev.pitch || !!t.loc || t.skip);
-    var showPl = !!t.outcome;
+    var showOut = !!t.ev && !t.outcome;
+    var showPitch = !!t.ev && !!t.outcome && t.ev.pitch && !t.loc && !t.skip;
+    var showPl = !!t.ev && !!t.outcome && (!t.ev.pitch || !!t.loc || t.skip);
     var idle = !t.ev && !t.outcome;
     var customEvts = (customEvents || []).map(function(d) {
       return Object.assign({}, d, { custom: true, l: (d.name || "").toUpperCase(), pitch: !!d.location });
