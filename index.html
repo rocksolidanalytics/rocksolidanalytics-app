@@ -1967,6 +1967,7 @@
     const pct = max > 0 ? Math.round(100 * value / max) : 0;
     return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, label), /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontFamily: MONO, fontWeight: 700 } }, value, suffix || "")), /* @__PURE__ */ React.createElement("div", { style: { height: 8, background: C.field, borderRadius: 5, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: pct + "%", background: color || C.greenB, borderRadius: 5 } })));
   }
+  function rsaScatter(pos){var g={},i,out=[];for(i=0;i<pos.length;i++){out.push([pos[i][0],pos[i][1]]);var k=Math.round(pos[i][0])+'_'+Math.round(pos[i][1]);(g[k]||(g[k]=[])).push(i);}Object.keys(g).forEach(function(k){var a=g[k],n=a.length;if(n<2)return;for(var j=0;j<n;j++){var r=Math.sqrt((j+0.5)/n)*24,t=j*2.399963;out[a[j]][0]=pos[a[j]][0]+Math.cos(t)*r;out[a[j]][1]=pos[a[j]][1]+Math.sin(t)*r;}});return out;}
   function PitchMap({ shots }) {
     const W = 300, H = 400, cx = W / 2;
     const m = (d) => d / 72 * H;
@@ -1980,7 +1981,7 @@
       const frac = (1 - x) / 0.5;
       return { sx: y * W, sy: frac * H, s: sh.score };
     };
-    const pts = (shots || []).map(proj);
+    const _p0 = (shots || []).map(proj); const _ps = rsaScatter(_p0.map(function(p){return [p.sx,p.sy];})); const pts = _p0.map(function(p,i){return {sx:_ps[i][0],sy:_ps[i][1],s:p.s};});
     const R2 = m(40), y2 = Math.sqrt(Math.max(0, R2 * R2 - cx * cx));
     const rD = m(13), y20 = m(20);
     let stripes = [], bands = 9;
@@ -2048,9 +2049,9 @@
       /* @__PURE__ */ React.createElement("line", { x1: 13, y1: H - m(22), x2: 13, y2: m(30), stroke: "#eaf6ee", strokeWidth: "1.4" }),
       /* @__PURE__ */ React.createElement("path", { d: "M 13 " + m(22) + " l -4 7 l 4 -2.4 l 4 2.4 z", fill: "#eaf6ee" }),
       /* @__PURE__ */ React.createElement("text", { x: 24, y: H / 2, fill: "#eaf6ee", fontSize: "9", fontFamily: MONO, letterSpacing: "1.5", transform: "rotate(-90 24 " + H / 2 + ")", textAnchor: "middle" }, "ALL KICKOUTS THIS WAY")),
-    /* @__PURE__ */ React.createElement("g", { filter: "url(#rskod)" }, (pts || []).map(function(p, i2) {
+    /* @__PURE__ */ React.createElement("g", { filter: "url(#rskod)" }, (function(){var _sc=rsaScatter((pts||[]).map(function(q){return [q.y*W,(1-q.x)*H];}));return (pts||[]).map(function(p,i2){return {won:p.won,cx:_sc[i2][0],cy:_sc[i2][1]};});})().map(function(p, i2) {
       var col = p.won ? C.greenB : C.red;
-      return /* @__PURE__ */ React.createElement("circle", { key: i2, cx: p.y * W, cy: (1 - p.x) * H, r: "4.5", fill: col, stroke: "#08160c", strokeWidth: "1.1", opacity: "0.96" });
+      return /* @__PURE__ */ React.createElement("circle", { key: i2, cx: p.cx, cy: p.cy, r: "4.5", fill: col, stroke: "#08160c", strokeWidth: "1.1", opacity: "0.96" });
     })));
   }
   function KickoutLegend() {
@@ -2117,7 +2118,7 @@
     function tap(e) {
       if (!onTap) return;
       var r = e.currentTarget.getBoundingClientRect();
-      onTap(snapZone({ x: Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)), y: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) }));
+      onTap({ x: Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)), y: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) });
     }
     var stripes = [], bands = 12;
     for (var i = 0; i < bands; i++) {
@@ -2244,7 +2245,7 @@
     function tap(e) {
       if (!onTap) return;
       var r = e.currentTarget.getBoundingClientRect();
-      onTap(snapZone({ x: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), y: Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)) }));
+      onTap({ x: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), y: Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)) });
     }
     var stripes = [], bands = 12;
     for (var i = 0; i < bands; i++) {
