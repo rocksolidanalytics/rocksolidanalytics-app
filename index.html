@@ -2024,8 +2024,8 @@
     s+='</svg>';
     return s;
   }
-  function XpPanel({ shots }){ return React.createElement("div", {}, React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "EXPECTED POINTS \u00b7 vs season baseline"), React.createElement("div", { dangerouslySetInnerHTML: { __html: xpPanelHtml(shots) } })); }
-  function ShotHeat({ shots }){ return React.createElement("div", {}, React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "SHOT DENSITY \u00b7 THIS MATCH"), React.createElement("div", { dangerouslySetInnerHTML: { __html: shotHeatHtml(shots) } })); }
+  function XpPanel({ shots, noHeading }){ return React.createElement("div", {}, noHeading ? null : React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "EXPECTED POINTS · vs season baseline"), React.createElement("div", { dangerouslySetInnerHTML: { __html: xpPanelHtml(shots) } })); }
+  function ShotHeat({ shots, noHeading }){ return React.createElement("div", {}, noHeading ? null : React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "SHOT DENSITY · THIS MATCH"), React.createElement("div", { dangerouslySetInnerHTML: { __html: shotHeatHtml(shots) } })); }
   
 function PitchMap({ shots }) {
     const W = 300, H = 400, cx = W / 2;
@@ -5047,6 +5047,8 @@ function PitchMap({ shots }) {
       }, style: { flex: 1, padding: "9px 0", borderRadius: 8, border: "none", cursor: "pointer", background: shotTeam === t[0] ? C.greenB : "transparent", color: shotTeam === t[0] ? C.bg : C.slate, fontWeight: 700, fontSize: 13 } }, t[1]);
     }))),
     dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: (shotTeam === "us" ? "OWN" : ON.toUpperCase()) + " SHOT MAP \xB7 " + d.shots[shotTeam].length + " SHOTS" }, /* @__PURE__ */ React.createElement(PitchMap, { shots: d.shots[shotTeam] }), /* @__PURE__ */ React.createElement(ShotLegend, null))),
+    dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "EXPECTED POINTS · vs season baseline" }, /* @__PURE__ */ React.createElement(XpPanel, { shots: d.shots[shotTeam], noHeading: true }))), 
+    dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "SHOT DENSITY · THIS MATCH" }, /* @__PURE__ */ React.createElement(ShotHeat, { shots: d.shots[shotTeam], noHeading: true }))), 
     dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "SHOT EFFICIENCY BY DISTANCE" }, [["Inside 21m", "inside21", C.greenB], ["21-45m", "mid", C.gold], ["45m+", "long", C.blue]].map(function(row) {
       var label = row[0], key = row[1], col = row[2];
       var b = d.bands[shotTeam][key];
