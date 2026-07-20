@@ -1665,7 +1665,7 @@
       { label: "Wides", us: countWide(us), opp: countWide(opp) },
       { label: "Shots / 10 Poss", us: usPoss ? Math.round(100 * usAll / usPoss) / 10 : 0, opp: opPoss ? Math.round(100 * opAll / opPoss) / 10 : 0 },
       { label: "Possession", us: usPoss + opPoss ? Math.round(100 * usPoss / (usPoss + opPoss)) : 0, opp: usPoss + opPoss ? Math.round(100 * opPoss / (usPoss + opPoss)) : 0, pct: true },
-      { label: "Tackles", us: usTk, opp: opTk },
+      { label: "Tackles", us: usTk, opp: opTk }, { label: "Turnovers", us: countTO(us), opp: countTO(opp) },
       { label: "Tackles / 10 opp poss", us: opPoss ? Math.round(100 * usTk / opPoss) / 10 : 0, opp: usPoss ? Math.round(100 * opTk / usPoss) / 10 : 0 },
       { label: "Tackle foul % \u00B7 lower is better", us: usTk ? Math.round(100 * usTkF / usTk) : 0, opp: opTk ? Math.round(100 * opTkF / opTk) : 0, pct: true },
       { label: "Def. work rate", us: usDwr, opp: opDwr },
@@ -2892,7 +2892,7 @@ function PitchMap({ shots }) {
         { label: "Shots / 10 Poss", us: usP ? Math.round(100 * usSh / usP) / 10 : 0, opp: opP ? Math.round(100 * opSh / opP) / 10 : 0 },
         { label: "Kickouts won", us: usKo ? Math.round(100 * f("us", koWon) / usKo) : 0, opp: opKo ? Math.round(100 * f("opp", koWon) / opKo) : 0, pct: true },
         { label: "Possession", us: usP + opP ? Math.round(100 * usP / (usP + opP)) : 0, opp: usP + opP ? Math.round(100 * opP / (usP + opP)) : 0, pct: true },
-        { label: "Tackles", us: usTk, opp: opTk },
+        { label: "Tackles", us: usTk, opp: opTk }, { label: "Turnovers", us: f("us", isTO), opp: f("opp", isTO) },
         { label: "Tackles / 10 opp poss", us: opP ? Math.round(100 * usTk / opP) / 10 : 0, opp: usP ? Math.round(100 * opTk / usP) / 10 : 0 },
         { label: "Tackle foul % \u00B7 lower is better", us: usTk ? Math.round(100 * usTkF / usTk) : 0, opp: opTk ? Math.round(100 * opTkF / opTk) : 0, pct: true }
       ];
