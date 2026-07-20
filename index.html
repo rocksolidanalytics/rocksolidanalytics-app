@@ -1968,7 +1968,55 @@
     return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, label), /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontFamily: MONO, fontWeight: 700 } }, value, suffix || "")), /* @__PURE__ */ React.createElement("div", { style: { height: 8, background: C.field, borderRadius: 5, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: pct + "%", background: color || C.greenB, borderRadius: 5 } })));
   }
   function rsaScatter(pos){var g={},i,out=[];for(i=0;i<pos.length;i++){out.push([pos[i][0],pos[i][1]]);var k=Math.round(pos[i][0])+'_'+Math.round(pos[i][1]);(g[k]||(g[k]=[])).push(i);}Object.keys(g).forEach(function(k){var a=g[k],n=a.length;if(n<2)return;for(var j=0;j<n;j++){var r=Math.sqrt((j+0.5)/n)*24,t=j*2.399963;out[a[j]][0]=pos[a[j]][0]+Math.cos(t)*r;out[a[j]][1]=pos[a[j]][1]+Math.sin(t)*r;}});return out;}
-  function PitchMap({ shots }) {
+  var XP_BASE = { "0_0":0.45,"0_1":1.35,"0_2":0.47,"1_0":0.62,"1_1":0.48,"1_2":0.52,"2_0":0.30,"2_1":0.40,"2_2":0.30 };
+  function xpZoneKey(sh){ var x=sh.x,y=sh.y; if(x<0.5){x=1-x;y=1-y;} var dd=(1-x)*144; var b=dd<=21?0:dd<=45?1:2; var l=y<0.38?0:y<0.62?1:2; return b+"_"+l; }
+  function matchXp(shots){ var xp=0,act=0; (shots||[]).forEach(function(sh){ xp+=(XP_BASE[xpZoneKey(sh)]||0); act+=(sh.score||0); }); return {xp:xp,act:act,diff:act-xp}; }
+  function xpPanelHtml(shots){
+    var r=matchXp(shots), cnt={};
+    (shots||[]).forEach(function(sh){ var k=xpZoneKey(sh); cnt[k]=(cnt[k]||0)+1; });
+    var lanes=["LEFT","CENTRE","RIGHT"], bands=["\u226421m","21-45m","45m+"];
+    var dc = r.diff>=0?C.greenB:C.red;
+    var h='<div style="font-size:13px;font-weight:800;color:'+dc+';margin-bottom:8px">xP '+r.xp.toFixed(1)+' \u00b7 scored '+r.act+' \u00b7 '+(r.diff>=0?"+":"")+r.diff.toFixed(1)+' vs expected</div>';
+    h+='<div style="display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:4px">';
+    h+='<div></div>';
+    for(var i=0;i<3;i++){ h+='<div style="font-size:8px;color:'+C.slateD+';text-align:center;font-family:'+MONO+'">'+lanes[i]+'</div>'; }
+    for(var b=0;b<3;b++){
+      h+='<div style="font-size:8px;color:'+C.slateD+';display:flex;align-items:center;font-family:'+MONO+'">'+bands[b]+'</div>';
+      for(var l=0;l<3;l++){
+        var k=b+"_"+l, v=XP_BASE[k]||0, n=cnt[k]||0;
+        var col=v>=0.8?C.greenB:v>=0.5?C.gold:C.red;
+        h+='<div style="background:'+col+'18;border:1px solid '+col+'55;border-radius:7px;padding:6px 2px;text-align:center">';
+        h+='<div style="font-size:13px;font-weight:800;color:'+col+'">'+v.toFixed(2)+'</div>';
+        h+='<div style="font-size:8px;color:'+C.slateD+'">'+n+(n===1?" shot":" shots")+'</div></div>';
+      }
+    }
+    h+='</div>';
+    return h;
+  }
+  function shotHeatHtml(shots){
+    var W=300,H=330,L=6,R=294,T=6,B=324,MX=150;
+    function yf(f){ return T+((1-f)/0.5)*(B-T); }
+    var P=[]; (shots||[]).forEach(function(sh){ var x=sh.x,y=sh.y; if(x<0.5){x=1-x;y=1-y;} P.push([L+y*(R-L), yf(x)]); });
+    var GX=18,GY=18,cw=(R-L)/GX,ch=(B-T)/GY,bw=20,grid=[],mx=0;
+    for(var gy=0;gy<GY;gy++){ grid[gy]=[]; for(var gx=0;gx<GX;gx++){ var cx=L+(gx+0.5)*cw,cy=T+(gy+0.5)*ch,v=0; for(var i=0;i<P.length;i++){ var dx=P[i][0]-cx,dy=P[i][1]-cy; v+=Math.exp(-(dx*dx+dy*dy)/(2*bw*bw)); } grid[gy][gx]=v; if(v>mx)mx=v; } }
+    var s='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;border-radius:10px;background:'+C.bg+'">';
+    s+='<defs><filter id="aShBlur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9"/></filter><clipPath id="aShClip"><rect x="'+L+'" y="'+T+'" width="'+(R-L)+'" height="'+(B-T)+'" rx="3"/></clipPath></defs>';
+    s+='<g clip-path="url(#aShClip)"><g filter="url(#aShBlur)">';
+    for(var gy2=0;gy2<GY;gy2++){ for(var gx2=0;gx2<GX;gx2++){ var t=mx?grid[gy2][gx2]/mx:0; if(t<0.08)continue; var hue=Math.round(120-120*Math.min(1,t)), op=(0.12+0.6*t).toFixed(2); s+='<rect x="'+(L+gx2*cw).toFixed(1)+'" y="'+(T+gy2*ch).toFixed(1)+'" width="'+(cw+1).toFixed(1)+'" height="'+(ch+1).toFixed(1)+'" fill="hsl('+hue+',90%,52%)" opacity="'+op+'"/>'; } }
+    s+='</g></g>';
+    var y20=yf(0.857),y45=yf(0.679),yARC=yf(0.714),y13=yf(0.907),LN="rgba(255,255,255,0.55)",LN2="rgba(255,255,255,0.3)";
+    s+='<rect x="'+L+'" y="'+T+'" width="'+(R-L)+'" height="'+(B-T)+'" fill="none" stroke="'+LN+'" stroke-width="2" rx="3"/>';
+    s+='<line x1="'+L+'" y1="'+y20+'" x2="'+R+'" y2="'+y20+'" stroke="'+LN+'" stroke-width="1.3" opacity="0.7"/>';
+    s+='<line x1="'+L+'" y1="'+y45+'" x2="'+R+'" y2="'+y45+'" stroke="'+LN2+'" stroke-width="1" opacity="0.6"/>';
+    s+='<path d="M'+(L+6)+','+y13+' Q'+MX+','+(2*yARC-y13)+' '+(R-6)+','+y13+'" fill="none" stroke="'+LN+'" stroke-width="1.5" opacity="0.7"/>';
+    s+='<line x1="'+(MX-20)+'" y1="'+(T-1)+'" x2="'+(MX+20)+'" y2="'+(T-1)+'" stroke="#fff" stroke-width="3" stroke-linecap="round"/>';
+    s+='</svg>';
+    return s;
+  }
+  function XpPanel({ shots }){ return React.createElement("div", {}, React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "EXPECTED POINTS \u00b7 vs season baseline"), React.createElement("div", { dangerouslySetInnerHTML: { __html: xpPanelHtml(shots) } })); }
+  function ShotHeat({ shots }){ return React.createElement("div", {}, React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "SHOT DENSITY \u00b7 THIS MATCH"), React.createElement("div", { dangerouslySetInnerHTML: { __html: shotHeatHtml(shots) } })); }
+  
+function PitchMap({ shots }) {
     const W = 300, H = 400, cx = W / 2;
     const m = (d) => d / 72 * H;
     const LN = "rgba(255,255,255,0.5)", LN2 = "rgba(255,255,255,0.28)";
@@ -2994,7 +3042,7 @@
       }, style: { flex: 1, padding: "8px 0", borderRadius: 8, border: "none", cursor: "pointer", background: stTeam === tt[0] ? C.greenB : "transparent", color: stTeam === tt[0] ? C.bg : C.slate, fontWeight: 700, fontSize: 12.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, tt[1]);
     })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "SCORERS"), liveScorers(stTeam).length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slateD } }, "No scores yet.") : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5 } }, liveScorers(stTeam).map(function(sc, i) {
       return /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 8, padding: "8px 11px", borderRadius: 8, background: C.bgCard, border: "1px solid " + C.border, fontSize: 12.5 } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1 } }, sc.name), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700, color: C.greenB } }, sc.g, "-", pad2(sc.p)));
-    })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "SHOT MAP \xB7 ", liveShots(stTeam).length, " SHOTS"), /* @__PURE__ */ React.createElement(PitchMap, { shots: liveShots(stTeam) }), /* @__PURE__ */ React.createElement(ShotLegend, null), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "KICKOUT MAP"), /* @__PURE__ */ React.createElement(KickoutMap, { pts: liveKoPts(stTeam) }), /* @__PURE__ */ React.createElement(KickoutLegend, null), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "SHOT EFFICIENCY BY DISTANCE"), [["Inside 21m", "inside21", C.greenB], ["21-45m", "mid", C.gold], ["45m+", "long", C.blue]].map(function(row) {
+    })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "SHOT MAP \xB7 ", liveShots(stTeam).length, " SHOTS"), /* @__PURE__ */ React.createElement(PitchMap, { shots: liveShots(stTeam) }), /* @__PURE__ */ React.createElement(ShotLegend, null), /* @__PURE__ */ React.createElement(XpPanel, { shots: liveShots(stTeam) }), /* @__PURE__ */ React.createElement(ShotHeat, { shots: liveShots(stTeam) }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "KICKOUT MAP"), /* @__PURE__ */ React.createElement(KickoutMap, { pts: liveKoPts(stTeam) }), /* @__PURE__ */ React.createElement(KickoutLegend, null), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "SHOT EFFICIENCY BY DISTANCE"), [["Inside 21m", "inside21", C.greenB], ["21-45m", "mid", C.gold], ["45m+", "long", C.blue]].map(function(row) {
       var b = liveBands(stTeam)[row[1]];
       var pct = b.n ? Math.round(100 * b.s / b.n) : 0;
       return /* @__PURE__ */ React.createElement("div", { key: row[1], style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, row[0]), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontWeight: 700 } }, pct, "%"), " ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 11 } }, " ", b.s, "/", b.n))), /* @__PURE__ */ React.createElement("div", { style: { height: 8, background: C.field, borderRadius: 5, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: pct + "%", background: row[2], borderRadius: 5 } })));
