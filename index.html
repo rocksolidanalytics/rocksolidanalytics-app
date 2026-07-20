@@ -1968,31 +1968,10 @@
     return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, label), /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontFamily: MONO, fontWeight: 700 } }, value, suffix || "")), /* @__PURE__ */ React.createElement("div", { style: { height: 8, background: C.field, borderRadius: 5, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: pct + "%", background: color || C.greenB, borderRadius: 5 } })));
   }
   function rsaScatter(pos){var g={},i,out=[];for(i=0;i<pos.length;i++){out.push([pos[i][0],pos[i][1]]);var k=Math.round(pos[i][0])+'_'+Math.round(pos[i][1]);(g[k]||(g[k]=[])).push(i);}Object.keys(g).forEach(function(k){var a=g[k],n=a.length;if(n<2)return;for(var j=0;j<n;j++){var r=Math.sqrt((j+0.5)/n)*24,t=j*2.399963;out[a[j]][0]=pos[a[j]][0]+Math.cos(t)*r;out[a[j]][1]=pos[a[j]][1]+Math.sin(t)*r;}});return out;}
-  var XP_BASE = { "0_0":0.45,"0_1":1.35,"0_2":0.47,"1_0":0.62,"1_1":0.48,"1_2":0.52,"2_0":0.30,"2_1":0.40,"2_2":0.30 };
+  var XP_BASE = { "0_0":0.447,"0_1":0.765,"0_2":0.471,"1_0":0.441,"1_1":0.443,"1_2":0.429,"2_0":0.18,"2_1":0.18,"2_2":0.18 };
   function xpZoneKey(sh){ var x=sh.x,y=sh.y; if(x<0.5){x=1-x;y=1-y;} var dd=(1-x)*144; var b=dd<=21?0:dd<=45?1:2; var l=y<0.38?0:y<0.62?1:2; return b+"_"+l; }
-  function matchXp(shots){ var xp=0,act=0; (shots||[]).forEach(function(sh){ xp+=(XP_BASE[xpZoneKey(sh)]||0); act+=(sh.score||0); }); return {xp:xp,act:act,diff:act-xp}; }
-  function xpPanelHtml(shots){
-    var r=matchXp(shots), cnt={};
-    (shots||[]).forEach(function(sh){ var k=xpZoneKey(sh); cnt[k]=(cnt[k]||0)+1; });
-    var lanes=["LEFT","CENTRE","RIGHT"], bands=["\u226421m","21-45m","45m+"];
-    var dc = r.diff>=0?C.greenB:C.red;
-    var h='<div style="font-size:13px;font-weight:800;color:'+dc+';margin-bottom:8px">xP '+r.xp.toFixed(1)+' \u00b7 scored '+r.act+' \u00b7 '+(r.diff>=0?"+":"")+r.diff.toFixed(1)+' vs expected</div>';
-    h+='<div style="display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:4px">';
-    h+='<div></div>';
-    for(var i=0;i<3;i++){ h+='<div style="font-size:8px;color:'+C.slateD+';text-align:center;font-family:'+MONO+'">'+lanes[i]+'</div>'; }
-    for(var b=0;b<3;b++){
-      h+='<div style="font-size:8px;color:'+C.slateD+';display:flex;align-items:center;font-family:'+MONO+'">'+bands[b]+'</div>';
-      for(var l=0;l<3;l++){
-        var k=b+"_"+l, v=XP_BASE[k]||0, n=cnt[k]||0;
-        var col=v>=0.8?C.greenB:v>=0.5?C.gold:C.red;
-        h+='<div style="background:'+col+'18;border:1px solid '+col+'55;border-radius:7px;padding:6px 2px;text-align:center">';
-        h+='<div style="font-size:13px;font-weight:800;color:'+col+'">'+v.toFixed(2)+'</div>';
-        h+='<div style="font-size:8px;color:'+C.slateD+'">'+n+(n===1?" shot":" shots")+'</div></div>';
-      }
-    }
-    h+='</div>';
-    return h;
-  }
+  function matchXp(shots){ var xs=0,act=0; (shots||[]).forEach(function(sh){ xs+=(XP_BASE[xpZoneKey(sh)]||0); act+=((sh.score||0)>0?1:0); }); return {xs:xs,act:act,diff:act-xs}; }
+  function xpPanelHtml(shots){ var r=matchXp(shots), cnt={}; (shots||[]).forEach(function(sh){ var k=xpZoneKey(sh); cnt[k]=(cnt[k]||0)+1; }); var lanes=["LEFT","CENTRE","RIGHT"], bands=["≤21m","21-45m","45m+"]; var dc = r.diff>=0?C.greenB:C.red; var h='<div style="font-size:13px;font-weight:800;color:'+dc+';margin-bottom:8px">xS '+r.xs.toFixed(1)+' · '+r.act+' scores · '+(r.diff>=0?"+":"")+r.diff.toFixed(1)+' vs expected</div>'; h+='<div style="display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:4px">'; h+='<div></div>'; for(var i=0;i<3;i++){ h+='<div style="font-size:8px;color:'+C.slateD+';text-align:center;font-family:'+MONO+'">'+lanes[i]+'</div>'; } for(var b=0;b<3;b++){ h+='<div style="font-size:8px;color:'+C.slateD+';display:flex;align-items:center;font-family:'+MONO+'">'+bands[b]+'</div>'; for(var l=0;l<3;l++){ var k=b+"_"+l, v=XP_BASE[k]||0, n=cnt[k]||0; var col=v>=0.55?C.greenB:v>=0.4?C.gold:C.red; h+='<div style="background:'+col+'18;border:1px solid '+col+'55;border-radius:7px;padding:6px 2px;text-align:center">'; h+='<div style="font-size:13px;font-weight:800;color:'+col+'">'+Math.round(v*100)+'%</div>'; h+='<div style="font-size:8px;color:'+C.slateD+'">'+n+(n===1?" shot":" shots")+'</div></div>'; } } h+='</div>'; return h; }
   function shotHeatHtml(shots){
     var W=300,H=340,L=8,R=292,T=8,B=332,MX=150,PW=R-L,PH=B-T,pm=PW/88;
     function yf(f){ return T+((1-f)/0.5)*PH; }
@@ -2024,7 +2003,7 @@
     s+='</svg>';
     return s;
   }
-  function XpPanel({ shots, noHeading }){ return React.createElement("div", {}, noHeading ? null : React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "EXPECTED POINTS · vs season baseline"), React.createElement("div", { dangerouslySetInnerHTML: { __html: xpPanelHtml(shots) } })); }
+  function XpPanel({ shots, noHeading }){ return React.createElement("div", {}, noHeading ? null : React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "EXPECTED SCORES · vs season baseline"), React.createElement("div", { dangerouslySetInnerHTML: { __html: xpPanelHtml(shots) } })); }
   function ShotHeat({ shots, noHeading }){ return React.createElement("div", {}, noHeading ? null : React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "SHOT DENSITY · THIS MATCH"), React.createElement("div", { dangerouslySetInnerHTML: { __html: shotHeatHtml(shots) } })); }
   
 function PitchMap({ shots }) {
@@ -5047,7 +5026,7 @@ function PitchMap({ shots }) {
       }, style: { flex: 1, padding: "9px 0", borderRadius: 8, border: "none", cursor: "pointer", background: shotTeam === t[0] ? C.greenB : "transparent", color: shotTeam === t[0] ? C.bg : C.slate, fontWeight: 700, fontSize: 13 } }, t[1]);
     }))),
     dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: (shotTeam === "us" ? "OWN" : ON.toUpperCase()) + " SHOT MAP \xB7 " + d.shots[shotTeam].length + " SHOTS" }, /* @__PURE__ */ React.createElement(PitchMap, { shots: d.shots[shotTeam] }), /* @__PURE__ */ React.createElement(ShotLegend, null))),
-    dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "EXPECTED POINTS · vs season baseline" }, /* @__PURE__ */ React.createElement(XpPanel, { shots: d.shots[shotTeam], noHeading: true }))), 
+    dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "EXPECTED SCORES · vs season baseline" }, /* @__PURE__ */ React.createElement(XpPanel, { shots: d.shots[shotTeam], noHeading: true }))), 
     dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "SHOT DENSITY · THIS MATCH" }, /* @__PURE__ */ React.createElement(ShotHeat, { shots: d.shots[shotTeam], noHeading: true }))), 
     dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "SHOT EFFICIENCY BY DISTANCE" }, [["Inside 21m", "inside21", C.greenB], ["21-45m", "mid", C.gold], ["45m+", "long", C.blue]].map(function(row) {
       var label = row[0], key = row[1], col = row[2];
