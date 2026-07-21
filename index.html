@@ -1999,7 +1999,7 @@
     s+='<path d="M'+L+','+ym(26).toFixed(1)+' Q'+MX+','+ym(46).toFixed(1)+' '+R+','+ym(26).toFixed(1)+'" stroke-dasharray="4 3" stroke-opacity="0.75"/>';
     s+='</g>';
     s+='<line x1="'+(MX-9)+'" y1="'+T+'" x2="'+(MX+9)+'" y2="'+T+'" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>';
-    S.forEach(function(p){ var col=p.s===3?C.gold:p.s===2?"#b06cff":p.s===1?C.greenB:C.red; s+='<circle cx="'+p.px.toFixed(1)+'" cy="'+p.py.toFixed(1)+'" r="3.2" fill="'+col+'" fill-opacity="0.92" stroke="#04140a" stroke-width="0.8"/>'; });
+    var _sc=rsaScatter(S.map(function(q){return [q.px,q.py];})); S.forEach(function(p,i){ var col=p.s===3?C.gold:p.s===2?"#b06cff":p.s===1?C.greenB:C.red; var _cx=_sc[i][0], _cy=_sc[i][1]; s+='<circle cx="'+_cx.toFixed(1)+'" cy="'+_cy.toFixed(1)+'" r="3.2" fill="'+col+'" fill-opacity="0.92" stroke="#04140a" stroke-width="0.8"/>'; });
     s+='</svg>';
     return s;
   }
