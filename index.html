@@ -626,6 +626,10 @@
       }
       return function() { dead = true; try { if (ytRef.current && ytRef.current.destroy) ytRef.current.destroy(); } catch (e) {} ytRef.current = null; if (hostRef.current) hostRef.current.innerHTML = ""; };
     }, [sel && sel.id]);
+    function nudge(d) {
+      var p = ytRef.current;
+      if (p && p.getCurrentTime && p.seekTo) { var t = p.getCurrentTime() || 0; p.seekTo(Math.max(0, t + d), true); if (d > 0 && p.playVideo) p.playVideo(); }
+    }
     function jump(t) {
       var target = Math.max(0, t - LEAD);
       var p = ytRef.current;
@@ -675,7 +679,9 @@
         var arr = groups[k], isOpen = !!openF[k];
         return React.createElement("div", { key: k, style: { marginBottom: 8 } }, React.createElement("button", { onClick: function() { setOpenF(function(p) { var n = Object.assign({}, p); n[k] = !n[k]; return n; }); }, style: { width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", background: C.bgCard, border: "1px solid " + C.border, borderRadius: 9, padding: "11px 12px", cursor: "pointer" } }, React.createElement("span", { style: { fontSize: 13, fontWeight: 800, color: C.white } }, (isOpen ? "\u25BE  " : "\u25B8  ") + k), React.createElement("span", { style: { fontSize: 11, color: C.slateD, fontFamily: MONO } }, String(arr.length))), isOpen ? React.createElement("div", { style: { paddingTop: 6 } }, arr.map(evBtn)) : null);
       });
-      return React.createElement("div", { style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { style: { flex: 1, overflowY: "auto" } }, React.createElement("div", { style: { position: "sticky", top: 0, zIndex: 5, background: C.bg, padding: "12px 14px 8px", borderBottom: "1px solid " + C.border } }, player, React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, paddingTop: 8, fontFamily: MONO } }, "TAP AN EVENT \u00b7 STARTS 5s BEFORE")), React.createElement("div", { style: { padding: "0 14px 28px" } }, chips, gchips, body2)));
+      return React.createElement("div", { style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { style: { flex: 1, overflowY: "auto" } }, React.createElement("div", { style: { position: "sticky", top: 0, zIndex: 5, background: C.bg, padding: "12px 14px 8px", borderBottom: "1px solid " + C.border } }, player, React.createElement("div", { style: { display: "flex", gap: 6, paddingTop: 8 } }, [[-10, "\u00ab 10s"], [-5, "\u2039 5s"], [5, "5s \u203a"], [10, "10s \u00bb"]].map(function(b) {
+        return React.createElement("button", { key: b[0], onClick: function() { nudge(b[0]); }, style: { flex: 1, padding: "9px 0", borderRadius: 8, border: "1px solid " + C.border, background: C.bgCard, color: C.slate, fontWeight: 800, fontSize: 12, fontFamily: MONO, cursor: "pointer" } }, b[1]);
+      })), React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, paddingTop: 8, fontFamily: MONO } }, "TAP AN EVENT \u00b7 STARTS 5s BEFORE")), React.createElement("div", { style: { padding: "0 14px 28px" } }, chips, gchips, body2)));
     }
     var visible = (matches || []).filter(function(m) { return manage ? true : (m.video_enabled && ytId(m.video_url)); });
     var body = matches === null ? React.createElement("div", { style: { padding: 24, textAlign: "center" } }, React.createElement(Spin, { s: 20, c: C.greenB })) : visible.length === 0 ? React.createElement("div", { style: { padding: 24, textAlign: "center", color: C.slateD, fontSize: 13 } }, manage ? "No video-tagged games yet." : isAnalyst ? "No games switched on yet. Tap Manage to add a link and enable one." : "No game film available yet.") : visible.map(function(m, i) {
