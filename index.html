@@ -586,28 +586,52 @@
     const [events, setEvents] = useState(null);
     const [ts, setTs] = useState(0);
     const [urlIn, setUrlIn] = useState({});
-    const [, bumpG] = useState(0);
+    const [manage, setManage] = useState(false);
+    const [, bump] = useState(0);
     const isAnalyst = role !== "player";
-    useEffect(function() {
-      db.from("matches").select("id,date,opponent,video_url").eq("club_id", club.id).eq("scouting", false).eq("video_tagged", true).order("date", { ascending: false }).limit(2).then(function(r) { setMatches(r.data || []); }, function() { setMatches([]); });
-    }, []);
+    function load() {
+      db.from("matches").select("id,date,opponent,video_url,video_enabled,video_throwin,video_halfstart").eq("club_id", club.id).eq("scouting", false).eq("video_tagged", true).order("date", { ascending: false }).then(function(r) { setMatches(r.data || []); }, function() { setMatches([]); });
+    }
+    useEffect(function() { load(); }, []);
     function ytId(u) { if (!u) return null; var m = String(u).match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/); return m ? m[1] : null; }
-    function open2(m) { setSel(m); setEvents(null); setTs(0); db.from("events").select("id,event_type,player,team,outcome,score,video_ts,time_text").eq("match_id", m.id).not("video_ts", "is", null).order("video_ts", { ascending: true }).then(function(r) { setEvents(r.data || []); }, function() { setEvents([]); }); }
-    function saveUrl(m) { var u = (urlIn[m.id] || "").trim(); if (!u) return; db.from("matches").update({ video_url: u }).eq("id", m.id).then(function() { m.video_url = u; bumpG(function(x) { return x + 1; }); }); }
+    function open2(m) { setSel(m); setEvents(null); setTs(0); db.from("events").select("id,event_type,player,team,outcome,score,video_ts,time_text,period").eq("match_id", m.id).order("seq", { ascending: true }).then(function(r) { setEvents(r.data || []); }, function() { setEvents([]); }); }
+    function seekOf(e, m) {
+      if (e.video_ts != null) return e.video_ts;
+      var pp = String(e.time_text || "").split(":").map(Number);
+      var gs = pp.length === 3 ? pp[0] * 3600 + pp[1] * 60 + pp[2] : pp.length === 2 ? pp[0] * 60 + pp[1] : null;
+      if (gs == null) return null;
+      var per = e.period == null ? 1 : Number(e.period);
+      if (per === 2 && m.video_halfstart != null) return m.video_halfstart + (gs - 1800);
+      if (m.video_throwin != null) return m.video_throwin + gs;
+      return null;
+    }
+    function patch(m, fields) { db.from("matches").update(fields).eq("id", m.id).then(function() { Object.assign(m, fields); bump(function(x) { return x + 1; }); }, function() {}); }
     function fmtDate(d) { if (!d) return ""; var x = new Date(d + "T00:00:00"); return x.getDate() + "/" + (x.getMonth() + 1); }
-    var hdr = React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 12 } }, React.createElement("button", { onClick: sel ? function() { setSel(null); } : back, style: { background: "none", border: "none", color: C.greenB, fontSize: 24, cursor: "pointer", lineHeight: 1 } }, "\u2039"), React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, sel ? (sel.opponent || "Match") : "Game film"));
+    var hdr = React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 12 } }, React.createElement("button", { onClick: sel ? function() { setSel(null); } : manage ? function() { setManage(false); } : back, style: { background: "none", border: "none", color: C.greenB, fontSize: 24, cursor: "pointer", lineHeight: 1 } }, "\u2039"), React.createElement("div", { style: { fontSize: 15, fontWeight: 800, flex: 1 } }, sel ? (sel.opponent || "Match") : manage ? "Manage videos" : "Game film"), (!sel && isAnalyst) ? React.createElement("button", { onClick: function() { setManage(!manage); }, style: { background: "none", border: "1px solid " + C.border, color: C.slate, borderRadius: 8, padding: "6px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer" } }, manage ? "Done" : "Manage") : null);
     if (sel) {
       var vid = ytId(sel.video_url);
+      var noSync = sel.video_throwin == null && sel.video_halfstart == null;
       var player = vid ? React.createElement("div", { style: { position: "relative", paddingTop: "56.25%", background: "#000", borderRadius: 10, overflow: "hidden" } }, React.createElement("iframe", { key: Math.floor(ts), src: "https://www.youtube.com/embed/" + vid + "?start=" + Math.floor(ts) + "&autoplay=1&rel=0", style: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }, allow: "autoplay; encrypted-media; fullscreen", allowFullScreen: true })) : React.createElement("div", { style: { color: C.slateD, fontSize: 12, padding: 16, textAlign: "center" } }, "No valid YouTube link on this match.");
-      var list = events === null ? React.createElement("div", { style: { textAlign: "center", paddingTop: 16 } }, React.createElement(Spin, { s: 18, c: C.greenB })) : events.length === 0 ? React.createElement("div", { style: { color: C.slateD, fontSize: 12, padding: 12, textAlign: "center" } }, "No timestamped events on this match.") : events.map(function(e, i) {
+      var rows = (events || []).map(function(e) { return { e: e, t: seekOf(e, sel) }; }).filter(function(r) { return r.t != null && r.t >= 0; });
+      var list = events === null ? React.createElement("div", { style: { textAlign: "center", paddingTop: 16 } }, React.createElement(Spin, { s: 18, c: C.greenB })) : rows.length === 0 ? React.createElement("div", { style: { color: C.slateD, fontSize: 12, padding: 12, textAlign: "center" } }, noSync ? "This match has no video sync yet. Open it in the video tagger and set the throw-in / second-half start." : "No timestamped events on this match.") : rows.map(function(r, i) {
+        var e = r.e;
         var col = (e.score || 0) > 0 ? C.greenB : (e.event_type === "Shot from play" || e.event_type === "Scoreable free") ? C.red : C.slate;
-        return React.createElement("button", { key: e.id || i, onClick: function() { setTs(e.video_ts || 0); }, style: { width: "100%", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, borderLeft: "3px solid " + col, borderRadius: 8, padding: "8px 10px", marginBottom: 5, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" } }, React.createElement("div", null, React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: C.white } }, e.event_type + (e.outcome ? (" \u00b7 " + e.outcome) : "")), React.createElement("div", { style: { fontSize: 10, color: C.slateD, marginTop: 1 } }, (e.player || "\u2014") + " \u00b7 " + (e.team === "us" ? "Us" : "Opp"))), React.createElement("span", { style: { fontSize: 10, color: C.slate, fontFamily: MONO } }, e.time_text || ""));
+        return React.createElement("button", { key: e.id || i, onClick: function() { setTs(r.t); }, style: { width: "100%", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, borderLeft: "3px solid " + col, borderRadius: 8, padding: "8px 10px", marginBottom: 5, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" } }, React.createElement("div", null, React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: C.white } }, e.event_type + (e.outcome ? (" \u00b7 " + e.outcome) : "")), React.createElement("div", { style: { fontSize: 10, color: C.slateD, marginTop: 1 } }, (e.player || "\u2014") + " \u00b7 " + (e.team === "us" ? "Us" : "Opp"))), React.createElement("span", { style: { fontSize: 10, color: C.slate, fontFamily: MONO } }, e.time_text || ""));
       });
       return React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { style: { padding: "12px 14px 6px" } }, player), React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, padding: "10px 14px 4px", fontFamily: MONO } }, "TAP AN EVENT TO JUMP THE VIDEO"), React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "2px 14px 24px" } }, list));
     }
-    var body = matches === null ? React.createElement("div", { style: { padding: 24, textAlign: "center" } }, React.createElement(Spin, { s: 20, c: C.greenB })) : matches.length === 0 ? React.createElement("div", { style: { padding: 24, textAlign: "center", color: C.slateD, fontSize: 13 } }, "No video-tagged games yet.") : matches.map(function(m, i) {
+    var visible = (matches || []).filter(function(m) { return manage ? true : (m.video_enabled && ytId(m.video_url)); });
+    var body = matches === null ? React.createElement("div", { style: { padding: 24, textAlign: "center" } }, React.createElement(Spin, { s: 20, c: C.greenB })) : visible.length === 0 ? React.createElement("div", { style: { padding: 24, textAlign: "center", color: C.slateD, fontSize: 13 } }, manage ? "No video-tagged games yet." : isAnalyst ? "No games switched on yet. Tap Manage to add a link and enable one." : "No game film available yet.") : visible.map(function(m, i) {
       var has = !!ytId(m.video_url);
-      return React.createElement("div", { key: m.id || i, style: { background: C.bgCard, border: "1px solid " + C.border, borderRadius: 12, padding: 14, marginBottom: 12 } }, React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, m.opponent || "Match"), React.createElement("div", { style: { fontSize: 11, color: C.slateD, marginTop: 2 } }, fmtDate(m.date)), has ? React.createElement("button", { onClick: function() { open2(m); }, style: { marginTop: 10, width: "100%", padding: 11, borderRadius: 9, border: "none", background: C.greenB, color: "#04140a", fontWeight: 800, cursor: "pointer" } }, "\u25B6 Watch breakdown") : isAnalyst ? React.createElement("div", { style: { marginTop: 10 } }, React.createElement("input", { value: urlIn[m.id] || "", onChange: function(e) { var v = e.target.value; setUrlIn(function(p) { var n = Object.assign({}, p); n[m.id] = v; return n; }); }, placeholder: "Paste unlisted YouTube link", style: { width: "100%", boxSizing: "border-box", padding: 10, borderRadius: 8, border: "1px solid " + C.border, background: C.bg, color: C.white, fontSize: 12 } }), React.createElement("button", { onClick: function() { saveUrl(m); }, style: { marginTop: 6, padding: "8px 14px", borderRadius: 8, border: "1px solid " + C.greenB, background: "none", color: C.greenB, fontWeight: 700, cursor: "pointer" } }, "Save link")) : React.createElement("div", { style: { marginTop: 10, fontSize: 11, color: C.slateD } }, "Video not linked yet."));
+      var synced = m.video_throwin != null || m.video_halfstart != null;
+      var kids = [React.createElement("div", { key: "t", style: { fontSize: 15, fontWeight: 800 } }, m.opponent || "Match"), React.createElement("div", { key: "d", style: { fontSize: 11, color: C.slateD, marginTop: 2 } }, fmtDate(m.date) + (manage && has && !synced ? " \u00b7 no sync yet" : ""))];
+      if (manage) {
+        kids.push(React.createElement("input", { key: "i", value: urlIn[m.id] != null ? urlIn[m.id] : (m.video_url || ""), onChange: function(ev) { var v = ev.target.value; setUrlIn(function(p) { var n = Object.assign({}, p); n[m.id] = v; return n; }); }, placeholder: "Paste unlisted YouTube link", style: { width: "100%", boxSizing: "border-box", marginTop: 10, padding: 10, borderRadius: 8, border: "1px solid " + C.border, background: C.bg, color: C.white, fontSize: 12 } }));
+        kids.push(React.createElement("div", { key: "b", style: { display: "flex", gap: 8, marginTop: 8 } }, React.createElement("button", { onClick: function() { patch(m, { video_url: (urlIn[m.id] != null ? urlIn[m.id] : (m.video_url || "")).trim() || null }); }, style: { flex: 1, padding: "9px", borderRadius: 8, border: "1px solid " + C.border, background: "none", color: C.slate, fontWeight: 700, cursor: "pointer", fontSize: 12 } }, "Save link"), React.createElement("button", { onClick: function() { patch(m, { video_enabled: !m.video_enabled }); }, disabled: !has, style: { flex: 1, padding: "9px", borderRadius: 8, border: "1px solid " + (m.video_enabled ? C.greenB : C.border), background: m.video_enabled ? C.greenB + "22" : "none", color: has ? (m.video_enabled ? C.greenB : C.slate) : C.slateD, fontWeight: 800, cursor: has ? "pointer" : "default", fontSize: 12 } }, m.video_enabled ? "\u2713 Visible to players" : "Hidden")));
+      } else {
+        kids.push(React.createElement("button", { key: "w", onClick: function() { open2(m); }, style: { marginTop: 10, width: "100%", padding: 11, borderRadius: 9, border: "none", background: C.greenB, color: "#04140a", fontWeight: 800, cursor: "pointer" } }, "\u25B6 Watch breakdown"));
+      }
+      return React.createElement("div", { key: m.id || i, style: { background: C.bgCard, border: "1px solid " + C.border, borderRadius: 12, padding: 14, marginBottom: 12 } }, kids);
     });
     return React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "14px 14px 24px" } }, body));
   }
@@ -4214,7 +4238,12 @@ function PitchMap({ shots }) {
     function saveSync(patch) {
       try {
         var cur = JSON.parse(window.localStorage.getItem("rsa_vsync_" + match.id) || "{}");
-        window.localStorage.setItem("rsa_vsync_" + match.id, JSON.stringify(Object.assign(cur, patch)));
+        var nxt = Object.assign(cur, patch);
+        window.localStorage.setItem("rsa_vsync_" + match.id, JSON.stringify(nxt));
+        var dbp = {};
+        if (nxt.throwIn != null) dbp.video_throwin = nxt.throwIn;
+        if (nxt.halfStart != null) dbp.video_halfstart = nxt.halfStart;
+        if (Object.keys(dbp).length) db.from("matches").update(dbp).eq("id", match.id).then(function() {}, function() {});
       } catch (e) {
       }
     }
