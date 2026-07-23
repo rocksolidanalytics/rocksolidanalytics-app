@@ -590,6 +590,7 @@
     const [apiFail, setApiFail] = useState(false);
     const [teamF, setTeamF] = useState("all");
     const [openF, setOpenF] = useState({});
+    const [groupBy, setGroupBy] = useState("type");
     const ytRef = useRef(null);
     const hostRef = useRef(null);
     const LEAD = 5;
@@ -654,22 +655,27 @@
       var usS = usN.split(" ")[0], oppS = oppN.split(" ")[0];
       var shown = rows.filter(function(r) { return teamF === "all" || r.e.team === teamF; });
       var groups = {};
-      shown.forEach(function(r) { var k = r.e.event_type || "Other"; (groups[k] = groups[k] || []).push(r); });
-      var keys = Object.keys(groups).sort(function(a, b) { return groups[b].length - groups[a].length; });
+      var byPl = groupBy === "player";
+      shown.forEach(function(r) { var k = byPl ? (r.e.player || "Unassigned") : (r.e.event_type || "Other"); (groups[k] = groups[k] || []).push(r); });
+      var keys = Object.keys(groups).sort(byPl ? function(a, b) { if (a === "Unassigned") return 1; if (b === "Unassigned") return -1; return a > b ? 1 : -1; } : function(a, b) { return groups[b].length - groups[a].length; });
       var chips = React.createElement("div", { style: { display: "flex", gap: 6, margin: "12px 0" } }, [["all", "All"], ["us", usS], ["opp", oppS]].map(function(c) {
         var on = teamF === c[0];
         return React.createElement("button", { key: c[0], onClick: function() { setTeamF(c[0]); }, style: { flex: 1, padding: "8px", borderRadius: 8, border: "1px solid " + (on ? C.greenB : C.border), background: on ? C.greenB + "22" : "none", color: on ? C.greenB : C.slate, fontWeight: 800, fontSize: 12, cursor: "pointer" } }, c[1]);
       }));
+      var gchips = React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center", marginBottom: 12 } }, React.createElement("span", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO, letterSpacing: 1 } }, "GROUP"), [["type", "Event"], ["player", "Player"]].map(function(g) {
+        var on = groupBy === g[0];
+        return React.createElement("button", { key: g[0], onClick: function() { setGroupBy(g[0]); setOpenF({}); }, style: { flex: 1, padding: "7px", borderRadius: 8, border: "1px solid " + (on ? C.greenB : C.border), background: on ? C.greenB + "22" : "none", color: on ? C.greenB : C.slate, fontWeight: 800, fontSize: 11.5, cursor: "pointer" } }, g[1]);
+      }));
       function evBtn(r, i) {
         var e = r.e;
         var col = (e.score || 0) > 0 ? C.greenB : (e.event_type === "Shot from play" || e.event_type === "Scoreable free") ? C.red : C.slate;
-        return React.createElement("button", { key: e.id || i, onClick: function() { jump(r.t); }, style: { width: "100%", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, borderLeft: "3px solid " + col, borderRadius: 8, padding: "8px 10px", marginBottom: 5, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" } }, React.createElement("div", null, React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: C.white } }, e.outcome || e.event_type), React.createElement("div", { style: { fontSize: 10, color: C.slateD, marginTop: 1 } }, (e.player || "\u2014") + " \u00b7 " + (e.team === "us" ? usN : oppN))), React.createElement("span", { style: { fontSize: 10, color: C.slate, fontFamily: MONO } }, e.time_text || ""));
+        return React.createElement("button", { key: e.id || i, onClick: function() { jump(r.t); }, style: { width: "100%", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, borderLeft: "3px solid " + col, borderRadius: 8, padding: "8px 10px", marginBottom: 5, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" } }, React.createElement("div", null, React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: C.white } }, byPl ? ((e.event_type || "") + (e.outcome ? (" \u00b7 " + e.outcome) : "")) : (e.outcome || e.event_type)), React.createElement("div", { style: { fontSize: 10, color: C.slateD, marginTop: 1 } }, byPl ? (e.team === "us" ? usN : oppN) : ((e.player || "\u2014") + " \u00b7 " + (e.team === "us" ? usN : oppN)))), React.createElement("span", { style: { fontSize: 10, color: C.slate, fontFamily: MONO } }, e.time_text || ""));
       }
       var body2 = events === null ? React.createElement("div", { style: { textAlign: "center", paddingTop: 16 } }, React.createElement(Spin, { s: 18, c: C.greenB })) : rows.length === 0 ? React.createElement("div", { style: { color: C.slateD, fontSize: 12, padding: 12, textAlign: "center" } }, noSync ? "This match has no video sync yet. Open it in the video tagger and set the throw-in / second-half start." : "No timestamped events on this match.") : keys.length === 0 ? React.createElement("div", { style: { color: C.slateD, fontSize: 12, padding: 12, textAlign: "center" } }, "No events for this filter.") : keys.map(function(k) {
         var arr = groups[k], isOpen = !!openF[k];
         return React.createElement("div", { key: k, style: { marginBottom: 8 } }, React.createElement("button", { onClick: function() { setOpenF(function(p) { var n = Object.assign({}, p); n[k] = !n[k]; return n; }); }, style: { width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", background: C.bgCard, border: "1px solid " + C.border, borderRadius: 9, padding: "11px 12px", cursor: "pointer" } }, React.createElement("span", { style: { fontSize: 13, fontWeight: 800, color: C.white } }, (isOpen ? "\u25BE  " : "\u25B8  ") + k), React.createElement("span", { style: { fontSize: 11, color: C.slateD, fontFamily: MONO } }, String(arr.length))), isOpen ? React.createElement("div", { style: { paddingTop: 6 } }, arr.map(evBtn)) : null);
       });
-      return React.createElement("div", { style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { style: { flex: 1, overflowY: "auto" } }, React.createElement("div", { style: { position: "sticky", top: 0, zIndex: 5, background: C.bg, padding: "12px 14px 8px", borderBottom: "1px solid " + C.border } }, player, React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, paddingTop: 8, fontFamily: MONO } }, "TAP AN EVENT \u00b7 STARTS 5s BEFORE")), React.createElement("div", { style: { padding: "0 14px 28px" } }, chips, body2)));
+      return React.createElement("div", { style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { style: { flex: 1, overflowY: "auto" } }, React.createElement("div", { style: { position: "sticky", top: 0, zIndex: 5, background: C.bg, padding: "12px 14px 8px", borderBottom: "1px solid " + C.border } }, player, React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, paddingTop: 8, fontFamily: MONO } }, "TAP AN EVENT \u00b7 STARTS 5s BEFORE")), React.createElement("div", { style: { padding: "0 14px 28px" } }, chips, gchips, body2)));
     }
     var visible = (matches || []).filter(function(m) { return manage ? true : (m.video_enabled && ytId(m.video_url)); });
     var body = matches === null ? React.createElement("div", { style: { padding: 24, textAlign: "center" } }, React.createElement(Spin, { s: 20, c: C.greenB })) : visible.length === 0 ? React.createElement("div", { style: { padding: 24, textAlign: "center", color: C.slateD, fontSize: 13 } }, manage ? "No video-tagged games yet." : isAnalyst ? "No games switched on yet. Tap Manage to add a link and enable one." : "No game film available yet.") : visible.map(function(m, i) {
