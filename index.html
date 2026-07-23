@@ -587,6 +587,10 @@
     const [ts, setTs] = useState(0);
     const [urlIn, setUrlIn] = useState({});
     const [manage, setManage] = useState(false);
+    const [apiFail, setApiFail] = useState(false);
+    const ytRef = useRef(null);
+    const hostRef = useRef(null);
+    const LEAD = 2;
     const [, bump] = useState(0);
     const isAnalyst = role !== "player";
     function load() {
@@ -595,6 +599,36 @@
     useEffect(function() { load(); }, []);
     function ytId(u) { if (!u) return null; var m = String(u).match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/); return m ? m[1] : null; }
     function open2(m) { setSel(m); setEvents(null); setTs(0); db.from("events").select("id,event_type,player,team,outcome,score,video_ts,time_text,period").eq("match_id", m.id).order("seq", { ascending: true }).then(function(r) { setEvents(r.data || []); }, function() { setEvents([]); }); }
+    useEffect(function() {
+      if (!sel) return;
+      var vid = ytId(sel.video_url);
+      if (!vid) return;
+      var dead = false, host = null;
+      function mk() {
+        if (dead || !hostRef.current || !window.YT || !window.YT.Player) return;
+        hostRef.current.innerHTML = "";
+        host = document.createElement("div");
+        host.style.width = "100%"; host.style.height = "100%";
+        hostRef.current.appendChild(host);
+        try {
+          ytRef.current = new window.YT.Player(host, { videoId: vid, width: "100%", height: "100%", playerVars: { rel: 0, playsinline: 1, modestbranding: 1 } });
+        } catch (e) { setApiFail(true); }
+      }
+      if (window.YT && window.YT.Player) mk();
+      else {
+        var prev = window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady = function() { if (typeof prev === "function") { try { prev(); } catch (e) {} } mk(); };
+        if (!document.getElementById("rsa-yt-api")) { var sc = document.createElement("script"); sc.id = "rsa-yt-api"; sc.src = "https://www.youtube.com/iframe_api"; sc.onerror = function() { setApiFail(true); }; document.head.appendChild(sc); }
+        setTimeout(function() { if (!dead && !(window.YT && window.YT.Player)) setApiFail(true); }, 6000);
+      }
+      return function() { dead = true; try { if (ytRef.current && ytRef.current.destroy) ytRef.current.destroy(); } catch (e) {} ytRef.current = null; if (hostRef.current) hostRef.current.innerHTML = ""; };
+    }, [sel && sel.id]);
+    function jump(t) {
+      var target = Math.max(0, t - LEAD);
+      var p = ytRef.current;
+      if (p && p.seekTo) { p.seekTo(target, true); if (p.playVideo) p.playVideo(); }
+      else setTs(target);
+    }
     function seekOf(e, m) {
       if (e.video_ts != null) return e.video_ts;
       var pp = String(e.time_text || "").split(":").map(Number);
@@ -611,14 +645,14 @@
     if (sel) {
       var vid = ytId(sel.video_url);
       var noSync = sel.video_throwin == null && sel.video_halfstart == null;
-      var player = vid ? React.createElement("div", { style: { position: "relative", paddingTop: "56.25%", background: "#000", borderRadius: 10, overflow: "hidden" } }, React.createElement("iframe", { key: Math.floor(ts), src: "https://www.youtube.com/embed/" + vid + "?start=" + Math.floor(ts) + "&autoplay=1&rel=0", style: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }, allow: "autoplay; encrypted-media; fullscreen", allowFullScreen: true })) : React.createElement("div", { style: { color: C.slateD, fontSize: 12, padding: 16, textAlign: "center" } }, "No valid YouTube link on this match.");
+      var player = vid ? React.createElement("div", { style: { position: "relative", paddingTop: "56.25%", background: "#000", borderRadius: 10, overflow: "hidden" } }, apiFail ? React.createElement("iframe", { key: Math.floor(ts), src: "https://www.youtube.com/embed/" + vid + "?start=" + Math.floor(ts) + "&autoplay=1&rel=0", style: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }, allow: "autoplay; encrypted-media; fullscreen", allowFullScreen: true }) : React.createElement("div", { ref: hostRef, style: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" } })) : React.createElement("div", { style: { color: C.slateD, fontSize: 12, padding: 16, textAlign: "center" } }, "No valid YouTube link on this match.");
       var rows = (events || []).map(function(e) { return { e: e, t: seekOf(e, sel) }; }).filter(function(r) { return r.t != null && r.t >= 0; });
       var list = events === null ? React.createElement("div", { style: { textAlign: "center", paddingTop: 16 } }, React.createElement(Spin, { s: 18, c: C.greenB })) : rows.length === 0 ? React.createElement("div", { style: { color: C.slateD, fontSize: 12, padding: 12, textAlign: "center" } }, noSync ? "This match has no video sync yet. Open it in the video tagger and set the throw-in / second-half start." : "No timestamped events on this match.") : rows.map(function(r, i) {
         var e = r.e;
         var col = (e.score || 0) > 0 ? C.greenB : (e.event_type === "Shot from play" || e.event_type === "Scoreable free") ? C.red : C.slate;
-        return React.createElement("button", { key: e.id || i, onClick: function() { setTs(r.t); }, style: { width: "100%", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, borderLeft: "3px solid " + col, borderRadius: 8, padding: "8px 10px", marginBottom: 5, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" } }, React.createElement("div", null, React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: C.white } }, e.event_type + (e.outcome ? (" \u00b7 " + e.outcome) : "")), React.createElement("div", { style: { fontSize: 10, color: C.slateD, marginTop: 1 } }, (e.player || "\u2014") + " \u00b7 " + (e.team === "us" ? "Us" : "Opp"))), React.createElement("span", { style: { fontSize: 10, color: C.slate, fontFamily: MONO } }, e.time_text || ""));
+        return React.createElement("button", { key: e.id || i, onClick: function() { jump(r.t); }, style: { width: "100%", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, borderLeft: "3px solid " + col, borderRadius: 8, padding: "8px 10px", marginBottom: 5, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" } }, React.createElement("div", null, React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: C.white } }, e.event_type + (e.outcome ? (" \u00b7 " + e.outcome) : "")), React.createElement("div", { style: { fontSize: 10, color: C.slateD, marginTop: 1 } }, (e.player || "\u2014") + " \u00b7 " + (e.team === "us" ? "Us" : "Opp"))), React.createElement("span", { style: { fontSize: 10, color: C.slate, fontFamily: MONO } }, e.time_text || ""));
       });
-      return React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { style: { padding: "12px 14px 6px" } }, player), React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, padding: "10px 14px 4px", fontFamily: MONO } }, "TAP AN EVENT TO JUMP THE VIDEO"), React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "2px 14px 24px" } }, list));
+      return React.createElement("div", { style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { style: { padding: "12px 14px 6px" } }, player), React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, padding: "10px 14px 4px", fontFamily: MONO } }, "TAP AN EVENT \u00b7 STARTS 2s BEFORE"), React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "2px 14px 24px" } }, list));
     }
     var visible = (matches || []).filter(function(m) { return manage ? true : (m.video_enabled && ytId(m.video_url)); });
     var body = matches === null ? React.createElement("div", { style: { padding: 24, textAlign: "center" } }, React.createElement(Spin, { s: 20, c: C.greenB })) : visible.length === 0 ? React.createElement("div", { style: { padding: 24, textAlign: "center", color: C.slateD, fontSize: 13 } }, manage ? "No video-tagged games yet." : isAnalyst ? "No games switched on yet. Tap Manage to add a link and enable one." : "No game film available yet.") : visible.map(function(m, i) {
