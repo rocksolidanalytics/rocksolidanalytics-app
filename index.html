@@ -591,6 +591,7 @@
     const [teamF, setTeamF] = useState("all");
     const [openF, setOpenF] = useState({});
     const [groupBy, setGroupBy] = useState("type");
+    const [playing, setPlaying] = useState(false);
     const ytRef = useRef(null);
     const hostRef = useRef(null);
     const LEAD = 5;
@@ -614,7 +615,7 @@
         host.style.width = "100%"; host.style.height = "100%";
         hostRef.current.appendChild(host);
         try {
-          ytRef.current = new window.YT.Player(host, { videoId: vid, width: "100%", height: "100%", playerVars: { rel: 0, playsinline: 1, modestbranding: 1 } });
+          ytRef.current = new window.YT.Player(host, { videoId: vid, width: "100%", height: "100%", playerVars: { rel: 0, playsinline: 1, controls: 0, iv_load_policy: 3, disablekb: 1 }, events: { onStateChange: function(ev) { setPlaying(ev.data === 1); } } });
         } catch (e) { setApiFail(true); }
       }
       if (window.YT && window.YT.Player) mk();
@@ -629,6 +630,12 @@
     function nudge(d) {
       var p = ytRef.current;
       if (p && p.getCurrentTime && p.seekTo) { var t = p.getCurrentTime() || 0; p.seekTo(Math.max(0, t + d), true); if (d > 0 && p.playVideo) p.playVideo(); }
+    }
+    function toggle() {
+      var p = ytRef.current;
+      if (!p) return;
+      if (p.getPlayerState && p.getPlayerState() === 1) { if (p.pauseVideo) p.pauseVideo(); }
+      else if (p.playVideo) p.playVideo();
     }
     function jump(t) {
       var target = Math.max(0, t - LEAD);
@@ -652,7 +659,7 @@
     if (sel) {
       var vid = ytId(sel.video_url);
       var noSync = sel.video_throwin == null && sel.video_halfstart == null;
-      var player = vid ? React.createElement("div", { style: { position: "relative", paddingTop: "56.25%", background: "#000", borderRadius: 10, overflow: "hidden" } }, apiFail ? React.createElement("iframe", { key: Math.floor(ts), src: "https://www.youtube.com/embed/" + vid + "?start=" + Math.floor(ts) + "&autoplay=1&rel=0", style: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }, allow: "autoplay; encrypted-media; fullscreen", allowFullScreen: true }) : React.createElement("div", { ref: hostRef, style: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" } })) : React.createElement("div", { style: { color: C.slateD, fontSize: 12, padding: 16, textAlign: "center" } }, "No valid YouTube link on this match.");
+      var player = vid ? React.createElement("div", { style: { position: "relative", paddingTop: "56.25%", background: "#000", borderRadius: 10, overflow: "hidden" } }, apiFail ? React.createElement("iframe", { key: Math.floor(ts), src: "https://www.youtube.com/embed/" + vid + "?start=" + Math.floor(ts) + "&autoplay=1&rel=0&controls=0", style: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }, allow: "autoplay; encrypted-media; fullscreen", allowFullScreen: true }) : React.createElement("div", { ref: hostRef, style: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" } })) : React.createElement("div", { style: { color: C.slateD, fontSize: 12, padding: 16, textAlign: "center" } }, "No valid YouTube link on this match.");
       var rows = (events || []).map(function(e) { return { e: e, t: seekOf(e, sel) }; }).filter(function(r) { return r.t != null && r.t >= 0; });
       var usN = (club && club.name) ? club.name : "Us";
       var oppN = (sel && sel.opponent) ? sel.opponent : "Opp";
@@ -679,7 +686,8 @@
         var arr = groups[k], isOpen = !!openF[k];
         return React.createElement("div", { key: k, style: { marginBottom: 8 } }, React.createElement("button", { onClick: function() { setOpenF(function(p) { var n = Object.assign({}, p); n[k] = !n[k]; return n; }); }, style: { width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", background: C.bgCard, border: "1px solid " + C.border, borderRadius: 9, padding: "11px 12px", cursor: "pointer" } }, React.createElement("span", { style: { fontSize: 13, fontWeight: 800, color: C.white } }, (isOpen ? "\u25BE  " : "\u25B8  ") + k), React.createElement("span", { style: { fontSize: 11, color: C.slateD, fontFamily: MONO } }, String(arr.length))), isOpen ? React.createElement("div", { style: { paddingTop: 6 } }, arr.map(evBtn)) : null);
       });
-      return React.createElement("div", { style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { style: { flex: 1, overflowY: "auto" } }, React.createElement("div", { style: { position: "sticky", top: 0, zIndex: 5, background: C.bg, padding: "12px 14px 8px", borderBottom: "1px solid " + C.border } }, player, React.createElement("div", { style: { display: "flex", gap: 6, paddingTop: 8 } }, [[-10, "\u00ab 10s"], [-5, "\u2039 5s"], [5, "5s \u203a"], [10, "10s \u00bb"]].map(function(b) {
+      return React.createElement("div", { style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { style: { flex: 1, overflowY: "auto" } }, React.createElement("div", { style: { position: "sticky", top: 0, zIndex: 5, background: C.bg, padding: "12px 14px 8px", borderBottom: "1px solid " + C.border } }, player, React.createElement("div", { style: { display: "flex", gap: 6, paddingTop: 8, alignItems: "stretch" } }, [[-10, "\u00ab 10"], [-5, "\u2039 5"], [0, "PP"], [5, "5 \u203a"], [10, "10 \u00bb"]].map(function(b) {
+        if (b[0] === 0) return React.createElement("button", { key: "pp", onClick: toggle, style: { flex: 1.1, padding: "9px 0", borderRadius: 8, border: "1px solid " + C.greenB, background: C.greenB + "22", color: C.greenB, fontWeight: 800, fontSize: 13, cursor: "pointer" } }, playing ? "\u23F8" : "\u25B6");
         return React.createElement("button", { key: b[0], onClick: function() { nudge(b[0]); }, style: { flex: 1, padding: "9px 0", borderRadius: 8, border: "1px solid " + C.border, background: C.bgCard, color: C.slate, fontWeight: 800, fontSize: 12, fontFamily: MONO, cursor: "pointer" } }, b[1]);
       })), React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, paddingTop: 8, fontFamily: MONO } }, "TAP AN EVENT \u00b7 STARTS 5s BEFORE")), React.createElement("div", { style: { padding: "0 14px 28px" } }, chips, gchips, body2)));
     }
