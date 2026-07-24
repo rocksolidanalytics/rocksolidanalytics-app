@@ -1685,6 +1685,8 @@
           y = 1 - y;
         }
         var won = KO_WON.has(e.outcome);
+        var _f = koFixOrient({ x: x, y: y });
+        x = _f.x; y = _f.y;
         pts.push({ x, y, won });
         var dist = (1 - x) * 144;
         var row = dist < 45 ? "short" : dist <= 65 ? "mid" : "long";
@@ -2132,7 +2134,8 @@
   function XpPanel({ shots, usShots, oppShots, noHeading }){ return React.createElement("div", {}, noHeading ? null : React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "EXPECTED SCORES · vs season baseline"), React.createElement("div", { dangerouslySetInnerHTML: { __html: xpPanelHtml(shots, usShots, oppShots) } })); }
   function ShotHeat({ shots, noHeading }){ return React.createElement("div", {}, noHeading ? null : React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "SHOT DENSITY · THIS MATCH"), React.createElement("div", { dangerouslySetInnerHTML: { __html: shotHeatHtml(shots) } })); }
   
-function PitchMap({ shots }) {
+function koFixOrient(p){ var K0=0.854, PL=144, MX=70; function ok(v){ var k=(K0-v)*PL; return k>=-2 && k<=MX; } if(!ok(p.x) && ok(1-p.x)){ return { x: 1-p.x, y: 1-p.y }; } return p; }
+  function PitchMap({ shots }) {
     const W = 300, H = 400, cx = W / 2;
     const m = (d) => d / 72 * H;
     const LN = "rgba(255,255,255,0.5)", LN2 = "rgba(255,255,255,0.28)";
@@ -2565,7 +2568,7 @@ function PitchMap({ shots }) {
     }, []);
     const [subOff, setSubOff] = useState(null);
     const [subOn, setSubOn] = useState(null);
-    const [attackUp, setAttackUp] = useState(true);
+    const [attackUp, setAttackUp] = useState(match.attack_up == null ? true : !!match.attack_up);
     const [flash, setFlash] = useState(null);
     const [statsOpen, setStatsOpen] = useState(false);
     const [halfEnded, setHalfEnded] = useState(false);
@@ -3032,7 +3035,8 @@ function PitchMap({ shots }) {
           x = 1 - x;
           y = 1 - y;
         }
-        return { x, y, won: r.outcome === "Won clean" || r.outcome === "Break won" };
+        var _f = koFixOrient({ x: x, y: y });
+        return { x: _f.x, y: _f.y, won: r.outcome === "Won clean" || r.outcome === "Break won" };
       });
     }
     function liveScorers(tm) {
@@ -3287,9 +3291,10 @@ function PitchMap({ shots }) {
       tx.current.skip = true;
       sync();
     }, style: { background: "none", border: "1px solid " + C.border, borderRadius: 7, color: C.slate, fontSize: 10, fontWeight: 700, padding: "3px 9px", cursor: "pointer" } }, "Skip \u203A")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, margin: "0 2px 5px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, fontWeight: 800, fontFamily: MONO, color: C.greenB, letterSpacing: 0.5 } }, attackUp ? "\u25B2 " : "\u25BC ", club.name.split(" ")[0].toUpperCase(), " ATTACKING ", attackUp ? "TOP" : "BOTTOM", " GOAL"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
-      setAttackUp(function(a) {
-        return !a;
-      });
+      var _nv = !attackUp;
+      setAttackUp(_nv);
+      var _first = String(period) === "2" ? !_nv : _nv;
+      db.from("matches").update({ attack_up: _first }).eq("id", match.id).then(function() {}, function() {});
     }, style: { background: "none", border: "1px solid " + C.border, borderRadius: 7, color: C.slate, fontSize: 9.5, fontWeight: 800, padding: "3px 10px", cursor: "pointer" } }, "\u21C5 SWAP")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 430, position: "relative" } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 6, left: 0, right: 0, textAlign: "center", zIndex: 2, pointerEvents: "none", fontSize: 9, fontWeight: 800, fontFamily: MONO, color: attackUp ? C.greenB : C.gold, textShadow: "0 1px 3px #000" } }, attackUp ? club.name.split(" ")[0].toUpperCase() + " \u25B2" : (match.opponent || "OPP").split(" ")[0].toUpperCase() + " \u25B2"), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", bottom: 6, left: 0, right: 0, textAlign: "center", zIndex: 2, pointerEvents: "none", fontSize: 9, fontWeight: 800, fontFamily: MONO, color: attackUp ? C.gold : C.greenB, textShadow: "0 1px 3px #000" } }, attackUp ? (match.opponent || "OPP").split(" ")[0].toUpperCase() + " \u25BC" : club.name.split(" ")[0].toUpperCase() + " \u25BC"), /* @__PURE__ */ React.createElement(TagPitch, { active: true, onTap: function(loc) {
       tx.current.loc = loc;
       sync();
