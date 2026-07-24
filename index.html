@@ -2573,6 +2573,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [attackUp, setAttackUp] = useState(match.attack_up == null ? true : !!match.attack_up);
     const [flash, setFlash] = useState(null);
     const [statsOpen, setStatsOpen] = useState(false);
+    const [stHalf, setStHalf] = useState("all");
     const [halfEnded, setHalfEnded] = useState(false);
     const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine !== false : true);
     const [customEvents, setCustomEvents] = useState([]);
@@ -2962,7 +2963,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function liveCompare() {
       function f(tm, pred) {
         return tagged.filter(function(r) {
-          return r.team === tm && pred(r);
+          return r.team === tm && inHalf(r) && pred(r);
         }).length;
       }
       var isShot = function(r) {
@@ -3020,16 +3021,17 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         return !a;
       });
     } } : { l: "END MATCH", bg: C.red, fn: endMatch };
+    function inHalf(r) { return stHalf === "all" || String(r.period == null ? 1 : r.period) === stHalf; }
     function liveShots(tm) {
       return tagged.filter(function(r) {
-        return r.team === tm && (r.event_type === "Shot from play" || r.event_type === "Scoreable free") && r.x != null;
+        return r.team === tm && inHalf(r) && (r.event_type === "Shot from play" || r.event_type === "Scoreable free") && r.x != null;
       }).map(function(r) {
         return { x: r.x, y: r.y, score: r.score, outcome: r.outcome };
       });
     }
     function liveKoPts(tm) {
       return tagged.filter(function(r) {
-        return r.event_type === "Kickout" && r.team === tm && r.x != null;
+        return r.event_type === "Kickout" && r.team === tm && inHalf(r) && r.x != null;
       }).map(function(r) {
         var flip = tm === "us" ? String(r.period) === "2" : String(r.period) !== "2";
         var x = r.x, y = r.y;
@@ -3158,7 +3160,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }
     if (statsOpen) return /* @__PURE__ */ React.createElement("div", { style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", fontFamily: MONO } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderBottom: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontSize: 11, letterSpacing: 1, color: C.greenB } }, "LIVE STATS \xB7 ", running ? fmtFull(dispSec).slice(3) : "--:--", " \xB7 ", period === 1 ? "1ST" : "2ND"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setStatsOpen(false);
-    }, style: { background: "none", border: "1px solid " + C.border, borderRadius: 8, color: C.white, padding: "6px 13px", cursor: "pointer", fontSize: 13 } }, "\u2715")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflow: "auto", padding: "12px 14px 16px" } }, /* @__PURE__ */ React.createElement(CompareBars, { rows: liveCompare(), club }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, margin: "16px 0 4px", background: C.bgCard, padding: 4, borderRadius: 11, border: "1px solid " + C.border } }, [["us", club.name], ["opp", match.opponent || "Opposition"]].map(function(tt) {
+    }, style: { background: "none", border: "1px solid " + C.border, borderRadius: 8, color: C.white, padding: "6px 13px", cursor: "pointer", fontSize: 13 } }, "\u2715")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflow: "auto", padding: "12px 14px 16px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slateD, letterSpacing: 1, marginRight: 2 } }, "HALF"), [["all","FULL"],["1","1ST"],["2","2ND"]].map(function(hf){ var on = stHalf === hf[0]; return /* @__PURE__ */ React.createElement("button", { key: hf[0], onClick: function(){ setStHalf(hf[0]); }, style: { flex: 1, padding: "7px 0", borderRadius: 8, border: "1px solid " + (on ? C.greenB : C.border), background: on ? C.greenB + "22" : "none", color: on ? C.greenB : C.slate, fontWeight: 800, fontSize: 11.5, cursor: "pointer" } }, hf[1]); })), /* @__PURE__ */ React.createElement(CompareBars, { rows: liveCompare(), club }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, margin: "16px 0 4px", background: C.bgCard, padding: 4, borderRadius: 11, border: "1px solid " + C.border } }, [["us", club.name], ["opp", match.opponent || "Opposition"]].map(function(tt) {
       return /* @__PURE__ */ React.createElement("button", { key: tt[0], onClick: function() {
         setStTeam(tt[0]);
       }, style: { flex: 1, padding: "8px 0", borderRadius: 8, border: "none", cursor: "pointer", background: stTeam === tt[0] ? C.greenB : "transparent", color: stTeam === tt[0] ? C.bg : C.slate, fontWeight: 700, fontSize: 12.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, tt[1]);
