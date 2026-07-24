@@ -1710,7 +1710,7 @@
       }
     });
     function shotData(evs) {
-      const shots = evs.filter((e) => (e.event_type === "Shot from play" || e.event_type === "Scoreable free") && e.x != null && e.y != null).map((e) => ({ x: e.x, y: e.y, score: e.score || 0, outcome: e.outcome }));
+      const shots = evs.filter((e) => (e.event_type === "Shot from play" || e.event_type === "Scoreable free") && e.x != null && e.y != null).map((e) => ({ x: e.x, y: e.y, score: e.score || 0, outcome: e.outcome, player: e.player || null }));
       const bands = { inside21: { n: 0, s: 0 }, mid: { n: 0, s: 0 }, long: { n: 0, s: 0 } };
       shots.forEach(function(sh) {
         var x = sh.x;
@@ -2134,7 +2134,9 @@
   function XpPanel({ shots, usShots, oppShots, noHeading }){ return React.createElement("div", {}, noHeading ? null : React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "EXPECTED SCORES · vs season baseline"), React.createElement("div", { dangerouslySetInnerHTML: { __html: xpPanelHtml(shots, usShots, oppShots) } })); }
   function ShotHeat({ shots, noHeading }){ return React.createElement("div", {}, noHeading ? null : React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "SHOT DENSITY · THIS MATCH"), React.createElement("div", { dangerouslySetInnerHTML: { __html: shotHeatHtml(shots) } })); }
   
-function koFixOrient(p){ var K0=0.854, PL=144, MX=70; function ok(v){ var k=(K0-v)*PL; return k>=-2 && k<=MX; } if(!ok(p.x) && ok(1-p.x)){ return { x: 1-p.x, y: 1-p.y }; } return p; }
+function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(function(s){ return s.player === pl; }) : (list || []); }
+  function fKo(list, band){ if(!band || band === "all") return list || []; return (list || []).filter(function(p){ var dd = (1 - p.x) * 144; var b = dd < 45 ? "short" : dd <= 65 ? "mid" : "long"; return b === band; }); }
+  function koFixOrient(p){ var K0=0.854, PL=144, MX=70; function ok(v){ var k=(K0-v)*PL; return k>=-2 && k<=MX; } if(!ok(p.x) && ok(1-p.x)){ return { x: 1-p.x, y: 1-p.y }; } return p; }
   function PitchMap({ shots }) {
     const W = 300, H = 400, cx = W / 2;
     const m = (d) => d / 72 * H;
@@ -5092,6 +5094,8 @@ function koFixOrient(p){ var K0=0.854, PL=144, MX=70; function ok(v){ var k=(K0-
     }, [d0, half, club]);
     const [team, setTeam] = useState("us");
     const [shotTeam, setShotTeam] = useState("us");
+    const [shotPl, setShotPl] = useState("all");
+    const [koBand, setKoBand] = useState("all");
     const [dtab, setDtab] = useState("overview");
     const [psort, setPsort] = useState("score");
     var isMatch = scope === "match";
@@ -5153,7 +5157,7 @@ function koFixOrient(p){ var K0=0.854, PL=144, MX=70; function ok(v){ var k=(K0-
         setTeam(t[0]);
       }, style: { flex: 1, padding: "9px 0", borderRadius: 8, border: "none", cursor: "pointer", background: team === t[0] ? C.greenB : "transparent", color: team === t[0] ? C.bg : C.slate, fontWeight: 700, fontSize: 13 } }, t[1]);
     }))),
-    dtab === "kickouts" && (/* @__PURE__ */ React.createElement(Section, { title: (team === "us" ? "OWN" : ON.toUpperCase()) + " KICKOUT MAP" }, /* @__PURE__ */ React.createElement(KickoutMap, { pts: d.koPts[team] }), /* @__PURE__ */ React.createElement(KickoutLegend, null))),
+    dtab === "kickouts" && (/* @__PURE__ */ React.createElement(Section, { title: (team === "us" ? "OWN" : ON.toUpperCase()) + " KICKOUT MAP" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, paddingBottom: 9 } }, [["all","All"],["short","Short"],["mid","Mid"],["long","Long"]].map(function(b){ var on = koBand === b[0]; return /* @__PURE__ */ React.createElement("button", { key: b[0], onClick: function(){ setKoBand(b[0]); }, style: { flex: 1, padding: "7px 0", borderRadius: 8, border: "1px solid " + (on ? C.greenB : C.border), background: on ? C.greenB + "22" : "none", color: on ? C.greenB : C.slate, fontWeight: 700, fontSize: 11.5, cursor: "pointer" } }, b[1]); })), /* @__PURE__ */ React.createElement(KickoutMap, { pts: fKo(d.koPts[team], koBand) }), /* @__PURE__ */ React.createElement(KickoutLegend, null))),
     dtab === "kickouts" && (/* @__PURE__ */ React.createElement(Section, { title: (team === "us" ? "OWN" : ON.toUpperCase()) + " KICKOUT WIN % BY ZONE" }, /* @__PURE__ */ React.createElement(ZoneGrid, { grid: d.koGrid[team], unit: "KOs" }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slateD, fontFamily: MONO, marginTop: 8 } }, "own kickouts \\u00b7 <45m / 45-65m / 65m+ from own goal x channel"))),
     dtab === "kickouts" && (/* @__PURE__ */ React.createElement(Section, { title: (team === "us" ? "OWN" : ON.toUpperCase()) + " KICKOUT WIN % \xB7 SPEED \xD7 LENGTH" }, /* @__PURE__ */ React.createElement(ZoneGrid, { grid: d.koSpeedGrid[team], unit: "KOs", cols: [["FAST", "fast"], ["SLOW", "slow"]] }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slateD, fontFamily: MONO, marginTop: 8 } }, "fast = quicker than the median restart (", d.koMed[team], "s) \\u00b7 length from own goal"))),
     dtab === "attack" && (/* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 4, marginBottom: 16, background: C.bgCard, padding: 4, borderRadius: 11, border: "1px solid " + C.border } }, [["us", club.name], ["opp", ON]].map(function(t) {
@@ -5161,9 +5165,9 @@ function koFixOrient(p){ var K0=0.854, PL=144, MX=70; function ok(v){ var k=(K0-
         setShotTeam(t[0]);
       }, style: { flex: 1, padding: "9px 0", borderRadius: 8, border: "none", cursor: "pointer", background: shotTeam === t[0] ? C.greenB : "transparent", color: shotTeam === t[0] ? C.bg : C.slate, fontWeight: 700, fontSize: 13 } }, t[1]);
     }))),
-    dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: (shotTeam === "us" ? "OWN" : ON.toUpperCase()) + " SHOT MAP \xB7 " + d.shots[shotTeam].length + " SHOTS" }, /* @__PURE__ */ React.createElement(PitchMap, { shots: d.shots[shotTeam] }), /* @__PURE__ */ React.createElement(ShotLegend, null))),
-    dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "EXPECTED SCORES · vs season baseline" }, /* @__PURE__ */ React.createElement(XpPanel, { shots: d.shots[shotTeam], usShots: d.shots.us, oppShots: d.shots.opp, noHeading: true }))), 
-    dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "SHOT DENSITY · THIS MATCH" }, /* @__PURE__ */ React.createElement(ShotHeat, { shots: d.shots[shotTeam], noHeading: true }))), 
+    dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: (shotTeam === "us" ? "OWN" : ON.toUpperCase()) + " SHOT MAP \xB7 " + fShots(d.shots[shotTeam], shotPl).length + " SHOTS" }, (function(){ var ns = []; (d.shots[shotTeam] || []).forEach(function(s){ if (s.player && ns.indexOf(s.player) < 0) ns.push(s.player); }); ns.sort(); return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, overflowX: "auto", paddingBottom: 9 } }, ["all"].concat(ns).map(function(n){ var on = shotPl === n; return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function(){ setShotPl(n); }, style: { flexShrink: 0, padding: "7px 11px", borderRadius: 8, border: "1px solid " + (on ? C.greenB : C.border), background: on ? C.greenB + "22" : "none", color: on ? C.greenB : C.slate, fontWeight: 700, fontSize: 11.5, cursor: "pointer", whiteSpace: "nowrap" } }, n === "all" ? "All players" : n); })); })(), /* @__PURE__ */ React.createElement(PitchMap, { shots: fShots(d.shots[shotTeam], shotPl) }), /* @__PURE__ */ React.createElement(ShotLegend, null))),
+    dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "EXPECTED SCORES · vs season baseline" }, /* @__PURE__ */ React.createElement(XpPanel, { shots: fShots(d.shots[shotTeam], shotPl), usShots: d.shots.us, oppShots: d.shots.opp, noHeading: true }))), 
+    dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "SHOT DENSITY · THIS MATCH" }, /* @__PURE__ */ React.createElement(ShotHeat, { shots: fShots(d.shots[shotTeam], shotPl), noHeading: true }))), 
     dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "SHOT EFFICIENCY BY DISTANCE" }, [["Inside 21m", "inside21", C.greenB], ["21-45m", "mid", C.gold], ["45m+", "long", C.blue]].map(function(row) {
       var label = row[0], key = row[1], col = row[2];
       var b = d.bands[shotTeam][key];
