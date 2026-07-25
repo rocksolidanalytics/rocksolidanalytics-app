@@ -5120,7 +5120,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var win = match ? (match.our_total || 0) > (match.opp_total || 0) : false;
     var draw = match ? (match.our_total || 0) === (match.opp_total || 0) : false;
     var rc = win ? C.greenB : draw ? C.gold : C.red;
-    return /* @__PURE__ */ React.createElement("div", null,
+    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide" },
     isMatch && onBack && /* @__PURE__ */ React.createElement("button", { onClick: onBack, style: { display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: C.slate, cursor: "pointer", fontSize: 13, marginBottom: 12, fontFamily: MONO, padding: 0 } }, "\u2039 All matches"),
     /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, margin: "2px 0 12px", alignItems: "center" } },
       /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO, letterSpacing: 1, marginRight: 2 } }, "HALF"),
