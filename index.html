@@ -1354,6 +1354,17 @@
             }
           });
           setHistory(h);
+          if (Object.keys(m).length === 0 && Object.keys(h).length > 0) {
+            var bySlot = {};
+            Object.keys(h).forEach(function(pid) {
+              var rec = h[pid], s = rec.topSlot;
+              if (!s) return;
+              if (!bySlot[s] || rec.topN > bySlot[s].n) bySlot[s] = { pid: pid, n: rec.topN };
+            });
+            var auto = {};
+            Object.keys(bySlot).forEach(function(s) { auto[s] = bySlot[s].pid; });
+            setAssign(auto);
+          }
         } catch (ex) {
         }
         setReady(true);
