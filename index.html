@@ -4568,6 +4568,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const swipeRef = useRef({ x: 0, y: 0, sw: false, did: false });
     const [editRow, setEditRow] = useState(null);
     const [listMode, setListMode] = useState("list");
+    const [vtTeamF, setVtTeamF] = useState("all");
     const [subsOpen, setSubsOpen] = useState(false);
     const [vSubOpen, setVSubOpen] = useState(false);
     const [vSubOff, setVSubOff] = useState(null);
@@ -5026,9 +5027,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return /* @__PURE__ */ React.createElement("button", { key: o[0], onClick: function() {
         setListMode(o[0]);
       }, style: { flex: 1, padding: "6px 4px", borderRadius: 7, cursor: "pointer", fontSize: 11, fontWeight: 800, background: on ? C.blue : C.bgCard, border: "1px solid " + (on ? C.blue : C.border), color: on ? C.bg : C.slate } }, o[1]);
-    })), listMode === "folders" ? (function() {
+    })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, paddingBottom: 6 } }, [["all", "All"], ["us", (SC ? scoutAName : club.name).split(" ")[0]], ["opp", (SC ? scoutBName : (match.opponent || "Opp")).split(" ")[0]]].map(function(tf) { var on = vtTeamF === tf[0]; return /* @__PURE__ */ React.createElement("button", { key: tf[0], onClick: function() { setVtTeamF(tf[0]); }, style: { flex: 1, padding: "6px 0", borderRadius: 7, border: "1px solid " + (on ? C.greenB : C.border), background: on ? C.greenB + "22" : "none", color: on ? C.greenB : C.slate, fontWeight: 700, fontSize: 10.5, cursor: "pointer" } }, tf[1]); })), listMode === "folders" ? (function() {
       var tr = {};
-      tagged.forEach(function(e) {
+      tagged.filter(function(e) { return vtTeamF === "all" || e.team === vtTeamF; }).forEach(function(e) {
         if (e._vt == null) return;
         var ev = e.event_type || "Other", oc = e.outcome || "\u2014", pl = e.player || "Unassigned";
         tr[ev] = tr[ev] || { n: 0, o: {} };
@@ -5066,7 +5067,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           }));
         }));
       }));
-    })() : tagged.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 11.5, paddingTop: 8, lineHeight: 1.6 } }, throwIn == null ? "Scrub to the throw-in and tap \u2691 Mark throw-in to set the clock." : "Pause on a moment, then tap an event. Single tap = " + club.name.split(" ")[0] + ", double = opposition.") : tagged.map(function(r) {
+    })() : (function(){ var _ft = tagged.filter(function(e) { return vtTeamF === "all" || e.team === vtTeamF; }); return _ft; })().length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 11.5, paddingTop: 8, lineHeight: 1.6 } }, throwIn == null ? "Scrub to the throw-in and tap \u2691 Mark throw-in to set the clock." : "Pause on a moment, then tap an event. Single tap = " + club.name.split(" ")[0] + ", double = opposition.") : tagged.map(function(r) {
       var good = (r.score || 0) > 0 || ["Won clean", "Break won", "Contact Made", "Block"].indexOf(r.outcome) >= 0;
       return /* @__PURE__ */ React.createElement(
         "div",
