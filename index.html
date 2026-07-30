@@ -5197,16 +5197,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   function DashView({ d: d0, club, scope, match, onBack, oppName, wide }) {
     var ON = oppName || "Opposition";
     const [half, setHalf] = useState("all");
-    const [pBlocks, setPBlocks] = useState({});
     const d = useMemo(function() {
-      var bks = Object.keys(pBlocks).filter(function(k) { return pBlocks[k]; });
-      if (!d0 || (!bks.length && half === "all")) return d0;
-      var evs = (d0._events || []).filter(function(e) {
-        if (bks.length) { var secs = e.time_secs != null ? e.time_secs : 0; return bks.indexOf(String(Math.floor(secs / 600))) >= 0; }
-        return String(e.period == null ? 1 : e.period) === half;
-      });
+      if (!d0 || half === "all") return d0;
+      var evs = (d0._events || []).filter(function(e) { return String(e.period == null ? 1 : e.period) === half; });
       return Object.assign({}, computeStats(d0.matches || [], evs, d0._apps || [], club, half), { matches: d0.matches, _events: evs, _apps: d0._apps });
-    }, [d0, half, pBlocks, club]);
+    }, [d0, half, club]);
     const [team, setTeam] = useState("us");
     const [shotTeam, setShotTeam] = useState("us");
     const [shotPl, setShotPl] = useState("all");
@@ -5220,13 +5215,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     return /* @__PURE__ */ React.createElement("div", { className: "rs-wide" },
     isMatch && onBack && /* @__PURE__ */ React.createElement("button", { onClick: onBack, style: { display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: C.slate, cursor: "pointer", fontSize: 13, marginBottom: 12, fontFamily: MONO, padding: 0 } }, "\u2039 All matches"),
     /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, margin: "2px 0 12px", alignItems: "center" } },
-      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO, letterSpacing: 1, marginRight: 2 } }, "PERIOD"),
-      React.createElement("button", { key: "all", onClick: function() { setPBlocks({}); setHalf("all"); }, style: { padding: "5px 9px", borderRadius: 7, cursor: "pointer", border: "1px solid " + (Object.keys(pBlocks).every(function(k){return !pBlocks[k];}) ? C.gold : C.border), background: Object.keys(pBlocks).every(function(k){return !pBlocks[k];}) ? C.gold : "none", color: Object.keys(pBlocks).every(function(k){return !pBlocks[k];}) ? C.bg : C.slate, fontWeight: 800, fontSize: 9.5, fontFamily: MONO } }, "ALL"),
-      [["0","0-10"],["1","10-20"],["2","20-30"],["3","30-40"],["4","40-50"],["5","50-60"],["6","60+"]].map(function(b) {
-        var on = !!pBlocks[b[0]];
-        return React.createElement("button", { key: b[0], onClick: function() {
-          setPBlocks(function(p) { var n = Object.assign({}, p); n[b[0]] = !n[b[0]]; return n; }); setHalf("custom");
-        }, style: { padding: "5px 7px", borderRadius: 7, cursor: "pointer", border: "1px solid " + (on ? C.gold : C.border), background: on ? C.gold : "none", color: on ? C.bg : C.slate, fontWeight: 800, fontSize: 9.5, fontFamily: MONO } }, b[1]);
+      React.createElement("span", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO, letterSpacing: 1, marginRight: 2 } }, "HALF"),
+      [["all", "FULL GAME"], ["1", "1ST"], ["2", "2ND"]].map(function(hf) {
+        var on = half === hf[0];
+        return /* @__PURE__ */ React.createElement("button", { key: hf[0], onClick: function() { setHalf(hf[0]); }, style: { padding: "6px 11px", borderRadius: 8, cursor: "pointer", fontSize: 10, fontWeight: 800, fontFamily: MONO, letterSpacing: 0.5, background: on ? C.gold : "none", border: "1px solid " + (on ? C.gold : C.border), color: on ? C.bg : C.slate } }, hf[1]);
       })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, margin: "2px 0 18px" } }, [["overview","Overview"],["attack","Attack"],["defence","Defence"],["kickouts","Kickouts"],["players","Players"]].map(function(t) { var on = dtab === t[0]; return /* @__PURE__ */ React.createElement("button", { key: t[0], onClick: function() { setDtab(t[0]); }, style: { flex: 1, minWidth: 0, whiteSpace: "nowrap", padding: "8px 4px", borderRadius: 9, cursor: "pointer", fontSize: 11, fontWeight: 800, fontFamily: MONO, letterSpacing: 0.2, background: on ? C.greenB : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.bg : C.slate } }, t[1]); })),
     dtab === "overview" && (d.notes && d.notes.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { padding: 16, borderRadius: 14, background: "linear-gradient(135deg,#0e1c34,#0b1426)", border: "1px solid " + C.border, marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 10 } }, isMatch ? "MATCH READ" : "SEASON READ"), d.notes.map(function(n, i) {
       return /* @__PURE__ */ React.createElement("div", { key: i, style: { fontSize: 13, lineHeight: 1.5, color: C.white, marginBottom: i < d.notes.length - 1 ? 8 : 0 } }, n);
