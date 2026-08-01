@@ -5309,6 +5309,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         { key: "shots_opp", label: "Shots (Opp)", fn: function(e) { return e.team === "opp" && (e.event_type === "Shot from play" || e.event_type === "Scoreable free") ? 1 : 0; }, sum: true },
         { key: "ko_won", label: "KO Won", fn: function(e) { return e.team === "us" && e.event_type === "Kickout" && (e.outcome === "Won clean" || e.outcome === "Break won" || e.outcome === "Won Clean" || e.outcome === "Break Won") ? 1 : 0; }, sum: true },
         { key: "ko_total", label: "KO Total", fn: function(e) { return e.team === "us" && e.event_type === "Kickout" ? 1 : 0; }, sum: true },
+        { key: "oko_won", label: "Opp KO Won", fn: function(e) { return e.team === "opp" && e.event_type === "Kickout" && (e.outcome === "Won clean" || e.outcome === "Break won" || e.outcome === "Won Clean" || e.outcome === "Break Won") ? 1 : 0; }, sum: true },
+        { key: "oko_total", label: "Opp KO Total", fn: function(e) { return e.team === "opp" && e.event_type === "Kickout" ? 1 : 0; }, sum: true },
+        { key: "tackle_opp", label: "Opp Tackles", fn: function(e) { return e.team === "opp" && e.event_type === "Tackle" ? 1 : 0; }, sum: true },
+        { key: "wide_us", label: "Wides (Us)", fn: function(e) { return e.team === "us" && (e.event_type === "Shot from play" || e.event_type === "Scoreable free") && /wide/i.test(e.outcome || "") ? 1 : 0; }, sum: true },
+        { key: "wide_opp", label: "Wides (Opp)", fn: function(e) { return e.team === "opp" && (e.event_type === "Shot from play" || e.event_type === "Scoreable free") && /wide/i.test(e.outcome || "") ? 1 : 0; }, sum: true },
         { key: "to_us", label: "TO Lost (Us)", fn: function(e) { return e.team === "us" && e.event_type === "Possession lost" ? 1 : 0; }, sum: true },
         { key: "to_opp", label: "TO Won (Opp)", fn: function(e) { return e.team === "opp" && e.event_type === "Possession lost" ? 1 : 0; }, sum: true },
         { key: "tackle_us", label: "Tackles (Us)", fn: function(e) { return e.team === "us" && e.event_type === "Tackle" ? 1 : 0; }, sum: true }
@@ -5325,6 +5330,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         }
       });
       var koWinPct = blocks.map(function(_, bi) { var t = grid.ko_total[bi]; return t ? Math.round(100 * grid.ko_won[bi] / t) : null; });
+      var okoWinPct = blocks.map(function(_, bi) { var t = grid.oko_total[bi]; return t ? Math.round(100 * grid.oko_won[bi] / t) : null; });
       var nM = d && d.matches ? d.matches.length : 1;
       var accUs = [], accOpp = [], runUs = 0, runOpp = 0;
       blocks.forEach(function(_, bi) { runUs += grid.score_us[bi]; runOpp += grid.score_opp[bi]; accUs.push(runUs); accOpp.push(runOpp); });
@@ -5338,9 +5344,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           React.createElement("tbody", null,
             [["Score (Us)", grid.score_us, C.greenB], ["Score (Opp)", grid.score_opp, C.red],
              ["Shots (Us)", grid.shots_us, C.slate], ["Shots (Opp)", grid.shots_opp, C.slate],
-             ["KO Won %", koWinPct, C.gold], ["KO Total", grid.ko_total, C.slateD],
+             ["Wides (Us)", grid.wide_us, C.slateD], ["Wides (Opp)", grid.wide_opp, C.slateD],
+             ["Our KO Won %", koWinPct, C.gold], ["Our KO Total", grid.ko_total, C.slateD],
+             ["Opp KO Won %", okoWinPct, C.gold], ["Opp KO Total", grid.oko_total, C.slateD],
              ["TO Lost", grid.to_us, C.red], ["TO Won", grid.to_opp, C.greenB],
-             ["Tackles", grid.tackle_us, C.slate]
+             ["Tackles (Us)", grid.tackle_us, C.slate], ["Tackles (Opp)", grid.tackle_opp, C.slate]
             ].map(function(row, ri) {
               return React.createElement("tr", { key: ri, style: { borderBottom: "1px solid " + C.border } },
                 React.createElement("td", { style: { padding: "7px 6px", color: C.slateD, fontSize: 10, fontWeight: 600, whiteSpace: "nowrap" } }, row[0]),
