@@ -4151,7 +4151,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             return { g, p };
           };
           var gp = gp2;
-          const r = await db.from("events").select("match_id,team,event_type,outcome,player,score,x,y,period,seq,time_text").eq("match_id", m.id);
+          const r = await db.from("events").select("match_id,team,event_type,outcome,player,score,x,y,period,seq,time_text,time_secs").eq("match_id", m.id);
           if (r.error) throw r.error;
           var evs = r.data || [];
           var A = gp2("us"), B = gp2("opp");
@@ -5292,7 +5292,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     dtab === "players" && /* @__PURE__ */ React.createElement(Section, { title: "PLAYER BREAKDOWN" }, (function() { var cols = [["name","Player"],["score","Scr"],["sh","Sh"],["tk","Tk"],["kow","KO"],["tol","TO"],["xsd","xS±"]]; var rows = (d.players || []).slice(); rows.sort(function(a, b) { if (psort === "name") return (a.name > b.name ? 1 : -1); if (psort === "score") return (b.g * 3 + b.p) - (a.g * 3 + a.p); return (b[psort] || 0) - (a[psort] || 0); }); if (!rows.length) return /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: C.slateD, padding: "8px 2px" } }, "No player events tagged yet."); return /* @__PURE__ */ React.createElement("div", { style: { overflowX: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1.6fr 0.7fr 0.6fr 0.6fr 0.6fr 0.6fr 0.7fr", gap: 2, minWidth: 300 } }, cols.map(function(c) { var on = psort === c[0]; return /* @__PURE__ */ React.createElement("button", { key: c[0], onClick: function() { setPsort(c[0]); }, style: { textAlign: c[0] === "name" ? "left" : "center", background: "none", border: "none", cursor: "pointer", color: on ? C.greenB : C.slateD, fontSize: 9, fontWeight: 800, fontFamily: MONO, letterSpacing: 0.5, padding: "6px 4px" } }, c[1]); }), rows.map(function(r, ri) { return /* @__PURE__ */ React.createElement(React.Fragment, { key: ri }, /* @__PURE__ */ React.createElement("div", { style: { gridColumn: "1 / -1", height: 1, background: C.border } }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: C.white, padding: "9px 4px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, r.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, textAlign: "center", color: C.greenB, fontFamily: MONO, fontWeight: 800, padding: "9px 4px" } }, r.g + "-" + String(r.p).padStart(2, "0")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, textAlign: "center", color: C.slate, fontFamily: MONO, padding: "9px 4px" } }, String(r.sh)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, textAlign: "center", color: C.slate, fontFamily: MONO, padding: "9px 4px" } }, String(r.tk)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, textAlign: "center", color: C.slate, fontFamily: MONO, padding: "9px 4px" } }, String(r.kow)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, textAlign: "center", color: C.slate, fontFamily: MONO, padding: "9px 4px" } }, String(r.tol)), React.createElement("div", { style: { fontSize: 13, textAlign: "center", fontFamily: MONO, fontWeight: 800, padding: "9px 4px", color: (r.xsd >= 0 ? C.greenB : C.red) } }, (r.sh ? ((r.xsd >= 0 ? "+" : "") + r.xsd.toFixed(1)) : "–"))); }))); })())
   ,
     dtab === "periods" && (function() {
-      var evs = d && d._events || [];
+      var evs = (d && d._events || []).map(function(e) {
+        if (e.time_secs != null) return e;
+        if (!e.time_text) return e;
+        var pp = String(e.time_text).split(":").map(Number);
+        var secs = pp.length === 3 ? pp[0]*3600+pp[1]*60+pp[2] : pp.length === 2 ? pp[0]*60+pp[1] : 0;
+        return Object.assign({}, e, { time_secs: secs });
+      });
       var blocks = ["0-10","10-20","20-30","30-40","40-50","50-60","60+"];
       var ranges = [[0,600],[600,1200],[1200,1800],[1800,2400],[2400,3000],[3000,3600],[3600,9999]];
       function inBlock(secs, bi) { return secs >= ranges[bi][0] && secs < ranges[bi][1]; }
@@ -5319,6 +5325,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         }
       });
       var koWinPct = blocks.map(function(_, bi) { var t = grid.ko_total[bi]; return t ? Math.round(100 * grid.ko_won[bi] / t) : null; });
+      var nM = d && d.matches ? d.matches.length : 1;
       var accUs = [], accOpp = [], runUs = 0, runOpp = 0;
       blocks.forEach(function(_, bi) { runUs += grid.score_us[bi]; runOpp += grid.score_opp[bi]; accUs.push(runUs); accOpp.push(runOpp); });
 
@@ -5371,12 +5378,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       );
 
       return React.createElement(React.Fragment, null,
-        React.createElement(Section, { title: "CUMULATIVE SCORE" },
+        React.createElement(Section, { title: nM > 1 ? "AVG CUMULATIVE SCORE \u00b7 " + nM + " GAMES" : "CUMULATIVE SCORE" },
           React.createElement("div", { style: { display: "flex", gap: 16, justifyContent: "center", marginBottom: 10 } },
             React.createElement("span", { style: { fontSize: 10, color: C.greenB, fontWeight: 700 } }, "\u2014 " + (club.name || "Us")),
             React.createElement("span", { style: { fontSize: 10, color: C.red, fontWeight: 700 } }, "- - " + (ON || "Opposition"))
           ), chart),
-        React.createElement(Section, { title: "PERIOD BREAKDOWN" }, tbl)
+        React.createElement(Section, { title: nM > 1 ? "AVG PERIOD BREAKDOWN \u00b7 " + nM + " GAMES" : "PERIOD BREAKDOWN" }, tbl)
       );
     })()));
   }
