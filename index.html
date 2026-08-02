@@ -5335,27 +5335,33 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var accUs = [], accOpp = [], runUs = 0, runOpp = 0;
       blocks.forEach(function(_, bi) { runUs += grid.score_us[bi]; runOpp += grid.score_opp[bi]; accUs.push(runUs); accOpp.push(runOpp); });
 
-      var tbl = React.createElement("div", { style: { overflowX: "auto", marginBottom: 24 } },
-        React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: MONO } },
+      var tbl = React.createElement("div", { style: { overflowX: "auto", marginBottom: 24, background: C.bgCard, borderRadius: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.25)", padding: "10px 12px" } },
+        React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: 11.5, fontFamily: MONO } },
           React.createElement("thead", null, React.createElement("tr", null,
             React.createElement("th", { style: { textAlign: "left", padding: "8px 6px", borderBottom: "2px solid " + C.border, color: C.slateD, fontSize: 9, letterSpacing: 1 } }, ""),
             blocks.map(function(b, i2) { return React.createElement("th", { key: i2, style: { textAlign: "center", padding: "8px 4px", borderBottom: "2px solid " + C.border, color: C.slate, fontSize: 10, fontWeight: 700 } }, b); })
           )),
           React.createElement("tbody", null,
-            [["Score (Us)", grid.score_us, C.greenB], ["Score (Opp)", grid.score_opp, C.red],
-             ["Shots (Us)", grid.shots_us, C.slate], ["Shots (Opp)", grid.shots_opp, C.slate],
-             ["Wides (Us)", grid.wide_us, C.slateD], ["Wides (Opp)", grid.wide_opp, C.slateD],
-             ["Our KO Won %", koWinPct, C.gold], ["Our KO Total", grid.ko_total, C.slateD],
-             ["Opp KO Won %", okoWinPct, C.gold], ["Opp KO Total", grid.oko_total, C.slateD],
-             ["TO Lost", grid.to_us, C.red], ["TO Won", grid.to_opp, C.greenB],
-             ["Tackles (Us)", grid.tackle_us, C.slate], ["Tackles (Opp)", grid.tackle_opp, C.slate]
+            [["SCORING", null], ["Score (Us)", grid.score_us, C.greenB], ["Score (Opp)", grid.score_opp, C.red],
+             ["SHOOTING", null], ["Shots (Us)", grid.shots_us, C.slate], ["Shots (Opp)", grid.shots_opp, C.slate], ["Wides (Us)", grid.wide_us, C.slateD], ["Wides (Opp)", grid.wide_opp, C.slateD],
+             ["KICKOUTS", null], ["Our Won %", koWinPct, C.gold], ["Our Total", grid.ko_total, C.slateD], ["Opp Won %", okoWinPct, C.gold], ["Opp Total", grid.oko_total, C.slateD],
+             ["TURNOVERS", null], ["Lost", grid.to_us, C.red], ["Won", grid.to_opp, C.greenB],
+             ["TACKLES", null], ["Us", grid.tackle_us, C.slate], ["Opp", grid.tackle_opp, C.slate]
             ].map(function(row, ri) {
-              return React.createElement("tr", { key: ri, style: { borderBottom: "1px solid " + C.border } },
-                React.createElement("td", { style: { padding: "7px 6px", color: C.slateD, fontSize: 10, fontWeight: 600, whiteSpace: "nowrap" } }, row[0]),
+              if (row[1] === null) {
+                return React.createElement("tr", { key: ri },
+                  React.createElement("td", { colSpan: blocks.length + 1, style: { padding: "12px 6px 5px", color: C.greenB, fontSize: 9, fontWeight: 800, letterSpacing: 2, fontFamily: MONO } }, row[0]));
+              }
+              // find the peak block for this row to highlight
+              var peak = -1, pv = -1;
+              row[1].forEach(function(v, ci) { if (typeof v === "number" && v > pv) { pv = v; peak = ci; } });
+              return React.createElement("tr", { key: ri, style: { borderBottom: "1px solid " + C.border + "55" } },
+                React.createElement("td", { style: { padding: "7px 6px", color: C.slate, fontSize: 10.5, fontWeight: 600, whiteSpace: "nowrap" } }, row[0]),
                 row[1].map(function(v, ci) {
-                  var val = v == null ? "—" : (row[0].indexOf("%") >= 0 ? v + "%" : String(v));
+                  var val = v == null ? "\u2014" : (row[0].indexOf("%") >= 0 ? v + "%" : String(v));
                   var isHigh = typeof v === "number" && v > 0;
-                  return React.createElement("td", { key: ci, style: { textAlign: "center", padding: "7px 4px", color: isHigh ? row[2] : C.slateD, fontWeight: isHigh ? 800 : 400 } }, val);
+                  var isPeak = ci === peak && pv > 0;
+                  return React.createElement("td", { key: ci, style: { textAlign: "center", padding: "7px 4px", color: isHigh ? row[2] : C.slateD + "88", fontWeight: isHigh ? 800 : 400, background: isPeak ? row[2] + "18" : "none", borderRadius: isPeak ? 6 : 0 } }, val);
                 })
               );
             })
@@ -5387,10 +5393,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
 
       return React.createElement(React.Fragment, null,
         React.createElement(Section, { title: nM > 1 ? "AVG CUMULATIVE SCORE \u00b7 " + nM + " GAMES" : "CUMULATIVE SCORE" },
+          React.createElement("div", { style: { background: C.bgCard, borderRadius: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.25)", padding: "16px 12px 10px" } },
           React.createElement("div", { style: { display: "flex", gap: 16, justifyContent: "center", marginBottom: 10 } },
             React.createElement("span", { style: { fontSize: 10, color: C.greenB, fontWeight: 700 } }, "\u2014 " + (club.name || "Us")),
             React.createElement("span", { style: { fontSize: 10, color: C.red, fontWeight: 700 } }, "- - " + (ON || "Opposition"))
-          ), chart),
+          ), chart)),
         React.createElement(Section, { title: nM > 1 ? "AVG PERIOD BREAKDOWN \u00b7 " + nM + " GAMES" : "PERIOD BREAKDOWN" }, tbl)
       );
     })());
