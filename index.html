@@ -5331,6 +5331,20 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       });
       var koWinPct = blocks.map(function(_, bi) { var t = grid.ko_total[bi]; return t ? Math.round(100 * grid.ko_won[bi] / t) : null; });
       var okoWinPct = blocks.map(function(_, bi) { var t = grid.oko_total[bi]; return t ? Math.round(100 * grid.oko_won[bi] / t) : null; });
+      var xsUs = blocks.map(function(){ return 0; }), xsOpp = blocks.map(function(){ return 0; });
+      evs.forEach(function(e) {
+        if (!((e.event_type === "Shot from play" || e.event_type === "Scoreable free") && e.x != null)) return;
+        var secs = e.time_secs != null ? e.time_secs : 0;
+        for (var bi = 0; bi < ranges.length; bi++) {
+          if (inBlock(secs, bi)) {
+            var v = XP_BASE[xpZoneKey(e)] || 0;
+            if (e.team === "us") xsUs[bi] += v; else if (e.team === "opp") xsOpp[bi] += v;
+            break;
+          }
+        }
+      });
+      xsUs = xsUs.map(function(v){ return Math.round(v*10)/10; });
+      xsOpp = xsOpp.map(function(v){ return Math.round(v*10)/10; });
       var nM = d && d.matches ? d.matches.length : 1;
       var accUs = [], accOpp = [], runUs = 0, runOpp = 0;
       blocks.forEach(function(_, bi) { runUs += grid.score_us[bi]; runOpp += grid.score_opp[bi]; accUs.push(runUs); accOpp.push(runOpp); });
@@ -5342,7 +5356,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             blocks.map(function(b, i2) { return React.createElement("th", { key: i2, style: { textAlign: "center", padding: "8px 4px", borderBottom: "2px solid " + C.border, color: C.slate, fontSize: 10, fontWeight: 700 } }, b); })
           )),
           React.createElement("tbody", null,
-            [["SCORING", null], ["Score (Us)", grid.score_us, C.greenB], ["Score (Opp)", grid.score_opp, C.red],
+            [["SCORING", null], ["Score (Us)", grid.score_us, C.greenB], ["xS (Us)", xsUs, C.greenB], ["Score (Opp)", grid.score_opp, C.red], ["xS (Opp)", xsOpp, C.red],
              ["SHOOTING", null], ["Shots (Us)", grid.shots_us, C.slate], ["Shots (Opp)", grid.shots_opp, C.slate], ["Wides (Us)", grid.wide_us, C.slateD], ["Wides (Opp)", grid.wide_opp, C.slateD],
              ["KICKOUTS", null], ["Our Won %", koWinPct, C.gold], ["Our Total", grid.ko_total, C.slateD], ["Opp Won %", okoWinPct, C.gold], ["Opp Total", grid.oko_total, C.slateD],
              ["TURNOVERS", null], ["Lost", grid.to_us, C.red], ["Won", grid.to_opp, C.greenB],
