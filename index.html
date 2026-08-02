@@ -5359,7 +5359,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             [["SCORING", null], ["Score (Us)", grid.score_us, C.greenB], ["xS (Us)", xsUs, C.greenB], ["Score (Opp)", grid.score_opp, C.blue], ["xS (Opp)", xsOpp, C.blue],
              ["SHOOTING", null], ["Shots (Us)", grid.shots_us, C.slate], ["Shots (Opp)", grid.shots_opp, C.slate], ["Wides (Us)", grid.wide_us, C.slateD], ["Wides (Opp)", grid.wide_opp, C.slateD],
              ["KICKOUTS", null], ["Our Won %", koWinPct, C.gold], ["Our Total", grid.ko_total, C.slateD], ["Opp Won %", okoWinPct, C.gold], ["Opp Total", grid.oko_total, C.slateD],
-             ["TURNOVERS", null], ["Lost", grid.to_us, C.red], ["Won", grid.to_opp, C.greenB],
+             ["POSSESSIONS LOST", null], ["Us", grid.to_us, C.greenB], ["Opp", grid.to_opp, C.blue],
              ["TACKLES", null], ["Us", grid.tackle_us, C.slate], ["Opp", grid.tackle_opp, C.slate]
             ].map(function(row, ri) {
               if (row[1] === null) {
