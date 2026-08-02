@@ -5331,24 +5331,45 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       });
       var koWinPct = blocks.map(function(_, bi) { var t = grid.ko_total[bi]; return t ? Math.round(100 * grid.ko_won[bi] / t) : null; });
       var okoWinPct = blocks.map(function(_, bi) { var t = grid.oko_total[bi]; return t ? Math.round(100 * grid.oko_won[bi] / t) : null; });
-      var sources = ["Goals", "2pt play", "2pt free", "Point play", "Point free"];
+      function _srcOf(arr, i, X) {
+        var Y = X === "us" ? "opp" : "us";
+        var sawFree = false;
+        for (var j = i - 1; j >= 0; j--) {
+          var e = arr[j], et = e.event_type, oc = e.outcome || "", tm = e.team;
+          if (et === "Kickout" && tm === X && (oc === "Won clean" || oc === "Break won")) return "ownKO";
+          if (et === "Kickout" && tm === Y && (oc === "Lost clean" || oc === "Break lost")) return "oppKO";
+          if (et === "Possession lost" && tm === Y) {
+            var lc = oc.toLowerCase();
+            return lc === "kick pass" ? "toKick" : lc === "hand pass" ? "toHand" : lc === "in contact" ? "toContact" : "toOther";
+          }
+          if (et === "Free conceded" && tm === Y) { sawFree = true; continue; }
+          if (et === "Scoreable free" && tm === X) { sawFree = true; continue; }
+          if (et === "Possession lost" && tm === X) break;
+          if (et === "Free conceded" && tm === X) break;
+          if (et === "Kickout" && tm === X && (oc === "Lost clean" || oc === "Break lost")) break;
+          if (et === "Kickout" && tm === Y && (oc === "Won clean" || oc === "Break won")) break;
+          if ((et === "Shot from play" || et === "Scoreable free") && tm === Y) break;
+          if (et === "Shot from play" && tm === X) break;
+        }
+        return sawFree ? "toOther" : "unclear";
+      }
+      var sources = [["ownKO","Own kickout",C.greenB],["oppKO","Opp kickout",C.blue],["toKick","Turnover \u00b7 kick pass",C.gold],["toHand","Turnover \u00b7 hand pass","#a970ff"],["toContact","Turnover \u00b7 in contact","#4dd0b1"],["toOther","Turnover \u00b7 other",C.slate],["unclear","Tagging unclear",C.slateD]];
       var srcGrid = { us: {}, opp: {} };
-      sources.forEach(function(s) { srcGrid.us[s] = blocks.map(function(){return 0;}); srcGrid.opp[s] = blocks.map(function(){return 0;}); });
-      evs.forEach(function(e) {
-        var sc = e.score || 0; if (sc <= 0) return;
-        if (e.team !== "us" && e.team !== "opp") return;
-        var secs = e.time_secs != null ? e.time_secs : 0;
-        var bi = -1; for (var k = 0; k < ranges.length; k++) { if (inBlock(secs, k)) { bi = k; break; } }
-        if (bi < 0) return;
-        var isPlay = e.event_type === "Shot from play";
-        var isFree = e.event_type === "Scoreable free";
-        var key = null;
-        if (sc === 3) key = "Goals";
-        else if (sc === 2 && isPlay) key = "2pt play";
-        else if (sc === 2 && isFree) key = "2pt free";
-        else if (sc === 1 && isPlay) key = "Point play";
-        else if (sc === 1 && isFree) key = "Point free";
-        if (key) srcGrid[e.team][key][bi] += 1;
+      sources.forEach(function(s) { srcGrid.us[s[0]] = blocks.map(function(){return 0;}); srcGrid.opp[s[0]] = blocks.map(function(){return 0;}); });
+      // group events by match, sort by seq/time so scoreSourceOf can trace backwards
+      var byMatch = {};
+      evs.forEach(function(e) { var mid = e.match_id || "_"; (byMatch[mid] = byMatch[mid] || []).push(e); });
+      Object.keys(byMatch).forEach(function(mid) {
+        var arr = byMatch[mid].slice().sort(function(a,b) { return (a.seq || 0) - (b.seq || 0); });
+        arr.forEach(function(e, i) {
+          var sc = e.score || 0; if (sc <= 0) return;
+          if (e.team !== "us" && e.team !== "opp") return;
+          var secs = e.time_secs != null ? e.time_secs : 0;
+          var bi = -1; for (var k = 0; k < ranges.length; k++) { if (inBlock(secs, k)) { bi = k; break; } }
+          if (bi < 0) return;
+          var src = _srcOf(arr, i, e.team);
+          if (srcGrid[e.team][src]) srcGrid[e.team][src][bi] += sc;
+        });
       });
       function srcTable(team, teamColour, teamLabel) {
         return React.createElement("div", { style: { overflowX: "auto", marginBottom: 16, background: C.bgCard, borderRadius: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.25)", padding: "10px 12px" } },
@@ -5358,11 +5379,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
               React.createElement("th", { style: { textAlign: "left", padding: "6px 6px", borderBottom: "2px solid " + C.border, color: C.slateD, fontSize: 9, letterSpacing: 1 } }, ""),
               blocks.map(function(b, i2) { return React.createElement("th", { key: i2, style: { textAlign: "center", padding: "6px 4px", borderBottom: "2px solid " + C.border, color: C.slate, fontSize: 10, fontWeight: 700 } }, b); }))),
             React.createElement("tbody", null, sources.map(function(s, si) {
-              var row = srcGrid[team][s];
+              var row = srcGrid[team][s[0]];
               var peak = -1, pv = -1;
               row.forEach(function(v, ci) { if (v > pv) { pv = v; peak = ci; } });
               return React.createElement("tr", { key: si, style: { borderBottom: "1px solid " + C.border + "55" } },
-                React.createElement("td", { style: { padding: "6px 6px", color: C.slate, fontSize: 10.5, fontWeight: 600, whiteSpace: "nowrap" } }, s),
+                React.createElement("td", { style: { padding: "6px 6px", color: C.slate, fontSize: 10.5, fontWeight: 600, whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 8 } }, React.createElement("span", { style: { width: 10, height: 10, borderRadius: 3, background: s[2], flexShrink: 0 } }), s[1]),
                 row.map(function(v, ci) {
                   var isHigh = v > 0;
                   var isPeak = ci === peak && pv > 0;
