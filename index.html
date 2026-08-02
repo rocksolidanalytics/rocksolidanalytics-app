@@ -5356,7 +5356,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             blocks.map(function(b, i2) { return React.createElement("th", { key: i2, style: { textAlign: "center", padding: "8px 4px", borderBottom: "2px solid " + C.border, color: C.slate, fontSize: 10, fontWeight: 700 } }, b); })
           )),
           React.createElement("tbody", null,
-            [["SCORING", null], ["Score (Us)", grid.score_us, C.greenB], ["xS (Us)", xsUs, C.greenB], ["Score (Opp)", grid.score_opp, C.red], ["xS (Opp)", xsOpp, C.red],
+            [["SCORING", null], ["Score (Us)", grid.score_us, C.greenB], ["xS (Us)", xsUs, C.greenB], ["Score (Opp)", grid.score_opp, C.blue], ["xS (Opp)", xsOpp, C.blue],
              ["SHOOTING", null], ["Shots (Us)", grid.shots_us, C.slate], ["Shots (Opp)", grid.shots_opp, C.slate], ["Wides (Us)", grid.wide_us, C.slateD], ["Wides (Opp)", grid.wide_opp, C.slateD],
              ["KICKOUTS", null], ["Our Won %", koWinPct, C.gold], ["Our Total", grid.ko_total, C.slateD], ["Opp Won %", okoWinPct, C.gold], ["Opp Total", grid.oko_total, C.slateD],
              ["TURNOVERS", null], ["Lost", grid.to_us, C.red], ["Won", grid.to_opp, C.greenB],
@@ -5400,9 +5400,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           );
         }),
         React.createElement("polyline", { points: "0," + py(0) + " " + lineUs, fill: "none", stroke: C.greenB, strokeWidth: 2.5, strokeLinejoin: "round" }),
-        React.createElement("polyline", { points: "0," + py(0) + " " + lineOpp, fill: "none", stroke: C.red, strokeWidth: 2.5, strokeLinejoin: "round", strokeDasharray: "6 3" }),
+        React.createElement("polyline", { points: "0," + py(0) + " " + lineOpp, fill: "none", stroke: C.blue, strokeWidth: 2.5, strokeLinejoin: "round", strokeDasharray: "6 3" }),
         accUs.map(function(v, i2) { return React.createElement("circle", { key: "u" + i2, cx: px(i2), cy: py(v), r: 4, fill: C.greenB }); }),
-        accOpp.map(function(v, i2) { return React.createElement("circle", { key: "o" + i2, cx: px(i2), cy: py(v), r: 4, fill: C.red }); })
+        accOpp.map(function(v, i2) { return React.createElement("circle", { key: "o" + i2, cx: px(i2), cy: py(v), r: 4, fill: C.blue }); })
       );
 
       return React.createElement(React.Fragment, null,
@@ -5410,7 +5410,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           React.createElement("div", { style: { background: C.bgCard, borderRadius: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.25)", padding: "16px 12px 10px" } },
           React.createElement("div", { style: { display: "flex", gap: 16, justifyContent: "center", marginBottom: 10 } },
             React.createElement("span", { style: { fontSize: 10, color: C.greenB, fontWeight: 700 } }, "\u2014 " + (club.name || "Us")),
-            React.createElement("span", { style: { fontSize: 10, color: C.red, fontWeight: 700 } }, "- - " + (ON || "Opposition"))
+            React.createElement("span", { style: { fontSize: 10, color: C.blue, fontWeight: 700 } }, "- - " + (ON || "Opposition"))
           ), chart)),
         React.createElement(Section, { title: nM > 1 ? "AVG PERIOD BREAKDOWN \u00b7 " + nM + " GAMES" : "PERIOD BREAKDOWN" }, tbl)
       );
