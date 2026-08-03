@@ -3707,12 +3707,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var players = act.filter(function(a) { return a.role === "player"; });
       if (!players.length) return null;
       function ago(ls) {
-        if (!ls) return { t: "not yet", c: C.slateD };
-        var d = Math.round((Date.now() - new Date(ls + "T00:00:00").getTime()) / 864e5);
-        if (d <= 0) return { t: "today", c: C.greenB };
-        if (d === 1) return { t: "yesterday", c: C.greenB };
-        if (d <= 7) return { t: d + " days ago", c: C.gold };
-        return { t: d + " days ago", c: C.slateD };
+        if (!ls) return { t: "not yet", d: "", c: C.slateD };
+        var dt = new Date(ls + "T00:00:00");
+        var days = Math.round((Date.now() - dt.getTime()) / 864e5);
+        var dstr = dt.getDate() + " " + ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][dt.getMonth()];
+        var col = days <= 0 ? C.greenB : days === 1 ? C.greenB : days <= 7 ? C.gold : C.slateD;
+        var rel = days <= 0 ? "today" : days === 1 ? "yesterday" : days + "d ago";
+        return { t: rel, d: dstr, c: col };
       }
       var wk = players.filter(function(a) { return a.last_seen && (Date.now() - new Date(a.last_seen + "T00:00:00").getTime()) / 864e5 <= 7; }).length;
       return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18 } },
@@ -3725,7 +3726,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             return /* @__PURE__ */ React.createElement("div", { key: ai, style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderTop: ai ? "1px solid " + C.border : "none" } },
               /* @__PURE__ */ React.createElement("span", { style: { width: 7, height: 7, borderRadius: "50%", background: g.c, flexShrink: 0 } }),
               /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, fontSize: 11, color: C.slate, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, a.email),
-              /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: g.c, fontFamily: MONO, flexShrink: 0 } }, g.t));
+              /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: g.c, fontFamily: MONO, fontWeight: 700 } }, g.t), g.d && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO, marginTop: 1 } }, g.d)));
           })));
     })()), React.createElement("div", { style: { fontSize: 11, color: C.slateD, marginBottom: 12, lineHeight: 1.5 } }, "Preferred position feeds team selection suggestions. Actual positions are still set per match on the teamsheet."), squad === null && /* @__PURE__ */ React.createElement("div", { style: { color: C.slateD, fontSize: 11 } }, "Loading squad\\u2026"), squad && squad.map(function(p) {
       var pi = POSITIONS.find(function(x) {
