@@ -5201,6 +5201,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   function DashView({ d: d0, club, scope, match, onBack, oppName, wide }) {
     var ON = oppName || "Opposition";
     const [half, setHalf] = useState("all");
+    const [openTypes, setOpenTypes] = useState(false);
+    const [openOrigins, setOpenOrigins] = useState(false);
     const d = useMemo(function() {
       if (!d0 || half === "all") return d0;
       var evs = (d0._events || []).filter(function(e) { return String(e.period == null ? 1 : e.period) === half; });
@@ -5223,7 +5225,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       [["all", "FULL GAME"], ["1", "1ST"], ["2", "2ND"]].map(function(hf) {
         var on = half === hf[0];
         return /* @__PURE__ */ React.createElement("button", { key: hf[0], onClick: function() { setHalf(hf[0]); }, style: { padding: "6px 11px", borderRadius: 8, cursor: "pointer", fontSize: 10, fontWeight: 800, fontFamily: MONO, letterSpacing: 0.5, background: on ? C.gold : "none", border: "1px solid " + (on ? C.gold : C.border), color: on ? C.bg : C.slate } }, hf[1]);
-      })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, margin: "2px 0 18px" } }, [["overview","Overview"],["attack","Attack"],["defence","Defence"],["kickouts","Kickouts"],["players","Players"],["periods","Periods"]].map(function(t) { var on = dtab === t[0]; return /* @__PURE__ */ React.createElement("button", { key: t[0], onClick: function() { setDtab(t[0]); }, style: { flex: 1, minWidth: 0, whiteSpace: "nowrap", padding: "8px 4px", borderRadius: 9, cursor: "pointer", fontSize: 11, fontWeight: 800, fontFamily: MONO, letterSpacing: 0.2, background: on ? C.greenB : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.bg : C.slate } }, t[1]); })),
+      })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6, margin: "2px 0 18px" } }, [["overview","Overview"],["attack","Attack"],["defence","Defence"],["kickouts","Kickouts"],["players","Players"],["periods","Periods"]].map(function(t) { var on = dtab === t[0]; return /* @__PURE__ */ React.createElement("button", { key: t[0], onClick: function() { setDtab(t[0]); }, style: { flex: "1 1 30%", minWidth: 0, padding: "10px 8px", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 800, fontFamily: MONO, letterSpacing: 0.3, background: on ? C.greenB : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.bg : C.slate } }, t[1]); })),
     dtab === "overview" && (d.notes && d.notes.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { padding: 16, borderRadius: 14, background: "linear-gradient(135deg,#0e1c34,#0b1426)", border: "1px solid " + C.border, marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 12, fontSize: 11 } }, isMatch ? "MATCH READ" : "SEASON READ"), d.notes.map(function(n, i) {
       return /* @__PURE__ */ React.createElement("div", { key: i, style: { fontSize: 14, lineHeight: 1.6, color: C.white, marginBottom: i < d.notes.length - 1 ? 10 : 0 } }, n);
     }))),
@@ -5513,13 +5515,21 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             React.createElement("span", { style: { fontSize: 10, color: C.blue, fontWeight: 700 } }, "- - " + (ON || "Opposition"))
           ), chart)),
         React.createElement(Section, { title: nM > 1 ? "AVG PERIOD BREAKDOWN \u00b7 " + nM + " GAMES" : "PERIOD BREAKDOWN" }, tbl),
-        React.createElement(Section, { title: nM > 1 ? "AVG SCORE TYPES \u00b7 " + nM + " GAMES" : "SCORE TYPES" },
-          stTable("us", C.greenB, (club.name || "Us").toUpperCase()),
-          stTable("opp", C.blue, (ON || "OPPOSITION").toUpperCase())
+        React.createElement("div", { style: { marginBottom: 28 } },
+          React.createElement("button", { onClick: function() { setOpenTypes(!openTypes); }, style: { width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: openTypes ? 12 : 0 } },
+            React.createElement("span", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slate, fontFamily: MONO, fontWeight: 600 } }, nM > 1 ? "AVG SCORE TYPES \u00b7 " + nM + " GAMES" : "SCORE TYPES"),
+            React.createElement("span", { style: { fontSize: 14, color: C.slateD, fontFamily: MONO, transition: "transform 0.2s", transform: openTypes ? "rotate(90deg)" : "none" } }, "\u203A")),
+          openTypes && React.createElement(React.Fragment, null,
+            stTable("us", C.greenB, (club.name || "Us").toUpperCase()),
+            stTable("opp", C.blue, (ON || "OPPOSITION").toUpperCase()))
         ),
-        React.createElement(Section, { title: nM > 1 ? "AVG SCORE ORIGINS \u00b7 " + nM + " GAMES" : "SCORE ORIGINS" },
-          srcTable("us", C.greenB, (club.name || "Us").toUpperCase()),
-          srcTable("opp", C.blue, (ON || "OPPOSITION").toUpperCase())
+        React.createElement("div", { style: { marginBottom: 28 } },
+          React.createElement("button", { onClick: function() { setOpenOrigins(!openOrigins); }, style: { width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: openOrigins ? 12 : 0 } },
+            React.createElement("span", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slate, fontFamily: MONO, fontWeight: 600 } }, nM > 1 ? "AVG SCORE ORIGINS \u00b7 " + nM + " GAMES" : "SCORE ORIGINS"),
+            React.createElement("span", { style: { fontSize: 14, color: C.slateD, fontFamily: MONO, transition: "transform 0.2s", transform: openOrigins ? "rotate(90deg)" : "none" } }, "\u203A")),
+          openOrigins && React.createElement(React.Fragment, null,
+            srcTable("us", C.greenB, (club.name || "Us").toUpperCase()),
+            srcTable("opp", C.blue, (ON || "OPPOSITION").toUpperCase()))
         )
       );
     })());
