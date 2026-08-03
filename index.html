@@ -5374,7 +5374,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         else if (sc === 1 && isFree) key = "PtFree";
         if (key) stGrid[e.team][key][bi] += 1;
       });
-      var sources = [["ownKO","Own kickout",C.greenB],["oppKO","Opp kickout",C.blue],["toKick","Turnover \u00b7 kick pass",C.gold],["toHand","Turnover \u00b7 hand pass","#a970ff"],["toContact","Turnover \u00b7 in contact","#4dd0b1"],["toOther","Turnover \u00b7 other",C.slate],["unclear","Tagging unclear",C.slateD]];
+      var sources = [["ownKO","Own kickout",C.greenB],["oppKO","Opp kickout",C.blue],["turnover","Turnover",C.gold],["unclear","Tagging unclear",C.slateD]];
       var srcGrid = { us: {}, opp: {} };
       sources.forEach(function(s) { srcGrid.us[s[0]] = blocks.map(function(){return 0;}); srcGrid.opp[s[0]] = blocks.map(function(){return 0;}); });
       // group events by match, sort by seq/time so scoreSourceOf can trace backwards
@@ -5389,7 +5389,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           var bi = -1; for (var k = 0; k < ranges.length; k++) { if (inBlock(secs, k)) { bi = k; break; } }
           if (bi < 0) return;
           var src = _srcOf(arr, i, e.team);
-          if (srcGrid[e.team][src]) srcGrid[e.team][src][bi] += sc;
+          var mergedKey = (src === "toKick" || src === "toHand" || src === "toContact" || src === "toOther") ? "turnover" : src;
+          if (srcGrid[e.team][mergedKey]) srcGrid[e.team][mergedKey][bi] += sc;
         });
       });
       function stTable(team, teamColour, teamLabel) {
