@@ -5393,46 +5393,45 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           if (srcGrid[e.team][mergedKey]) srcGrid[e.team][mergedKey][bi] += sc;
         });
       });
-      function stTable(team, teamColour, teamLabel) {
-        return React.createElement("div", { style: { overflowX: "auto", marginBottom: 16, background: C.bgCard, borderRadius: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.25)", padding: "16px 14px" } },
-          React.createElement("div", { style: { fontSize: 11, fontFamily: MONO, letterSpacing: 1.5, color: teamColour, fontWeight: 800, marginBottom: 12 } }, teamLabel),
-          React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: 13, fontFamily: MONO } },
-            React.createElement("thead", null, React.createElement("tr", null,
-              React.createElement("th", { style: { textAlign: "left", padding: "6px 6px", borderBottom: "2px solid " + C.border, color: C.slateD, fontSize: 9, letterSpacing: 1 } }, ""),
-              blocks.map(function(b, i2) { return React.createElement("th", { key: i2, style: { textAlign: "center", padding: "10px 6px", borderBottom: "2px solid " + C.border, color: C.slate, fontSize: 11.5, fontWeight: 700 } }, b); }))),
-            React.createElement("tbody", null, shotTypes.map(function(t, si) {
-              var row = stGrid[team][t[0]];
-              var peak = -1, pv = -1;
-              row.forEach(function(v, ci) { if (v > pv) { pv = v; peak = ci; } });
-              return React.createElement("tr", { key: si, style: { borderBottom: "1px solid " + C.border + "55" } },
-                React.createElement("td", { style: { padding: "10px 8px", color: C.slate, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 10 } },
-                  React.createElement("span", { style: { width: 12, height: 12, borderRadius: 3, background: t[2], flexShrink: 0 } }), t[1]),
-                row.map(function(v, ci) {
-                  var isHigh = v > 0;
-                  var isPeak = ci === peak && pv > 0;
-                  return React.createElement("td", { key: ci, style: { textAlign: "center", padding: "10px 6px", color: isHigh ? t[2] : C.slateD + "88", fontWeight: isHigh ? 800 : 400, background: isPeak ? t[2] + "18" : "none", borderRadius: isPeak ? 6 : 0 } }, isHigh ? String(v) : "\u2014");
-                }));
-            }))));
+      function stTable(team1, colour1, label1, team2, colour2, label2) {
+        return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } },
+          blocks.map(function(blockLabel, bi) {
+            return React.createElement("div", { key: bi, style: { background: C.bgCard, borderRadius: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.25)", padding: "14px 16px" } },
+              React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: C.white, fontFamily: MONO, marginBottom: 12, borderBottom: "1px solid " + C.border, paddingBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "baseline" } },
+                React.createElement("span", null, blockLabel + " min"),
+                React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5 } },
+                  React.createElement("span", { style: { color: colour1, marginRight: 10 } }, label1),
+                  React.createElement("span", { style: { color: colour2 } }, label2))),
+              shotTypes.map(function(t, si) {
+                var us = stGrid[team1][t[0]][bi], opp = stGrid[team2][t[0]][bi];
+                if (us === 0 && opp === 0) return null;
+                return React.createElement("div", { key: si, style: { display: "flex", alignItems: "center", padding: "6px 0", borderBottom: si === shotTypes.length - 1 ? "none" : "1px solid " + C.border + "44" } },
+                  React.createElement("span", { style: { width: 10, height: 10, borderRadius: 3, background: t[2], flexShrink: 0, marginRight: 10 } }),
+                  React.createElement("div", { style: { flex: 1, fontSize: 12, color: C.slate, fontFamily: MONO } }, t[1]),
+                  React.createElement("div", { style: { minWidth: 44, textAlign: "right", fontSize: 13, fontWeight: 800, fontFamily: MONO, color: us > 0 ? colour1 : C.slateD + "88" } }, us > 0 ? String(us) : "\u2014"),
+                  React.createElement("div", { style: { minWidth: 44, textAlign: "right", fontSize: 13, fontWeight: 800, fontFamily: MONO, color: opp > 0 ? colour2 : C.slateD + "88", marginLeft: 10 } }, opp > 0 ? String(opp) : "\u2014"));
+              }).filter(Boolean));
+          }));
       }
-      function srcTable(team, teamColour, teamLabel) {
-        return React.createElement("div", { style: { overflowX: "auto", marginBottom: 16, background: C.bgCard, borderRadius: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.25)", padding: "16px 14px" } },
-          React.createElement("div", { style: { fontSize: 11, fontFamily: MONO, letterSpacing: 1.5, color: teamColour, fontWeight: 800, marginBottom: 12 } }, teamLabel),
-          React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: 13, fontFamily: MONO } },
-            React.createElement("thead", null, React.createElement("tr", null,
-              React.createElement("th", { style: { textAlign: "left", padding: "6px 6px", borderBottom: "2px solid " + C.border, color: C.slateD, fontSize: 9, letterSpacing: 1 } }, ""),
-              blocks.map(function(b, i2) { return React.createElement("th", { key: i2, style: { textAlign: "center", padding: "10px 6px", borderBottom: "2px solid " + C.border, color: C.slate, fontSize: 11.5, fontWeight: 700 } }, b); }))),
-            React.createElement("tbody", null, sources.map(function(s, si) {
-              var row = srcGrid[team][s[0]];
-              var peak = -1, pv = -1;
-              row.forEach(function(v, ci) { if (v > pv) { pv = v; peak = ci; } });
-              return React.createElement("tr", { key: si, style: { borderBottom: "1px solid " + C.border + "55" } },
-                React.createElement("td", { style: { padding: "10px 8px", color: C.slate, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 10 } }, React.createElement("span", { style: { width: 12, height: 12, borderRadius: 3, background: s[2], flexShrink: 0 } }), s[1]),
-                row.map(function(v, ci) {
-                  var isHigh = v > 0;
-                  var isPeak = ci === peak && pv > 0;
-                  return React.createElement("td", { key: ci, style: { textAlign: "center", padding: "10px 6px", color: isHigh ? teamColour : C.slateD + "88", fontWeight: isHigh ? 800 : 400, background: isPeak ? teamColour + "18" : "none", borderRadius: isPeak ? 6 : 0 } }, isHigh ? String(v) : "\u2014");
-                }));
-            }))));
+      function srcTable(team1, colour1, label1, team2, colour2, label2) {
+        return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } },
+          blocks.map(function(blockLabel, bi) {
+            return React.createElement("div", { key: bi, style: { background: C.bgCard, borderRadius: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.25)", padding: "14px 16px" } },
+              React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: C.white, fontFamily: MONO, marginBottom: 12, borderBottom: "1px solid " + C.border, paddingBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "baseline" } },
+                React.createElement("span", null, blockLabel + " min"),
+                React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5 } },
+                  React.createElement("span", { style: { color: colour1, marginRight: 10 } }, label1),
+                  React.createElement("span", { style: { color: colour2 } }, label2))),
+              sources.map(function(s, si) {
+                var us = srcGrid[team1][s[0]][bi], opp = srcGrid[team2][s[0]][bi];
+                if (us === 0 && opp === 0) return null;
+                return React.createElement("div", { key: si, style: { display: "flex", alignItems: "center", padding: "6px 0", borderBottom: si === sources.length - 1 ? "none" : "1px solid " + C.border + "44" } },
+                  React.createElement("span", { style: { width: 10, height: 10, borderRadius: 3, background: s[2], flexShrink: 0, marginRight: 10 } }),
+                  React.createElement("div", { style: { flex: 1, fontSize: 12, color: C.slate, fontFamily: MONO } }, s[1]),
+                  React.createElement("div", { style: { minWidth: 44, textAlign: "right", fontSize: 13, fontWeight: 800, fontFamily: MONO, color: us > 0 ? colour1 : C.slateD + "88" } }, us > 0 ? String(us) : "\u2014"),
+                  React.createElement("div", { style: { minWidth: 44, textAlign: "right", fontSize: 13, fontWeight: 800, fontFamily: MONO, color: opp > 0 ? colour2 : C.slateD + "88", marginLeft: 10 } }, opp > 0 ? String(opp) : "\u2014"));
+              }).filter(Boolean));
+          }));
       }
       var xsUs = blocks.map(function(){ return 0; }), xsOpp = blocks.map(function(){ return 0; });
       evs.forEach(function(e) {
@@ -5452,38 +5451,36 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var accUs = [], accOpp = [], runUs = 0, runOpp = 0;
       blocks.forEach(function(_, bi) { runUs += grid.score_us[bi]; runOpp += grid.score_opp[bi]; accUs.push(runUs); accOpp.push(runOpp); });
 
-      var tbl = React.createElement("div", { style: { overflowX: "auto", marginBottom: 24, background: C.bgCard, borderRadius: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.25)", padding: "16px 14px" } },
-        React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: 13, fontFamily: MONO } },
-          React.createElement("thead", null, React.createElement("tr", null,
-            React.createElement("th", { style: { textAlign: "left", padding: "8px 6px", borderBottom: "2px solid " + C.border, color: C.slateD, fontSize: 9, letterSpacing: 1 } }, ""),
-            blocks.map(function(b, i2) { return React.createElement("th", { key: i2, style: { textAlign: "center", padding: "12px 8px", borderBottom: "2px solid " + C.border, color: C.slate, fontSize: 11.5, fontWeight: 700 } }, b); })
-          )),
-          React.createElement("tbody", null,
-            [["SCORING", null], ["Score (Us)", grid.score_us, C.greenB], ["xS (Us)", xsUs, C.greenB], ["Score (Opp)", grid.score_opp, C.blue], ["xS (Opp)", xsOpp, C.blue],
-             ["SHOOTING", null], ["Shots (Us)", grid.shots_us, C.slate], ["Shots (Opp)", grid.shots_opp, C.slate], ["Wides (Us)", grid.wide_us, C.slateD], ["Wides (Opp)", grid.wide_opp, C.slateD],
-             ["KICKOUTS", null], ["Our Won %", koWinPct, C.gold], ["Our Total", grid.ko_total, C.slateD], ["Opp Won %", okoWinPct, C.gold], ["Opp Total", grid.oko_total, C.slateD],
-             ["POSSESSIONS LOST", null], ["Us", grid.to_us, C.greenB], ["Opp", grid.to_opp, C.blue],
-             ["TACKLES", null], ["Us", grid.tackle_us, C.slate], ["Opp", grid.tackle_opp, C.slate]
-            ].map(function(row, ri) {
-              if (row[1] === null) {
-                return React.createElement("tr", { key: ri },
-                  React.createElement("td", { colSpan: blocks.length + 1, style: { padding: "18px 6px 8px", color: C.greenB, fontSize: 10.5, fontWeight: 800, letterSpacing: 2, fontFamily: MONO } }, row[0]));
-              }
-              // find the peak block for this row to highlight
-              var peak = -1, pv = -1;
-              row[1].forEach(function(v, ci) { if (typeof v === "number" && v > pv) { pv = v; peak = ci; } });
-              return React.createElement("tr", { key: ri, style: { borderBottom: "1px solid " + C.border + "55" } },
-                React.createElement("td", { style: { padding: "10px 8px", color: C.slate, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap" } }, row[0]),
-                row[1].map(function(v, ci) {
-                  var val = v == null ? "\u2014" : (row[0].indexOf("%") >= 0 ? v + "%" : String(v));
-                  var isHigh = typeof v === "number" && v > 0;
-                  var isPeak = ci === peak && pv > 0;
-                  return React.createElement("td", { key: ci, style: { textAlign: "center", padding: "10px 6px", color: isHigh ? row[2] : C.slateD + "88", fontWeight: isHigh ? 800 : 400, background: isPeak ? row[2] + "18" : "none", borderRadius: isPeak ? 6 : 0 } }, val);
-                })
-              );
-            })
-          )
-        )
+      var metricGroups = [
+        { title: "SCORING", rows: [["Score", grid.score_us, grid.score_opp], ["xS", xsUs, xsOpp]] },
+        { title: "SHOOTING", rows: [["Shots", grid.shots_us, grid.shots_opp], ["Wides", grid.wide_us, grid.wide_opp]] },
+        { title: "KICKOUTS", rows: [["Won %", koWinPct, okoWinPct], ["Total", grid.ko_total, grid.oko_total]] },
+        { title: "POSSESSIONS LOST", rows: [["Count", grid.to_us, grid.to_opp]] },
+        { title: "TACKLES", rows: [["Count", grid.tackle_us, grid.tackle_opp]] }
+      ];
+      // find peak block per (row, team) for highlighting
+      function peakOf(arr) { var p = -1, pv = -1; arr.forEach(function(v, ci) { if (typeof v === "number" && v > pv) { pv = v; p = ci; } }); return { peak: p, pv: pv }; }
+      var tbl = React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } },
+        blocks.map(function(blockLabel, bi) {
+          return React.createElement("div", { key: bi, style: { background: C.bgCard, borderRadius: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.25)", padding: "14px 16px" } },
+            React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: C.white, fontFamily: MONO, marginBottom: 12, borderBottom: "1px solid " + C.border, paddingBottom: 8 } }, blockLabel + " min"),
+            metricGroups.map(function(g, gi) {
+              return React.createElement("div", { key: gi, style: { marginBottom: gi === metricGroups.length - 1 ? 0 : 12 } },
+                React.createElement("div", { style: { fontSize: 9.5, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 800, marginBottom: 6 } }, g.title),
+                g.rows.map(function(row, ri) {
+                  var label = row[0], us = row[1][bi], opp = row[2][bi];
+                  var isPct = label.indexOf("%") >= 0;
+                  var pkUs = peakOf(row[1]), pkOpp = peakOf(row[2]);
+                  var isPeakUs = pkUs.peak === bi && pkUs.pv > 0;
+                  var isPeakOpp = pkOpp.peak === bi && pkOpp.pv > 0;
+                  var fmt = function(v) { return v == null ? "\u2014" : (isPct ? v + "%" : String(v)); };
+                  return React.createElement("div", { key: ri, style: { display: "flex", alignItems: "center", padding: "6px 0", borderBottom: ri === g.rows.length - 1 ? "none" : "1px solid " + C.border + "44" } },
+                    React.createElement("div", { style: { flex: 1, fontSize: 12, color: C.slate, fontFamily: MONO } }, label),
+                    React.createElement("div", { style: { minWidth: 60, textAlign: "right", fontSize: 13, fontWeight: 800, fontFamily: MONO, color: (typeof us === "number" && us > 0) ? C.greenB : C.slateD + "88", background: isPeakUs ? C.greenB + "18" : "none", padding: "3px 8px", borderRadius: 6 } }, fmt(us)),
+                    React.createElement("div", { style: { minWidth: 60, textAlign: "right", fontSize: 13, fontWeight: 800, fontFamily: MONO, color: (typeof opp === "number" && opp > 0) ? C.blue : C.slateD + "88", background: isPeakOpp ? C.blue + "18" : "none", padding: "3px 8px", borderRadius: 6, marginLeft: 6 } }, fmt(opp)));
+                }));
+            }));
+        })
       );
 
       var maxS = Math.max(accUs[accUs.length-1], accOpp[accOpp.length-1], 1);
@@ -5521,16 +5518,14 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             React.createElement("span", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slate, fontFamily: MONO, fontWeight: 600 } }, nM > 1 ? "AVG SCORE TYPES \u00b7 " + nM + " GAMES" : "SCORE TYPES"),
             React.createElement("span", { style: { fontSize: 14, color: C.slateD, fontFamily: MONO, transition: "transform 0.2s", transform: openTypes ? "rotate(90deg)" : "none" } }, "\u203A")),
           openTypes && React.createElement(React.Fragment, null,
-            stTable("us", C.greenB, (club.name || "Us").toUpperCase()),
-            stTable("opp", C.blue, (ON || "OPPOSITION").toUpperCase()))
+            stTable("us", C.greenB, (club.name || "Us").toUpperCase(), "opp", C.blue, (ON || "OPPOSITION").toUpperCase()))
         ),
         React.createElement("div", { style: { marginBottom: 28 } },
           React.createElement("button", { onClick: function() { setOpenOrigins(!openOrigins); }, style: { width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: openOrigins ? 12 : 0 } },
             React.createElement("span", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slate, fontFamily: MONO, fontWeight: 600 } }, nM > 1 ? "AVG SCORE ORIGINS \u00b7 " + nM + " GAMES" : "SCORE ORIGINS"),
             React.createElement("span", { style: { fontSize: 14, color: C.slateD, fontFamily: MONO, transition: "transform 0.2s", transform: openOrigins ? "rotate(90deg)" : "none" } }, "\u203A")),
           openOrigins && React.createElement(React.Fragment, null,
-            srcTable("us", C.greenB, (club.name || "Us").toUpperCase()),
-            srcTable("opp", C.blue, (ON || "OPPOSITION").toUpperCase()))
+            srcTable("us", C.greenB, (club.name || "Us").toUpperCase(), "opp", C.blue, (ON || "OPPOSITION").toUpperCase()))
         )
       );
     })());
