@@ -5435,6 +5435,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                 }));
             }))));
       }
+      var possUs = blocks.map(function(_, bi) { return grid.shots_us[bi] + grid.to_us[bi]; });
+      var possOpp = blocks.map(function(_, bi) { return grid.shots_opp[bi] + grid.to_opp[bi]; });
+      var possPct = blocks.map(function(_, bi) { var t = possUs[bi] + possOpp[bi]; return t ? Math.round(100 * possUs[bi] / t) : null; });
       var xsUs = blocks.map(function(){ return 0; }), xsOpp = blocks.map(function(){ return 0; });
       evs.forEach(function(e) {
         if (!((e.event_type === "Shot from play" || e.event_type === "Scoreable free") && e.x != null)) return;
@@ -5464,6 +5467,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
              ["SHOOTING", null], ["Shots (Us)", grid.shots_us, C.slate], ["Shots (Opp)", grid.shots_opp, C.slate], ["Wides (Us)", grid.wide_us, C.slateD], ["Wides (Opp)", grid.wide_opp, C.slateD],
              ["KICKOUTS", null], ["Our Won %", koWinPct, C.gold], ["Our Total", grid.ko_total, C.slateD], ["Opp Won %", okoWinPct, C.gold], ["Opp Total", grid.oko_total, C.slateD],
              ["POSSESSIONS LOST", null], ["Us", grid.to_us, C.greenB], ["Opp", grid.to_opp, C.blue],
+             ["POSSESSION", null], ["Us", possUs, C.greenB], ["Opp", possOpp, C.blue], ["Share %", possPct, C.gold],
              ["TACKLES", null], ["Us", grid.tackle_us, C.slate], ["Opp", grid.tackle_opp, C.slate]
             ].map(function(row, ri) {
               if (row[1] === null) {
