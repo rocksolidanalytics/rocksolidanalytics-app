@@ -604,7 +604,7 @@
     const [, bump] = useState(0);
     const isAnalyst = role !== "player";
     function load() {
-      db.from("matches").select("id,date,opponent,video_url,video_enabled,video_throwin,video_halfstart").eq("club_id", club.id).eq("scouting", false).eq("video_tagged", true).order("date", { ascending: false }).then(function(r) { setMatches(r.data || []); }, function() { setMatches([]); });
+      db.from("matches").select("id,date,opponent,video_url,video_enabled,video_throwin,video_halfstart").eq("club_id", club.id).eq("video_tagged", true).order("date", { ascending: false }).then(function(r) { setMatches(r.data || []); }, function() { setMatches([]); });
     }
     useEffect(function() { load(); }, []);
     function ytId(u) { if (!u) return null; var m = String(u).match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/); return m ? m[1] : null; }
