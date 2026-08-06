@@ -603,8 +603,9 @@
     const LEAD = 5;
     const [, bump] = useState(0);
     const isAnalyst = role !== "player";
+    const [showScoutStats, setShowScoutStats] = useState(false);
     function load() {
-      db.from("matches").select("id,date,opponent,video_url,video_enabled,video_throwin,video_halfstart").eq("club_id", club.id).eq("video_tagged", true).order("date", { ascending: false }).then(function(r) { setMatches(r.data || []); }, function() { setMatches([]); });
+      db.from("matches").select("id,date,opponent,video_url,video_enabled,video_throwin,video_halfstart,scouting").eq("club_id", club.id).eq("video_tagged", true).order("date", { ascending: false }).then(function(r) { setMatches(r.data || []); }, function() { setMatches([]); });
     }
     useEffect(function() { load(); }, []);
     function ytId(u) { if (!u) return null; var m = String(u).match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/); return m ? m[1] : null; }
@@ -661,7 +662,10 @@
     }
     function patch(m, fields) { db.from("matches").update(fields).eq("id", m.id).then(function() { Object.assign(m, fields); bump(function(x) { return x + 1; }); }, function() {}); }
     function fmtDate(d) { if (!d) return ""; var x = new Date(d + "T00:00:00"); return x.getDate() + "/" + (x.getMonth() + 1); }
-    var hdr = React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 12 } }, React.createElement("button", { onClick: sel ? function() { setSel(null); } : manage ? function() { setManage(false); } : back, style: { background: "none", border: "none", color: C.greenB, fontSize: 24, cursor: "pointer", lineHeight: 1 } }, "\u2039"), React.createElement("div", { style: { fontSize: 15, fontWeight: 800, flex: 1 } }, sel ? (sel.opponent || "Match") : manage ? "Manage videos" : "Game film"), (!sel && isAnalyst) ? React.createElement("button", { onClick: function() { setManage(!manage); }, style: { background: "none", border: "1px solid " + C.border, color: C.slate, borderRadius: 8, padding: "6px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer" } }, manage ? "Done" : "Manage") : null);
+    var hdr = React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 12 } }, React.createElement("button", { onClick: sel ? function() { setSel(null); } : manage ? function() { setManage(false); } : back, style: { background: "none", border: "none", color: C.greenB, fontSize: 24, cursor: "pointer", lineHeight: 1 } }, "\u2039"), React.createElement("div", { style: { fontSize: 15, fontWeight: 800, flex: 1 } }, sel ? (sel.opponent || "Match") + (sel.scouting ? " \u00b7 Scout" : "") : manage ? "Manage videos" : "Game film"), (sel && sel.scouting) ? React.createElement("button", { onClick: function() { setShowScoutStats(true); }, style: { background: C.greenB + "22", border: "1px solid " + C.greenB, color: C.greenB, borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 800, cursor: "pointer" } }, "Stats") : null, (!sel && isAnalyst) ? React.createElement("button", { onClick: function() { setManage(!manage); }, style: { background: "none", border: "1px solid " + C.border, color: C.slate, borderRadius: 8, padding: "6px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer" } }, manage ? "Done" : "Manage") : null);
+    if (sel && showScoutStats && sel.scouting) {
+      return React.createElement(ScoutDash, { m: sel, club: club, back: function() { setShowScoutStats(false); } });
+    }
     if (sel) {
       var vid = ytId(sel.video_url);
       var noSync = sel.video_throwin == null && sel.video_halfstart == null;
