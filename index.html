@@ -2270,9 +2270,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   var EV_TYPE = { kickout: "Kickout", shot: "Shot from play", free: "Scoreable free", poss: "Possession lost", tackle: "Tackle", card: "Bookings" };
   var TAG_EVENTS = [
     { id: "kickout", l: "KICKOUT", pitch: true, outcomes: ["Won Clean", "Break Won", "Break Lost", "Lost Clean"] },
-    { id: "shot", l: "SHOT", pitch: true, outcomes: ["Point", "2-Pointer", "Goal", "Wide", "Blocked", "Dropped Short", "Saved"] },
-    { id: "free", l: "FREE", pitch: true, outcomes: ["Point", "2-Pointer", "Goal", "Wide", "Dropped Short", "Saved"] },
-    { id: "poss", l: "TURNOVER", pitch: false, outcomes: ["In Contact", "Kick Pass", "Hand Pass", "Handling", "Intercepted", "Foul"] },
+    { id: "shot", l: "SHOT", pitch: true, outcomes: ["Point", "2-Pointer", "Goal", "Wide", "Blocked", "Dropped Short", "Saved", "Woodwork"] },
+    { id: "free", l: "FREE", pitch: true, outcomes: ["Point", "2-Pointer", "Goal", "Wide", "Dropped Short", "Saved", "Woodwork"] },
+    { id: "poss", l: "TURNOVER", pitch: false, outcomes: ["In Contact", "Kick Pass", "Hand Pass", "Handling", "Intercepted", "Foul", "Shot Dropped Short"] },
     { id: "tackle", l: "TACKLE", pitch: false, outcomes: ["Contact Made", "Block", "Foul"] },
     { id: "card", l: "CARD", pitch: false, outcomes: ["Yellow", "Black", "Red"] }
   ];
