@@ -2276,6 +2276,15 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     { id: "tackle", l: "TACKLE", pitch: false, outcomes: ["Contact Made", "Block", "Foul"] },
     { id: "card", l: "CARD", pitch: false, outcomes: ["Yellow", "Black", "Red"] }
   ];
+  function sportEvents(sport) {
+    var isStick = sport === "camogie" || sport === "hurling";
+    if (!isStick) return TAG_EVENTS;
+    return TAG_EVENTS.map(function(ev) {
+      if (ev.id === "kickout") return Object.assign({}, ev, { l: "PUCKOUT" });
+      if (ev.id === "poss") return Object.assign({}, ev, { outcomes: ev.outcomes.map(function(o) { return o === "Kick Pass" ? "Strike" : o; }) });
+      return ev;
+    });
+  }
   function mapOutcome(evid, oc) {
     if (evid === "kickout") {
       var k = { "Won Clean": "Won clean", "Break Won": "Break won", "Break Lost": "Break lost", "Lost Clean": "Lost clean" };
@@ -2572,6 +2581,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }, Promise.resolve());
   }
   function Tagger({ club, session, match, back }) {
+    var _tevs = sportEvents(club.sport);
     const [editRow, setEditRow] = useState(null);
     const [edOut, setEdOut] = useState(null);
     const [edPl, setEdPl] = useState(void 0);
@@ -2826,7 +2836,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       sync();
     }
     function findDefLT(etype) {
-      var d = TAG_EVENTS.filter(function(e) {
+      var d = _tevs.filter(function(e) {
         return EV_TYPE[e.id] === etype;
       })[0];
       if (d) return d;
@@ -3233,7 +3243,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, padding: "4px 10px", background: "#141003", borderBottom: "1px solid " + C.gold + "33", alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 8.5, color: C.gold, fontFamily: MONO, fontWeight: 800, letterSpacing: 1 } }, "SIN BIN"), bins.map(function(b2) {
         return /* @__PURE__ */ React.createElement("span", { key: b2.n, style: { fontSize: 10, color: C.gold, fontWeight: 800 } }, "#", b2.n, nameMap[b2.n] ? " " + nameMap[b2.n].split(" ").slice(-1)[0] : "", " \xB7 ", Math.floor(b2.left / 60) + ":" + String(b2.left % 60).padStart(2, "0"));
       }));
-    })(), flash && /* @__PURE__ */ React.createElement("div", { style: { background: flash.indexOf("\u2713") === 0 ? C.green : C.navyL, padding: "5px", textAlign: "center", fontSize: 11 } }, flash, (String(flash).indexOf("\u2713") === 0 && tagged.length) ? /* @__PURE__ */ React.createElement("button", { onClick: function() { undo(); setFlash(null); }, style: { marginLeft: 10, background: "rgba(0,0,0,0.28)", border: "1px solid rgba(255,255,255,0.35)", color: "#fff", borderRadius: 6, padding: "2px 9px", fontSize: 10, fontWeight: 800, letterSpacing: 0.5, cursor: "pointer" } }, "UNDO") : null), pending > 0 && /* @__PURE__ */ React.createElement("div", { style: { background: (online ? C.gold : C.slateD) + "22", padding: "4px", textAlign: "center", fontSize: 9.5, color: online ? C.gold : C.slate } }, online ? "\u27F3 syncing " + pending + "\u2026" : "\u25CF " + pending + " saved on device \xB7 waiting for signal"), halfEnded && /* @__PURE__ */ React.createElement("div", { style: { background: C.gold + "22", padding: "5px", textAlign: "center", fontSize: 10.5, color: C.gold } }, "HALF TIME \xB7 tap START 2ND HALF when ready"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", gap: 6, padding: "4px 6px 8px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5, width: 94, flexShrink: 0, overflowY: "auto" } }, TAG_EVENTS.map(function(ev) {
+    })(), flash && /* @__PURE__ */ React.createElement("div", { style: { background: flash.indexOf("\u2713") === 0 ? C.green : C.navyL, padding: "5px", textAlign: "center", fontSize: 11 } }, flash, (String(flash).indexOf("\u2713") === 0 && tagged.length) ? /* @__PURE__ */ React.createElement("button", { onClick: function() { undo(); setFlash(null); }, style: { marginLeft: 10, background: "rgba(0,0,0,0.28)", border: "1px solid rgba(255,255,255,0.35)", color: "#fff", borderRadius: 6, padding: "2px 9px", fontSize: 10, fontWeight: 800, letterSpacing: 0.5, cursor: "pointer" } }, "UNDO") : null), pending > 0 && /* @__PURE__ */ React.createElement("div", { style: { background: (online ? C.gold : C.slateD) + "22", padding: "4px", textAlign: "center", fontSize: 9.5, color: online ? C.gold : C.slate } }, online ? "\u27F3 syncing " + pending + "\u2026" : "\u25CF " + pending + " saved on device \xB7 waiting for signal"), halfEnded && /* @__PURE__ */ React.createElement("div", { style: { background: C.gold + "22", padding: "5px", textAlign: "center", fontSize: 10.5, color: C.gold } }, "HALF TIME \xB7 tap START 2ND HALF when ready"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", gap: 6, padding: "4px 6px 8px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5, width: 94, flexShrink: 0, overflowY: "auto" } }, _tevs.map(function(ev) {
       var on = t.ev && t.ev.id === ev.id;
       return /* @__PURE__ */ React.createElement("button", { key: ev.id, onClick: function() {
         onEventTap(ev);
@@ -4642,7 +4652,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       if (throwIn != null) stampVideoTimes(throwIn, halfStart);
     }, [throwIn, halfStart, tagged.length]);
     function findDef(etype) {
-      var d = TAG_EVENTS.filter(function(e) {
+      var d = _tevs.filter(function(e) {
         return EV_TYPE[e.id] === etype;
       })[0];
       if (d) return d;
@@ -4974,7 +4984,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         seek(-10);
       }, style: { flexShrink: 0, minWidth: 52, padding: "9px 6px", borderRadius: 8, cursor: "pointer", fontSize: 11, fontWeight: 800, fontFamily: MONO, background: C.field, border: "1px solid " + C.border, color: C.slate } }, "\u226A10s"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
         seek(10);
-      }, style: { flexShrink: 0, minWidth: 52, padding: "9px 6px", borderRadius: 8, cursor: "pointer", fontSize: 11, fontWeight: 800, fontFamily: MONO, background: C.field, border: "1px solid " + C.border, color: C.slate } }, "10s\u226B"), /* @__PURE__ */ React.createElement("div", { style: { width: 1, alignSelf: "stretch", background: C.border, margin: "2px 3px" } }), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 8.5, color: C.slateD, fontFamily: MONO, whiteSpace: "nowrap", padding: "0 4px" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "\u25CF"), " TAP=", nmH.split(" ")[0].slice(0, 3).toUpperCase(), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { style: { color: "#ffd75e" } }, "\u25CF\u25CF"), " DBL=", nmA.split(" ")[0].slice(0, 3).toUpperCase()), TAG_EVENTS.concat(customEvts).map(function(ev) {
+      }, style: { flexShrink: 0, minWidth: 52, padding: "9px 6px", borderRadius: 8, cursor: "pointer", fontSize: 11, fontWeight: 800, fontFamily: MONO, background: C.field, border: "1px solid " + C.border, color: C.slate } }, "10s\u226B"), /* @__PURE__ */ React.createElement("div", { style: { width: 1, alignSelf: "stretch", background: C.border, margin: "2px 3px" } }), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 8.5, color: C.slateD, fontFamily: MONO, whiteSpace: "nowrap", padding: "0 4px" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "\u25CF"), " TAP=", nmH.split(" ")[0].slice(0, 3).toUpperCase(), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { style: { color: "#ffd75e" } }, "\u25CF\u25CF"), " DBL=", nmA.split(" ")[0].slice(0, 3).toUpperCase()), _tevs.concat(customEvts).map(function(ev) {
         var on2 = t.ev && t.ev.id === ev.id;
         return /* @__PURE__ */ React.createElement("button", { key: ev.id, onClick: function() {
           onEventTap(ev);
