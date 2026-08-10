@@ -4316,6 +4316,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     })), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, color: C.red, fontSize: 11 } }, err)));
   }
   function VideoTagger({ club, session, match, back }) {
+    var _tevs = sportEvents(club.sport);
     const [tagged, setTagged] = useState([]);
     const [nameMap, setNameMap] = useState({});
     const [flash, setFlash] = useState(null);
@@ -5019,7 +5020,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setDockOpen(false);
     }, style: { marginLeft: 6, background: "none", border: "1px solid " + C.border, borderRadius: 7, color: C.slateD, fontSize: 10, fontWeight: 800, padding: "3px 9px", cursor: "pointer" } }, "\xBB")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", gap: 6, padding: "0 6px 6px" } }, !land && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5, width: 94, flexShrink: 0, overflowY: "auto" } }, land && !dockX && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4 } }, /* @__PURE__ */ React.createElement("button", { onClick: undo, disabled: tagged.length === 0, style: { flex: 1, padding: "7px 2px", borderRadius: 8, background: C.bgCard, border: "1px solid " + C.border, color: C.slate, fontSize: 11, cursor: "pointer" } }, "\u21A9"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setDockOpen(true);
-    }, style: { flex: 1, padding: "7px 2px", borderRadius: 8, background: C.bgCard, border: "1px solid " + C.border, color: C.slate, fontSize: 11, cursor: "pointer" } }, "\u2261")), TAG_EVENTS.map(function(ev) {
+    }, style: { flex: 1, padding: "7px 2px", borderRadius: 8, background: C.bgCard, border: "1px solid " + C.border, color: C.slate, fontSize: 11, cursor: "pointer" } }, "\u2261")), _tevs.map(function(ev) {
       var on = t.ev && t.ev.id === ev.id;
       return /* @__PURE__ */ React.createElement("button", { key: ev.id, onClick: function() {
         onEventTap(ev);
