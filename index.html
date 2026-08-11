@@ -1627,7 +1627,7 @@
   }
   function Benchmark({ rows, club }) {
     var METRICS = [
-      { key: "koWin", label: _stick ? "Puckout win %" : "Kickout win %", pct: true, better: "high" },
+      { key: "koWin", label: (club.sport === "camogie" || club.sport === "hurling") ? "Puckout win %" : "Kickout win %", pct: true, better: "high" },
       { key: "shotEff", label: "Shot efficiency", pct: true, better: "high" },
       { key: "tovPg", label: "Turnovers / game", pct: false, better: "low", dp: 1 },
       { key: "tackPg", label: "Tackles / game", pct: false, better: "high", dp: 1 },
@@ -1818,7 +1818,7 @@
       { label: "Tackles / 10 opp poss", us: opPoss ? Math.round(100 * usTk / opPoss) / 10 : 0, opp: usPoss ? Math.round(100 * opTk / usPoss) / 10 : 0 },
       { label: "Tackle foul % \u00B7 lower is better", us: usTk ? Math.round(100 * usTkF / usTk) : 0, opp: opTk ? Math.round(100 * opTkF / opTk) : 0, pct: true },
       { label: "Def. work rate", us: usDwr, opp: opDwr },
-      { label: _stick ? "Puckouts won" : "Kickouts won", us: ko.length ? Math.round(100 * koWon / ko.length) : 0, opp: oko.length ? Math.round(100 * okoWon / oko.length) : 0, pct: true }
+      { label: (club.sport === "camogie" || club.sport === "hurling") ? "Puckouts won" : "Kickouts won", us: ko.length ? Math.round(100 * koWon / ko.length) : 0, opp: oko.length ? Math.round(100 * okoWon / oko.length) : 0, pct: true }
     ];
     function isTrig(e) {
       return (e.event_type === "Shot from play" || e.event_type === "Scoreable free") && ((e.score || 0) > 0 || (e.outcome || "").toLowerCase().indexOf("wide") >= 0);
@@ -3034,7 +3034,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           return isShot(r) && (r.outcome || "").toLowerCase().indexOf("wide") >= 0;
         }) },
         { label: "Shots / 10 Poss", us: usP ? Math.round(100 * usSh / usP) / 10 : 0, opp: opP ? Math.round(100 * opSh / opP) / 10 : 0 },
-        { label: _stick ? "Puckouts won" : "Kickouts won", us: usKo ? Math.round(100 * f("us", koWon) / usKo) : 0, opp: opKo ? Math.round(100 * f("opp", koWon) / opKo) : 0, pct: true },
+        { label: (club.sport === "camogie" || club.sport === "hurling") ? "Puckouts won" : "Kickouts won", us: usKo ? Math.round(100 * f("us", koWon) / usKo) : 0, opp: opKo ? Math.round(100 * f("opp", koWon) / opKo) : 0, pct: true },
         { label: "Possession", us: usP + opP ? Math.round(100 * usP / (usP + opP)) : 0, opp: usP + opP ? Math.round(100 * opP / (usP + opP)) : 0, pct: true },
         { label: "Tackles", us: usTk, opp: opTk }, { label: "Turnovers", us: f("us", isTO), opp: f("opp", isTO) },
         { label: "Tackles / 10 opp poss", us: opP ? Math.round(100 * usTk / opP) / 10 : 0, opp: usP ? Math.round(100 * opTk / usP) / 10 : 0 },
@@ -5810,7 +5810,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return /* @__PURE__ */ React.createElement("button", { key: p[0], onClick: function() {
         setLine(p[0]);
       }, style: { flex: "1 0 0", padding: "8px 2px", borderRadius: 7, cursor: "pointer", fontSize: 11, fontWeight: 700, background: on ? C.greenB : "transparent", border: "none", color: on ? C.bg : C.slate } }, p[1]);
-    })), line === "gk" ? /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(MetricRow, { label: "Save %", m: by["gk_save"], fmt: fp }), /* @__PURE__ */ React.createElement(MetricRow, { label: _stick ? "Puckout win %" : "Kickout win %", m: by["gk_ko"], fmt: fp }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slateD, marginTop: 2, lineHeight: 1.5 } }, "Save % = shots saved \xF7 (saves + goals conceded), from opposition shots on your goal.")) : LM.map(function(c) {
+    })), line === "gk" ? /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(MetricRow, { label: "Save %", m: by["gk_save"], fmt: fp }), /* @__PURE__ */ React.createElement(MetricRow, { label: (club.sport === "camogie" || club.sport === "hurling") ? "Puckout win %" : "Kickout win %", m: by["gk_ko"], fmt: fp }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slateD, marginTop: 2, lineHeight: 1.5 } }, "Save % = shots saved \xF7 (saves + goals conceded), from opposition shots on your goal.")) : LM.map(function(c) {
       return /* @__PURE__ */ React.createElement(MetricRow, { key: c[0], label: c[1], m: by[line + c[0]], fmt: c[2] });
     })));
   }
