@@ -2605,6 +2605,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [subOn, setSubOn] = useState(null);
     const [attackUp, setAttackUp] = useState(match.attack_up == null ? true : !!match.attack_up);
     const [flash, setFlash] = useState(null);
+    const [oppNameMap, setOppNameMap] = useState({});
     const [statsOpen, setStatsOpen] = useState(false);
     const [stHalf, setStHalf] = useState("all");
     const [halfEnded, setHalfEnded] = useState(false);
@@ -2911,7 +2912,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         var _koW = t2.outcome === "Won Clean" || t2.outcome === "Break Won";
         credH = t2.team === "h" ? _koW : !_koW;
       }
-      var pname = num == null ? null : credH ? nameMap[num] || "#" + num : "#" + num;
+      var pname = num == null ? null : credH ? nameMap[num] || "#" + num : oppNameMap[num] || "#" + num;
       var seq = seqRef.current++;
       var row = {
         club_id: club.id,
@@ -3383,6 +3384,47 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setStatsOpen(true);
     }, style: { flex: 1, padding: "15px 4px", borderRadius: 11, border: "1px solid " + C.blue + "66", background: C.blue + "18", color: C.blue, fontWeight: 800, fontSize: 13.5, cursor: "pointer" } }, "VIEW STATS"), /* @__PURE__ */ React.createElement("button", { onClick: halfBtn.fn, style: { flex: 1, padding: "15px 4px", borderRadius: 11, border: "none", background: halfBtn.bg, color: C.bg, fontWeight: 800, fontSize: 13.5, cursor: "pointer" } }, halfBtn.l)));
   }
+  function ScoutTeamsheet({ match, teamA, teamB, onDone }) {
+    const [namesA, setNamesA] = useState({});
+    const [namesB, setNamesB] = useState({});
+    const [saving, setSaving] = useState(false);
+    const [activeTab, setActiveTab] = useState("a");
+
+    async function save() {
+      setSaving(true);
+      var rows = [];
+      Object.keys(namesA).forEach(function(k) {
+        if (namesA[k]) rows.push({ club_id: match.club_id, match_id: match.id, player_name: namesA[k], position_slot: Number(k), is_start: Number(k) <= 15 });
+      });
+      Object.keys(namesB).forEach(function(k) {
+        if (namesB[k]) rows.push({ club_id: match.club_id, match_id: match.id, player_name: namesB[k], position_slot: Number(k) + 100, is_start: Number(k) <= 15 });
+      });
+      if (rows.length) await db.from("appearances").insert(rows);
+      setSaving(false);
+      onDone();
+    }
+
+    function grid(names, setNames) {
+      var nums = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
+      return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } },
+        nums.map(function(n) {
+          return React.createElement("div", { key: n, style: { display: "flex", alignItems: "center", gap: 8 } },
+            React.createElement("div", { style: { width: 28, textAlign: "center", fontSize: 14, fontWeight: 800, color: n <= 15 ? C.greenB : C.gold, fontFamily: MONO } }, n),
+            React.createElement("input", { value: names[n] || "", onChange: function(e) { setNames(function(p) { var o = Object.assign({}, p); o[n] = e.target.value; return o; }); },
+              placeholder: n <= 15 ? "Starter" : "Sub",
+              style: { flex: 1, padding: "10px 12px", borderRadius: 8, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: 14, fontFamily: "inherit", outline: "none" } }));
+        }));
+    }
+
+    return React.createElement("div", { className: "rs-wide rsa-screen", style: { minHeight: "100dvh", background: C.bg, color: C.white, padding: "14px" } },
+      React.createElement("div", { style: { fontSize: 16, fontWeight: 800, marginBottom: 4 } }, "Scout Teamsheets"),
+      React.createElement("div", { style: { fontSize: 11, color: C.slateD, marginBottom: 16 } }, "Enter player names for both teams. You can skip any you don't know."),
+      React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 16 } },
+        React.createElement("button", { onClick: function() { setActiveTab("a"); }, style: { flex: 1, padding: "10px", borderRadius: 8, border: "1px solid " + (activeTab === "a" ? C.greenB : C.border), background: activeTab === "a" ? C.greenB + "22" : "none", color: activeTab === "a" ? C.greenB : C.slate, fontWeight: 800, fontSize: 13, cursor: "pointer" } }, teamA || "Home"),
+        React.createElement("button", { onClick: function() { setActiveTab("b"); }, style: { flex: 1, padding: "10px", borderRadius: 8, border: "1px solid " + (activeTab === "b" ? C.blue : C.border), background: activeTab === "b" ? C.blue + "22" : "none", color: activeTab === "b" ? C.blue : C.slate, fontWeight: 800, fontSize: 13, cursor: "pointer" } }, teamB || "Away")),
+      activeTab === "a" ? grid(namesA, setNamesA) : grid(namesB, setNamesB),
+      React.createElement("button", { onClick: save, disabled: saving, style: { width: "100%", marginTop: 20, padding: "16px", borderRadius: 10, border: "none", background: C.greenB, color: "#000", fontSize: 15, fontWeight: 800, cursor: "pointer" } }, saving ? "Saving..." : "\u2713 Save & Continue"));
+  }
   function NewMatch({ club, session, back, onTag, onVideo }) {
     const [stage, setStage] = useState("form");
     const [opponent, setOpp] = useState("");
@@ -3455,6 +3497,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }
       setBusy(false);
     }
+    if (stage === "squad" && match && isScout) return /* @__PURE__ */ React.createElement(ScoutTeamsheet, { match: match, teamA: teamA, teamB: opponent, onDone: function() { setStage("done"); } });
     if (stage === "squad" && match) return /* @__PURE__ */ React.createElement(
       Teamsheet,
       {
