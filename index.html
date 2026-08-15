@@ -1692,6 +1692,12 @@
     const koWon = ko.filter((e) => KO_WON.has(e.outcome)).length;
     const oko = opp.filter((e) => e.event_type === "Kickout");
     const okoWon = oko.filter((e) => KO_WON.has(e.outcome)).length;
+    const koBrkW = ko.filter(function(e) { return e.outcome === "Break won"; }).length;
+    const koBrkL = ko.filter(function(e) { return e.outcome === "Break lost"; }).length;
+    const koBrkT = koBrkW + koBrkL;
+    const okoBrkW = oko.filter(function(e) { return e.outcome === "Break won"; }).length;
+    const okoBrkL = oko.filter(function(e) { return e.outcome === "Break lost"; }).length;
+    const okoBrkT = okoBrkW + okoBrkL;
     function blankRow() {
       return { left: { n: 0, w: 0 }, centre: { n: 0, w: 0 }, right: { n: 0, w: 0 } };
     }
@@ -1818,7 +1824,8 @@
       { label: "Tackles / 10 opp poss", us: opPoss ? Math.round(100 * usTk / opPoss) / 10 : 0, opp: usPoss ? Math.round(100 * opTk / usPoss) / 10 : 0 },
       { label: "Tackle foul % \u00B7 lower is better", us: usTk ? Math.round(100 * usTkF / usTk) : 0, opp: opTk ? Math.round(100 * opTkF / opTk) : 0, pct: true },
       { label: "Def. work rate", us: usDwr, opp: opDwr },
-      { label: "Restarts won", us: ko.length ? Math.round(100 * koWon / ko.length) : 0, opp: oko.length ? Math.round(100 * okoWon / oko.length) : 0, pct: true }
+      { label: "Restarts won", us: ko.length ? Math.round(100 * koWon / ko.length) : 0, opp: oko.length ? Math.round(100 * okoWon / oko.length) : 0, pct: true },
+      { label: "Breaking ball won", us: koBrkT ? Math.round(100 * koBrkW / koBrkT) : 0, opp: okoBrkT ? Math.round(100 * okoBrkW / okoBrkT) : 0, pct: true }
     ];
     function isTrig(e) {
       return (e.event_type === "Shot from play" || e.event_type === "Scoreable free") && ((e.score || 0) > 0 || (e.outcome || "").toLowerCase().indexOf("wide") >= 0);
@@ -2105,7 +2112,7 @@
       sf,
       sa,
       scorers,
-      ko: { won: koWon, total: ko.length, pct: ko.length ? Math.round(100 * koWon / ko.length) : 0 },
+      ko: { won: koWon, total: ko.length, pct: ko.length ? Math.round(100 * koWon / ko.length) : 0, brkW: koBrkW, brkT: koBrkT, brkPct: koBrkT ? Math.round(100 * koBrkW / koBrkT) : 0 },
       oko: { won: okoWon, total: oko.length, pct: oko.length ? Math.round(100 * okoWon / oko.length) : 0 },
       sectors,
       played: matches.length,
@@ -5410,6 +5417,18 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       });
       var koWinPct = blocks.map(function(_, bi) { var t = grid.ko_total[bi]; return t ? Math.round(100 * grid.ko_won[bi] / t) : null; });
       var okoWinPct = blocks.map(function(_, bi) { var t = grid.oko_total[bi]; return t ? Math.round(100 * grid.oko_won[bi] / t) : null; });
+      var brkWUs = blocks.map(function() { return 0; }), brkTUs = blocks.map(function() { return 0; });
+      evs.forEach(function(e) {
+        if (e.event_type !== "Kickout") return;
+        var secs = e.time_secs != null ? e.time_secs : 0;
+        for (var bi = 0; bi < ranges.length; bi++) {
+          if (inBlock(secs, bi)) {
+            if (e.team === "us" && (e.outcome === "Break won" || e.outcome === "Break lost")) { brkTUs[bi]++; if (e.outcome === "Break won") brkWUs[bi]++; }
+            break;
+          }
+        }
+      });
+      var brkPctUs = blocks.map(function(_, bi) { return brkTUs[bi] ? Math.round(100 * brkWUs[bi] / brkTUs[bi]) : null; });
       function _srcOf(arr, i, X) {
         var Y = X === "us" ? "opp" : "us";
         var sawFree = false;
@@ -5541,7 +5560,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           React.createElement("tbody", null,
             [["SCORING", null], ["Score (Us)", grid.score_us, C.greenB], ["xS (Us)", xsUs, C.greenB], ["Score (Opp)", grid.score_opp, C.blue], ["xS (Opp)", xsOpp, C.blue],
              ["SHOOTING", null], ["Shots (Us)", grid.shots_us, C.slate], ["Shots (Opp)", grid.shots_opp, C.slate], ["Wides (Us)", grid.wide_us, C.slateD], ["Wides (Opp)", grid.wide_opp, C.slateD],
-             ["RESTARTS", null], ["Our Won %", koWinPct, C.gold], ["Our Total", grid.ko_total, C.slateD], ["Opp Won %", okoWinPct, C.gold], ["Opp Total", grid.oko_total, C.slateD],
+             ["RESTARTS", null], ["Our Won %", koWinPct, C.gold], ["Our Total", grid.ko_total, C.slateD], ["Break Won %", brkPctUs, C.gold], ["Opp Won %", okoWinPct, C.gold], ["Opp Total", grid.oko_total, C.slateD],
              ["POSSESSIONS LOST", null], ["Us", grid.to_us, C.greenB], ["Opp", grid.to_opp, C.blue],
              ["POSSESSION", null], ["Us", possUs, C.greenB], ["Opp", possOpp, C.blue], ["Share %", possPct, C.gold],
              ["TACKLES", null], ["Us", grid.tackle_us, C.slate], ["Opp", grid.tackle_opp, C.slate]
