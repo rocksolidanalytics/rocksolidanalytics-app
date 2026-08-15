@@ -5337,7 +5337,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }
       // 2-pt arc
       var R2=mD(40),y2a=Math.sqrt(Math.max(0,R2*R2-cx*cx));
-      svg+='<path d="M 0 '+y2a+' A '+R2+' '+R2+' 0 0 1 '+W+' '+y2a+'" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1" stroke-dasharray="6 4"/>';
+      svg+='<path d="M 0 '+y2a+' A '+R2+' '+R2+' 0 0 0 '+W+' '+y2a+'" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1" stroke-dasharray="6 4"/>';
       // 45m line
       var y45=mD(27);
       svg+='<line x1="0" y1="'+y45+'" x2="'+W+'" y2="'+y45+'" stroke="rgba(255,255,255,0.22)" stroke-width="0.8" stroke-dasharray="6 4"/>';
