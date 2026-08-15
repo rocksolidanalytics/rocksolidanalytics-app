@@ -5564,7 +5564,19 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       React.createElement("div", { style: { position: "sticky", top: 0, zIndex: 10, background: "#070c18", borderBottom: "1px solid #172238", padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 } },
         React.createElement("button", { onClick: function() { setReportHtml(null); }, style: { background: "none", border: "none", color: "#34c967", fontSize: 18, cursor: "pointer", padding: "4px 8px" } }, "\u2039 Back"),
         React.createElement("span", { style: { flex: 1, fontSize: 14, fontWeight: 800, color: "#eef2f8" } }, "Match Report"),
-        React.createElement("button", { onClick: function() { window.print(); }, style: { background: "#34c96722", border: "1px solid #34c967", color: "#34c967", borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 800, cursor: "pointer" } }, "\u{1F5A8} Print / PDF")),
+        React.createElement("div", { style: { display: "flex", gap: 6 } },
+        navigator.share ? React.createElement("button", { onClick: function() {
+          var blob = new Blob([reportHtml], { type: "text/html" });
+          var file = new File([blob], (club.name || "Match") + " v " + (match ? match.opponent || "Opp" : "Opp") + " Report.html", { type: "text/html" });
+          navigator.share({ title: "Match Report", files: [file] }).catch(function() {});
+        }, style: { background: "#34c96722", border: "1px solid #34c967", color: "#34c967", borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 800, cursor: "pointer" } }, "\u21E5 Share") : null,
+        React.createElement("button", { onClick: function() {
+          var blob = new Blob([reportHtml], { type: "text/html" });
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a"); a.href = url;
+          a.download = (club.name || "Match") + " v " + (match ? match.opponent || "Opp" : "Opp") + " Report.html";
+          a.click(); URL.revokeObjectURL(url);
+        }, style: { background: "#34c96722", border: "1px solid #34c967", color: "#34c967", borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 800, cursor: "pointer" } }, "\u2B07 Save"))),
       React.createElement("div", { dangerouslySetInnerHTML: { __html: reportHtml }, style: { padding: 0 } }));
     var isMatch = scope === "match";
     var win = match ? (match.our_total || 0) > (match.opp_total || 0) : false;
