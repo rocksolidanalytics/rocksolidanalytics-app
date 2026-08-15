@@ -5545,7 +5545,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     h3.push('</div></div>');
 
     h3.push('<p style="text-align:center;margin-top:24px;color:#536176;font-size:10px">Rock Solid Analytics \u00b7 Match Report \u00b7 '+match.date+'</p></body></html>');
-    var w2=window.open("","_blank"); if(w2){w2.document.write(h3.join(""));w2.document.close();} }
+    var blob=new Blob([h3.join("")],{type:"text/html;charset=utf-8"}); var url=URL.createObjectURL(blob); window.open(url,"_blank"); }
     const d = useMemo(function() {
       if (!d0 || half === "all") return d0;
       var evs = (d0._events || []).filter(function(e) { return String(e.period == null ? 1 : e.period) === half; });
