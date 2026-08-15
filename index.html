@@ -5287,6 +5287,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [half, setHalf] = useState("all");
     const [openTypes, setOpenTypes] = useState(false);
     const [openOrigins, setOpenOrigins] = useState(false);
+    const [reportHtml, setReportHtml] = useState(null);
+    // inject print CSS to hide app chrome during print
+    useEffect(function() { if (!reportHtml) return; var s = document.createElement("style"); s.textContent = "@media print { body > div > div:first-child { display: none !important; } }"; document.head.appendChild(s); return function() { document.head.removeChild(s); }; }, [reportHtml]);
     var _stick = club.sport === "camogie" || club.sport === "hurling";
     function exportMatchReport() { if (!d || !match) return;
     var evs=d._events||[]; var apps=d._apps||[];
@@ -5545,7 +5548,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     h3.push('</div></div>');
 
     h3.push('<p style="text-align:center;margin-top:24px;color:#536176;font-size:10px">Rock Solid Analytics \u00b7 Match Report \u00b7 '+match.date+'</p></body></html>');
-    var blob=new Blob([h3.join("")],{type:"text/html;charset=utf-8"}); var url=URL.createObjectURL(blob); window.open(url,"_blank"); }
+    setReportHtml(h3.join("")); }
     const d = useMemo(function() {
       if (!d0 || half === "all") return d0;
       var evs = (d0._events || []).filter(function(e) { return String(e.period == null ? 1 : e.period) === half; });
@@ -5557,6 +5560,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [koBand, setKoBand] = useState("all");
     const [dtab, setDtab] = useState("overview");
     const [psort, setPsort] = useState("score");
+    if (reportHtml) return React.createElement("div", { style: { minHeight: "100dvh", background: "#070c18" } },
+      React.createElement("div", { style: { position: "sticky", top: 0, zIndex: 10, background: "#070c18", borderBottom: "1px solid #172238", padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 } },
+        React.createElement("button", { onClick: function() { setReportHtml(null); }, style: { background: "none", border: "none", color: "#34c967", fontSize: 18, cursor: "pointer", padding: "4px 8px" } }, "\u2039 Back"),
+        React.createElement("span", { style: { flex: 1, fontSize: 14, fontWeight: 800, color: "#eef2f8" } }, "Match Report"),
+        React.createElement("button", { onClick: function() { window.print(); }, style: { background: "#34c96722", border: "1px solid #34c967", color: "#34c967", borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 800, cursor: "pointer" } }, "\u{1F5A8} Print / PDF")),
+      React.createElement("div", { dangerouslySetInnerHTML: { __html: reportHtml }, style: { padding: 0 } }));
     var isMatch = scope === "match";
     var win = match ? (match.our_total || 0) > (match.opp_total || 0) : false;
     var draw = match ? (match.our_total || 0) === (match.opp_total || 0) : false;
