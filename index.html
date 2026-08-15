@@ -5325,72 +5325,110 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function bldSc(tevs){var mp={};tevs.forEach(function(e){if((e.event_type==="Shot from play"||e.event_type==="Scoreable free")&&(e.score||0)>0){var p=e.player||"Unknown";if(!mp[p])mp[p]={g:0,pts:0,fg:0,fp:0,t2:0};var isF=e.event_type==="Scoreable free";if(e.score===3){mp[p].g++;if(isF)mp[p].fg++;}else if(e.score===2){mp[p].t2++;mp[p].pts+=2;}else{mp[p].pts+=e.score;if(isF)mp[p].fp+=e.score;}}});return Object.keys(mp).map(function(n){var s=mp[n];var t=s.g*3+s.pts;var mn=s.g+"-"+(s.pts<10?"0":"")+s.pts;var fr=(s.fg||s.fp)?" ("+s.fg+"-"+(s.fp<10?"0":"")+s.fp+")":"";var p2=s.t2?" "+s.t2+"x2pt":"";return{name:n,total:t,text:mn+fr+p2};}).sort(function(a,b){return b.total-a.total;});}
     var usSc=bldSc(usEvs); var opSc=bldSc(opEvs);
 
-    // Shot map SVG — HALF PITCH, goal at top, folded
+    // Shot map SVG — HALF PITCH with grass stripes, GAA lines, goal at top
     function shotMapSvg(teamEvs, label, color) {
-      var W=280,H=220;
-      var svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;max-width:300px">';
-      svg+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#1a5c2e" rx="8"/>';
-      // Goal
-      svg+='<rect x="'+(W/2-25)+'" y="0" width="50" height="6" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.7"/>';
-      // Small rectangle (13m)
-      svg+='<rect x="'+(W/2-50)+'" y="0" width="100" height="'+(H*0.15)+'" fill="none" stroke="#fff" stroke-width="0.8" opacity="0.35"/>';
-      // Large rectangle (20m)
-      svg+='<rect x="'+(W/2-70)+'" y="0" width="140" height="'+(H*0.25)+'" fill="none" stroke="#fff" stroke-width="0.8" opacity="0.25"/>';
-      // D arc
-      svg+='<path d="M '+(W/2-55)+' '+(H*0.15)+' Q '+(W/2)+' '+(H*0.28)+' '+(W/2+55)+' '+(H*0.15)+'" fill="none" stroke="#fff" stroke-width="0.8" opacity="0.3"/>';
-      // 21m line
-      svg+='<line x1="0" y1="'+(H*0.29)+'" x2="'+W+'" y2="'+(H*0.29)+'" stroke="#fff" stroke-width="0.5" stroke-dasharray="4 3" opacity="0.2"/>';
+      var W=300,H=400,cx=W/2;
+      var mD=function(d){return d/72*H;};
+      var svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;max-width:320px;display:block;margin:0 auto;border-radius:12px;border:1px solid #172238">';
+      // Grass stripes
+      var bands=9;
+      for(var b=0;b<bands;b++){
+        svg+='<rect x="0" y="'+(H/bands*b)+'" width="'+W+'" height="'+(H/bands)+'" fill="'+(b%2?'#0c4a22':'#0a3f1d')+'"/>';
+      }
+      // 2-pt arc
+      var R2=mD(40),y2a=Math.sqrt(Math.max(0,R2*R2-cx*cx));
+      svg+='<path d="M 0 '+y2a+' A '+R2+' '+R2+' 0 0 1 '+W+' '+y2a+'" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1" stroke-dasharray="6 4"/>';
       // 45m line
-      svg+='<line x1="0" y1="'+(H*0.67)+'" x2="'+W+'" y2="'+(H*0.67)+'" stroke="#fff" stroke-width="0.5" stroke-dasharray="4 3" opacity="0.2"/>';
+      var y45=mD(27);
+      svg+='<line x1="0" y1="'+y45+'" x2="'+W+'" y2="'+y45+'" stroke="rgba(255,255,255,0.22)" stroke-width="0.8" stroke-dasharray="6 4"/>';
+      // 21m line
+      var y21=mD(7);
+      svg+='<line x1="0" y1="'+y21+'" x2="'+W+'" y2="'+y21+'" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>';
+      // 20m rectangle
+      var y20=mD(20);
+      svg+='<rect x="'+(cx-70)+'" y="0" width="140" height="'+y20+'" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>';
+      // D arc
+      var rD=mD(13);
+      svg+='<path d="M '+(cx-rD)+' '+y20+' A '+rD+' '+rD+' 0 0 0 '+(cx+rD)+' '+y20+'" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>';
+      // Small rectangle (13m)
+      svg+='<rect x="'+(cx-45)+'" y="0" width="90" height="'+mD(13)+'" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1"/>';
+      // Goal
+      svg+='<rect x="'+(cx-26)+'" y="0" width="52" height="8" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>';
       // Endline
-      svg+='<line x1="0" y1="0.5" x2="'+W+'" y2="0.5" stroke="#fff" stroke-width="1" opacity="0.4"/>';
+      svg+='<line x1="0" y1="1" x2="'+W+'" y2="1" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>';
+      // Sidelines
+      svg+='<line x1="1" y1="0" x2="1" y2="'+H+'" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>';
+      svg+='<line x1="'+(W-1)+'" y1="0" x2="'+(W-1)+'" y2="'+H+'" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>';
+      // Shots
       var scored=0,total=0;
-      teamEvs.forEach(function(e) {
+      teamEvs.forEach(function(e){
         if((e.event_type==="Shot from play"||e.event_type==="Scoreable free")&&e.x!=null&&e.y!=null){
           total++;
           var x=e.x,y=e.y; if(x<0.5){x=1-x;y=1-y;}
-          // x: 0.5=midfield(bottom), 1.0=endline(top). Map to py: 0.5->H, 1.0->0
-          var py = (1-x)*2*H; if(py>H) py=H;
-          var px = y*W;
+          var frac=(1-x)/0.5;
+          var px=y*W, py=frac*H;
           var sc=(e.score||0)>0; if(sc)scored++;
-          if(sc) svg+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="5" fill="'+color+'" opacity="0.85"/>';
-          else svg+='<g transform="translate('+px.toFixed(1)+','+py.toFixed(1)+')"><line x1="-4" y1="-4" x2="4" y2="4" stroke="#e0584d" stroke-width="2"/><line x1="4" y1="-4" x2="-4" y2="4" stroke="#e0584d" stroke-width="2"/></g>';
+          if(sc){
+            svg+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="6" fill="'+color+'" fill-opacity="0.85" stroke="#fff" stroke-width="0.5"/>';
+          }else{
+            svg+='<g transform="translate('+px.toFixed(1)+','+py.toFixed(1)+')"><line x1="-5" y1="-5" x2="5" y2="5" stroke="#e0584d" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="-5" x2="-5" y2="5" stroke="#e0584d" stroke-width="2.5" stroke-linecap="round"/></g>';
+          }
         }
       });
+      // Legend
+      svg+='<circle cx="12" cy="'+(H-14)+'" r="5" fill="'+color+'" opacity="0.85"/><text x="22" y="'+(H-10)+'" fill="#eef2f8" font-size="10" font-family="Inter,sans-serif">Scored</text>';
+      svg+='<g transform="translate(82,'+(H-14)+')"><line x1="-4" y1="-4" x2="4" y2="4" stroke="#e0584d" stroke-width="2"/><line x1="4" y1="-4" x2="-4" y2="4" stroke="#e0584d" stroke-width="2"/></g><text x="92" y="'+(H-10)+'" fill="#eef2f8" font-size="10" font-family="Inter,sans-serif">Missed</text>';
       svg+='</svg>';
       var pct=total?Math.round(100*scored/total):0;
-      return '<div><p style="font-size:11px;font-weight:700;color:'+color+';margin-bottom:4px">'+label+'</p>'+svg+'<p class="m" style="margin-top:4px">'+scored+'/'+total+' scored ('+pct+'%)</p></div>';
+      return '<div><p style="font-size:11px;font-weight:700;color:'+color+';margin-bottom:6px">'+label+'</p>'+svg+'<p class="m" style="margin-top:6px">'+scored+'/'+total+' scored ('+pct+'%)</p></div>';
     }
 
-    // Kickout map SVG — FULL PITCH, goal at bottom, with koFixOrient
+    // Kickout map SVG — FULL PITCH with grass stripes, koFixOrient
     function koMapSvg(teamEvs, teamKey, label, color) {
-      var W=200,H=300;
-      var svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;max-width:220px">';
-      svg+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#1a5c2e" rx="8"/>';
-      // Halfway
-      svg+='<line x1="0" y1="'+H/2+'" x2="'+W+'" y2="'+H/2+'" stroke="#fff" stroke-width="0.8" opacity="0.3"/>';
-      // Goal at bottom
-      svg+='<rect x="'+(W/2-20)+'" y="'+(H-5)+'" width="40" height="5" fill="none" stroke="#fff" stroke-width="1" opacity="0.5"/>';
-      // 21m from bottom
-      svg+='<line x1="0" y1="'+(H*0.855)+'" x2="'+W+'" y2="'+(H*0.855)+'" stroke="#fff" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.2"/>';
-      // 45m
-      svg+='<line x1="0" y1="'+(H*0.688)+'" x2="'+W+'" y2="'+(H*0.688)+'" stroke="#fff" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.2"/>';
+      var W=220,H=360,cx=W/2,L=4,T=4,R=W-4,B=H-4,PL=B-T;
+      var mD=function(d){return d/144*PL;};
+      var svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;max-width:240px;display:block;margin:0 auto;border-radius:12px;border:1px solid #172238">';
+      // Grass stripes
+      var bands=12;
+      for(var b=0;b<bands;b++){
+        svg+='<rect x="0" y="'+(H/bands*b)+'" width="'+W+'" height="'+(H/bands)+'" fill="'+(b%2?'#0c4a22':'#0a3f1d')+'"/>';
+      }
+      var MID=(T+B)/2;
+      // Midfield
+      svg+='<line x1="'+L+'" y1="'+MID+'" x2="'+R+'" y2="'+MID+'" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>';
+      // Bottom end (own goal)
+      var B13=B-mD(13),B20=B-mD(20),B45=B-mD(45),B65=B-mD(65);
+      svg+='<rect x="'+(cx-40)+'" y="'+(B-6)+'" width="80" height="6" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>';
+      svg+='<rect x="'+(cx-50)+'" y="'+B13+'" width="100" height="'+(B-B13)+'" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>';
+      svg+='<rect x="'+(cx-65)+'" y="'+B20+'" width="130" height="'+(B-B20)+'" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="0.8"/>';
+      svg+='<line x1="'+L+'" y1="'+B45+'" x2="'+R+'" y2="'+B45+'" stroke="rgba(255,255,255,0.18)" stroke-width="0.8" stroke-dasharray="5 4"/>';
+      svg+='<line x1="'+L+'" y1="'+B65+'" x2="'+R+'" y2="'+B65+'" stroke="rgba(255,255,255,0.12)" stroke-width="0.8" stroke-dasharray="5 4"/>';
+      // Top end (far goal)
+      var T13=T+mD(13),T20=T+mD(20),T45=T+mD(45),T65=T+mD(65);
+      svg+='<rect x="'+(cx-40)+'" y="'+T+'" width="80" height="6" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>';
+      svg+='<rect x="'+(cx-50)+'" y="'+T+'" width="100" height="'+(T13-T)+'" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>';
+      svg+='<rect x="'+(cx-65)+'" y="'+T+'" width="130" height="'+(T20-T)+'" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="0.8"/>';
+      svg+='<line x1="'+L+'" y1="'+T45+'" x2="'+R+'" y2="'+T45+'" stroke="rgba(255,255,255,0.18)" stroke-width="0.8" stroke-dasharray="5 4"/>';
+      svg+='<line x1="'+L+'" y1="'+T65+'" x2="'+R+'" y2="'+T65+'" stroke="rgba(255,255,255,0.12)" stroke-width="0.8" stroke-dasharray="5 4"/>';
       // Direction arrow
-      svg+='<polygon points="'+(W/2-6)+','+(H*0.45)+' '+(W/2+6)+','+(H*0.45)+' '+W/2+','+(H*0.38)+'" fill="#fff" opacity="0.15"/>';
+      svg+='<polygon points="'+(cx-8)+','+MID+' '+(cx+8)+','+MID+' '+cx+','+(MID-18)+'" fill="rgba(255,255,255,0.12)"/>';
+      // Kickout dots
       var won=0,lost=0;
       teamEvs.forEach(function(e){
         if(e.event_type==="Kickout"&&e.x!=null&&e.y!=null){
           var pt=koFixOrient({x:e.x,y:e.y});
-          // Kickouts go from bottom (goal) upward. x near 1 = near own goal = bottom of SVG
-          var px=pt.y*W;
-          var py=pt.x*H; // x=0 is far end (top), x=1 is own goal (bottom)
+          var px=L+(pt.y*(R-L));
+          var py=T+(pt.x*PL);
           var w=KO_WON.has(e.outcome); if(w)won++;else lost++;
-          svg+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="5" fill="'+(w?"#34c967":"#e0584d")+'" opacity="0.8"/>';
+          svg+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="6" fill="'+(w?"#34c967":"#e0584d")+'" fill-opacity="0.85" stroke="#fff" stroke-width="0.5"/>';
         }
       });
+      // Legend
+      svg+='<circle cx="12" cy="'+(H-14)+'" r="5" fill="#34c967" opacity="0.85"/><text x="22" y="'+(H-10)+'" fill="#eef2f8" font-size="10" font-family="Inter,sans-serif">Won</text>';
+      svg+='<circle cx="72" cy="'+(H-14)+'" r="5" fill="#e0584d" opacity="0.85"/><text x="82" y="'+(H-10)+'" fill="#eef2f8" font-size="10" font-family="Inter,sans-serif">Lost</text>';
       svg+='</svg>';
       var pct=(won+lost)?Math.round(100*won/(won+lost)):0;
-      return '<div><p style="font-size:11px;font-weight:700;color:'+color+';margin-bottom:4px">'+label+'</p>'+svg+'<p class="m" style="margin-top:4px">Won '+won+'/'+(won+lost)+' ('+pct+'%)</p></div>';
+      return '<div><p style="font-size:11px;font-weight:700;color:'+color+';margin-bottom:6px">'+label+'</p>'+svg+'<p class="m" style="margin-top:6px">Won '+won+'/'+(won+lost)+' ('+pct+'%)</p></div>';
     }
 
     // Conversion by zone — using real xpZoneKey
