@@ -6385,7 +6385,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [err, setErr] = useState("");
 
     useEffect(function() {
-      db.from("matches").select("*").eq("club_id", club.id).order("date", { ascending: false }).limit(1).then(function(r) {
+      db.from("matches").select("*").eq("club_id", club.id).eq("scouting", false).order("date", { ascending: false }).limit(1).then(function(r) {
         var ms = r.data || [];
         setMatches(ms);
         if (ms.length > 0) setSel(ms[0]);
