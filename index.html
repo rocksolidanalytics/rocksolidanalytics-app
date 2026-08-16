@@ -6491,7 +6491,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           setClub(c.data);
           loadCount(c.data.id);
           setPhase("home");
-      db.from("matches").select("*").eq("club_id", prof.data.club_id).neq("status", "final").eq("scouting", false).order("date", { ascending: false }).limit(1).then(function(r) { if (r.data && r.data[0]) setResumeMatch(r.data[0]); });
+      db.from("matches").select("*").eq("club_id", prof.data.club_id).neq("status", "final").order("date", { ascending: false }).limit(1).then(function(r) { if (r.data && r.data[0]) setResumeMatch(r.data[0]); });
           return;
         }
       }
