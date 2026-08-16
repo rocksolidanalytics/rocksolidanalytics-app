@@ -2650,6 +2650,16 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       });
     }, []);
     useEffect(function() {
+      db.from("events").select("*").eq("match_id", match.id).order("seq", { ascending: true }).then(function(r) {
+        if (r.data && r.data.length && tagged.length === 0) {
+          var EVM = { "Kickout": "kickout", "Shot from play": "shot", "Scoreable free": "free", "Possession lost": "poss", "Tackle": "tackle", "Ruck": "ruck", "Bookings": "card" };
+          setTagged(r.data.map(function(e) {
+            return { id: e.id, team: e.team === "us" ? "h" : "a", ev: { id: EVM[e.event_type] || "shot" }, outcome: e.outcome, num: null, player: e.player, x: e.x, y: e.y, score: e.score || 0, period: e.period || 1, seq: e.seq, time_text: e.time_text, time_secs: e.time_secs, _db: true };
+          }));
+        }
+      });
+    }, []);
+    useEffect(function() {
       if (running) {
         iv.current = setInterval(function() {
           setClock(function(c) {
