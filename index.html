@@ -5306,6 +5306,34 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     // inject print CSS to hide app chrome during print
     useEffect(function() { if (!reportHtml) return; var s = document.createElement("style"); s.textContent = "@media print { body > div > div:first-child { display: none !important; } }"; document.head.appendChild(s); return function() { document.head.removeChild(s); }; }, [reportHtml]);
     var _stick = club.sport === "camogie" || club.sport === "hurling";
+    function exportCSV() {
+      if (!d || !match) return;
+      var evs = d._events || [];
+      var cn = club.name || "Us";
+      var opp2 = match.opponent || "Opposition";
+      var rows = [["Event","Time","Team Name","Name","Game Period","Outcome","Player","Location X","Location Y","Score"]];
+      evs.filter(function(e) { return e.match_id === match.id; }).sort(function(a,b) { return (a.seq||0)-(b.seq||0); }).forEach(function(e) {
+        var teamName = e.team === "us" ? cn : opp2;
+        rows.push([
+          e.seq || "",
+          e.time_text || "",
+          teamName,
+          e.event_type || "",
+          e.period || 1,
+          e.outcome || "",
+          e.player || "",
+          e.x != null ? e.x : "",
+          e.y != null ? e.y : "",
+          e.score || 0
+        ]);
+      });
+      var csv = rows.map(function(r) { return r.map(function(c) { var s = String(c); return s.indexOf(",") >= 0 || s.indexOf('"') >= 0 ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(","); }).join("\n");
+      var blob = new Blob([csv], { type: "text/csv" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a"); a.href = url;
+      a.download = (cn + " v " + opp2 + " " + (match.date || "") + ".csv").replace(/[^a-zA-Z0-9 ._-]/g, "");
+      a.click(); URL.revokeObjectURL(url);
+    }
     function exportMatchReport() { if (!d || !match) return;
     var evs=d._events||[]; var apps=d._apps||[];
     var usEvs=evs.filter(function(e){return e.team==="us";});
@@ -5600,7 +5628,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var draw = match ? (match.our_total || 0) === (match.opp_total || 0) : false;
     var rc = win ? C.greenB : draw ? C.gold : C.red;
     return /* @__PURE__ */ React.createElement("div", { className: "rs-wide" },
-    isMatch && React.createElement("button", { onClick: exportMatchReport, style: { background: C.greenB + "22", border: "1px solid " + C.greenB, color: C.greenB, borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 800, cursor: "pointer", marginLeft: "auto" } }, "\u21E5 Export"), isMatch && onBack && /* @__PURE__ */ React.createElement("button", { onClick: onBack, style: { display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: C.slate, cursor: "pointer", fontSize: 13, marginBottom: 12, fontFamily: MONO, padding: 0 } }, "\u2039 All matches"),
+    isMatch && React.createElement("button", { onClick: exportCSV, style: { background: "none", border: "1px solid " + C.slate, color: C.slate, borderRadius: 8, padding: "6px 10px", fontSize: 10, fontWeight: 700, cursor: "pointer" } }, "CSV"), isMatch && React.createElement("button", { onClick: exportMatchReport, style: { background: C.greenB + "22", border: "1px solid " + C.greenB, color: C.greenB, borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 800, cursor: "pointer", marginLeft: "auto" } }, "\u21E5 Export"), isMatch && onBack && /* @__PURE__ */ React.createElement("button", { onClick: onBack, style: { display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: C.slate, cursor: "pointer", fontSize: 13, marginBottom: 12, fontFamily: MONO, padding: 0 } }, "\u2039 All matches"),
     /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, margin: "2px 0 12px", alignItems: "center" } },
       React.createElement("span", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO, letterSpacing: 1, marginRight: 2 } }, "HALF"),
       [["all", "FULL GAME"], ["1", "1ST"], ["2", "2ND"]].map(function(hf) {
