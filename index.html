@@ -1466,7 +1466,8 @@
             match_id: match.id,
             player_id: pid,
             player_name: nameOf(pid),
-            position_slot: jerseyMap[sl] ? Number(jerseyMap[sl]) : Number(sl),
+            position_slot: Number(sl),
+            jersey: jerseyMap[sl] ? Number(jerseyMap[sl]) : Number(sl),
             position: pos ? pos.code : null,
             is_start: true,
             created_by: session.user.id
@@ -2658,10 +2659,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }, String(t2).indexOf("\u2713") === 0 ? 3500 : 1300);
     }
     useEffect(function() {
-      db.from("appearances").select("position_slot,player_name").eq("match_id", match.id).then(function(r) {
+      db.from("appearances").select("position_slot,player_name,jersey").eq("match_id", match.id).then(function(r) {
         var mp = {};
         (r.data || []).forEach(function(a) {
-          mp[a.position_slot] = a.player_name;
+          mp[a.jersey || a.position_slot] = a.player_name;
         });
         setNameMap(mp);
       });
@@ -6282,7 +6283,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             if (m.scouting) return true; return m.our_score != null && String(m.our_score).trim() !== "";
           });
           const events = await fetchAll("events", "match_id,team,event_type,outcome,player,score,x,y,period,seq,time_text");
-          const apps = await fetchAll("appearances", "match_id,player_name,position_slot");
+          const apps = await fetchAll("appearances", "match_id,player_name,position_slot,jersey");
           matches.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
           try {
             var xpR = await db.rpc("xp_baseline", { p_sport: club.sport || "football" });
