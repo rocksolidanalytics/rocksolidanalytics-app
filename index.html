@@ -1819,6 +1819,10 @@
       }).length;
     }
     const usAll = countShots(us), opAll = countShots(opp);
+    var usFrees = us.filter(function(e) { return e.event_type === "Scoreable free"; });
+    var opFrees = opp.filter(function(e) { return e.event_type === "Scoreable free"; });
+    var usFreeSc = usFrees.filter(function(e) { return (e.score || 0) > 0; }).length;
+    var opFreeSc = opFrees.filter(function(e) { return (e.score || 0) > 0; }).length;
     const usPoss = usAll + countTO(us), opPoss = opAll + countTO(opp);
     function nTackle(evs) {
       return evs.filter(function(e) {
@@ -1860,6 +1864,9 @@
       { label: "Shots", us: usAll, opp: opAll },
       { label: "Scores from play", us: nPlayScore(us), opp: nPlayScore(opp) },
       { label: "Accuracy", us: usAll ? Math.round(100 * countScored(us) / usAll) : 0, opp: opAll ? Math.round(100 * countScored(opp) / opAll) : 0, pct: true },
+      { label: "Frees taken", us: usFrees.length, opp: opFrees.length },
+      { label: "Frees scored", us: usFreeSc, opp: opFreeSc },
+      { label: "Free accuracy", us: usFrees.length ? Math.round(100 * usFreeSc / usFrees.length) : 0, opp: opFrees.length ? Math.round(100 * opFreeSc / opFrees.length) : 0, pct: true },
       { label: "Wides", us: countWide(us), opp: countWide(opp) },
       { label: "Shots / 10 Poss", us: usPoss ? Math.round(100 * usAll / usPoss) / 10 : 0, opp: opPoss ? Math.round(100 * opAll / opPoss) / 10 : 0 },
       { label: "Possession", us: usPoss + opPoss ? Math.round(100 * usPoss / (usPoss + opPoss)) : 0, opp: usPoss + opPoss ? Math.round(100 * opPoss / (usPoss + opPoss)) : 0, pct: true },
