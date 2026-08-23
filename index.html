@@ -5697,7 +5697,54 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     ].map(function(card, i) {
       return /* @__PURE__ */ React.createElement("div", { key: i, style: { flexGrow: 1, flexBasis: "28%", minWidth: 92, padding: "20px 10px", borderRadius: 14, background: C.bgCard, border: "none", boxShadow: "0 2px 8px rgba(0,0,0,0.25)", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { className: "rsa-count", style: { fontSize: 26, fontWeight: 800, fontFamily: MONO, color: card.c } }, card.v), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO, letterSpacing: 1, marginTop: 4 } }, card.l));
     })))),
-    dtab === "overview" && (/* @__PURE__ */ React.createElement(Section, { title: isMatch ? "MATCH COMPARISON" : "SEASON COMPARISON \xB7 VS OPPOSITION" }, /* @__PURE__ */ React.createElement(CompareBars, { rows: d.compare, club }))),
+    dtab === "overview" && React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } },
+      isMatch && match && React.createElement("div", { style: { padding: "16px", borderRadius: 12, background: C.bgCard, boxShadow: "0 2px 8px rgba(0,0,0,0.2)" } },
+        React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } },
+          React.createElement("div", { style: { textAlign: "center", flex: 1 } },
+            React.createElement("div", { style: { fontSize: 10, letterSpacing: 1, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 2 } }, (club.name || "Us").toUpperCase().slice(0,14)),
+            React.createElement("div", { style: { fontSize: 28, fontWeight: 900, color: C.white } }, match.our_score || "0-00")),
+          React.createElement("div", { style: { fontSize: 10, color: C.slateD, padding: "0 6px" } }, "v"),
+          React.createElement("div", { style: { textAlign: "center", flex: 1 } },
+            React.createElement("div", { style: { fontSize: 10, letterSpacing: 1, color: "#4a9eff", fontFamily: MONO, fontWeight: 700, marginBottom: 2 } }, ON.toUpperCase().slice(0,14)),
+            React.createElement("div", { style: { fontSize: 28, fontWeight: 900, color: C.white } }, match.opp_score || "0-00"))),
+        React.createElement("div", { style: { display: "flex", gap: 12, marginTop: 10 } },
+          React.createElement("div", { style: { flex: 1 } },
+            (d.scorers || []).filter(function(s) { return s.total > 0; }).slice(0, 8).map(function(s, idx) {
+              return React.createElement("div", { key: idx, style: { display: "flex", justifyContent: "space-between", padding: "2px 0", fontSize: 11 } },
+                React.createElement("span", { style: { color: "#cfd9e8" } }, s.name),
+                React.createElement("span", { style: { fontFamily: MONO, color: C.greenB, fontWeight: 700 } }, s.g + "-" + (s.ptot < 10 ? "0" : "") + s.ptot));
+            })))),
+      (function() {
+        var c2 = d.compare || [];
+        var groups = [
+          { icon: "\uD83C\uDFAF", label: "SHOOTING", keys: ["Score (pts)", "Shots", "Scores from play", "Accuracy", "Frees taken", "Frees scored", "Free accuracy", "Wides"] },
+          { icon: "\uD83C\uDFC3", label: "POSSESSION", keys: ["Shots / 10 Poss", "Possession"] },
+          { icon: "\uD83D\uDEE1\uFE0F", label: "DEFENCE", keys: ["Tackles", "Tackles / 10 opp poss", "Tackle foul % \u00B7 lower is better", "Def. work rate"] },
+          { icon: "\u21BB", label: "RESTARTS", keys: ["Restarts won", "Breaking ball won"] },
+          { icon: "\u2194\uFE0F", label: "TURNOVERS", keys: ["Turnovers"] }
+        ];
+        function barRow(r, idx) {
+          var mx = Math.max(r.us || 0, r.opp || 0, 1);
+          return React.createElement("div", { key: idx, style: { marginBottom: 8 } },
+            React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 3 } },
+              React.createElement("span", { style: { fontWeight: 700, color: C.greenB, fontFamily: MONO } }, r.us + (r.pct ? "%" : "")),
+              React.createElement("span", { style: { color: C.slateD, fontSize: 10 } }, r.label),
+              React.createElement("span", { style: { fontWeight: 700, color: "#4a9eff", fontFamily: MONO } }, r.opp + (r.pct ? "%" : ""))),
+            React.createElement("div", { style: { display: "flex", gap: 3, height: 6 } },
+              React.createElement("div", { style: { flex: 1, display: "flex", justifyContent: "flex-end" } },
+                React.createElement("div", { style: { width: Math.round(100 * (r.us || 0) / mx) + "%", height: 6, borderRadius: 3, background: C.greenB } })),
+              React.createElement("div", { style: { flex: 1 } },
+                React.createElement("div", { style: { width: Math.round(100 * (r.opp || 0) / mx) + "%", height: 6, borderRadius: 3, background: "#4a9eff" } }))));
+        }
+        return React.createElement(React.Fragment, null,
+          groups.map(function(grp) {
+            var rows = grp.keys.map(function(k) { return c2.find(function(r) { return r.label === k; }); }).filter(Boolean);
+            if (!rows.length) return null;
+            return React.createElement("div", { key: grp.label, style: { padding: "14px 16px", borderRadius: 12, background: C.bgCard, boxShadow: "0 2px 8px rgba(0,0,0,0.15)" } },
+              React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 10 } }, grp.icon + "  " + grp.label),
+              rows.map(function(r, idx) { return barRow(r, idx); }));
+          }));
+      }())),
     dtab === "overview" && (scope === "season" && d.winLoss && /* @__PURE__ */ React.createElement(Section, { title: "WHAT WINS LOOK LIKE \xB7 " + d.winLoss.nW + "W vs " + d.winLoss.nL + " D/L" }, /* @__PURE__ */ React.createElement("div", { style: { background: C.bgCard, border: "1px solid " + C.border, borderRadius: 12, padding: "13px 14px" } }, d.winLoss.rows.map(function(rw, i) {
       if (rw.w == null) return null;
       var fmt = function(v) {
