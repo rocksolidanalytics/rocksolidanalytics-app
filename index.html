@@ -5411,6 +5411,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [half, setHalf] = useState("all");
     const [openTypes, setOpenTypes] = useState(false);
     const [openOrigins, setOpenOrigins] = useState(false);
+    const [rSort, setRSort] = useState("overall");
     const [reportHtml, setReportHtml] = useState(null);
     // inject print CSS to hide app chrome during print
     useEffect(function() { if (!reportHtml) return; var s = document.createElement("style"); s.textContent = "@media print { body > div > div:first-child { display: none !important; } }"; document.head.appendChild(s); return function() { document.head.removeChild(s); }; }, [reportHtml]);
@@ -5835,15 +5836,15 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: 11 } },
               React.createElement("thead", null,
                 React.createElement("tr", { style: { borderBottom: "2px solid #172238" } },
-                  React.createElement("th", { style: { padding: "8px 8px", textAlign: "left", color: "#536176", fontSize: 9, fontFamily: MONO } }, "DATE"),
+                  React.createElement("th", { onClick: function(){setRSort("date");}, style: { padding: "8px 8px", textAlign: "left", color: rSort==="date"?C.greenB:"#536176", fontSize: 9, fontFamily: MONO, cursor: "pointer" } }, "DATE", rSort==="date"?" \u25BC":""),
                   React.createElement("th", { style: { padding: "8px 6px", textAlign: "left", color: "#536176", fontSize: 9, fontFamily: MONO } }, "OPP"),
                   React.createElement("th", { style: { padding: "8px 4px", textAlign: "center", color: "#536176", fontSize: 9 } }, ""),
-                  React.createElement("th", { style: { padding: "8px 4px", textAlign: "center", fontSize: 9 } }, "\uD83C\uDFAF"),
-                  React.createElement("th", { style: { padding: "8px 4px", textAlign: "center", fontSize: 9 } }, "\uD83D\uDEE1\uFE0F"),
-                  React.createElement("th", { style: { padding: "8px 4px", textAlign: "center", fontSize: 9 } }, "\u21BB"),
-                  React.createElement("th", { style: { padding: "8px 4px", textAlign: "center", color: "#536176", fontSize: 9, fontFamily: MONO } }, "OVR"))),
+                  React.createElement("th", { onClick: function(){setRSort("atk");}, style: { padding: "8px 4px", textAlign: "center", fontSize: 9, cursor: "pointer", color: rSort==="atk"?C.greenB:"#8b9ab5" } }, "\uD83C\uDFAF", rSort==="atk"?" \u25BC":""),
+                  React.createElement("th", { onClick: function(){setRSort("def");}, style: { padding: "8px 4px", textAlign: "center", fontSize: 9, cursor: "pointer", color: rSort==="def"?C.greenB:"#8b9ab5" } }, "\uD83D\uDEE1\uFE0F", rSort==="def"?" \u25BC":""),
+                  React.createElement("th", { onClick: function(){setRSort("rst");}, style: { padding: "8px 4px", textAlign: "center", fontSize: 9, cursor: "pointer", color: rSort==="rst"?C.greenB:"#8b9ab5" } }, "\u21BB", rSort==="rst"?" \u25BC":""),
+                  React.createElement("th", { onClick: function(){setRSort("overall");}, style: { padding: "8px 4px", textAlign: "center", color: rSort==="overall"?C.greenB:"#536176", fontSize: 9, fontFamily: MONO, cursor: "pointer" } }, "OVR", rSort==="overall"?" \u25BC":""))),
               React.createElement("tbody", null,
-                d.matches.slice().sort(function(a,b) { var ra = d.ratings && d.ratings[a.id] ? d.ratings[a.id].overall : 0; var rb = d.ratings && d.ratings[b.id] ? d.ratings[b.id].overall : 0; return rb - ra; }).map(function(m2) {
+                d.matches.slice().sort(function(a,b) { if (rSort === "date") return (b.date||"").localeCompare(a.date||""); var ra = d.ratings && d.ratings[a.id] ? d.ratings[a.id][rSort] || 0 : 0; var rb = d.ratings && d.ratings[b.id] ? d.ratings[b.id][rSort] || 0 : 0; return rb - ra; }).map(function(m2) {
                   var r = d.ratings ? d.ratings[m2.id] : null;
                   var w2 = (m2.our_total||0) > (m2.opp_total||0), dr = (m2.our_total||0) === (m2.opp_total||0);
                   var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? "#f0c040" : "#e0584d"; };
@@ -6422,7 +6423,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     useEffect(function() {
       if (!raw) return;
       var ms = raw.matches.filter(function(m) {
-        if (comp === "scout") { if (!m.scouting) return false; } else { if (m.scouting) return false; if (comp !== "all" && (m.competition || "League") !== comp) return false; }
+        if (comp === "scout") { if (!m.scouting) return false; } else { if (m.scouting) return false; if (comp !== "all") { var _comps = comp.split(","); if (_comps.indexOf(m.competition || "League") < 0) return false; } }
         if (yearF !== "all" && m.date && m.date.slice(0,4) !== yearF) return false;
         return true;
       });
@@ -6513,10 +6514,18 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       } }, label);
     };
     return /* @__PURE__ */ React.createElement("div", { className: "rs-wide", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px 0", borderBottom: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, club.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: C.slate, fontFamily: MONO } }, (yearF === "all" ? "ALL SEASONS" : yearF + " SEASON"), " \xB7 ", sport ? sport.label.toUpperCase() : ""))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, marginBottom: 6 } }, [["all", "ALL"], ["League", "LEAGUE"], ["Championship", "CHAMPIONSHIP"], ["Challenge", "CHALLENGE"], ["scout", "SCOUT"]].map(function(cc) {
-      var on = comp === cc[0];
+      var on = cc[0] === "all" ? comp === "all" : cc[0] === "scout" ? comp === "scout" : comp !== "all" && comp !== "scout" && comp.indexOf(cc[0]) >= 0;
       return /* @__PURE__ */ React.createElement("button", { key: cc[0], onClick: function() {
-        setComp(cc[0]);
-        if (cc[0] === "scout" && tab === "season") setTab("matches");
+        (function() {
+          var v = cc[0];
+          if (v === "all" || v === "scout") { setComp(v); if (v === "scout" && tab === "season") setTab("matches"); }
+          else {
+            var cur = comp === "all" || comp === "scout" ? [] : comp.split(",");
+            var idx = cur.indexOf(v);
+            if (idx >= 0) cur.splice(idx, 1); else cur.push(v);
+            setComp(cur.length === 0 || cur.length === 3 ? "all" : cur.join(","));
+          }
+        }());
       }, style: { flex: cc[0] === "Championship" ? 1.5 : 1, padding: "7px 2px", borderRadius: 8, background: on ? C.greenB + "22" : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.greenB : C.slateD, fontSize: 9, fontWeight: 800, fontFamily: MONO, letterSpacing: 0.5, cursor: "pointer" } }, cc[1]);
     })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", overflowX: "auto", WebkitOverflowScrolling: "touch" } }, /* @__PURE__ */ React.createElement(Tab, { id: "season", label: "Season" }), /* @__PURE__ */ React.createElement(Tab, { id: "matches", label: "Matches" }), /* @__PURE__ */ React.createElement(Tab, { id: "bench", label: "Benchmark" }), /* @__PURE__ */ React.createElement(Tab, { id: "cond", label: "Conditions" }), /* @__PURE__ */ React.createElement(Tab, { id: "rank", label: "vs Others" }))), (function() { var yrs = {}; (raw && raw.matches || []).forEach(function(m) { if (m.date) yrs[m.date.slice(0,4)] = 1; }); var ks = Object.keys(yrs).sort().reverse(); return ks.length > 1 ? /* @__PURE__ */ React.createElement("select", { value: yearF, onChange: function(e) { setYearF(e.target.value); }, style: { padding: "7px 8px", borderRadius: 8, border: "1px solid " + (yearF === "all" ? C.border : C.greenB), background: yearF === "all" ? C.bgCard : C.greenB + "22", color: yearF === "all" ? C.slateD : C.greenB, fontSize: 9, fontWeight: 800, cursor: "pointer", appearance: "none", WebkitAppearance: "none", letterSpacing: 1 } }, [/* @__PURE__ */ React.createElement("option", { key: "all", value: "all" }, "ALL YEARS")].concat(ks.map(function(y) { return /* @__PURE__ */ React.createElement("option", { key: y, value: y }, y); }))) : null; })(),  /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, err && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 12px", background: `${C.red}14`, border: `1px solid ${C.red}55`, borderRadius: 9, color: C.red, fontSize: 13 } }, err), !d && !err && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 60 } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.greenB })), d && tab === "season" && (d.matches.length ? /* @__PURE__ */ React.createElement(DashView, { d, club, scope: "season" }) : /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 13, paddingTop: 40, lineHeight: 1.6 } }, "No ", comp === "all" ? "" : comp.toLowerCase() + " ", "games yet.", /* @__PURE__ */ React.createElement("br", null), "Matches appear here once they have a final score.")), d && tab === "bench" && (d.benchmark && d.benchmark.length > 1 ? /* @__PURE__ */ React.createElement(Benchmark, { rows: d.benchmark, club }) : /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 13, paddingTop: 40, lineHeight: 1.6 } }, "Not enough teams yet.", /* @__PURE__ */ React.createElement("br", null), "Tag a couple of matches and the benchmark fills out.")), d && tab === "cond" && /* @__PURE__ */ React.createElement(Conditions, { matches: d.matches, events: d._events, club }), d && tab === "rank" && /* @__PURE__ */ React.createElement(RankView, { club }), d && tab === "matches" && (selMatch ? /* @__PURE__ */ selMatch.scouting ? React.createElement(ScoutDash, { m: selMatch, club: club, back: function() { setSelMatch(null); } }) : React.createElement(DashView, { key: selMatch.id, d: matchStats(selMatch), club, scope: "match", match: selMatch, onBack: function() {
       setSelMatch(null);
