@@ -5350,6 +5350,62 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }, style: { display: "flex", alignItems: "center", gap: 10, padding: "12px 12px", borderRadius: 10, background: C.bgCard, border: "1px solid " + C.border, cursor: "pointer", textAlign: "left", width: "100%" } }, /* @__PURE__ */ React.createElement("span", { style: { width: 18, height: 18, borderRadius: 5, background: draw ? C.gold : win ? C.greenB : C.red, color: C.bg, fontSize: 9, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO } }, draw ? "D" : win ? "W" : "L"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 13, color: C.white } }, m.opponent), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 13, fontWeight: 700, color: C.white } }, m.our_score, " ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, "-"), " ", m.opp_score), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 18 } }, "\u203A"));
     }));
   }
+  function matchRatings(matches, allEvents) {
+    if (!matches || matches.length < 2) return {};
+    var mStats = matches.map(function(m) {
+      var ev = allEvents.filter(function(e) { return e.match_id === m.id; });
+      var usShots = ev.filter(function(e) { return e.team === "us" && (e.event_type === "Shot from play" || e.event_type === "Scoreable free"); });
+      var opShots = ev.filter(function(e) { return e.team === "opp" && (e.event_type === "Shot from play" || e.event_type === "Scoreable free"); });
+      var usScored = usShots.filter(function(e) { return (e.score || 0) > 0; }).length;
+      var usFrees = usShots.filter(function(e) { return e.event_type === "Scoreable free"; });
+      var usFreesSc = usFrees.filter(function(e) { return (e.score || 0) > 0; }).length;
+      var opScored = opShots.filter(function(e) { return (e.score || 0) > 0; }).length;
+      var usTackles = ev.filter(function(e) { return e.team === "us" && e.event_type === "Tackle"; }).length;
+      var usTO = ev.filter(function(e) { return e.team === "us" && e.event_type === "Possession lost"; }).length;
+      var usKO = ev.filter(function(e) { return e.team === "us" && e.event_type === "Kickout"; });
+      var usKOWon = usKO.filter(function(e) { return e.outcome === "Won clean" || e.outcome === "Break won"; }).length;
+      var usBrkT = usKO.filter(function(e) { return e.outcome === "Break won" || e.outcome === "Break lost"; }).length;
+      var usBrkW = usKO.filter(function(e) { return e.outcome === "Break won"; }).length;
+      var opKO = ev.filter(function(e) { return e.team === "opp" && e.event_type === "Kickout"; });
+      var opKOLost = opKO.filter(function(e) { return e.outcome === "Lost clean" || e.outcome === "Break lost"; }).length;
+      return {
+        id: m.id,
+        atk_shots: usShots.length,
+        atk_acc: usShots.length ? 100 * usScored / usShots.length : 0,
+        atk_scores: usScored,
+        atk_freeAcc: usFrees.length ? 100 * usFreesSc / usFrees.length : 0,
+        def_oppShots: opShots.length,
+        def_oppAcc: opShots.length ? 100 * opScored / opShots.length : 0,
+        def_to: usTO,
+        rst_koPct: usKO.length ? 100 * usKOWon / usKO.length : 0,
+        rst_brkPct: usBrkT ? 100 * usBrkW / usBrkT : 50,
+        rst_oppSteal: opKOLost
+      };
+    });
+    function pctRank(arr, val, lower) {
+      var below = arr.filter(function(v) { return lower ? v > val : v < val; }).length;
+      return Math.round(100 * below / Math.max(arr.length - 1, 1));
+    }
+    var result = {};
+    var keys = {
+      atk: [["atk_shots",false],["atk_acc",false],["atk_scores",false],["atk_freeAcc",false]],
+      def: [["def_oppShots",true],["def_oppAcc",true],["def_to",true]],
+      rst: [["rst_koPct",false],["rst_brkPct",false],["rst_oppSteal",false]]
+    };
+    mStats.forEach(function(ms) {
+      var pillars = {};
+      ["atk","def","rst"].forEach(function(pil) {
+        var scores = keys[pil].map(function(k) {
+          var vals = mStats.map(function(s) { return s[k[0]]; });
+          return pctRank(vals, ms[k[0]], k[1]);
+        });
+        pillars[pil] = Math.round(scores.reduce(function(a,b){return a+b;},0) / scores.length);
+      });
+      pillars.overall = Math.round((pillars.atk + pillars.def + pillars.rst) / 3);
+      result[ms.id] = pillars;
+    });
+    return result;
+  }
   function DashView({ d: d0, club, scope, match, onBack, oppName, wide }) {
     var ON = oppName || "Opposition";
     const [half, setHalf] = useState("all");
@@ -5718,6 +5774,23 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                 React.createElement("span", { style: { color: "#cfd9e8" } }, s.name),
                 React.createElement("span", { style: { fontFamily: MONO, color: C.greenB, fontWeight: 700 } }, s.g + "-" + (s.ptot < 10 ? "0" : "") + s.ptot));
             })))),
+      d.ratings && match && d.ratings[match.id] && (function() {
+        var r = d.ratings[match.id];
+        var clr = function(v) { return v >= 70 ? "#34c967" : v >= 45 ? "#f0c040" : "#e0584d"; };
+        function pill(label, icon, val) {
+          return React.createElement("div", { style: { flex: 1, textAlign: "center", padding: "10px 4px", background: "#0a1020", borderRadius: 8 } },
+            React.createElement("div", { style: { fontSize: 9, color: "#536176", letterSpacing: 1, fontFamily: MONO } }, icon + " " + label),
+            React.createElement("div", { style: { fontSize: 22, fontWeight: 900, color: clr(val), marginTop: 4 } }, val));
+        }
+        return React.createElement("div", { style: { padding: "14px 16px", borderRadius: 12, background: C.bgCard, boxShadow: "0 2px 8px rgba(0,0,0,0.2)", marginBottom: 12 } },
+          React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 } },
+            React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: "#536176", fontFamily: MONO, fontWeight: 700 } }, "MATCH RATING"),
+            React.createElement("div", { style: { fontSize: 28, fontWeight: 900, color: clr(r.overall) } }, r.overall)),
+          React.createElement("div", { style: { display: "flex", gap: 6 } },
+            pill("ATK", "\uD83C\uDFAF", r.atk),
+            pill("DEF", "\uD83D\uDEE1\uFE0F", r.def),
+            pill("RST", "\u21BB", r.rst)));
+      }()),
       (function() {
         var c2 = d.compare || [];
         var groups = [
@@ -6340,7 +6413,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var aps = raw.apps.filter(function(a) {
         return !!ids[a.match_id];
       });
-      setD(Object.assign({}, computeStats(ms, evs, aps, club), { matches: ms, _events: evs, _apps: aps }));
+      var _cs = computeStats(ms, evs, aps, club); var _ratings = matchRatings(ms, evs); setD(Object.assign({}, _cs, { matches: ms, _events: evs, _apps: aps, ratings: _ratings }));
       setSelMatch(null);
     }, [raw, comp, yearF]);
     async function fetchAll(table, cols) {
