@@ -5412,6 +5412,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [openTypes, setOpenTypes] = useState(false);
     const [openOrigins, setOpenOrigins] = useState(false);
     const [rSort, setRSort] = useState("overall");
+    const [rOpen, setROpen] = useState(false);
     const [reportHtml, setReportHtml] = useState(null);
     // inject print CSS to hide app chrome during print
     useEffect(function() { if (!reportHtml) return; var s = document.createElement("style"); s.textContent = "@media print { body > div > div:first-child { display: none !important; } }"; document.head.appendChild(s); return function() { document.head.removeChild(s); }; }, [reportHtml]);
@@ -5748,7 +5749,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     dtab === "overview" && (d.notes && d.notes.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { padding: 16, borderRadius: 14, background: "linear-gradient(135deg,#0e1c34,#0b1426)", border: "1px solid " + C.border, marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 12, fontSize: 11 } }, isMatch ? "MATCH READ" : "SEASON READ"), d.notes.map(function(n, i) {
       return /* @__PURE__ */ React.createElement("div", { key: i, style: { fontSize: 14, lineHeight: 1.6, color: C.white, marginBottom: i < d.notes.length - 1 ? 10 : 0 } }, n);
     }))),
-    dtab === "overview" && (false ? null : /* @__PURE__ */ React.createElement(Section, { title: "SEASON SNAPSHOT" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 12 } }, [
+    dtab === "overview" && (!isMatch ? null : /* @__PURE__ */ React.createElement(Section, { title: "SEASON SNAPSHOT" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 12 } }, [
       { v: d.record.w + "-" + d.record.d + "-" + d.record.l, l: "W-D-L", c: C.greenB },
       { v: d.played, l: "PLAYED", c: C.white },
       { v: d.played ? Math.round(d.sf / d.played) : 0, l: "AVG SCORED", c: C.greenB },
@@ -5799,18 +5800,15 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                   { name: "Shot volume", k: "atk_shots" },
                   { name: "Accuracy", k: "atk_acc", pct: true },
                   { name: "Scores", k: "atk_scores" },
-                  { name: "Free accuracy", k: "atk_freeAcc", pct: true }
-                ]},
+                  { name: "Free accuracy", k: "atk_freeAcc", pct: true }]},
                 { label: "\uD83D\uDEE1\uFE0F DEFENCE", items: [
                   { name: "Opp shots", k: "def_oppShots" },
                   { name: "Opp accuracy", k: "def_oppAcc", pct: true },
-                  { name: "Turnovers", k: "def_to" }
-                ]},
+                  { name: "Turnovers", k: "def_to" }]},
                 { label: "\u21BB RESTARTS", items: [
                   { name: "KO win %", k: "rst_koPct", pct: true },
                   { name: "Breaking ball", k: "rst_brkPct", pct: true },
-                  { name: "Opp KO steals", k: "rst_oppSteal" }
-                ]}
+                  { name: "Opp KO steals", k: "rst_oppSteal" }]}
               ];
               var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? "#f0c040" : "#e0584d"; };
               return groups.map(function(grp) {
