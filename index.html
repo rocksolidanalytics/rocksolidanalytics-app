@@ -5707,7 +5707,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const d = useMemo(function() {
       if (!d0 || half === "all") return d0;
       var evs = (d0._events || []).filter(function(e) { return String(e.period == null ? 1 : e.period) === half; });
-      return Object.assign({}, computeStats(d0.matches || [], evs, d0._apps || [], club, half), { matches: d0.matches, _events: evs, _apps: d0._apps });
+      return Object.assign({}, computeStats(d0.matches || [], evs, d0._apps || [], club, half), { matches: d0.matches, _events: evs, _apps: d0._apps, ratings: d0.ratings });
     }, [d0, half, club]);
     const [team, setTeam] = useState("us");
     const [shotTeam, setShotTeam] = useState("us");
