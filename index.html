@@ -1758,7 +1758,7 @@
         var won = KO_WON.has(e.outcome);
         var _f = koFixOrient({ x: x, y: y });
         x = _f.x; y = _f.y;
-        pts.push({ x, y, won, player: e.player || null, num: _koNumMap[e.player] || null });
+        pts.push({ x, y, won, player: e.player || null, num: _koNumMap[e.player] || (e.player && e.player.charAt(0) === "#" ? e.player.slice(1) : null) });
         var dist = (1 - x) * 144;
         var row = dist < 45 ? "short" : dist <= 65 ? "mid" : "long";
         var col = y < 1 / 3 ? "left" : y < 2 / 3 ? "centre" : "right";
@@ -1782,7 +1782,7 @@
     });
     function shotData(evs, apps) {
       var _numMap = {}; (apps || []).forEach(function(a) { if (a.player_name) _numMap[a.player_name] = a.jersey || a.position_slot; });
-      const shots = evs.filter((e) => (e.event_type === "Shot from play" || e.event_type === "Scoreable free") && e.x != null && e.y != null).map((e) => ({ x: e.x, y: e.y, score: e.score || 0, outcome: e.outcome, player: e.player || null, num: _numMap[e.player] || null, isFree: e.event_type === "Scoreable free" }));
+      const shots = evs.filter((e) => (e.event_type === "Shot from play" || e.event_type === "Scoreable free") && e.x != null && e.y != null).map((e) => ({ x: e.x, y: e.y, score: e.score || 0, outcome: e.outcome, player: e.player || null, num: _numMap[e.player] || (e.player && e.player.charAt(0) === "#" ? e.player.slice(1) : null), isFree: e.event_type === "Scoreable free" }));
       const bands = { inside21: { n: 0, s: 0 }, mid: { n: 0, s: 0 }, long: { n: 0, s: 0 } };
       shots.forEach(function(sh) {
         var x = sh.x;
