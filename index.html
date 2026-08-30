@@ -1744,7 +1744,8 @@
     function blankRow() {
       return { left: { n: 0, w: 0 }, centre: { n: 0, w: 0 }, right: { n: 0, w: 0 } };
     }
-    function kickData(evs, side) {
+    function kickData(evs, side, apps) {
+      var _koNumMap = {}; (apps || []).forEach(function(a) { if (a.player_name) _koNumMap[a.player_name] = a.jersey || a.position_slot; });
       const grid = { short: blankRow(), mid: blankRow(), long: blankRow() };
       const pts = [];
       evs.filter((e) => e.event_type === "Kickout" && e.x != null && e.y != null).forEach(function(e) {
@@ -1757,7 +1758,7 @@
         var won = KO_WON.has(e.outcome);
         var _f = koFixOrient({ x: x, y: y });
         x = _f.x; y = _f.y;
-        pts.push({ x, y, won });
+        pts.push({ x, y, won, player: e.player || null, num: _koNumMap[e.player] || null });
         var dist = (1 - x) * 144;
         var row = dist < 45 ? "short" : dist <= 65 ? "mid" : "long";
         var col = y < 1 / 3 ? "left" : y < 2 / 3 ? "centre" : "right";
@@ -1766,7 +1767,7 @@
       });
       return { grid, pts };
     }
-    const koUs = kickData(us, "us"), koOpp = kickData(opp, "opp");
+    const koUs = kickData(us, "us", apps), koOpp = kickData(opp, "opp", apps);
     const appKey = {};
     apps.forEach((a) => {
       appKey[a.match_id + "|" + (a.player_name || "").trim().toLowerCase()] = a.position_slot;
@@ -2307,14 +2308,25 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function koEnd(top) {
       return /* @__PURE__ */ React.createElement("g", { key: top ? "t" : "b" }, /* @__PURE__ */ React.createElement("rect", { x: cx - 0.22 * W, y: top ? 0 : H - m(13), width: 0.44 * W, height: m(13), fill: "none", stroke: LN2, strokeWidth: "1" }), /* @__PURE__ */ React.createElement("rect", { x: cx - 0.1 * W, y: top ? 0 : H - m(4.5), width: 0.2 * W, height: m(4.5), fill: "none", stroke: LN, strokeWidth: "1.2" }), /* @__PURE__ */ React.createElement("rect", { x: cx - 0.075 * W, y: top ? 0 : H - 5.5, width: 0.15 * W, height: "5.5", fill: "rgba(255,255,255,0.16)", stroke: "#fff", strokeWidth: "1.6" }), /* @__PURE__ */ React.createElement("line", { x1: "0", y1: top ? m(45) : H - m(45), x2: W, y2: top ? m(45) : H - m(45), stroke: LN2, strokeWidth: "1", strokeDasharray: "6,5" }), /* @__PURE__ */ React.createElement("line", { x1: "0", y1: top ? m(65) : H - m(65), x2: W, y2: top ? m(65) : H - m(65), stroke: LN2, strokeWidth: "1", strokeDasharray: "6,5" }), /* @__PURE__ */ React.createElement("line", { x1: "0", y1: top ? m(21) : H - m(21), x2: W, y2: top ? m(21) : H - m(21), stroke: LN, strokeWidth: "1.1" }), /* @__PURE__ */ React.createElement("path", { d: "M 4 " + (top ? m(13) : H - m(13)) + " A 185 185 0 0 " + (top ? 0 : 1) + " " + (W - 4) + " " + (top ? m(13) : H - m(13)), fill: "none", stroke: LN, strokeWidth: "1.3" }), /* @__PURE__ */ React.createElement("path", { d: "M " + (cx - 40) + " " + (top ? m(13) : H - m(13)) + " A 40 40 0 0 " + (top ? 0 : 1) + " " + (cx + 40) + " " + (top ? m(13) : H - m(13)), fill: "none", stroke: LN, strokeWidth: "1.2" }));
     }
-    return /* @__PURE__ */ React.createElement("svg", { viewBox: "0 0 " + W + " " + H, style: { width: "100%", maxWidth: 340, display: "block", margin: "0 auto", borderRadius: 12, border: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("linearGradient", { id: "rskog", x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0", stopColor: "#0e5528" }), /* @__PURE__ */ React.createElement("stop", { offset: "0.5", stopColor: "#0a4a21" }), /* @__PURE__ */ React.createElement("stop", { offset: "1", stopColor: "#0e5528" })), /* @__PURE__ */ React.createElement("radialGradient", { id: "rskov", cx: "50%", cy: "50%", r: "72%" }, /* @__PURE__ */ React.createElement("stop", { offset: "55%", stopColor: "#000", stopOpacity: "0" }), /* @__PURE__ */ React.createElement("stop", { offset: "100%", stopColor: "#000", stopOpacity: "0.42" })), /* @__PURE__ */ React.createElement("filter", { id: "rskod", x: "-60%", y: "-60%", width: "220%", height: "220%" }, /* @__PURE__ */ React.createElement("feDropShadow", { dx: "0", dy: "0.7", stdDeviation: "0.9", floodColor: "#000", floodOpacity: "0.55" }))), /* @__PURE__ */ React.createElement("rect", { x: "0", y: "0", width: W, height: H, fill: "url(#rskog)" }), stripes, /* @__PURE__ */ React.createElement("rect", { x: "0", y: "0", width: W, height: H, fill: "url(#rskov)" }), /* @__PURE__ */ React.createElement("rect", { x: "1.5", y: "1.5", width: W - 3, height: H - 3, fill: "none", stroke: LN, strokeWidth: "1.8", rx: "2" }), /* @__PURE__ */ React.createElement("line", { x1: "0", y1: H / 2, x2: W, y2: H / 2, stroke: LN, strokeWidth: "1.2", strokeDasharray: "6,5" }), koEnd(true), koEnd(false), /* @__PURE__ */ React.createElement("g", { opacity: "0.5" },
+    return React.createElement(React.Fragment, null, React.createElement("svg", { viewBox: "0 0 " + W + " " + H, style: { width: "100%", maxWidth: 340, display: "block", margin: "0 auto", borderRadius: 12, border: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("linearGradient", { id: "rskog", x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0", stopColor: "#0e5528" }), /* @__PURE__ */ React.createElement("stop", { offset: "0.5", stopColor: "#0a4a21" }), /* @__PURE__ */ React.createElement("stop", { offset: "1", stopColor: "#0e5528" })), /* @__PURE__ */ React.createElement("radialGradient", { id: "rskov", cx: "50%", cy: "50%", r: "72%" }, /* @__PURE__ */ React.createElement("stop", { offset: "55%", stopColor: "#000", stopOpacity: "0" }), /* @__PURE__ */ React.createElement("stop", { offset: "100%", stopColor: "#000", stopOpacity: "0.42" })), /* @__PURE__ */ React.createElement("filter", { id: "rskod", x: "-60%", y: "-60%", width: "220%", height: "220%" }, /* @__PURE__ */ React.createElement("feDropShadow", { dx: "0", dy: "0.7", stdDeviation: "0.9", floodColor: "#000", floodOpacity: "0.55" }))), /* @__PURE__ */ React.createElement("rect", { x: "0", y: "0", width: W, height: H, fill: "url(#rskog)" }), stripes, /* @__PURE__ */ React.createElement("rect", { x: "0", y: "0", width: W, height: H, fill: "url(#rskov)" }), /* @__PURE__ */ React.createElement("rect", { x: "1.5", y: "1.5", width: W - 3, height: H - 3, fill: "none", stroke: LN, strokeWidth: "1.8", rx: "2" }), /* @__PURE__ */ React.createElement("line", { x1: "0", y1: H / 2, x2: W, y2: H / 2, stroke: LN, strokeWidth: "1.2", strokeDasharray: "6,5" }), koEnd(true), koEnd(false), /* @__PURE__ */ React.createElement("g", { opacity: "0.5" },
       /* @__PURE__ */ React.createElement("line", { x1: 13, y1: H - m(22), x2: 13, y2: m(30), stroke: "#eaf6ee", strokeWidth: "1.4" }),
       /* @__PURE__ */ React.createElement("path", { d: "M 13 " + (m(22) + 7) + " l -4 -7 l 4 2.4 l 4 -2.4 z", fill: "#eaf6ee" }),
       /* @__PURE__ */ React.createElement("text", { x: 24, y: H / 2, fill: "#eaf6ee", fontSize: "9", fontFamily: MONO, letterSpacing: "1.5", transform: "rotate(-90 24 " + H / 2 + ")", textAnchor: "middle" }, "ALL RESTARTS THIS WAY")),
     /* @__PURE__ */ React.createElement("g", { filter: "url(#rskod)" }, (function(){var _sc=rsaScatter((pts||[]).map(function(q){return [q.y*W,(1-q.x)*H];}));return (pts||[]).map(function(p,i2){return {won:p.won,cx:_sc[i2][0],cy:_sc[i2][1]};});})().map(function(p, i2) {
       var col = p.won ? C.greenB : C.red;
-      return /* @__PURE__ */ React.createElement("circle", { key: i2, cx: p.cx, cy: p.cy, r: "4.5", fill: col, stroke: "#08160c", strokeWidth: "1.1", opacity: "0.96" });
-    })));
+      return React.createElement("g", { key: i2 }, React.createElement("circle", { cx: p.cx, cy: p.cy, r: 5.5, fill: col, stroke: "#08160c", strokeWidth: 1, opacity: 0.9 }), p.num ? React.createElement("text", { x: p.cx, y: p.cy + 3, textAnchor: "middle", fill: "#08160c", fontSize: 7, fontWeight: 800, fontFamily: "Inter,sans-serif" }, p.num) : null);
+    }))), (function() {
+      var seen = {};
+      pts.forEach(function(p2) { if (p2.num && p2.player) seen[p2.num] = p2.player; });
+      var entries = Object.keys(seen).sort(function(a,b) { return Number(a) - Number(b); });
+      if (!entries.length) return null;
+      return React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: "2px 8px", marginTop: 6, padding: "0 2px" } },
+        entries.map(function(n) {
+          return React.createElement("span", { key: n, style: { fontSize: 9, color: "#8b9ab5", fontFamily: MONO } },
+            React.createElement("span", { style: { color: C.greenB, fontWeight: 800 } }, n),
+            "\u00b7" + seen[n].split(" ").pop());
+        }));
+    }()));;
   }
   function KickoutLegend() {
     function it(c, t) {
