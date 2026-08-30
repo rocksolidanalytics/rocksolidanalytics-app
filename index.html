@@ -5436,6 +5436,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       });
       result[ms.id] = pillars;
     });
+    // Re-rank overall within this set so best=100, worst=0
+    var overalls = Object.values(result).map(function(r) { return r.overall; });
+    var minO = Math.min.apply(null, overalls), maxO = Math.max.apply(null, overalls);
+    var rangeO = maxO - minO || 1;
+    Object.keys(result).forEach(function(id) {
+      result[id].overall = Math.round(100 * (result[id].overall - minO) / rangeO);
+    });
     return result;
   }
   function DashView({ d: d0, club, scope, match, onBack, oppName, wide }) {
