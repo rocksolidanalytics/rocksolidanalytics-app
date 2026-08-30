@@ -5402,6 +5402,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         pillars[pil] = Math.round(scores.reduce(function(a,b){return a+b;},0) / scores.length);
       });
       pillars.overall = Math.round((pillars.atk + pillars.def + pillars.rst) / 3);
+      pillars.detail = {};
+      ["atk","def","rst"].forEach(function(pil) {
+        keys[pil].forEach(function(k) {
+          var vals = mStats.map(function(s){return s[k[0]];});
+          pillars.detail[k[0]] = { val: typeof ms[k[0]]==="number" ? Math.round(ms[k[0]]) : ms[k[0]], pct: pctRank(vals, ms[k[0]], k[1]) };
+        });
+      });
       result[ms.id] = pillars;
     });
     return result;
