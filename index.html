@@ -2312,7 +2312,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       /* @__PURE__ */ React.createElement("line", { x1: 13, y1: H - m(22), x2: 13, y2: m(30), stroke: "#eaf6ee", strokeWidth: "1.4" }),
       /* @__PURE__ */ React.createElement("path", { d: "M 13 " + (m(22) + 7) + " l -4 -7 l 4 2.4 l 4 -2.4 z", fill: "#eaf6ee" }),
       /* @__PURE__ */ React.createElement("text", { x: 24, y: H / 2, fill: "#eaf6ee", fontSize: "9", fontFamily: MONO, letterSpacing: "1.5", transform: "rotate(-90 24 " + H / 2 + ")", textAnchor: "middle" }, "ALL RESTARTS THIS WAY")),
-    /* @__PURE__ */ React.createElement("g", { filter: "url(#rskod)" }, (function(){var _sc=rsaScatter((pts||[]).map(function(q){return [q.y*W,(1-q.x)*H];}));return (pts||[]).map(function(p,i2){return {won:p.won,cx:_sc[i2][0],cy:_sc[i2][1]};});})().map(function(p, i2) {
+    /* @__PURE__ */ React.createElement("g", { filter: "url(#rskod)" }, (function(){var _sc=rsaScatter((pts||[]).map(function(q){return [q.y*W,(1-q.x)*H];}));return (pts||[]).map(function(p,i2){return {won:p.won,num:p.num,player:p.player,cx:_sc[i2][0],cy:_sc[i2][1]};});})().map(function(p, i2) {
       var col = p.won ? C.greenB : C.red;
       return React.createElement("g", { key: i2 }, React.createElement("circle", { cx: p.cx, cy: p.cy, r: 5.5, fill: col, stroke: "#08160c", strokeWidth: 1, opacity: 0.9 }), p.num ? React.createElement("text", { x: p.cx, y: p.cy + 3, textAnchor: "middle", fill: "#08160c", fontSize: 7, fontWeight: 800, fontFamily: "Inter,sans-serif" }, p.num) : null);
     }))), (function() {
