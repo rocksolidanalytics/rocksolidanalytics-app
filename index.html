@@ -5402,6 +5402,18 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         pillars[pil] = Math.round(scores.reduce(function(a,b){return a+b;},0) / scores.length);
       });
       pillars.overall = Math.round((pillars.atk + pillars.def + pillars.rst) / 3);
+      pillars.detail = {
+        atk_shots: { val: ms.atk_shots, pct: pctRank(mStats.map(function(s){return s.atk_shots;}), ms.atk_shots, false) },
+        atk_acc: { val: Math.round(ms.atk_acc), pct: pctRank(mStats.map(function(s){return s.atk_acc;}), ms.atk_acc, false) },
+        atk_scores: { val: ms.atk_scores, pct: pctRank(mStats.map(function(s){return s.atk_scores;}), ms.atk_scores, false) },
+        atk_freeAcc: { val: Math.round(ms.atk_freeAcc), pct: pctRank(mStats.map(function(s){return s.atk_freeAcc;}), ms.atk_freeAcc, false) },
+        def_oppShots: { val: ms.def_oppShots, pct: pctRank(mStats.map(function(s){return s.def_oppShots;}), ms.def_oppShots, true) },
+        def_oppAcc: { val: Math.round(ms.def_oppAcc), pct: pctRank(mStats.map(function(s){return s.def_oppAcc;}), ms.def_oppAcc, true) },
+        def_to: { val: ms.def_to, pct: pctRank(mStats.map(function(s){return s.def_to;}), ms.def_to, true) },
+        rst_koPct: { val: Math.round(ms.rst_koPct), pct: pctRank(mStats.map(function(s){return s.rst_koPct;}), ms.rst_koPct, false) },
+        rst_brkPct: { val: Math.round(ms.rst_brkPct), pct: pctRank(mStats.map(function(s){return s.rst_brkPct;}), ms.rst_brkPct, false) },
+        rst_oppSteal: { val: ms.rst_oppSteal, pct: pctRank(mStats.map(function(s){return s.rst_oppSteal;}), ms.rst_oppSteal, false) }
+      };
       result[ms.id] = pillars;
     });
     return result;
@@ -5412,6 +5424,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [openTypes, setOpenTypes] = useState(false);
     const [openOrigins, setOpenOrigins] = useState(false);
     const [rSort, setRSort] = useState("overall");
+    const [rOpen, setROpen] = useState(false);
     const [reportHtml, setReportHtml] = useState(null);
     // inject print CSS to hide app chrome during print
     useEffect(function() { if (!reportHtml) return; var s = document.createElement("style"); s.textContent = "@media print { body > div > div:first-child { display: none !important; } }"; document.head.appendChild(s); return function() { document.head.removeChild(s); }; }, [reportHtml]);
@@ -5790,7 +5803,44 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           React.createElement("div", { style: { display: "flex", gap: 6 } },
             pill("ATK", "\uD83C\uDFAF", r.atk),
             pill("DEF", "\uD83D\uDEE1\uFE0F", r.def),
-            pill("RST", "\u21BB", r.rst)));
+            pill("RST", "\u21BB", r.rst)),
+          React.createElement("div", { onClick: function() { setROpen(!rOpen); }, style: { textAlign: "center", marginTop: 8, cursor: "pointer", fontSize: 10, color: C.slateD, fontFamily: MONO } }, rOpen ? "\u25B2 Hide breakdown" : "\u25BC Show breakdown"),
+          rOpen && r.detail && React.createElement("div", { style: { marginTop: 10 } },
+            (function() {
+              var groups = [
+                { label: "\uD83C\uDFAF ATTACK", items: [
+                  { name: "Shot volume", k: "atk_shots" },
+                  { name: "Accuracy", k: "atk_acc", pct: true },
+                  { name: "Scores", k: "atk_scores" },
+                  { name: "Free accuracy", k: "atk_freeAcc", pct: true }
+                ]},
+                { label: "\uD83D\uDEE1\uFE0F DEFENCE", items: [
+                  { name: "Opp shots allowed", k: "def_oppShots", inv: true },
+                  { name: "Opp accuracy", k: "def_oppAcc", inv: true, pct: true },
+                  { name: "Turnovers", k: "def_to", inv: true }
+                ]},
+                { label: "\u21BB RESTARTS", items: [
+                  { name: "Kickout win %", k: "rst_koPct", pct: true },
+                  { name: "Breaking ball %", k: "rst_brkPct", pct: true },
+                  { name: "Opp KO steals", k: "rst_oppSteal" }
+                ]}
+              ];
+              var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? "#f0c040" : "#e0584d"; };
+              return groups.map(function(grp) {
+                return React.createElement("div", { key: grp.label, style: { marginBottom: 10 } },
+                  React.createElement("div", { style: { fontSize: 9, letterSpacing: 1, color: "#536176", fontFamily: MONO, marginBottom: 4 } }, grp.label),
+                  grp.items.map(function(it) {
+                    var d2 = r.detail[it.k];
+                    if (!d2) return null;
+                    return React.createElement("div", { key: it.k, style: { display: "flex", alignItems: "center", gap: 6, marginBottom: 3 } },
+                      React.createElement("span", { style: { flex: 1, fontSize: 11, color: "#b0bdd0" } }, it.name),
+                      React.createElement("span", { style: { fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "#eef2f8", minWidth: 36, textAlign: "right" } }, d2.val + (it.pct ? "%" : "")),
+                      React.createElement("div", { style: { width: 50, height: 6, borderRadius: 3, background: "#172238", overflow: "hidden" } },
+                        React.createElement("div", { style: { width: d2.pct + "%", height: 6, borderRadius: 3, background: clr(d2.pct) } })),
+                      React.createElement("span", { style: { fontFamily: MONO, fontSize: 10, fontWeight: 800, color: clr(d2.pct), minWidth: 24, textAlign: "right" } }, d2.pct));
+                  }));
+              });
+            }())));
       }()),
       (function() {
         var c2 = d.compare || [];
