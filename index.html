@@ -2228,9 +2228,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         y = 1 - y;
       }
       const frac = (1 - x) / 0.5;
-      return { sx: y * W, sy: frac * H, s: sh.score };
+      return { sx: y * W, sy: frac * H, s: sh.score, num: sh.num, isFree: sh.isFree };
     };
-    const _p0 = (shots || []).map(proj); const _ps = rsaScatter(_p0.map(function(p){return [p.sx,p.sy];})); const pts = _p0.map(function(p,i){return {sx:_ps[i][0],sy:_ps[i][1],s:p.s};});
+    const _p0 = (shots || []).map(proj); const _ps = rsaScatter(_p0.map(function(p){return [p.sx,p.sy];})); const pts = _p0.map(function(p,i){return {sx:_ps[i][0],sy:_ps[i][1],s:p.s,num:p.num,isFree:p.isFree};});
     const R2 = m(40), y2 = Math.sqrt(Math.max(0, R2 * R2 - cx * cx));
     const rD = m(13), y20 = m(20);
     let stripes = [], bands = 9;
