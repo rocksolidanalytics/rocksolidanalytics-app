@@ -5947,7 +5947,21 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                     React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, color: r ? clr(r.def) : "#536176" } }, r ? r.def : "-"),
                     React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, color: r ? clr(r.rst) : "#536176" } }, r ? r.rst : "-"),
                     React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: 12, color: r ? clr(r.overall) : "#536176" } }, r ? r.overall : "-"));
-                })))))),
+                }))))), React.createElement("tfoot", null, (function() {
+        var rated = d.matches.filter(function(m2) { return d.ratings && d.ratings[m2.id]; });
+        if (!rated.length) return null;
+        var sA = 0, sD = 0, sR = 0, sO = 0;
+        rated.forEach(function(m2) { var r = d.ratings[m2.id]; sA += r.atk; sD += r.def; sR += r.rst; sO += r.overall; });
+        var n = rated.length;
+        var avgA = Math.round(sA/n), avgD = Math.round(sD/n), avgR = Math.round(sR/n), avgO = Math.round(sO/n);
+        var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? "#f0c040" : "#e0584d"; };
+        return React.createElement("tr", { style: { borderTop: "2px solid #23344E" } },
+          React.createElement("td", { colSpan: 3, style: { padding: "10px 8px", fontSize: 10, fontWeight: 800, fontFamily: MONO, letterSpacing: 1, color: "#536176" } }, "AVG (" + n + " games)"),
+          React.createElement("td", { style: { padding: "10px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: 12, color: clr(avgA) } }, avgA),
+          React.createElement("td", { style: { padding: "10px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: 12, color: clr(avgD) } }, avgD),
+          React.createElement("td", { style: { padding: "10px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: 12, color: clr(avgR) } }, avgR),
+          React.createElement("td", { style: { padding: "10px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: 12, color: clr(avgO) } }, avgO));
+      }()))),
     dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "TOP SCORERS" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 7 } }, d.scorers.slice(0, 12).map(function(sc, i) {
       return /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, background: C.bgCard, border: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 13 } }, sc.name), sc.tp > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.gold, fontFamily: MONO } }, sc.tp, "x2pt"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 13, fontWeight: 700, color: C.greenB } }, sc.g, "-", String(sc.ptot).padStart(2, "0")));
     }), d.scorers.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: C.slateD, fontFamily: MONO } }, "No scores tagged.")))),
