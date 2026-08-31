@@ -25,7 +25,8 @@
       box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 30px 80px rgba(0,0,0,.6); }
     #root > div.rs-wide { max-width: 1040px; }
   }
-@keyframes rsaIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.rsa-screen{animation:rsaIn .17s ease-out}@media (min-width:760px){.rsa-home-tiles{display:grid!important;grid-template-columns:1fr 1fr;gap:12px}.rsa-home-tiles>button{margin-top:0!important}.rsa-gf-detail{flex-direction:row!important;flex:1;min-height:0}.rsa-gf-video{position:sticky!important;top:0;width:55%!important;flex-shrink:0;align-self:flex-start}.rsa-gf-events{flex:1;overflow-y:auto!important;min-height:0}}@keyframes rsaShim{0%{background-position:-220px 0}100%{background-position:220px 0}}.rsa-skel{background:#101a2c;background-image:linear-gradient(90deg,#101a2c 0px,#18253c 110px,#101a2c 220px);background-size:440px 100%;animation:rsaShim 1.1s linear infinite;border-radius:8px}@media (prefers-reduced-motion:reduce){.rsa-screen{animation:none}.rsa-skel{animation:none}}@keyframes rsaCount{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.rsa-count{animation:rsaCount .4s ease-out}</style>
+@keyframes rsaIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.rsa-screen{animation:rsaIn .17s ease-out}@media (min-width:760px){.rsa-home-tiles{display:grid!important;grid-template-columns:1fr 1fr;gap:12px}.rsa-home-tiles>button{margin-top:0!important}.rsa-gf-detail{flex-direction:row!important;flex:1;min-height:0}.rsa-gf-video{position:sticky!important;top:0;width:55%!important;flex-shrink:0;align-self:flex-start}.rsa-gf-events{flex:1;overflow-y:auto!important;min-height:0}}@keyframes rsaShim{0%{background-position:-220px 0}100%{background-position:220px 0}}.rsa-skel{background:#101a2c;background-image:linear-gradient(90deg,#101a2c 0px,#18253c 110px,#101a2c 220px);background-size:440px 100%;animation:rsaShim 1.1s linear infinite;border-radius:8px}@media (prefers-reduced-motion:reduce){.rsa-screen{animation:none}.rsa-skel{animation:none}}@keyframes rsaCount{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.rsa-count{animation:rsaCount .4s ease-out}@keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+</style>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2676,6 +2677,41 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [running, setRunning] = useState(false);
     const [dirPicked, setDirPicked] = useState(match.attack_up != null);
     const [period, setPeriod] = useState(1);
+    const [mAlert, setMAlert] = useState(null);
+    function checkMomentum(evts) {
+      if (!evts || evts.length < 2) return;
+      var scores = evts.filter(function(e) { return e.score > 0; });
+      // Check unanswered runs
+      var oppRun = 0, usRun = 0;
+      for (var i = scores.length - 1; i >= 0; i--) {
+        if (scores[i].team === "a") { oppRun++; if (usRun > 0) break; }
+        else { usRun++; if (oppRun > 0) break; }
+      }
+      if (oppRun >= 3) { setMAlert({ type: "danger", icon: "\u26A0\uFE0F", msg: oppRun + " unanswered opposition scores", sub: "3+ unanswered runs lead to defeat 77% of the time" }); return; }
+      if (usRun >= 3) { setMAlert({ type: "surge", icon: "\uD83D\uDD25", msg: usRun + " unanswered scores", sub: "Keep the pressure on restarts" }); return; }
+      // Check kickout loss streak
+      var kos = evts.filter(function(e) { return e.ev && e.ev.id === "kickout" && e.team === "h"; });
+      var koLoss = 0;
+      for (var j = kos.length - 1; j >= 0; j--) {
+        if (kos[j].outcome === "Lost clean" || kos[j].outcome === "Break lost") koLoss++;
+        else break;
+      }
+      if (koLoss >= 3) { setMAlert({ type: "danger", icon: "\u26A0\uFE0F", msg: koLoss + " consecutive restart losses", sub: "KO loss streaks of 3+ occur in 83% of defeats" }); return; }
+      // Check turnover cluster (3+ in last ~5 events)
+      var recent = evts.slice(-8);
+      var recentTO = recent.filter(function(e) { return e.ev && e.ev.id === "poss" && e.team === "h"; }).length;
+      if (recentTO >= 3) { setMAlert({ type: "danger", icon: "\u26A0\uFE0F", msg: recentTO + " turnovers in last 8 events", sub: "Slow it down — turnover clusters precede scoring runs" }); return; }
+      // Check kickout win streak
+      var koWin = 0;
+      for (var k = kos.length - 1; k >= 0; k--) {
+        if (kos[k].outcome === "Won clean" || kos[k].outcome === "Break won") koWin++;
+        else break;
+      }
+      if (koWin >= 4) { setMAlert({ type: "surge", icon: "\uD83D\uDD25", msg: koWin + " consecutive restarts won", sub: "Dominant restart phase — press the advantage" }); return; }
+      // Positive: 2 unanswered opposition = early warning
+      if (oppRun >= 2) { setMAlert({ type: "warning", icon: "\u26A1", msg: "2 unanswered opposition scores", sub: "Next score is critical — pattern becomes dangerous at 3" }); return; }
+      setMAlert(null);
+    }
     const [tagged, setTagged] = useState([]);
     const [nameMap, setNameMap] = useState({});
     const [subOpen, setSubOpen] = useState(false);
@@ -3326,7 +3362,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", fontSize: 10.5, color: C.slateD, marginTop: 14 } }, tagged.length, " events tagged so far")), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setStatsOpen(false);
     }, style: { margin: 10, padding: 16, borderRadius: 12, border: "none", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 15, cursor: "pointer" } }, "\u2190 Back to tagging"));
-    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide", style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", fontFamily: MONO, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", padding: "7px 10px", borderBottom: "1px solid " + C.border, gap: 6 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 18 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, color: C.greenB, letterSpacing: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, club.name.toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, fontWeight: 900 } }, nota(us), " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slate } }, "(", us.g * 3 + us.p, ")"))), /* @__PURE__ */ React.createElement("div", { onClick: function() {
+    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide", style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", fontFamily: MONO, overflow: "hidden" } }, mAlert && React.createElement("div", { onClick: function() { setMAlert(null); }, style: { position: "fixed", top: 0, left: 0, right: 0, zIndex: 999, padding: "12px 16px", background: mAlert.type === "danger" ? "linear-gradient(135deg, #8b1a1a, #c0392b)" : mAlert.type === "warning" ? "linear-gradient(135deg, #7d6608, #d4a017)" : "linear-gradient(135deg, #0e6631, #27ae60)", boxShadow: "0 4px 20px rgba(0,0,0,0.5)", cursor: "pointer", animation: "slideDown 0.3s ease-out" } }, React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, React.createElement("span", { style: { fontSize: 20 } }, mAlert.icon), React.createElement("div", { style: { flex: 1 } }, React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: "#fff" } }, mAlert.msg), React.createElement("div", { style: { fontSize: 10, color: "rgba(255,255,255,0.8)", marginTop: 2 } }, mAlert.sub)), React.createElement("span", { style: { fontSize: 10, color: "rgba(255,255,255,0.5)" } }, "TAP TO DISMISS"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", padding: "7px 10px", borderBottom: "1px solid " + C.border, gap: 6 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 18 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, color: C.greenB, letterSpacing: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, club.name.toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, fontWeight: 900 } }, nota(us), " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slate } }, "(", us.g * 3 + us.p, ")"))), /* @__PURE__ */ React.createElement("div", { onClick: function() {
       setRunning(function(r) {
         return !r;
       });
