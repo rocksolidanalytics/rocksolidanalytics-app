@@ -3333,7 +3333,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       if (_sc.length >= 2) {
         var _oppR = 0, _usR = 0;
         for (var _i = _sc.length - 1; _i >= 0; _i--) {
-          if (_sc[_i].team === "a") { _oppR++; if (_usR > 0) break; }
+          if (_sc[_i].team === "opp" || _sc[_i].team === "a") { _oppR++; if (_usR > 0) break; }
           else { _usR++; if (_oppR > 0) break; }
         }
         if (_oppR >= 3) mAlert = { bg: "#8b1a1a", icon: "\u26A0\uFE0F", msg: _oppR + " unanswered opp scores" };
@@ -3341,7 +3341,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         else if (_oppR >= 2) mAlert = { bg: "#7d6608", icon: "\u26A1", msg: "2 unanswered opp scores \u2014 next is critical" };
       }
       if (!mAlert) {
-        var _kos = tagged.filter(function(e) { return e.ev && e.ev.id === "kickout" && e.team === "h"; });
+        var _kos = tagged.filter(function(e) { return e.ev && e.ev.id === "kickout" && (e.team === "us" || e.team === "h"); });
         if (_kos.length >= 3) {
           var _kl = 0;
           for (var _j = _kos.length - 1; _j >= 0; _j--) {
