@@ -5442,7 +5442,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   }
   function PulseTimeline({ events, match, club, result }) {
     if (!events || events.length < 5) return null;
-    var W = 340, H = 140, pad = { l: 6, r: 6, t: 20, b: 16 };
+    var W = 340, H = 140, pad = { l: 24, r: 6, t: 20, b: 16 };
     var cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
     var mid = pad.t + ch * 0.5;
     
@@ -5543,6 +5543,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       // Pin final point to known result
       var finalWP = match.our_total > match.opp_total ? 100 : match.our_total === match.opp_total ? 50 : 0;
       if (match.our_total != null) wpPoints.push({ secs: maxSecs, prob: finalWP });
+      // Peak WP marker
+      var peakWP = wpPoints.reduce(function(best, p) { return p.prob > best.prob ? p : best; }, wpPoints[0]);
+      if (peakWP && peakWP.prob > wpPoints[wpPoints.length-1].prob + 5) {
+        var peakX = mx(peakWP.secs), peakY = pad.t + ch - (peakWP.prob / 100) * ch;
+        elements.push(React.createElement("circle", { key: "peak", cx: peakX, cy: peakY, r: 3, fill: "none", stroke: "#4a9eff", strokeWidth: 1.5 }));
+        elements.push(React.createElement("text", { key: "peakl", x: peakX, y: peakY - 6, textAnchor: "middle", fill: "#4a9eff", fontSize: 8, fontWeight: 700, fontFamily: "Inter,system-ui,sans-serif" }, "\u25B2 " + peakWP.prob + "%"));
+      }
       // Start and end WP labels
       var first = wpPoints[0], last = wpPoints[wpPoints.length-1];
       elements.push(React.createElement("text", { key: "wps", x: mx(first.secs)+2, y: pad.t+ch-(first.prob/100)*ch-5, fill: "#4a9eff", fontSize: 8, fontWeight: 700, fontFamily: "Inter,system-ui,sans-serif" }, first.prob+"%"));
@@ -5550,8 +5557,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }
     
     // WP axis labels
-    elements.push(React.createElement("text", { key: "wp100", x: pad.l-2, y: pad.t+5, fill: "#536176", fontSize: 6, textAnchor: "end", fontFamily: "Inter,system-ui,sans-serif" }, "100"));
-    elements.push(React.createElement("text", { key: "wp50", x: pad.l-2, y: mid+2, fill: "#536176", fontSize: 6, textAnchor: "end", fontFamily: "Inter,system-ui,sans-serif" }, "50"));
+    // Y-axis: 0%, 50%, 100% with gridlines
+    [0, 50, 100].forEach(function(pct) {
+      var y = pad.t + ch - (pct / 100) * ch;
+      elements.push(React.createElement("line", { key: "g"+pct, x1: pad.l, y1: y, x2: pad.l+cw, y2: y, stroke: "#23344E", strokeWidth: 0.3, strokeDasharray: pct === 50 ? "2,2" : "none" }));
+      elements.push(React.createElement("text", { key: "a"+pct, x: pad.l-3, y: y+3, fill: "#536176", fontSize: 7, textAnchor: "end", fontFamily: "Inter,system-ui,sans-serif" }, pct+"%"));
+    });
     
     return React.createElement("div", { style: { padding: "14px 16px", borderRadius: 12, background: C.bgCard, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", marginBottom: 12 } },
       React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 } },
