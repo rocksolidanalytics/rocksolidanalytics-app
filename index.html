@@ -2677,41 +2677,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [running, setRunning] = useState(false);
     const [dirPicked, setDirPicked] = useState(match.attack_up != null);
     const [period, setPeriod] = useState(1);
-    const [mAlert, setMAlert] = useState(null);
-    function checkMomentum(evts) {
-      if (!evts || evts.length < 2) return;
-      var scores = evts.filter(function(e) { return e.score > 0; });
-      // Check unanswered runs
-      var oppRun = 0, usRun = 0;
-      for (var i = scores.length - 1; i >= 0; i--) {
-        if (scores[i].team === "a") { oppRun++; if (usRun > 0) break; }
-        else { usRun++; if (oppRun > 0) break; }
-      }
-      if (oppRun >= 3) { setMAlert({ type: "danger", icon: "\u26A0\uFE0F", msg: oppRun + " unanswered opposition scores", sub: "3+ unanswered runs lead to defeat 77% of the time" }); return; }
-      if (usRun >= 3) { setMAlert({ type: "surge", icon: "\uD83D\uDD25", msg: usRun + " unanswered scores", sub: "Keep the pressure on restarts" }); return; }
-      // Check kickout loss streak
-      var kos = evts.filter(function(e) { return e.ev && e.ev.id === "kickout" && e.team === "h"; });
-      var koLoss = 0;
-      for (var j = kos.length - 1; j >= 0; j--) {
-        if (kos[j].outcome === "Lost clean" || kos[j].outcome === "Break lost") koLoss++;
-        else break;
-      }
-      if (koLoss >= 3) { setMAlert({ type: "danger", icon: "\u26A0\uFE0F", msg: koLoss + " consecutive restart losses", sub: "KO loss streaks of 3+ occur in 83% of defeats" }); return; }
-      // Check turnover cluster (3+ in last ~5 events)
-      var recent = evts.slice(-8);
-      var recentTO = recent.filter(function(e) { return e.ev && e.ev.id === "poss" && e.team === "h"; }).length;
-      if (recentTO >= 3) { setMAlert({ type: "danger", icon: "\u26A0\uFE0F", msg: recentTO + " turnovers in last 8 events", sub: "Slow it down — turnover clusters precede scoring runs" }); return; }
-      // Check kickout win streak
-      var koWin = 0;
-      for (var k = kos.length - 1; k >= 0; k--) {
-        if (kos[k].outcome === "Won clean" || kos[k].outcome === "Break won") koWin++;
-        else break;
-      }
-      if (koWin >= 4) { setMAlert({ type: "surge", icon: "\uD83D\uDD25", msg: koWin + " consecutive restarts won", sub: "Dominant restart phase — press the advantage" }); return; }
-      // Positive: 2 unanswered opposition = early warning
-      if (oppRun >= 2) { setMAlert({ type: "warning", icon: "\u26A1", msg: "2 unanswered opposition scores", sub: "Next score is critical — pattern becomes dangerous at 3" }); return; }
-      setMAlert(null);
-    }
+        
     const [tagged, setTagged] = useState([]);
     const [nameMap, setNameMap] = useState({});
     const [subOpen, setSubOpen] = useState(false);
@@ -2770,8 +2736,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           if (maxPeriod >= 2) setPeriod(2);
         }
       });
-    }, [])
-    useEffect(function() { checkMomentum(tagged); }, [tagged.length]);;
+    }, []);
     useEffect(function() {
       if (running) {
         iv.current = setInterval(function() {
@@ -3363,7 +3328,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", fontSize: 10.5, color: C.slateD, marginTop: 14 } }, tagged.length, " events tagged so far")), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setStatsOpen(false);
     }, style: { margin: 10, padding: 16, borderRadius: 12, border: "none", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 15, cursor: "pointer" } }, "\u2190 Back to tagging"));
-    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide", style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", fontFamily: MONO, overflow: "hidden" } }, mAlert && React.createElement("div", { onClick: function() { setMAlert(null); }, style: { position: "fixed", top: 0, left: 0, right: 0, zIndex: 999, padding: "12px 16px", background: mAlert.type === "danger" ? "linear-gradient(135deg, #8b1a1a, #c0392b)" : mAlert.type === "warning" ? "linear-gradient(135deg, #7d6608, #d4a017)" : "linear-gradient(135deg, #0e6631, #27ae60)", boxShadow: "0 4px 20px rgba(0,0,0,0.5)", cursor: "pointer", animation: "slideDown 0.3s ease-out" } }, React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, React.createElement("span", { style: { fontSize: 20 } }, mAlert.icon), React.createElement("div", { style: { flex: 1 } }, React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: "#fff" } }, mAlert.msg), React.createElement("div", { style: { fontSize: 10, color: "rgba(255,255,255,0.8)", marginTop: 2 } }, mAlert.sub)), React.createElement("span", { style: { fontSize: 10, color: "rgba(255,255,255,0.5)" } }, "TAP TO DISMISS"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", padding: "7px 10px", borderBottom: "1px solid " + C.border, gap: 6 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 18 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, color: C.greenB, letterSpacing: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, club.name.toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, fontWeight: 900 } }, nota(us), " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slate } }, "(", us.g * 3 + us.p, ")"))), /* @__PURE__ */ React.createElement("div", { onClick: function() {
+    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide", style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", fontFamily: MONO, overflow: "hidden" } }, mAlert && React.createElement("div", { style: { position: "fixed", top: 0, left: 0, right: 0, zIndex: 999, padding: "12px 16px", background: mAlert.type === "danger" ? "linear-gradient(135deg, #8b1a1a, #c0392b)" : mAlert.type === "warning" ? "linear-gradient(135deg, #7d6608, #d4a017)" : "linear-gradient(135deg, #0e6631, #27ae60)", boxShadow: "0 4px 20px rgba(0,0,0,0.5)", cursor: "pointer", animation: "slideDown 0.3s ease-out" } }, React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, React.createElement("span", { style: { fontSize: 20 } }, mAlert.icon), React.createElement("div", { style: { flex: 1 } }, React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: "#fff" } }, mAlert.msg), React.createElement("div", { style: { fontSize: 10, color: "rgba(255,255,255,0.8)", marginTop: 2 } }, mAlert.sub)), null)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", padding: "7px 10px", borderBottom: "1px solid " + C.border, gap: 6 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 18 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, color: C.greenB, letterSpacing: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, club.name.toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, fontWeight: 900 } }, nota(us), " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slate } }, "(", us.g * 3 + us.p, ")"))), /* @__PURE__ */ React.createElement("div", { onClick: function() {
       setRunning(function(r) {
         return !r;
       });
@@ -5481,7 +5446,38 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [openTypes, setOpenTypes] = useState(false);
     const [openOrigins, setOpenOrigins] = useState(false);
     const [rSort, setRSort] = useState("overall");
-    const [rOpen, setROpen] = useState(false);
+    
+    var mAlert = useMemo(function() {
+      if (!tagged || tagged.length < 2) return null;
+      var scores = tagged.filter(function(e) { return (e.score || 0) > 0; });
+      if (!scores.length) return null;
+      var oppRun = 0, usRun = 0;
+      for (var i = scores.length - 1; i >= 0; i--) {
+        if (scores[i].team === "a") { oppRun++; if (usRun > 0) break; }
+        else { usRun++; if (oppRun > 0) break; }
+      }
+      if (oppRun >= 3) return { type: "danger", icon: "\u26A0\uFE0F", msg: oppRun + " unanswered opposition scores", sub: "3+ unanswered runs lead to defeat 77% of the time" };
+      if (usRun >= 3) return { type: "surge", icon: "\uD83D\uDD25", msg: usRun + " unanswered scores", sub: "Keep the pressure on restarts" };
+      var kos = tagged.filter(function(e) { return e.ev && e.ev.id === "kickout" && e.team === "h"; });
+      var koLoss = 0;
+      for (var j = kos.length - 1; j >= 0; j--) {
+        if (kos[j].outcome === "Lost clean" || kos[j].outcome === "Break lost") koLoss++;
+        else break;
+      }
+      if (koLoss >= 3) return { type: "danger", icon: "\u26A0\uFE0F", msg: koLoss + " consecutive restart losses", sub: "KO loss streaks of 3+ occur in 83% of defeats" };
+      var recent = tagged.slice(-8);
+      var recentTO = recent.filter(function(e) { return e.ev && e.ev.id === "poss" && e.team === "h"; }).length;
+      if (recentTO >= 3) return { type: "danger", icon: "\u26A0\uFE0F", msg: recentTO + " turnovers in last 8 events", sub: "Slow it down \u2014 turnover clusters precede scoring runs" };
+      var koWin = 0;
+      for (var k = kos.length - 1; k >= 0; k--) {
+        if (kos[k].outcome === "Won clean" || kos[k].outcome === "Break won") koWin++;
+        else break;
+      }
+      if (koWin >= 4) return { type: "surge", icon: "\uD83D\uDD25", msg: koWin + " consecutive restarts won", sub: "Dominant restart phase \u2014 press the advantage" };
+      if (oppRun >= 2) return { type: "warning", icon: "\u26A1", msg: "2 unanswered opposition scores", sub: "Next score is critical \u2014 pattern becomes dangerous at 3" };
+      return null;
+    }, [tagged]);
+const [rOpen, setROpen] = useState(false);
     const [reportHtml, setReportHtml] = useState(null);
     // inject print CSS to hide app chrome during print
     useEffect(function() { if (!reportHtml) return; var s = document.createElement("style"); s.textContent = "@media print { body > div > div:first-child { display: none !important; } }"; document.head.appendChild(s); return function() { document.head.removeChild(s); }; }, [reportHtml]);
