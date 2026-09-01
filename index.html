@@ -2770,7 +2770,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           if (maxPeriod >= 2) setPeriod(2);
         }
       });
-    }, []);
+    }, [])
+    useEffect(function() { checkMomentum(tagged); }, [tagged.length]);;
     useEffect(function() {
       if (running) {
         iv.current = setInterval(function() {
