@@ -5440,6 +5440,128 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }, style: { display: "flex", alignItems: "center", gap: 10, padding: "12px 12px", borderRadius: 10, background: C.bgCard, border: "1px solid " + C.border, cursor: "pointer", textAlign: "left", width: "100%" } }, /* @__PURE__ */ React.createElement("span", { style: { width: 18, height: 18, borderRadius: 5, background: draw ? C.gold : win ? C.greenB : C.red, color: C.bg, fontSize: 9, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO } }, draw ? "D" : win ? "W" : "L"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 13, color: C.white } }, m.opponent), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 13, fontWeight: 700, color: C.white } }, m.our_score, " ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, "-"), " ", m.opp_score), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 18 } }, "\u203A"));
     }));
   }
+  function PulseTimeline({ events, match, club, result }) {
+    if (!events || events.length < 5) return null;
+    var W = 340, H = 140, pad = { l: 6, r: 6, t: 20, b: 16 };
+    var cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+    var mid = pad.t + ch * 0.5;
+    
+    // Parse time and compute max seconds
+    function parseSecs(tt) {
+      if (!tt || typeof tt !== "string") return 0;
+      var p = tt.split(":");
+      return p.length === 3 ? (+p[0]*3600 + +p[1]*60 + +p[2]) : p.length === 2 ? (+p[0]*60 + +p[1]) : 0;
+    }
+    var maxSecs = 3600;
+    events.forEach(function(e) { var s = parseSecs(e.time_text); if (s > maxSecs) maxSecs = s; });
+    maxSecs = Math.max(maxSecs, 3600);
+    
+    function mx(s) { return pad.l + (s / maxSecs) * cw; }
+    function my(frac, up) { return up ? mid - frac * ch * 0.45 : mid + frac * ch * 0.45; }
+    
+    // Build event list with parsed times
+    var evts = events.map(function(e) {
+      return { secs: parseSecs(e.time_text), team: e.team, type: e.event_type, outcome: e.outcome, score: e.score || 0, player: e.player };
+    }).filter(function(e) { return e.secs > 0; }).sort(function(a,b) { return a.secs - b.secs; });
+    
+    // Compute win probability at each scoring event
+    var WP_B = -1.5251, WP_W = [0.4878, -0.3061, 1.2853, -0.2731];
+    function sigmoid(z) { return 1 / (1 + Math.exp(-Math.max(-20, Math.min(20, z)))); }
+    var usScore = 0, opScore = 0, usShots = 0, usScored = 0, usKO = 0, usKOWon = 0;
+    var wpPoints = [{ secs: 0, prob: 33 }];
+    evts.forEach(function(e) {
+      if (e.score > 0) { if (e.team === "us") usScore += e.score; else opScore += e.score; }
+      if (e.type === "Shot from play" || e.type === "Scoreable free") {
+        if (e.team === "us") { usShots++; if (e.score > 0) usScored++; }
+      }
+      if (e.type === "Kickout" && e.team === "us") {
+        usKO++;
+        if (e.outcome === "Won clean" || e.outcome === "Break won") usKOWon++;
+      }
+      if (e.score > 0 || e.type === "Kickout") {
+        var diff = usScore - opScore;
+        var minsLeft = Math.max(0, (maxSecs - e.secs) / 60) / 60;
+        var koPct = usKO > 0 ? usKOWon / usKO : 0.5;
+        var accPct = usShots > 0 ? usScored / usShots : 0.5;
+        var z = WP_B + WP_W[0]*diff + WP_W[1]*minsLeft + WP_W[2]*koPct + WP_W[3]*accPct;
+        var prob = Math.round(sigmoid(z) * 100);
+        if (!isNaN(prob)) wpPoints.push({ secs: e.secs, prob: prob });
+      }
+    });
+    
+    // SVG elements
+    var elements = [];
+    
+    // Centre line
+    elements.push(React.createElement("line", { key: "mid", x1: pad.l, y1: mid, x2: pad.l+cw, y2: mid, stroke: "#23344E", strokeWidth: 0.5 }));
+    
+    // Half-time line
+    elements.push(React.createElement("line", { key: "ht", x1: mx(1800), y1: pad.t, x2: mx(1800), y2: pad.t+ch, stroke: "#23344E", strokeWidth: 0.5, strokeDasharray: "3,2" }));
+    elements.push(React.createElement("text", { key: "htl", x: mx(1800), y: pad.t+ch+12, textAnchor: "middle", fill: "#536176", fontSize: 7, fontFamily: "Inter,system-ui,sans-serif" }, "HT"));
+    
+    // Time labels
+    [0,10,20,30,40,50,60].forEach(function(m2, i) {
+      elements.push(React.createElement("text", { key: "t"+i, x: mx(m2*60), y: pad.t+ch+12, textAnchor: "middle", fill: "#536176", fontSize: 7, fontFamily: "Inter,system-ui,sans-serif" }, m2+"'"));
+    });
+    
+    // Event spikes
+    evts.forEach(function(e, i) {
+      var x = mx(e.secs);
+      var isUs = e.team === "us";
+      var isScore = (e.type === "Shot from play" || e.type === "Scoreable free") && e.score > 0;
+      var isGoal = isScore && e.score === 3;
+      var isMiss = (e.type === "Shot from play" || e.type === "Scoreable free") && e.score === 0;
+      var isKO = e.type === "Kickout";
+      var isTO = e.type === "Possession lost";
+      var isTackle = e.type === "Tackle";
+      
+      var col, h, w, opacity;
+      if (isScore) { col = isUs ? "#34c967" : "#e0584d"; h = isGoal ? 0.85 : 0.55; w = 2; opacity = 0.85; }
+      else if (isKO) { col = "#f0c040"; h = 0.3; w = 1.2; opacity = 0.5; }
+      else if (isTO) { col = "#eb6834"; h = 0.22; w = 1.2; opacity = 0.5; }
+      else if (isTackle) { col = "#536176"; h = 0.12; w = 0.6; opacity = 0.3; }
+      else { col = "#536176"; h = 0.1; w = 0.5; opacity = 0.2; }
+      
+      elements.push(React.createElement("line", { key: "e"+i, x1: x, y1: mid, x2: x, y2: my(h, isUs), stroke: col, strokeWidth: w, opacity: opacity }));
+      
+      if (isScore) {
+        elements.push(React.createElement("circle", { key: "d"+i, cx: x, cy: my(h, isUs), r: isGoal ? 3 : 2, fill: col, opacity: 0.9 }));
+      }
+    });
+    
+    // Win probability curve
+    if (wpPoints.length > 2) {
+      var wpPath = "M" + wpPoints.map(function(p) {
+        return mx(p.secs).toFixed(1) + "," + (pad.t + ch - (p.prob / 100) * ch).toFixed(1);
+      }).join(" L");
+      elements.push(React.createElement("path", { key: "wp", d: wpPath, fill: "none", stroke: "#4a9eff", strokeWidth: 1.5, opacity: 0.8 }));
+      
+      // Fill under curve
+      var fillPath = wpPath + " L" + mx(wpPoints[wpPoints.length-1].secs).toFixed(1) + "," + (pad.t+ch) + " L" + pad.l + "," + (pad.t+ch) + " Z";
+      elements.push(React.createElement("path", { key: "wpf", d: fillPath, fill: "#4a9eff", opacity: 0.06 }));
+      
+      // Start and end WP labels
+      var first = wpPoints[0], last = wpPoints[wpPoints.length-1];
+      elements.push(React.createElement("text", { key: "wps", x: mx(first.secs)+2, y: pad.t+ch-(first.prob/100)*ch-5, fill: "#4a9eff", fontSize: 8, fontWeight: 700, fontFamily: "Inter,system-ui,sans-serif" }, first.prob+"%"));
+      elements.push(React.createElement("text", { key: "wpe", x: mx(last.secs)-2, y: pad.t+ch-(last.prob/100)*ch-5, fill: "#4a9eff", fontSize: 8, fontWeight: 700, textAnchor: "end", fontFamily: "Inter,system-ui,sans-serif" }, last.prob+"%"));
+    }
+    
+    // WP axis labels
+    elements.push(React.createElement("text", { key: "wp100", x: pad.l-2, y: pad.t+5, fill: "#536176", fontSize: 6, textAnchor: "end", fontFamily: "Inter,system-ui,sans-serif" }, "100"));
+    elements.push(React.createElement("text", { key: "wp50", x: pad.l-2, y: mid+2, fill: "#536176", fontSize: 6, textAnchor: "end", fontFamily: "Inter,system-ui,sans-serif" }, "50"));
+    
+    return React.createElement("div", { style: { padding: "14px 16px", borderRadius: 12, background: C.bgCard, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", marginBottom: 12 } },
+      React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 } },
+        React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700 } }, "\u2764\uFE0F\u200D\uD83D\uDD25 MATCH PULSE"),
+        wpPoints.length > 1 ? React.createElement("div", { style: { fontSize: 11, fontWeight: 800, fontFamily: MONO, color: wpPoints[wpPoints.length-1].prob >= 60 ? C.greenB : wpPoints[wpPoints.length-1].prob >= 40 ? "#f0c040" : "#e0584d" } }, wpPoints[wpPoints.length-1].prob + "% WIN") : null),
+      React.createElement("svg", { viewBox: "0 0 " + W + " " + H, style: { width: "100%", height: "auto" } }, elements),
+      React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 } },
+        React.createElement("span", { style: { fontSize: 8, color: "#536176", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 6, height: 6, borderRadius: 3, background: "#34c967", display: "inline-block" } }), club.name || "Us"),
+        React.createElement("span", { style: { fontSize: 8, color: "#536176", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 6, height: 6, borderRadius: 3, background: "#e0584d", display: "inline-block" } }), "Opp"),
+        React.createElement("span", { style: { fontSize: 8, color: "#536176", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 10, height: 2, borderRadius: 1, background: "#4a9eff", display: "inline-block" } }), "Win prob"),
+        React.createElement("span", { style: { fontSize: 8, color: "#536176", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 6, height: 2, background: "#f0c040", display: "inline-block" } }), "KO"),
+        React.createElement("span", { style: { fontSize: 8, color: "#536176", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 4, height: 4, background: "#eb6834", display: "inline-block" } }), "TO")));
+  }
   function matchRatings(matches, allEvents) {
     if (!matches || matches.length < 2) return {};
     var mStats = matches.map(function(m) {
@@ -5873,6 +5995,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                 React.createElement("span", { style: { color: "#cfd9e8" } }, s.name),
                 React.createElement("span", { style: { fontFamily: MONO, color: C.greenB, fontWeight: 700 } }, s.g + "-" + (s.ptot < 10 ? "0" : "") + s.ptot));
             })))),
+      isMatch && match && d._events && React.createElement(PulseTimeline, { events: (d._events || []).filter(function(e) { return e.match_id === match.id; }), match: match, club: club }),
       d.ratings && match && d.ratings[match.id] && (function() {
         var r = d.ratings[match.id];
         var clr = function(v) { return v >= 70 ? "#34c967" : v >= 45 ? "#f0c040" : "#e0584d"; };
