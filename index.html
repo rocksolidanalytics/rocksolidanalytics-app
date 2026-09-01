@@ -2784,7 +2784,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     useEffect(function() {
       taggedRef.current = tagged;
       lsSave(match.id, tagged);
-    }, [tagged]);
+    })();
     useEffect(function() {
       if (typeof window !== "undefined") window.__rsaTagging = (window.__rsaTagging || 0) + 1;
       var saved = lsLoad(match.id);
@@ -5447,7 +5447,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [openOrigins, setOpenOrigins] = useState(false);
     const [rSort, setRSort] = useState("overall");
     
-    var mAlert = useMemo(function() {
+    var mAlert = (function() {
       if (!tagged || tagged.length < 2) return null;
       var scores = tagged.filter(function(e) { return (e.score || 0) > 0; });
       if (!scores.length) return null;
