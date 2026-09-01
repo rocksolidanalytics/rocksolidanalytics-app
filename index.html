@@ -3382,11 +3382,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           }
         });
         var scoreDiff = usScore - opScore;
-        var minsLeft = Math.max(0, 60 - Math.floor((tx.current || 0) / 60)) / 60;
+        var _sec = period === 2 ? clock + 1800 : clock; var minsLeft = Math.max(0, 60 - Math.floor(_sec / 60)) / 60;
         var koPct = usKO > 0 ? usKOWon / usKO : 0.5;
         var accPct = usShots > 0 ? usScored / usShots : 0.5;
         var z = WP_B + WP_W[0] * scoreDiff + WP_W[1] * minsLeft + WP_W[2] * koPct + WP_W[3] * accPct;
-        var prob = Math.round(100 / (1 + Math.exp(-Math.max(-20, Math.min(20, z)))));
+        var prob = Math.round(100 / (1 + Math.exp(-Math.max(-20, Math.min(20, z))))); if (isNaN(prob)) return null;
         return prob;
       } catch(ex) { return null; }
     })();
