@@ -5540,6 +5540,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var fillPath = wpPath + " L" + mx(wpPoints[wpPoints.length-1].secs).toFixed(1) + "," + (pad.t+ch) + " L" + pad.l + "," + (pad.t+ch) + " Z";
       elements.push(React.createElement("path", { key: "wpf", d: fillPath, fill: "#4a9eff", opacity: 0.06 }));
       
+      // Pin final point to known result
+      var finalWP = match.our_total > match.opp_total ? 100 : match.our_total === match.opp_total ? 50 : 0;
+      if (match.our_total != null) wpPoints.push({ secs: maxSecs, prob: finalWP });
       // Start and end WP labels
       var first = wpPoints[0], last = wpPoints[wpPoints.length-1];
       elements.push(React.createElement("text", { key: "wps", x: mx(first.secs)+2, y: pad.t+ch-(first.prob/100)*ch-5, fill: "#4a9eff", fontSize: 8, fontWeight: 700, fontFamily: "Inter,system-ui,sans-serif" }, first.prob+"%"));
