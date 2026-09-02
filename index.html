@@ -5451,15 +5451,50 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var _vol = function(p) { return p.sh || 0; };
     var _big = function(p) { return p.xsd || 0; };
     var _def = function(p) { return p.tk || 0; };
-    var _inv = function(p) { return p.sh > 0 ? (p.scr||0) / p.sh + (p.tk||0) / Math.max(p.sh,1) : 0; };
-    var dims = [
-      { key: "score", label: "Scoring", pct: pRank(allPlayers.map(_pts), _pts(player)) },
-      { key: "acc", label: "Accuracy", pct: player.sh > 2 ? pRank(allPlayers.filter(function(p){return p.sh>2;}).map(_acc), _acc(player)) : 50 },
-      { key: "vol", label: "Volume", pct: pRank(allPlayers.map(_vol), _vol(player)) },
-      { key: "big", label: "Big game", pct: pRank(allPlayers.map(_big), _big(player)) },
-      { key: "def", label: "Defence", pct: pRank(allPlayers.map(_def), _def(player)) },
-      { key: "disc", label: "Involvement", pct: pRank(allPlayers.map(_inv), _inv(player)) }
-    ];
+    var _kow = function(p) { return p.kow || 0; };
+    var _tol = function(p) { return p.tol || 0; };
+    var _posRet = function(p) { var total = (p.sh||0) + (p.tk||0) + (p.kow||0) + (p.tol||0); return total > 0 ? 1 - (p.tol||0) / total : 0.5; };
+    // Auto-detect role from event distribution
+    var isDefender = (player.sh || 0) < 3;
+    var isMidfield = !isDefender && (player.tk || 0) >= (player.sh || 0);
+    var roleLabel = isDefender ? "DEFENDER" : isMidfield ? "MIDFIELDER" : "FORWARD";
+    var rolePeers = allPlayers.filter(function(p) {
+      var d2 = (p.sh||0) < 3;
+      var m2 = !d2 && (p.tk||0) >= (p.sh||0);
+      if (isDefender) return d2;
+      if (isMidfield) return m2;
+      return !d2 && !m2;
+    });
+    if (rolePeers.length < 2) rolePeers = allPlayers;
+    var dims;
+    if (isDefender) {
+      dims = [
+        { key: "tk", label: "Tackles", pct: pRank(rolePeers.map(_def), _def(player)) },
+        { key: "kow", label: "KO wins", pct: pRank(rolePeers.map(_kow), _kow(player)) },
+        { key: "ret", label: "Possession", pct: pRank(rolePeers.map(_posRet), _posRet(player)) },
+        { key: "tol", label: "Low TOs", pct: pRank(rolePeers.map(function(p){return -(p.tol||0);}), -(player.tol||0)) },
+        { key: "big", label: "Big game", pct: pRank(rolePeers.map(_big), _big(player)) },
+        { key: "vol", label: "Work rate", pct: pRank(rolePeers.map(function(p){return (p.tk||0)+(p.kow||0);}), (player.tk||0)+(player.kow||0)) }
+      ];
+    } else if (isMidfield) {
+      dims = [
+        { key: "score", label: "Scoring", pct: pRank(rolePeers.map(_pts), _pts(player)) },
+        { key: "acc", label: "Accuracy", pct: pRank(rolePeers.filter(function(p){return p.sh>2;}).map(_acc), _acc(player)) },
+        { key: "tk", label: "Tackles", pct: pRank(rolePeers.map(_def), _def(player)) },
+        { key: "kow", label: "KO wins", pct: pRank(rolePeers.map(_kow), _kow(player)) },
+        { key: "big", label: "Big game", pct: pRank(rolePeers.map(_big), _big(player)) },
+        { key: "vol", label: "Work rate", pct: pRank(rolePeers.map(function(p){return (p.sh||0)+(p.tk||0);}), (player.sh||0)+(player.tk||0)) }
+      ];
+    } else {
+      dims = [
+        { key: "score", label: "Scoring", pct: pRank(rolePeers.map(_pts), _pts(player)) },
+        { key: "acc", label: "Accuracy", pct: player.sh > 2 ? pRank(rolePeers.filter(function(p){return p.sh>2;}).map(_acc), _acc(player)) : 50 },
+        { key: "vol", label: "Volume", pct: pRank(rolePeers.map(_vol), _vol(player)) },
+        { key: "big", label: "Big game", pct: pRank(rolePeers.map(_big), _big(player)) },
+        { key: "def", label: "Defence", pct: pRank(rolePeers.map(_def), _def(player)) },
+        { key: "kow", label: "KO wins", pct: pRank(rolePeers.map(_kow), _kow(player)) }
+      ];
+    }
     var overall = Math.round(dims.reduce(function(s,d){return s+d.pct;},0) / dims.length);
     var R = 65, cx = 90, cy = 95;
     var angles = dims.map(function(_,i) { return -Math.PI/2 + (2*Math.PI*i/6); });
@@ -5473,7 +5508,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         React.createElement("div", { style: { width: 32, height: 32, borderRadius: "50%", background: clr(overall), display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: "#070c18", fontFamily: MONO } }, player.num || ""),
         React.createElement("div", { style: { flex: 1 } },
           React.createElement("div", { style: { fontSize: 14, fontWeight: 700 } }, player.name),
-          React.createElement("div", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO } }, _pts(player) + "pts \u00B7 " + (player.sh||0) + " shots \u00B7 " + (player.tk||0) + " tackles")),
+          React.createElement("div", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO } }, roleLabel + " \u00B7 " + _pts(player) + "pts \u00B7 " + (player.sh||0) + " shots \u00B7 " + (player.tk||0) + " tackles")),
         React.createElement("div", { style: { textAlign: "right" } },
           React.createElement("div", { style: { fontSize: 22, fontWeight: 900, color: clr(overall) } }, overall),
           React.createElement("div", { style: { fontSize: 7, color: C.slateD, letterSpacing: 1, fontFamily: MONO } }, "DNA SCORE")),
