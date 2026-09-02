@@ -5443,8 +5443,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   function PlayerDNA({ player, allPlayers, club, onClose }) {
     if (!player || !allPlayers || allPlayers.length < 2) return null;
     function pRank(arr, val) {
-      var below = arr.filter(function(v) { return v < val; }).length;
-      return Math.round(100 * below / Math.max(arr.length - 1, 1));
+      if (!arr.length) return 50;
+      var mn = Math.min.apply(null, arr), mx = Math.max.apply(null, arr);
+      if (mx === mn) return 50;
+      return Math.round(100 * (val - mn) / (mx - mn));
     }
     var _pts = function(p) { return 3*(p.g||0) + (p.p||0); };
     var _acc = function(p) { return p.sh > 2 ? (p.scr||0) / p.sh : 0; };
