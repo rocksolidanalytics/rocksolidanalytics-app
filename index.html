@@ -3994,6 +3994,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     return EB;
   })();
   function EditMatch({ club, match, back, onSaved }) {
+    const [isScout, setIsScout] = useState(match.scouting || false);
     const [opponent, setOpp] = useState(match.opponent || "");
     const [competition, setComp] = useState(match.competition || "League");
     const [round, setRound] = useState(match.round || "");
