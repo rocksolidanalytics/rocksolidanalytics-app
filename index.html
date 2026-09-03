@@ -7114,6 +7114,59 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             React.createElement("div", { style: { fontSize: 10, color: C.greenB, fontFamily: MONO } }, "Auto-refreshing every 12s \u00b7 ", d._events ? d._events.length : 0, " events")),
           React.createElement("button", { onClick: function() { setTick(function(t) { return t + 1; }); }, style: { background: C.greenB + "22", border: "1px solid " + C.greenB, color: C.greenB, borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 800, cursor: "pointer" } }, "\u21BB Refresh")),
         err && React.createElement("div", { style: { padding: "8px 14px", color: C.red, fontSize: 11 } }, err),
+        (function() {
+          var evts = d._events || [];
+          // Momentum alert
+          var _lspAlert = null;
+          try {
+            var _sc = evts.filter(function(e) { return (e.score || 0) > 0; });
+            if (_sc.length >= 2) {
+              var _oppR = 0, _usR = 0;
+              for (var _i = _sc.length - 1; _i >= 0; _i--) {
+                if (_sc[_i].team === "opp" || _sc[_i].team === "a") { _oppR++; if (_usR > 0) break; }
+                else { _usR++; if (_oppR > 0) break; }
+              }
+              if (_oppR >= 3) _lspAlert = { bg: "#8b1a1a", icon: "\u26A0\uFE0F", msg: _oppR + " unanswered opp scores" };
+              else if (_usR >= 3) _lspAlert = { bg: "#0e6631", icon: "\uD83D\uDD25", msg: _usR + " unanswered scores" };
+              else if (_oppR >= 2) _lspAlert = { bg: "#7d6608", icon: "\u26A1", msg: "2 unanswered opp scores" };
+            }
+            if (!_lspAlert) {
+              var _kos = evts.filter(function(e) { return e.event_type === "Kickout" && (e.team === "us"); });
+              var _kl = 0;
+              for (var _j = _kos.length - 1; _j >= 0; _j--) {
+                if (_kos[_j].outcome === "Lost clean" || _kos[_j].outcome === "Break lost") _kl++; else break;
+              }
+              if (_kl >= 3) _lspAlert = { bg: "#8b1a1a", icon: "\u26A0\uFE0F", msg: _kl + " consecutive KO losses" };
+            }
+          } catch(ex) {}
+          // Win probability
+          var _wpVal = null;
+          try {
+            var WP_B = -1.5251, WP_W = [0.4878, -0.3061, 1.2853, -0.2731];
+            var _usS = 0, _opS = 0, _usSh = 0, _usSc = 0, _usKO = 0, _usKW = 0;
+            evts.forEach(function(e) {
+              if ((e.score||0) > 0) { if (e.team === "us") _usS += e.score; else _opS += e.score; }
+              if (e.event_type === "Shot from play" || e.event_type === "Scoreable free") { if (e.team === "us") { _usSh++; if ((e.score||0) > 0) _usSc++; } }
+              if (e.event_type === "Kickout" && e.team === "us") { _usKO++; if (e.outcome === "Won clean" || e.outcome === "Break won") _usKW++; }
+            });
+            if (_usSh > 0 || _usKO > 0) {
+              var _maxT = 0; evts.forEach(function(e) { if (e.time_text) { var p = e.time_text.split(":"); var s = (+p[0]||0)*3600+(+p[1]||0)*60+(+p[2]||0); if (s > _maxT) _maxT = s; } });
+              var _ml = Math.max(0, 60 - _maxT/60) / 60;
+              var _kp = _usKO > 0 ? _usKW/_usKO : 0.5;
+              var _ap = _usSh > 0 ? _usSc/_usSh : 0.5;
+              var _z = WP_B + WP_W[0]*(_usS-_opS) + WP_W[1]*_ml + WP_W[2]*_kp + WP_W[3]*_ap;
+              _wpVal = Math.round(100 / (1 + Math.exp(-Math.max(-20, Math.min(20, _z)))));
+              if (isNaN(_wpVal)) _wpVal = null;
+            }
+          } catch(ex) {}
+          return React.createElement("div", null,
+            _lspAlert ? React.createElement("div", { style: { padding: "10px 14px", background: _lspAlert.bg, display: "flex", alignItems: "center", gap: 8 } },
+              React.createElement("span", { style: { fontSize: 18 } }, _lspAlert.icon),
+              React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: "#fff" } }, _lspAlert.msg)) : null,
+            _wpVal !== null ? React.createElement("div", { style: { padding: "8px 14px", background: "#0a1020", display: "flex", justifyContent: "center", alignItems: "center", gap: 6, borderBottom: "1px solid #23344E" } },
+              React.createElement("span", { style: { fontSize: 11, color: "#536176", fontFamily: MONO } }, "WIN PROBABILITY"),
+              React.createElement("span", { style: { fontSize: 16, fontWeight: 900, fontFamily: MONO, color: _wpVal >= 60 ? "#34c967" : _wpVal >= 40 ? "#f0c040" : "#e0584d" } }, _wpVal + "%")) : null);
+        }()),
         React.createElement(DashView, { d: d, club: club, scope: "match", match: sel, oppName: sel.opponent }));
     }
 
