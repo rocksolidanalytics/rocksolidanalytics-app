@@ -7278,7 +7278,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         setTplMatch(editMatch);
         setPhase("template");
       };
-      return /* @__PURE__ */ React.createElement(EditMatch, { club, match: editMatch, back: () => setPhase("lineups"), onSaved: () => setPhase("lineups") });
+      if (!editMatch) { setPhase("lineups"); return null; }
+      try { return /* @__PURE__ */ React.createElement(EditMatch, { club: club, match: editMatch, back: function() { setPhase("lineups"); }, onSaved: function() { setPhase("lineups"); } }); } catch(ex) { return React.createElement("div", { style: { padding: 40, color: "#e0584d" } }, "Error: " + (ex.message || ex)); }
     }
     if (phase === "template") return /* @__PURE__ */ React.createElement(TemplateEditor, { club, match: tplMatch, back: () => setPhase(tplMatch ? "editmatch" : "home"), onSaved: () => setPhase(tplMatch ? "editmatch" : "home") });
     if (phase === "videohub") return /* @__PURE__ */ React.createElement(VideoHub, { club, session, role, onPick: (m) => {
