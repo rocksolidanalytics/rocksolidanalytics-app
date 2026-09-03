@@ -1291,7 +1291,7 @@
     const [confirmDel, setConfirmDel] = useState(null);
     async function load() {
       try {
-        const m = await db.from("matches").select("id,date,opponent,status").eq("club_id", club.id).eq("scouting", false).order("date");
+        const m = await db.from("matches").select("*").eq("club_id", club.id).eq("scouting", false).order("date");
         const p = await db.from("players").select("id,name,preferred_slot").eq("club_id", club.id).order("name");
         const a = await db.from("appearances").select("match_id").eq("club_id", club.id);
         const cnt = {};
