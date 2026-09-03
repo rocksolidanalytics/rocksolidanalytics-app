@@ -5766,7 +5766,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     });
         return result;
   }
-  function DashView({ d: d0, club, scope, match, onBack, oppName, wide }) {
+  function DashView({ d: d0, club, scope, match, onBack, onEdit, oppName, wide }) {
     var ON = oppName || "Opposition";
     const [half, setHalf] = useState("all");
     const [openTypes, setOpenTypes] = useState(false);
@@ -6100,7 +6100,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var draw = match ? (match.our_total || 0) === (match.opp_total || 0) : false;
     var rc = win ? C.greenB : draw ? C.gold : C.red;
     return /* @__PURE__ */ React.createElement("div", { className: "rs-wide" },
-    isMatch && React.createElement("button", { onClick: exportCSV, style: { background: "none", border: "1px solid " + C.slate, color: C.slate, borderRadius: 8, padding: "6px 10px", fontSize: 10, fontWeight: 700, cursor: "pointer" } }, "CSV"), isMatch && React.createElement("button", { onClick: exportMatchReport, style: { background: C.greenB + "22", border: "1px solid " + C.greenB, color: C.greenB, borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 800, cursor: "pointer", marginLeft: "auto" } }, "\u21E5 Export"), isMatch && onBack && /* @__PURE__ */ React.createElement("button", { onClick: onBack, style: { display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: C.slate, cursor: "pointer", fontSize: 13, marginBottom: 12, fontFamily: MONO, padding: 0 } }, "\u2039 All matches"),
+    isMatch && React.createElement("button", { onClick: exportCSV, style: { background: "none", border: "1px solid " + C.slate, color: C.slate, borderRadius: 8, padding: "6px 10px", fontSize: 10, fontWeight: 700, cursor: "pointer" } }, "CSV"), isMatch && React.createElement("button", { onClick: exportMatchReport, style: { background: C.greenB + "22", border: "1px solid " + C.greenB, color: C.greenB, borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 800, cursor: "pointer", marginLeft: "auto" } }, "\u21E5 Export"), isMatch && onBack && /* @__PURE__ */ React.createElement("button", { onClick: onBack, style: { display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: C.slate, cursor: "pointer", fontSize: 13, marginBottom: 12, fontFamily: MONO, padding: 0 } }, "\u2039 All matches"), isMatch && onEdit && match && React.createElement("div", { onClick: function() { onEdit(match); }, style: { display: "flex", alignItems: "center", gap: 4, background: "none", border: "1px solid " + C.border, borderRadius: 6, color: C.slate, cursor: "pointer", fontSize: 11, fontFamily: MONO, padding: "4px 10px", marginBottom: 12, marginLeft: 8 } }, "\u270F\uFE0F Edit"),
     /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, margin: "2px 0 12px", alignItems: "center" } },
       React.createElement("span", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO, letterSpacing: 1, marginRight: 2 } }, "HALF"),
       [["all", "FULL GAME"], ["1", "1ST"], ["2", "2ND"]].map(function(hf) {
