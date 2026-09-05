@@ -2615,6 +2615,72 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     } catch (e) {
     }
   }
+  // ---- live match session persistence -------------------------------------
+  // The tagged events were already persisted, but the match CLOCK, PERIOD and
+  // RUNNING state were not, so backgrounding the app reset the game to 00:00 in
+  // the first half. These helpers persist the full session, and the clock is
+  // stored as a wall-clock anchor rather than a counter so it stays correct even
+  // if the browser kills the page for the whole of half-time.
+  function sessKey(mid) {
+    return "rsa_sess_" + mid;
+  }
+  function sessSave(mid, s) {
+    try {
+      window.localStorage.setItem(sessKey(mid), JSON.stringify(s));
+    } catch (e) {
+    }
+  }
+  function sessLoad(mid) {
+    try {
+      var r = window.localStorage.getItem(sessKey(mid));
+      return r ? JSON.parse(r) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function sessClear(mid) {
+    try {
+      window.localStorage.removeItem(sessKey(mid));
+    } catch (e) {
+    }
+  }
+  // Derive the live clock from the anchor. Immune to background throttling,
+  // tab suspension and full page kills.
+  function sessClock(s) {
+    if (!s) return 0;
+    var base = s.clockBase || 0;
+    if (s.running && s.anchor) base += (Date.now() - s.anchor) / 1000;
+    return Math.max(0, Math.floor(base));
+  }
+  // Pointer to the match currently being tagged, so a reload can walk straight
+  // back into the tagger instead of dumping the analyst on the home screen.
+  function activeSet(mid, clubId) {
+    try {
+      window.localStorage.setItem("rsa_active", JSON.stringify({
+        matchId: mid, clubId: clubId || null, ts: Date.now()
+      }));
+    } catch (e) {
+    }
+  }
+  function activeGet() {
+    try {
+      var r = window.localStorage.getItem("rsa_active");
+      if (!r) return null;
+      var a = JSON.parse(r);
+      // A stale pointer from days ago should not hijack the app.
+      if (!a || !a.matchId) return null;
+      if (Date.now() - (a.ts || 0) > 6 * 3600 * 1000) return null;
+      return a;
+    } catch (e) {
+      return null;
+    }
+  }
+  function activeClear() {
+    try {
+      window.localStorage.removeItem("rsa_active");
+    } catch (e) {
+    }
+  }
   function cleanRow(o) {
     var r = {};
     for (var k in o) {
@@ -2673,10 +2739,15 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [edPl, setEdPl] = useState(void 0);
     const [edLoc, setEdLoc] = useState(null);
     const [edLocOpen, setEdLocOpen] = useState(false);
-    const [clock, setClock] = useState(0);
-    const [running, setRunning] = useState(false);
+    const _sess0 = (function() {
+      try { return sessLoad(match.id); } catch (e) { return null; }
+    })();
+    const clockBase = useRef(_sess0 ? (_sess0.clockBase || 0) : 0);
+    const clockAnchor = useRef(_sess0 && _sess0.running ? (_sess0.anchor || Date.now()) : null);
+    const [clock, setClock] = useState(_sess0 ? sessClock(_sess0) : 0);
+    const [running, setRunning] = useState(_sess0 ? !!_sess0.running : false);
     const [dirPicked, setDirPicked] = useState(match.attack_up != null);
-    const [period, setPeriod] = useState(1);
+    const [period, setPeriod] = useState(_sess0 && _sess0.period ? _sess0.period : 1);
     const [dismissedMsg, setDismissedMsg] = useState(null);
     const [tagged, setTagged] = useState([]);
     const [nameMap, setNameMap] = useState({});
@@ -2694,7 +2765,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [oppNameMap, setOppNameMap] = useState({});
     const [statsOpen, setStatsOpen] = useState(false);
     const [stHalf, setStHalf] = useState("all");
-    const [halfEnded, setHalfEnded] = useState(false);
+    const [halfEnded, setHalfEnded] = useState(_sess0 ? !!_sess0.halfEnded : false);
     const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine !== false : true);
     const [customEvents, setCustomEvents] = useState([]);
     const [stTeam, setStTeam] = useState("us");
@@ -2725,7 +2796,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }, []);
     useEffect(function() {
       db.from("events").select("*").eq("match_id", match.id).order("seq", { ascending: true }).then(function(r) {
-        if (r.data && r.data.length && tagged.length === 0) {
+        // taggedRef is live; `tagged` here is the mount-time closure and is
+        // always []. Reading the ref stops a slow DB fetch from clobbering
+        // events restored from localStorage — which would silently drop any
+        // event tagged while offline.
+        if (r.data && r.data.length && (taggedRef.current || []).length === 0) {
           var EVM = { "Kickout": "kickout", "Shot from play": "shot", "Scoreable free": "free", "Possession lost": "poss", "Tackle": "tackle", "Ruck": "ruck", "Bookings": "card" };
           var loaded = r.data.map(function(e) {
             return { id: e.id, team: e.team === "us" ? "h" : "a", ev: { id: EVM[e.event_type] || "shot" }, outcome: e.outcome, num: null, player: e.player, x: e.x, y: e.y, score: e.score || 0, period: e.period || 1, seq: e.seq, time_text: e.time_text, time_secs: e.time_secs, _db: true };
@@ -2737,20 +2812,54 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         }
       });
     }, []);
+    // Wall-clock timer. The old implementation incremented a counter once a
+    // second, which mobile browsers throttle to a crawl in the background and
+    // lose entirely if the page is killed. This derives the clock from a
+    // timestamp anchor instead, so it stays correct across app switches, phone
+    // locks and full reloads.
     useEffect(function() {
       if (running) {
-        iv.current = setInterval(function() {
-          setClock(function(c) {
-            return c + 1;
-          });
-        }, 1e3);
+        if (!clockAnchor.current) clockAnchor.current = Date.now();
+        var tickNow = function() {
+          setClock(Math.max(0, Math.floor(
+            clockBase.current + (Date.now() - clockAnchor.current) / 1000)));
+        };
+        tickNow();
+        iv.current = setInterval(tickNow, 1000);
       } else {
+        if (clockAnchor.current) {
+          clockBase.current += (Date.now() - clockAnchor.current) / 1000;
+          clockAnchor.current = null;
+        }
         clearInterval(iv.current);
+        setClock(Math.max(0, Math.floor(clockBase.current)));
       }
       return function() {
         clearInterval(iv.current);
       };
     }, [running]);
+    // Re-derive the clock the moment the app comes back to the foreground, and
+    // force a save the moment it leaves. pagehide is the last reliable hook
+    // before iOS/Android reclaim the page.
+    useEffect(function() {
+      var onVis = function() {
+        if (document.visibilityState === "visible") {
+          if (running && clockAnchor.current) {
+            setClock(Math.max(0, Math.floor(
+              clockBase.current + (Date.now() - clockAnchor.current) / 1000)));
+          }
+        } else {
+          persistSession();
+        }
+      };
+      var onHide = function() { persistSession(); };
+      document.addEventListener("visibilitychange", onVis);
+      window.addEventListener("pagehide", onHide);
+      return function() {
+        document.removeEventListener("visibilitychange", onVis);
+        window.removeEventListener("pagehide", onHide);
+      };
+    });
     function flush() {
       if (flushing.current) return Promise.resolve();
       if (typeof navigator !== "undefined" && navigator.onLine === false) return Promise.resolve();
@@ -2781,10 +2890,29 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         flushing.current = false;
       });
     }
+    function persistSession() {
+      try {
+        sessSave(match.id, {
+          clockBase: clockBase.current,
+          anchor: clockAnchor.current,
+          running: running,
+          period: period,
+          halfEnded: halfEnded,
+          savedAt: Date.now()
+        });
+        activeSet(match.id, club && club.id);
+      } catch (e) {
+      }
+    }
     useEffect(function() {
       taggedRef.current = tagged;
       lsSave(match.id, tagged);
     }, [tagged]);
+    // Any change to the game state is written through immediately. A phone can
+    // be locked at any moment; there is no safe window to batch this.
+    useEffect(function() {
+      persistSession();
+    }, [running, period, halfEnded, clock]);
     useEffect(function() {
       if (typeof window !== "undefined") window.__rsaTagging = (window.__rsaTagging || 0) + 1;
       var saved = lsLoad(match.id);
@@ -3079,7 +3207,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var u = score("us"), o = score("opp");
       await db.from("matches").update({ status: "final", our_score: nota(u), opp_score: nota(o), our_total: u.g * 3 + u.p, opp_total: o.g * 3 + o.p }).eq("id", match.id);
       db.from("matches").update({ h2_added_secs: Math.max(0, clock - 1800) }).eq("id", match.id).then(function() {}).catch(function() {});
-      if (pendN === 0) lsClear(match.id);
+      if (pendN === 0) { lsClear(match.id); sessClear(match.id); activeClear(); }
       back();
     }
     var t = tx.current, us = score("us"), op = score("opp");
@@ -3152,6 +3280,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       db.from("matches").update({ h1_added_secs: Math.max(0, clock - 1800) }).eq("id", match.id).then(function() {}).catch(function() {});
     } } : period === 1 && halfEnded ? { l: "START 2ND HALF", bg: C.greenB, fn: function() {
       setPeriod(2);
+      clockBase.current = 0;
+      clockAnchor.current = Date.now();
       setClock(0);
       setHalfEnded(false);
       setRunning(true);
@@ -7227,6 +7357,20 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           loadCount(c.data.id);
           setPhase("home");
       db.from("matches").select("*").eq("club_id", prof.data.club_id).neq("status", "final").order("date", { ascending: false }).limit(1).then(function(r) { if (r.data && r.data[0]) setResumeMatch(r.data[0]); });
+      // If the analyst was mid-match when the browser reclaimed the page, walk
+      // straight back into the tagger rather than stranding them on the home
+      // screen with a running game. The pointer expires after 6 hours and is
+      // cleared on FULL TIME, so this cannot hijack a normal launch.
+      (function() {
+        var act = activeGet();
+        if (!act) return;
+        db.from("matches").select("*").eq("id", act.matchId).maybeSingle().then(function(mr) {
+          if (!mr.data) { activeClear(); return; }
+          if (mr.data.status === "final") { activeClear(); return; }
+          setTagMatch(mr.data);
+          setPhase("tagger");
+        }).catch(function() {});
+      })();
           return;
         }
       }
