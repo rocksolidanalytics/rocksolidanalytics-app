@@ -2795,6 +2795,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [flash, setFlash] = useState(null);
     const [oppNameMap, setOppNameMap] = useState({});
     const [statsOpen, setStatsOpen] = useState(false);
+    const [teamOpen, setTeamOpen] = useState(false);
+    const [teamSide, setTeamSide] = useState("us");
     const [stHalf, setStHalf] = useState("all");
     const [halfEnded, setHalfEnded] = useState(_sess0 ? !!_sess0.halfEnded : false);
     const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine !== false : true);
@@ -3502,6 +3504,159 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return { grid: g, med };
     }
     if (!dirPicked && !running && tagged.length === 0) return /* @__PURE__ */ React.createElement("div", { className: "rsa-screen", style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, letterSpacing: 2, color: C.slateD, fontFamily: MONO, marginBottom: 18 } }, "BEFORE THROW-IN"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800, marginBottom: 6 } }, "Which end are we attacking?"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slateD, marginBottom: 28 } }, "This sets pitch orientation for shots & kickouts"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 12, width: "100%" } }, /* @__PURE__ */ React.createElement("button", { onClick: function() { setAttackUp(true); db.from("matches").update({ attack_up: true }).eq("id", match.id).then(function(){},function(){}); setDirPicked(true); }, style: { flex: 1, padding: "20px 0", borderRadius: 12, border: "1px solid " + C.greenB, background: C.greenB + "18", color: C.greenB, fontWeight: 800, fontSize: 14, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 24 } }, "\u2191"), "Top of screen"), /* @__PURE__ */ React.createElement("button", { onClick: function() { setAttackUp(false); db.from("matches").update({ attack_up: false }).eq("id", match.id).then(function(){},function(){}); setDirPicked(true); }, style: { flex: 1, padding: "20px 0", borderRadius: 12, border: "1px solid " + C.greenB, background: C.greenB + "18", color: C.greenB, fontWeight: 800, fontSize: 14, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 24 } }, "\u2193"), "Bottom of screen")));
+    if (teamOpen) {
+      // Live team sheet. Reads straight off `tagged`, so it reflects unsynced
+      // events too and works with no network.
+      var _sideIsUs = teamSide === "us";
+      var _map = _sideIsUs ? nameMap : oppNameMap;
+      var _teamKey = _sideIsUs ? "us" : "opp";
+      var _label = _sideIsUs
+        ? (_scNames ? _scNames[0].trim() : club.name)
+        : (_scNames ? _scNames[1].trim() : (match.opponent || "Opposition"));
+
+      // Which jersey does this event belong to? Player is stored either as the
+      // resolved name or as "#N" when the squad has no entry for that number.
+      var _numOf = function(pl) {
+        if (!pl) return null;
+        if (String(pl).charAt(0) === "#") {
+          var n = parseInt(String(pl).slice(1), 10);
+          return isNaN(n) ? null : n;
+        }
+        for (var k in _map) {
+          if (Object.prototype.hasOwnProperty.call(_map, k) && _map[k] === pl) return parseInt(k, 10);
+        }
+        return null;
+      };
+
+      var _rows = {};
+      var _ensure = function(n) {
+        if (!_rows[n]) _rows[n] = { num: n, name: _map[n] || null, g: 0, p: 0, cards: [], shots: 0 };
+        return _rows[n];
+      };
+      // Everyone named on the teamsheet appears, even with no involvement yet.
+      for (var _k in _map) {
+        if (Object.prototype.hasOwnProperty.call(_map, _k)) _ensure(parseInt(_k, 10));
+      }
+      tagged.forEach(function(r) {
+        if (r.team !== _teamKey) return;
+        var n = _numOf(r.player);
+        if (n == null) return;
+        var row = _ensure(n);
+        if (r.event_type === "Shot from play" || r.event_type === "Scoreable free") {
+          row.shots++;
+          if ((r.score || 0) === 3) row.g++;
+          else if ((r.score || 0) > 0) row.p += r.score;
+        }
+        if (r.event_type === "Bookings" && r.outcome) row.cards.push(r.outcome);
+      });
+
+      var _list = Object.keys(_rows).map(function(k) { return _rows[k]; })
+        .sort(function(a, b) { return a.num - b.num; });
+      var _starters = _list.filter(function(r) { return r.num <= 15; });
+      var _bench = _list.filter(function(r) { return r.num > 15; });
+
+      var _cardStyle = function(c) {
+        var lc = String(c).toLowerCase();
+        if (lc.indexOf("red") >= 0) return { bg: "#e0584d", fg: "#fff", t: "R" };
+        if (lc.indexOf("black") >= 0) return { bg: "#1a1a1a", fg: "#fff", t: "B" };
+        return { bg: "#f0c040", fg: "#1a1a1a", t: "Y" };
+      };
+
+      var _rowEl = function(r) {
+        // A red, or a second yellow, means the player is off.
+        var yellows = r.cards.filter(function(c) { return String(c).toLowerCase().indexOf("yellow") >= 0; }).length;
+        var isOff = r.cards.some(function(c) { return String(c).toLowerCase().indexOf("red") >= 0; }) || yellows >= 2;
+        var sc = (r.g || r.p) ? (r.g + "-" + (r.p < 10 ? "0" : "") + r.p) : null;
+        return React.createElement("div", { key: r.num, style: {
+            display: "flex", alignItems: "center", gap: 9, padding: "9px 10px",
+            borderBottom: "1px solid " + C.border,
+            opacity: isOff ? 0.45 : 1
+          } },
+          React.createElement("div", { style: {
+              width: 27, height: 27, borderRadius: "50%", flexShrink: 0,
+              background: isOff ? "#3a1f1f" : C.bgCard,
+              border: "1px solid " + (isOff ? "#e0584d" : C.border),
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontFamily: MONO, fontSize: 11, fontWeight: 800,
+              color: isOff ? "#e0584d" : C.white
+            } }, r.num),
+          React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+            React.createElement("div", { style: {
+                fontSize: 12.5, fontWeight: 600,
+                textDecoration: isOff ? "line-through" : "none",
+                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
+              } }, r.name || ("#" + r.num)),
+            r.shots ? React.createElement("div", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO } },
+              r.shots + (r.shots === 1 ? " shot" : " shots")) : null),
+          sc ? React.createElement("span", { style: {
+              fontFamily: MONO, fontSize: 13, fontWeight: 800, color: C.greenB, marginRight: 2
+            } }, sc) : null,
+          React.createElement("div", { style: { display: "flex", gap: 3 } },
+            r.cards.map(function(c, ci) {
+              var st = _cardStyle(c);
+              return React.createElement("span", { key: ci, title: c, style: {
+                  width: 13, height: 17, borderRadius: 2, background: st.bg, color: st.fg,
+                  fontSize: 8, fontWeight: 800, display: "flex", alignItems: "center",
+                  justifyContent: "center", fontFamily: MONO
+                } }, st.t);
+            })));
+      };
+
+      var _tot = _list.reduce(function(a, r) { return { g: a.g + r.g, p: a.p + r.p }; }, { g: 0, p: 0 });
+      var _cardCount = _list.reduce(function(a, r) { return a + r.cards.length; }, 0);
+
+      return React.createElement("div", { className: "rsa-screen", style: {
+          height: "100dvh", background: C.bg, color: C.white,
+          display: "flex", flexDirection: "column", fontFamily: MONO
+        } },
+        React.createElement("div", { style: {
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "12px 14px", borderBottom: "1px solid " + C.border
+          } },
+          React.createElement("div", { style: { flex: 1, fontSize: 11, letterSpacing: 1, color: C.greenB } },
+            "TEAM \u00B7 ", _tot.g + "-" + (_tot.p < 10 ? "0" : "") + _tot.p,
+            _cardCount ? "  \u00B7 " + _cardCount + " card" + (_cardCount === 1 ? "" : "s") : ""),
+          React.createElement("button", { onClick: function() { setTeamOpen(false); }, style: {
+              background: "none", border: "1px solid " + C.border, borderRadius: 8,
+              color: C.white, padding: "6px 13px", cursor: "pointer", fontSize: 13
+            } }, "\u2715")),
+        React.createElement("div", { style: {
+            display: "flex", gap: 6, margin: "10px 14px 4px",
+            background: C.bgCard, padding: 4, borderRadius: 11, border: "1px solid " + C.border
+          } },
+          [["us", _scNames ? _scNames[0].trim() : club.name],
+           ["opp", _scNames ? _scNames[1].trim() : (match.opponent || "Opposition")]].map(function(tt) {
+            return React.createElement("button", { key: tt[0], onClick: function() { setTeamSide(tt[0]); }, style: {
+                flex: 1, padding: "8px 0", borderRadius: 8, border: "none", cursor: "pointer",
+                background: teamSide === tt[0] ? C.greenB : "transparent",
+                color: teamSide === tt[0] ? C.bg : C.slate,
+                fontWeight: 700, fontSize: 12.5, whiteSpace: "nowrap",
+                overflow: "hidden", textOverflow: "ellipsis"
+              } }, tt[1]);
+          })),
+        React.createElement("div", { style: { flex: 1, overflow: "auto", padding: "6px 14px 16px" } },
+          _list.length === 0
+            ? React.createElement("div", { style: { fontSize: 12, color: C.slateD, padding: "20px 0", textAlign: "center", lineHeight: 1.7 } },
+                "No squad set for ", _label, ".",
+                React.createElement("br"),
+                _sideIsUs ? "Add a line-up from Edit match information." : "Opposition numbers appear here once tagged.")
+            : React.createElement("div", null,
+                React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, margin: "10px 0 4px" } }, "STARTERS"),
+                _starters.map(_rowEl),
+                _bench.length ? React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, margin: "16px 0 4px" } }, "BENCH") : null,
+                _bench.map(_rowEl))),
+        React.createElement("div", { style: {
+            display: "flex", gap: 12, justifyContent: "center",
+            padding: "8px 14px 14px", fontSize: 9, color: C.slateD, borderTop: "1px solid " + C.border
+          } },
+          [["#f0c040", "#1a1a1a", "Y", "Yellow"], ["#1a1a1a", "#fff", "B", "Black"], ["#e0584d", "#fff", "R", "Red"]].map(function(c, i2) {
+            return React.createElement("span", { key: i2, style: { display: "flex", alignItems: "center", gap: 4 } },
+              React.createElement("span", { style: {
+                  width: 11, height: 14, borderRadius: 2, background: c[0], color: c[1],
+                  fontSize: 7, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center"
+                } }, c[2]), c[3]);
+          })));
+    }
     if (statsOpen) return /* @__PURE__ */ React.createElement("div", { className: "rsa-screen", style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", fontFamily: MONO } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderBottom: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontSize: 11, letterSpacing: 1, color: C.greenB } }, "LIVE STATS \xB7 ", running ? fmtFull(dispSec).slice(3) : "--:--", " \xB7 ", period === 1 ? "1ST" : "2ND"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setStatsOpen(false);
     }, style: { background: "none", border: "1px solid " + C.border, borderRadius: 8, color: C.white, padding: "6px 13px", cursor: "pointer", fontSize: 13 } }, "\u2715")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflow: "auto", padding: "12px 14px 16px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slateD, letterSpacing: 1, marginRight: 2 } }, "HALF"), [["all","FULL"],["1","1ST"],["2","2ND"]].map(function(hf){ var on = stHalf === hf[0]; return /* @__PURE__ */ React.createElement("button", { key: hf[0], onClick: function(){ setStHalf(hf[0]); }, style: { flex: 1, padding: "7px 0", borderRadius: 8, border: "1px solid " + (on ? C.greenB : C.border), background: on ? C.greenB + "22" : "none", color: on ? C.greenB : C.slate, fontWeight: 800, fontSize: 11.5, cursor: "pointer" } }, hf[1]); })), /* @__PURE__ */ React.createElement(CompareBars, { rows: liveCompare(), club }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, margin: "16px 0 4px", background: C.bgCard, padding: 4, borderRadius: 11, border: "1px solid " + C.border } }, [["us", _scNames ? _scNames[0].trim() : club.name], ["opp", _scNames ? _scNames[1].trim() : (match.opponent || "Opposition")]].map(function(tt) {
@@ -3603,7 +3758,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }, style: { textAlign: "center", cursor: "pointer", minWidth: 78 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 900, color: running ? C.greenB : C.slate } }, running ? fmtFull(dispSec).slice(3) : "\u25B6"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, color: running ? C.greenB : C.slate } }, running ? period === 1 ? "1ST HALF" : "2ND HALF" : "START"), winProb !== null ? React.createElement("div", { style: { fontSize: 10, fontWeight: 800, fontFamily: MONO, marginTop: 2, color: winProb >= 60 ? "#34c967" : winProb >= 40 ? "#f0c040" : "#e0584d" } }, winProb + "% WIN") : null), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, color: C.gold, letterSpacing: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, (match.opponent || "OPP").toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, fontWeight: 900 } }, nota(op), " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slate } }, "(", op.g * 3 + op.p, ")")))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 12px", gap: 6, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, fontSize: 8.5 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "\u25CF TAP = ", (_scNames ? _scNames[0].trim() : club.name).split(" ")[0].toUpperCase()), /* @__PURE__ */ React.createElement("span", { style: { color: C.gold } }, "\u25CF\u25CF DBL = OPP")), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setSubOpen(true);
       setSubOff(null);
-    }, style: { fontSize: 9, color: C.blue, background: "none", border: "1px solid " + C.blue + "44", borderRadius: 7, cursor: "pointer", padding: "3px 8px", marginRight: 6, fontWeight: 800 } }, "\u21C4 SUB"), /* @__PURE__ */ React.createElement("button", { onClick: undo, disabled: tagged.length === 0, style: { fontSize: 9, color: tagged.length ? C.red : C.slate, background: "none", border: "none", cursor: tagged.length ? "pointer" : "default", opacity: tagged.length ? 1 : 0.4, padding: "3px 4px" } }, "\u21A9 UNDO")), (function() {
+    }, style: { fontSize: 9, color: C.blue, background: "none", border: "1px solid " + C.blue + "44", borderRadius: 7, cursor: "pointer", padding: "3px 8px", marginRight: 6, fontWeight: 800 } }, "\u21C4 SUB"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+      setTeamOpen(true);
+    }, style: { fontSize: 9, color: C.greenB, background: "none", border: "1px solid " + C.greenB + "44", borderRadius: 7, cursor: "pointer", padding: "3px 8px", marginRight: 6, fontWeight: 800 } }, "\u2630 TEAM"), /* @__PURE__ */ React.createElement("button", { onClick: undo, disabled: tagged.length === 0, style: { fontSize: 9, color: tagged.length ? C.red : C.slate, background: "none", border: "none", cursor: tagged.length ? "pointer" : "default", opacity: tagged.length ? 1 : 0.4, padding: "3px 4px" } }, "\u21A9 UNDO")), (function() {
       var rs = rosterState();
       var bins = Object.keys(rs.cards).map(Number).map(function(n2) {
         var c2 = rs.cards[n2];
