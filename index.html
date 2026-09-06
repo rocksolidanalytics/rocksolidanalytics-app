@@ -2726,7 +2726,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     try {
       for (var i = 0; i < window.localStorage.length; i++) {
         var k = window.localStorage.key(i);
-        if (k && k.indexOf("rsa_tag_") === 0) keys.push(k);
+        if (k && k.indexOf("rsa_tag_") === 0) keys.push(k);   // filtered by club_id below
       }
     } catch (e) {
       return Promise.resolve();
@@ -2739,7 +2739,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         } catch (e) {
           return;
         }
+        var _cc = null;
+        try { _cc = window.__rsaClubId || null; } catch (e) {}
         var pend = arr.filter(function(x) {
+          // Never push another club's queued events. RLS would reject them, but
+          // that produces error noise and can stall the queue behind a row that
+          // will never succeed.
+          if (_cc && x.club_id && x.club_id !== _cc) return false;
           return x._pending;
         });
         if (!pend.length) return;
@@ -7615,6 +7621,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         const c = await db.from("clubs").select("*").eq("id", prof.data.club_id).maybeSingle();
         if (c.data) {
           setClub(c.data);
+          try { window.__rsaClubId = c.data.id; } catch (e) {}
           loadCount(c.data.id);
           setPhase("home");
       db.from("matches").select("*").eq("club_id", prof.data.club_id).neq("status", "final").order("date", { ascending: false }).limit(1).then(function(r) { if (r.data && r.data[0]) setResumeMatch(r.data[0]); });
@@ -7625,8 +7632,15 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       (function() {
         var act = activeGet();
         if (!act) return;
-        db.from("matches").select("*").eq("id", act.matchId).maybeSingle().then(function(mr) {
+        // localStorage is per-device, not per-account. Without this check a
+        // half-finished match belonging to one club would be resumed after
+        // signing in as another. Verify on both sides: the stored pointer and
+        // the row itself must belong to the club we are signed in as.
+        if (act.clubId && act.clubId !== prof.data.club_id) { activeClear(); return; }
+        db.from("matches").select("*").eq("id", act.matchId)
+          .eq("club_id", prof.data.club_id).maybeSingle().then(function(mr) {
           if (!mr.data) { activeClear(); return; }
+          if (mr.data.club_id !== prof.data.club_id) { activeClear(); return; }
           if (mr.data.status === "final") { activeClear(); return; }
           setTagMatch(mr.data);
           setPhase("tagger");
@@ -7770,7 +7784,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     if (phase === "stats") return /* @__PURE__ */ React.createElement(Stats, { club, back: () => setPhase("home") });
     if (phase === "livepad") return /* @__PURE__ */ React.createElement(LiveStatsPad, { club, back: function() { setPhase("home"); } });
     if (phase === "gamefilm") return /* @__PURE__ */ React.createElement(GameFilm, { club, role, back: () => setPhase("home") });
-    return /* @__PURE__ */ React.createElement(Home, { club, onSignOut: () => db.auth.signOut(), onImport: () => setPhase("import"), onGameFilm: () => setPhase("gamefilm"), onLineups: () => setPhase("lineups"), onStats: () => setPhase("stats"), onNewMatch: () => setPhase("newmatch"), onVideoHub: () => setPhase("videohub"), onTemplate: () => {
+    return /* @__PURE__ */ React.createElement(Home, { club, onSignOut: () => { try { activeClear(); } catch (e) {} db.auth.signOut(); }, onImport: () => setPhase("import"), onGameFilm: () => setPhase("gamefilm"), onLineups: () => setPhase("lineups"), onStats: () => setPhase("stats"), onNewMatch: () => setPhase("newmatch"), onVideoHub: () => setPhase("videohub"), onTemplate: () => {
       setTplMatch(null);
       setPhase("template");
     }, onLive: () => setPhase("live"), onLivePad: () => setPhase("livepad"), onResume: function(m) { setTagMatch(m); setPhase("tagger"); }, resumeMatch, onTactic: () => setPhase("tactic"), onHelp: () => setPhase("help"), onSquad: () => setPhase("squad"), role, matchCount });
