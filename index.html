@@ -2627,6 +2627,69 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   // Football and ladies football kick their restarts; hurling and camogie puck
   // them. The stored event_type stays "Kickout" for every sport so historic
   // data and queries keep working — only the words shown to the user change.
+  // Recovery hatch. Any corrupt key in localStorage could otherwise crash the
+  // app on boot, and because the crash happens every reload there is no way
+  // back in from the device. ?reset=1 clears our keys and reloads clean.
+  (function() {
+    try {
+      if (typeof window === "undefined") return;
+      var p = new URLSearchParams(window.location.search);
+      if (!p.get("reset")) return;
+      var kill = [];
+      for (var i = 0; i < window.localStorage.length; i++) {
+        var k = window.localStorage.key(i);
+        if (k && k.indexOf("rsa_") === 0) kill.push(k);
+      }
+      kill.forEach(function(k) { try { window.localStorage.removeItem(k); } catch (e) {} });
+      window.history.replaceState(null, "", window.location.pathname);
+      if (typeof console !== "undefined") console.log("Rock Solid: cleared " + kill.length + " local keys");
+    } catch (e) {}
+  })();
+  // App-level crash guard. Without this a throw anywhere on the boot path
+  // renders a blank screen with no way back, which is exactly what happened.
+  var RSABoundary = (function() {
+    class EB extends React.Component {
+      constructor(p) { super(p); this.state = { err: null }; }
+      static getDerivedStateFromError(e) { return { err: e }; }
+      render() {
+        if (!this.state.err) return this.props.children;
+        var wipe = function() {
+          try {
+            var kill = [];
+            for (var i = 0; i < window.localStorage.length; i++) {
+              var k = window.localStorage.key(i);
+              if (k && k.indexOf("rsa_") === 0) kill.push(k);
+            }
+            kill.forEach(function(k) { window.localStorage.removeItem(k); });
+          } catch (e) {}
+          window.location.href = window.location.pathname;
+        };
+        return React.createElement("div", { style: {
+            minHeight: "100dvh", background: "#070c18", color: "#eef2f8",
+            padding: 28, fontFamily: "system-ui, sans-serif"
+          } },
+          React.createElement("div", { style: { fontSize: 18, fontWeight: 800, color: "#e0584d", marginBottom: 10 } },
+            "Something went wrong"),
+          React.createElement("div", { style: { fontSize: 13, color: "#b0bdd0", lineHeight: 1.6, marginBottom: 16 } },
+            "Your tagged events are safe \u2014 they are stored on the server, not on this phone. Clearing local data below will not lose any match data."),
+          React.createElement("pre", { style: {
+              fontSize: 11, color: "#f0c040", background: "#0d1525", padding: 12,
+              borderRadius: 8, whiteSpace: "pre-wrap", wordBreak: "break-word",
+              maxHeight: 180, overflow: "auto", marginBottom: 18
+            } }, String((this.state.err && (this.state.err.stack || this.state.err.message)) || this.state.err)),
+          React.createElement("button", { onClick: wipe, style: {
+              width: "100%", padding: 15, borderRadius: 11, border: "none",
+              background: "#34c967", color: "#070c18", fontWeight: 800, fontSize: 15, cursor: "pointer"
+            } }, "Clear local data & restart"),
+          React.createElement("button", { onClick: function() { window.location.reload(); }, style: {
+              width: "100%", padding: 13, borderRadius: 11, marginTop: 10,
+              border: "1px solid #23344E", background: "none", color: "#8b9ab5",
+              fontSize: 13, cursor: "pointer"
+            } }, "Just reload"));
+      }
+    }
+    return EB;
+  })();
   var _RS_SPORT = "football";
   function setSportTerms(sport) { _RS_SPORT = String(sport || "football").toLowerCase(); }
   function _isStickSport() { return _RS_SPORT === "hurling" || _RS_SPORT === "camogie"; }
@@ -7726,8 +7789,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       // screen with a running game. The pointer expires after 6 hours and is
       // cleared on FULL TIME, so this cannot hijack a normal launch.
       (function() {
-        var act = activeGet();
+        var act = null;
+        try { act = activeGet(); } catch (e) { try { activeClear(); } catch (e2) {} return; }
         if (!act) return;
+        // Clear the pointer up front. If resuming crashes, the next reload
+        // starts clean instead of repeating the crash forever.
+        try { activeClear(); } catch (e) {}
         // localStorage is per-device, not per-account. Without this check a
         // half-finished match belonging to one club would be resumed after
         // signing in as another. Verify on both sides: the stored pointer and
@@ -7738,9 +7805,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           if (!mr.data) { activeClear(); return; }
           if (mr.data.club_id !== prof.data.club_id) { activeClear(); return; }
           if (mr.data.status === "final") { activeClear(); return; }
+          try { activeSet(mr.data.id, mr.data.club_id); } catch (e) {}
           setTagMatch(mr.data);
           setPhase("tagger");
-        }).catch(function() {});
+        }).catch(function() { try { activeClear(); } catch (e) {} });
       })();
           return;
         }
@@ -7887,7 +7955,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setPhase("template");
     }, onLive: () => setPhase("live"), onLivePad: () => setPhase("livepad"), onResume: function(m) { setTagMatch(m); setPhase("tagger"); }, resumeMatch, onTactic: () => setPhase("tactic"), onHelp: () => setPhase("help"), onSquad: () => setPhase("squad"), role, matchCount });
   }
-  ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(App, null));
+  ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(RSABoundary, null, /* @__PURE__ */ React.createElement(App, null)));
 })();
 
 </script>
