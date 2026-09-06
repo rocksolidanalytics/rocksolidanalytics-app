@@ -2900,7 +2900,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           halfEnded: halfEnded,
           savedAt: Date.now()
         });
-        activeSet(match.id, club && club.id);
+        // Only claim the resume pointer once the match has real events.
+        // Otherwise opening the tagger on a match you then abandon would drag
+        // you back into it on every reload.
+        if ((taggedRef.current || []).length > 0) activeSet(match.id, club && club.id);
       } catch (e) {
       }
     }
@@ -7202,10 +7205,39 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [err, setErr] = useState("");
 
     useEffect(function() {
-      db.from("matches").select("*").eq("club_id", club.id).eq("scouting", false).order("date", { ascending: false }).limit(1).then(function(r) {
+      // Pull today's and recent candidates rather than blindly taking the
+      // newest by date. Several matches can share a date (a fixture set up
+      // twice, a duplicate created after a false start), and `order by date
+      // limit 1` returned an arbitrary one — which is how this pad ended up
+      // watching an empty match for a full game.
+      db.from("matches").select("*").eq("club_id", club.id).eq("scouting", false)
+        .order("date", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(12).then(function(r) {
         var ms = r.data || [];
         setMatches(ms);
-        if (ms.length > 0) setSel(ms[0]);
+        if (!ms.length) return;
+        // Choose the match with genuine live activity: most events, and among
+        // those the most recently created. Falls back to the newest match.
+        var ids = ms.map(function(m2) { return m2.id; });
+        db.from("events").select("match_id,created_at").in("match_id", ids)
+          .then(function(er) {
+            var cnt = {}, last = {};
+            (er.data || []).forEach(function(e) {
+              cnt[e.match_id] = (cnt[e.match_id] || 0) + 1;
+              if (!last[e.match_id] || e.created_at > last[e.match_id]) last[e.match_id] = e.created_at;
+            });
+            var live = ms.filter(function(m2) { return (cnt[m2.id] || 0) > 0; });
+            if (live.length) {
+              live.sort(function(a, b) {
+                if (last[b.id] !== last[a.id]) return last[b.id] < last[a.id] ? -1 : 1;
+                return (cnt[b.id] || 0) - (cnt[a.id] || 0);
+              });
+              setSel(live[0]);
+            } else {
+              setSel(ms[0]);
+            }
+          }).catch(function() { setSel(ms[0]); });
       });
     }, []);
 
