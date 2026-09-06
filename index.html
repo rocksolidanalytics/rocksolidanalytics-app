@@ -3665,7 +3665,73 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }
     if (statsOpen) return /* @__PURE__ */ React.createElement("div", { className: "rsa-screen", style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", fontFamily: MONO } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderBottom: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontSize: 11, letterSpacing: 1, color: C.greenB } }, "LIVE STATS \xB7 ", running ? fmtFull(dispSec).slice(3) : "--:--", " \xB7 ", period === 1 ? "1ST" : "2ND"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setStatsOpen(false);
-    }, style: { background: "none", border: "1px solid " + C.border, borderRadius: 8, color: C.white, padding: "6px 13px", cursor: "pointer", fontSize: 13 } }, "\u2715")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflow: "auto", padding: "12px 14px 16px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slateD, letterSpacing: 1, marginRight: 2 } }, "HALF"), [["all","FULL"],["1","1ST"],["2","2ND"]].map(function(hf){ var on = stHalf === hf[0]; return /* @__PURE__ */ React.createElement("button", { key: hf[0], onClick: function(){ setStHalf(hf[0]); }, style: { flex: 1, padding: "7px 0", borderRadius: 8, border: "1px solid " + (on ? C.greenB : C.border), background: on ? C.greenB + "22" : "none", color: on ? C.greenB : C.slate, fontWeight: 800, fontSize: 11.5, cursor: "pointer" } }, hf[1]); })), /* @__PURE__ */ React.createElement(CompareBars, { rows: liveCompare(), club }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, margin: "16px 0 4px", background: C.bgCard, padding: 4, borderRadius: 11, border: "1px solid " + C.border } }, [["us", _scNames ? _scNames[0].trim() : club.name], ["opp", _scNames ? _scNames[1].trim() : (match.opponent || "Opposition")]].map(function(tt) {
+    }, style: { background: "none", border: "1px solid " + C.border, borderRadius: 8, color: C.white, padding: "6px 13px", cursor: "pointer", fontSize: 13 } }, "\u2715")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflow: "auto", padding: "12px 14px 16px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slateD, letterSpacing: 1, marginRight: 2 } }, "HALF"), [["all","FULL"],["1","1ST"],["2","2ND"]].map(function(hf){ var on = stHalf === hf[0]; return /* @__PURE__ */ React.createElement("button", { key: hf[0], onClick: function(){ setStHalf(hf[0]); }, style: { flex: 1, padding: "7px 0", borderRadius: 8, border: "1px solid " + (on ? C.greenB : C.border), background: on ? C.greenB + "22" : "none", color: on ? C.greenB : C.slate, fontWeight: 800, fontSize: 11.5, cursor: "pointer" } }, hf[1]); })), /* @__PURE__ */ React.createElement(CompareBars, { rows: liveCompare(), club }), /* @__PURE__ */ (function() {
+      // Per-10-minute breakdown, same bands as the dashboard Periods tab.
+      // At half-time this is the fastest read on which block you lost.
+      var _blocks = [["0-10",0,600],["10-20",600,1200],["20-30",1200,1800],
+                     ["30-40",1800,2400],["40-50",2400,3000],["50-60",3000,3600],
+                     ["60+",3600,99999]];
+      var _ev = tagged.map(function(r) {
+        var s = r.time_secs != null ? r.time_secs : t2s(r.time_text);
+        return { s: s == null ? 0 : s, team: r.team, et: r.event_type, oc: r.outcome || "", sc: r.score || 0 };
+      });
+      // Only show bands that have actually happened.
+      var _maxS = _ev.reduce(function(a, e) { return Math.max(a, e.s); }, dispSec || 0);
+      var _live = _blocks.filter(function(b) { return _maxS >= b[1]; });
+      if (!_live.length || !_ev.length) return null;
+
+      var _isShot = function(e) { return e.et === "Shot from play" || e.et === "Scoreable free"; };
+      var _koWon = function(e) { return e.oc === "Won clean" || e.oc === "Break won"; };
+      var _in = function(e, b) { return e.s >= b[1] && e.s < b[2]; };
+      var _n = function(b, fn) { return _ev.filter(function(e) { return _in(e, b) && fn(e); }).length; };
+
+      var _rows = [
+        { l: "Score", us: function(b){return _n(b,function(e){return e.team==="us"&&e.sc>0;});},
+                      op: function(b){return _n(b,function(e){return e.team==="opp"&&e.sc>0;});}, hi: true },
+        { l: "Shots", us: function(b){return _n(b,function(e){return e.team==="us"&&_isShot(e);});},
+                      op: function(b){return _n(b,function(e){return e.team==="opp"&&_isShot(e);});} },
+        { l: "Restarts won", us: function(b){return _n(b,function(e){return e.team==="us"&&e.et==="Kickout"&&_koWon(e);});},
+                      op: function(b){return _n(b,function(e){return e.team==="opp"&&e.et==="Kickout"&&_koWon(e);});} },
+        { l: "Turnovers", us: function(b){return _n(b,function(e){return e.team==="us"&&e.et==="Possession lost";});},
+                      op: function(b){return _n(b,function(e){return e.team==="opp"&&e.et==="Possession lost";});}, inv: true }
+      ];
+
+      var _cell = function(u, o, hi, inv) {
+        // Green when ahead on the metric, red when behind. Turnovers invert.
+        var good = inv ? u < o : u > o;
+        var bad = inv ? u > o : u < o;
+        var col = (u === o) ? C.slate : good ? C.greenB : "#e0584d";
+        return React.createElement("td", { style: {
+            padding: "7px 4px", textAlign: "center", fontFamily: MONO,
+            fontSize: hi ? 12 : 11, fontWeight: hi ? 800 : 600,
+            color: col, whiteSpace: "nowrap"
+          } }, u + "-" + o);
+      };
+
+      return React.createElement("div", { style: { margin: "18px 0 4px" } },
+        React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, marginBottom: 6 } },
+          "BY 10 MINUTES \u00B7 us-them"),
+        React.createElement("div", { style: { overflowX: "auto", background: C.bgCard, borderRadius: 10, border: "1px solid " + C.border } },
+          React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: 11 } },
+            React.createElement("thead", null,
+              React.createElement("tr", { style: { borderBottom: "1px solid " + C.border } },
+                React.createElement("th", { style: { padding: "7px 8px", textAlign: "left", color: C.slateD, fontSize: 9, fontFamily: MONO, fontWeight: 700 } }, ""),
+                _live.map(function(b) {
+                  var isNow = (dispSec || 0) >= b[1] && (dispSec || 0) < b[2];
+                  return React.createElement("th", { key: b[0], style: {
+                      padding: "7px 4px", textAlign: "center", fontSize: 9, fontFamily: MONO,
+                      fontWeight: 700, color: isNow ? C.greenB : C.slateD, whiteSpace: "nowrap"
+                    } }, b[0]);
+                }))),
+            React.createElement("tbody", null,
+              _rows.map(function(rw) {
+                return React.createElement("tr", { key: rw.l, style: { borderTop: "1px solid " + C.border + "66" } },
+                  React.createElement("td", { style: { padding: "7px 8px", fontSize: 11, color: "#b0bdd0", whiteSpace: "nowrap" } }, rw.l),
+                  _live.map(function(b) {
+                    return React.createElement(React.Fragment, { key: b[0] }, _cell(rw.us(b), rw.op(b), rw.hi, rw.inv));
+                  }));
+              })))));
+    })(), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, margin: "16px 0 4px", background: C.bgCard, padding: 4, borderRadius: 11, border: "1px solid " + C.border } }, [["us", _scNames ? _scNames[0].trim() : club.name], ["opp", _scNames ? _scNames[1].trim() : (match.opponent || "Opposition")]].map(function(tt) {
       return /* @__PURE__ */ React.createElement("button", { key: tt[0], onClick: function() {
         setStTeam(tt[0]);
       }, style: { flex: 1, padding: "8px 0", borderRadius: 8, border: "none", cursor: "pointer", background: stTeam === tt[0] ? C.greenB : "transparent", color: stTeam === tt[0] ? C.bg : C.slate, fontWeight: 700, fontSize: 12.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, tt[1]);
