@@ -2694,7 +2694,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   function setSportTerms(sport) { _RS_SPORT = String(sport || "football").toLowerCase(); }
   function _isStickSport() { return _RS_SPORT === "hurling" || _RS_SPORT === "camogie"; }
   function RESTART() { return _isStickSport() ? "Puckout" : "Kickout"; }
-  function RESTARTS() { return _isStickSport() ? "Puckouts" : RESTARTS(); }
+  function RESTARTS() { return _isStickSport() ? "Puckouts" : "Kickouts"; }
   function restart_() { return _isStickSport() ? "puckout" : "kickout"; }
   function restarts_() { return _isStickSport() ? "puckouts" : "kickouts"; }
   function RST() { return _isStickSport() ? "PO" : "KO"; }
