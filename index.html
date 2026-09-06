@@ -1732,6 +1732,29 @@
       }
     });
     const scorers = Object.entries(sc).map(([name, o]) => ({ name, g: o.g, tp: o.tp, ptot: o.one + 2 * o.tp, total: 3 * o.g + o.one + 2 * o.tp })).sort((a, b) => b.total - a.total);
+    // Distance banding, identical to kickData so the table agrees with the map.
+    function _koBand(e, side) {
+      if (e.x == null) return null;
+      var flip = side === "us" ? String(e.period) === "2" : String(e.period) !== "2";
+      var x = e.x, y = e.y == null ? 0.5 : e.y;
+      if (flip) { x = 1 - x; y = 1 - y; }
+      var f = koFixOrient({ x: x, y: y });
+      var dist = (1 - f.x) * 144;
+      return dist < 45 ? "short" : dist <= 65 ? "mid" : "long";
+    }
+    function _koSplit(list, side) {
+      var out = { short: { n: 0, w: 0 }, mid: { n: 0, w: 0 }, long: { n: 0, w: 0 }, unplaced: 0 };
+      list.forEach(function(e) {
+        var b = _koBand(e, side);
+        if (!b) { out.unplaced++; return; }
+        out[b].n++;
+        if (KO_WON.has(e.outcome)) out[b].w++;
+      });
+      ["short", "mid", "long"].forEach(function(k) {
+        out[k].pct = out[k].n ? Math.round(100 * out[k].w / out[k].n) : null;
+      });
+      return out;
+    }
     const ko = us.filter((e) => e.event_type === "Kickout");
     const koWon = ko.filter((e) => KO_WON.has(e.outcome)).length;
     const oko = opp.filter((e) => e.event_type === "Kickout");
@@ -1822,6 +1845,12 @@
       }).length;
     }
     const usAll = countShots(us), opAll = countShots(opp);
+    // Split the shot profile. Overall accuracy blends placed balls with open
+    // play and can mask either one.
+    var usPlay = us.filter(function(e) { return e.event_type === "Shot from play"; });
+    var opPlay = opp.filter(function(e) { return e.event_type === "Shot from play"; });
+    var usPlaySc = usPlay.filter(function(e) { return (e.score || 0) > 0; }).length;
+    var opPlaySc = opPlay.filter(function(e) { return (e.score || 0) > 0; }).length;
     var usFrees = us.filter(function(e) { return e.event_type === "Scoreable free"; });
     var opFrees = opp.filter(function(e) { return e.event_type === "Scoreable free"; });
     var usFreeSc = usFrees.filter(function(e) { return (e.score || 0) > 0; }).length;
@@ -1867,6 +1896,8 @@
       { label: "Shots", us: usAll, opp: opAll },
       { label: "Scores from play", us: nPlayScore(us), opp: nPlayScore(opp) },
       { label: "Accuracy", us: usAll ? Math.round(100 * countScored(us) / usAll) : 0, opp: opAll ? Math.round(100 * countScored(opp) / opAll) : 0, pct: true },
+      { label: "Shots from play", us: usPlay.length, opp: opPlay.length },
+      { label: "Play accuracy", us: usPlay.length ? Math.round(100 * usPlaySc / usPlay.length) : 0, opp: opPlay.length ? Math.round(100 * opPlaySc / opPlay.length) : 0, pct: true },
       { label: "Frees taken", us: usFrees.length, opp: opFrees.length },
       { label: "Frees scored", us: usFreeSc, opp: opFreeSc },
       { label: "Free accuracy", us: usFrees.length ? Math.round(100 * usFreeSc / usFrees.length) : 0, opp: opFrees.length ? Math.round(100 * opFreeSc / opFrees.length) : 0, pct: true },
@@ -2165,8 +2196,8 @@
       sf,
       sa,
       scorers,
-      ko: { won: koWon, total: ko.length, pct: ko.length ? Math.round(100 * koWon / ko.length) : 0, brkW: koBrkW, brkT: koBrkT, brkPct: koBrkT ? Math.round(100 * koBrkW / koBrkT) : 0 },
-      oko: { won: okoWon, total: oko.length, pct: oko.length ? Math.round(100 * okoWon / oko.length) : 0, brkW: okoBrkW, brkT: okoBrkT, brkPct: okoBrkT ? Math.round(100 * okoBrkW / okoBrkT) : 0 },
+      ko: { split: _koSplit(ko, "us"), won: koWon, total: ko.length, pct: ko.length ? Math.round(100 * koWon / ko.length) : 0, brkW: koBrkW, brkT: koBrkT, brkPct: koBrkT ? Math.round(100 * koBrkW / koBrkT) : 0 },
+      oko: { split: _koSplit(oko, "opp"), won: okoWon, total: oko.length, pct: oko.length ? Math.round(100 * okoWon / oko.length) : 0, brkW: okoBrkW, brkT: okoBrkT, brkPct: okoBrkT ? Math.round(100 * okoBrkW / okoBrkT) : 0 },
       sectors,
       played: matches.length,
       benchmark: computeBenchmark(matches, events, club)
@@ -3244,6 +3275,36 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var isTO = function(r) {
         return r.event_type === "Possession lost" && (r.outcome || "").toLowerCase().indexOf("shot") < 0;
       };
+      var isPlay = function(r) { return r.event_type === "Shot from play"; };
+      var isFree = function(r) { return r.event_type === "Scoreable free"; };
+      var usPl = f("us", isPlay), opPl = f("opp", isPlay);
+      var usPlSc = f("us", function(r) { return isPlay(r) && r.score > 0; });
+      var opPlSc = f("opp", function(r) { return isPlay(r) && r.score > 0; });
+      var usFr = f("us", isFree), opFr = f("opp", isFree);
+      var usFrSc = f("us", function(r) { return isFree(r) && r.score > 0; });
+      var opFrSc = f("opp", function(r) { return isFree(r) && r.score > 0; });
+      // Restart distance bands, same thresholds as the kickout map.
+      function bandOf(r, tm) {
+        if (r.x == null) return null;
+        var flip = tm === "us" ? String(r.period) === "2" : String(r.period) !== "2";
+        var x = r.x, y = r.y == null ? 0.5 : r.y;
+        if (flip) { x = 1 - x; y = 1 - y; }
+        var fo = koFixOrient({ x: x, y: y });
+        var dd = (1 - fo.x) * 144;
+        return dd < 45 ? "short" : dd <= 65 ? "mid" : "long";
+      }
+      function bandStat(tm, band) {
+        var rows = tagged.filter(function(r) {
+          return r.team === tm && inHalf(r) && r.event_type === "Kickout" && bandOf(r, tm) === band;
+        });
+        var w = rows.filter(function(r) {
+          return r.outcome === "Won clean" || r.outcome === "Break won";
+        }).length;
+        return { n: rows.length, w: w, pct: rows.length ? Math.round(100 * w / rows.length) : 0 };
+      }
+      var bS = { us: bandStat("us", "short"), opp: bandStat("opp", "short") };
+      var bM = { us: bandStat("us", "mid"), opp: bandStat("opp", "mid") };
+      var bL = { us: bandStat("us", "long"), opp: bandStat("opp", "long") };
       var usSh = f("us", isShot), opSh = f("opp", isShot);
       var usSc = f("us", function(r) {
         return isShot(r) && r.score > 0;
@@ -3264,6 +3325,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         { label: "Score (pts)", us: us.g * 3 + us.p, opp: op.g * 3 + op.p },
         { label: "Shots", us: usSh, opp: opSh },
         { label: "Accuracy", us: usSh ? Math.round(100 * usSc / usSh) : 0, opp: opSh ? Math.round(100 * opSc / opSh) : 0, pct: true },
+        { label: "Shots from play", us: usPl, opp: opPl },
+        { label: "Play accuracy", us: usPl ? Math.round(100 * usPlSc / usPl) : 0, opp: opPl ? Math.round(100 * opPlSc / opPl) : 0, pct: true },
+        { label: "Frees taken", us: usFr, opp: opFr },
+        { label: "Frees scored", us: usFrSc, opp: opFrSc },
+        { label: "Free accuracy", us: usFr ? Math.round(100 * usFrSc / usFr) : 0, opp: opFr ? Math.round(100 * opFrSc / opFr) : 0, pct: true },
         { label: "Wides", us: f("us", function(r) {
           return isShot(r) && (r.outcome || "").toLowerCase().indexOf("wide") >= 0;
         }), opp: f("opp", function(r) {
@@ -3274,7 +3340,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         { label: "Possession", us: usP + opP ? Math.round(100 * usP / (usP + opP)) : 0, opp: usP + opP ? Math.round(100 * opP / (usP + opP)) : 0, pct: true },
         { label: "Tackles", us: usTk, opp: opTk }, { label: "Turnovers", us: f("us", isTO), opp: f("opp", isTO) },
         { label: "Tackles / 10 opp poss", us: opP ? Math.round(100 * usTk / opP) / 10 : 0, opp: usP ? Math.round(100 * opTk / usP) / 10 : 0 },
-        { label: "Tackle foul % \u00B7 lower is better", us: usTk ? Math.round(100 * usTkF / usTk) : 0, opp: opTk ? Math.round(100 * opTkF / opTk) : 0, pct: true }
+        { label: "Tackle foul % \u00B7 lower is better", us: usTk ? Math.round(100 * usTkF / usTk) : 0, opp: opTk ? Math.round(100 * opTkF / opTk) : 0, pct: true },
+        { label: "Restarts short", us: bS.us.n, opp: bS.opp.n },
+        { label: "Short won %", us: bS.us.pct, opp: bS.opp.pct, pct: true },
+        { label: "Restarts mid", us: bM.us.n, opp: bM.opp.n },
+        { label: "Mid won %", us: bM.us.pct, opp: bM.opp.pct, pct: true },
+        { label: "Restarts long", us: bL.us.n, opp: bL.opp.n },
+        { label: "Long won %", us: bL.us.pct, opp: bL.opp.pct, pct: true }
       ];
     }
     var halfBtn = period === 1 && !halfEnded ? { l: "END 1ST HALF", bg: C.gold, fn: function() {
