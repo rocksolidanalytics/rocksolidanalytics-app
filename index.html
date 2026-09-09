@@ -4,28 +4,28 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#070c18">
+<meta name="theme-color" content="#09090B">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Rock Solid Analytics</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; background: #070c18; }
+  html, body { margin: 0; background: #09090B; }
   body { font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
   input { font-family: inherit; }
-  input::placeholder { color: #536176; }
+  input::placeholder { color: #6B7280; }
   button:focus-visible, input:focus-visible { outline: 2px solid #34c967; outline-offset: 2px; }
   @keyframes rsSpin { to { transform: rotate(360deg); } }
   .rs-spin { animation: rsSpin .8s linear infinite; transform-origin: 12px 12px; }
   @keyframes rsRise { from { opacity:0; transform: translateY(10px) scale(.96);} to {opacity:1; transform:none;} }
   .rs-rise { animation: rsRise .6s cubic-bezier(.2,.7,.2,1) both; }
   @media (min-width: 760px){
-    body { background:#04060c; }
+    body { background:#050506; }
     #root > div { max-width: 560px; margin-left:auto; margin-right:auto;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 30px 80px rgba(0,0,0,.6); }
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.10), 0 30px 80px rgba(0,0,0,.6); }
     #root > div.rs-wide { max-width: 1040px; }
   }
-@keyframes rsaIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.rsa-screen{animation:rsaIn .17s ease-out}@media (min-width:760px){.rsa-home-tiles{display:grid!important;grid-template-columns:1fr 1fr;gap:12px}.rsa-home-tiles>button{margin-top:0!important}.rsa-gf-detail{flex-direction:row!important;flex:1;min-height:0}.rsa-gf-video{position:sticky!important;top:0;width:55%!important;flex-shrink:0;align-self:flex-start}.rsa-gf-events{flex:1;overflow-y:auto!important;min-height:0}}@keyframes rsaShim{0%{background-position:-220px 0}100%{background-position:220px 0}}.rsa-skel{background:#101a2c;background-image:linear-gradient(90deg,#101a2c 0px,#18253c 110px,#101a2c 220px);background-size:440px 100%;animation:rsaShim 1.1s linear infinite;border-radius:8px}@media (prefers-reduced-motion:reduce){.rsa-screen{animation:none}.rsa-skel{animation:none}}@keyframes rsaCount{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.rsa-count{animation:rsaCount .4s ease-out}@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes rsaIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.rsa-screen{animation:rsaIn .17s ease-out}@media (min-width:760px){.rsa-home-tiles{display:grid!important;grid-template-columns:1fr 1fr;gap:12px}.rsa-home-tiles>button{margin-top:0!important}.rsa-gf-detail{flex-direction:row!important;flex:1;min-height:0}.rsa-gf-video{position:sticky!important;top:0;width:55%!important;flex-shrink:0;align-self:flex-start}.rsa-gf-events{flex:1;overflow-y:auto!important;min-height:0}}@keyframes rsaShim{0%{background-position:-220px 0}100%{background-position:220px 0}}.rsa-skel{background:#141417;background-image:linear-gradient(90deg,#141417 0px,#1F1F24 110px,#141417 220px);background-size:440px 100%;animation:rsaShim 1.1s linear infinite;border-radius:8px}@media (prefers-reduced-motion:reduce){.rsa-screen{animation:none}.rsa-skel{animation:none}}@keyframes rsaCount{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.rsa-count{animation:rsaCount .4s ease-out}@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
 </style>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -46,21 +46,21 @@
   const BRAY_CREST = "data:image/png;base64,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";
 
   const C = {
-    bg: "#070c18",
-    bgCard: "#0d1525",
-    field: "#0a1222",
-    border: "#172238",
-    borderB: "#1f3157",
-    navy: "#0B1C35",
+    bg: "#09090B",
+    bgCard: "#141417",
+    field: "#0F0F12",
+    border: "#232327",
+    borderB: "#33333A",
+    navy: "#16161A",
     green: "#1e5c38",
     greenB: "#34c967",
     blue: "#4a9eff",
     gold: "#f0c040",
     red: "#e0584d",
-    slate: "#7a90aa",
-    slateD: "#536176",
-    white: "#eef2f8",
-    navyL: "#16294a"
+    slate: "#9CA3AF",
+    slateD: "#6B7280",
+    white: "#FFFFFF",
+    navyL: "#1C1C21"
   };
   const MONO = "ui-monospace, 'SF Mono', Menlo, monospace";
   const FORMATION = [[1], [2, 3, 4], [5, 6, 7], [8, 9], [10, 11, 12], [13, 14, 15]];
@@ -725,96 +725,75 @@
     }, [role]);
     var isPlayer = role === "player";
     const sport = SPORTS.find((s) => s.id === club.sport);
-    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide", style: { minHeight: "100dvh", background: C.bg, color: C.white, padding: "20px 18px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 22 } }, /* @__PURE__ */ React.createElement("img", { src: LOGO, alt: "", width: 30, height: 30 }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 800 } }, "Rock Solid ", /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "Analytics"))), /* @__PURE__ */ React.createElement("button", { onClick: onSignOut, style: { background: "none", border: `1px solid ${C.border}`, borderRadius: 9, color: C.slate, fontSize: 11, padding: "7px 12px", cursor: "pointer", fontFamily: MONO } }, "Sign out")), /* @__PURE__ */ React.createElement("div", { style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 16,
-      padding: 20,
-      borderRadius: 16,
-      background: `linear-gradient(135deg,${club.colour_primary || C.navy},${C.bg})`,
-      border: `1px solid ${C.border}`
-    } }, /* @__PURE__ */ (function() { var _crests = { "972a7387-aeaa-4567-ad09-0f24f3b79e3c": BRAY_CREST, "382a6343-a360-43de-94d6-752dc2842215": EADESTOWN_CREST }; var _cs = _crests[club.id]; return _cs ? React.createElement("img", { src: _cs, alt: "", style: { width: 72, height: 72, objectFit: "contain" } }) : React.createElement(Jersey, { primary: club.colour_primary, secondary: club.colour_secondary, size: 72 }); })(), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 22, fontWeight: 800 } }, club.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#cfd9e8", fontFamily: MONO, marginTop: 3 } }, club.county, " \xB7 ", sport ? sport.label : club.sport, !club.verified && /* @__PURE__ */ React.createElement("span", { style: { marginLeft: 8, color: C.gold } }, "\xB7 unverified")))), /* @__PURE__ */ React.createElement("button", { onClick: onStats, style: {
-      width: "100%",
-      marginTop: 18,
-      padding: 18,
-      borderRadius: 14,
-      cursor: "pointer",
-      textAlign: "left",
-      background: `linear-gradient(135deg,${C.greenB},${C.green})`,
-      border: "none",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between"
-    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.bg } }, "Dashboard"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#0c2a18", marginTop: 2 } }, "Season stats, scorers, " + restarts_() + " & positions")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, color: C.bg } }, "\u2192")), !isPlayer && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 2, color: C.slateD, fontFamily: MONO, margin: "24px 0 2px" } }, "MATCH"), /* @__PURE__ */ React.createElement("button", { onClick: onNewMatch, style: {
-      width: "100%",
-      marginTop: 12,
-      padding: 18,
-      borderRadius: 14,
-      cursor: "pointer",
-      textAlign: "left",
-      background: C.bgCard,
-      border: `1px solid ${C.border}`,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between"
-    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.white } }, "New match"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#cfd9e8", marginTop: 2 } }, "Set up a game & squad, ready to tag")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22, color: C.greenB } }, "+")), !isPlayer && /* @__PURE__ */ resumeMatch && React.createElement("button", { onClick: function() { onResume(resumeMatch); }, style: { width: "100%", marginTop: 10, padding: "14px 18px", borderRadius: 14, background: C.greenB + "12", border: "1px solid " + C.greenB + "44", cursor: "pointer", display: "flex", alignItems: "center", gap: 12 } }, React.createElement("div", { style: { width: 32, height: 32, borderRadius: 8, background: C.greenB + "22", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement("span", { style: { fontSize: 14, color: C.greenB } }, "\u25B6")), React.createElement("div", { style: { textAlign: "left", flex: 1 } }, React.createElement("div", { style: { fontSize: 13, fontWeight: 800, color: C.greenB } }, "Resume Tagging"), React.createElement("div", { style: { fontSize: 11, color: C.slate, marginTop: 1, fontFamily: MONO } }, (resumeMatch.opponent || "TBC"))), React.createElement("span", { style: { fontSize: 14, color: C.greenB + "66" } }, "\u203A")),
-      React.createElement("button", { onClick: onImport, style: {
-      width: "100%",
-      marginTop: 12,
-      padding: 18,
-      borderRadius: 14,
-      cursor: "pointer",
-      textAlign: "left",
-      background: C.bgCard,
-      border: `1px solid ${C.border}`,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between"
-    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.white } }, "Import data"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#cfe6d6", marginTop: 2 } }, "Upload match CSVs to build your history")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22, color: C.greenB } }, "\u2191")), !isPlayer && /* @__PURE__ */ React.createElement("button", { onClick: onLineups, style: {
-      width: "100%",
-      marginTop: 12,
-      padding: 18,
-      borderRadius: 14,
-      cursor: "pointer",
-      textAlign: "left",
-      background: C.bgCard,
-      border: `1px solid ${C.border}`,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between"
-    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.white } }, "Edit match information"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, marginTop: 2 } }, "Line-ups, details, referee, venue and weather")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, color: C.greenB } }, "\u2630")), !isPlayer && /* @__PURE__ */ React.createElement("button", { onClick: onSquad, style: { width: "100%", marginTop: 12, padding: 18, borderRadius: 14, cursor: "pointer", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.white } }, "Squad"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontWeight: 600, marginTop: 2 } }, "Add players \xB7 set preferred positions")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, color: C.greenB } }, "\u25C9")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 2, color: C.slateD, fontFamily: MONO, margin: "24px 0 2px" } }, "ANALYSIS"), /* @__PURE__ */ isPlayer ? null : React.createElement("button", { onClick: onLivePad, style: { width: "100%", marginTop: 12, padding: "18px 20px", borderRadius: 14, background: C.bgCard, border: "1px solid " + C.border, cursor: "pointer", display: "flex", alignItems: "center", gap: 16 } }, React.createElement("span", { style: { fontSize: 18, color: C.gold } }, "\u25C9"), React.createElement("div", { style: { textAlign: "left", flex: 1 } }, React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.white } }, "Live Stats Pad"), React.createElement("div", { style: { fontSize: 11, color: C.slateD, marginTop: 2 } }, "Follow a match in real time"))), React.createElement("button", { onClick: onGameFilm, style: { width: "100%", marginTop: 12, padding: 18, borderRadius: 14, cursor: "pointer", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.greenB } }, "Game film"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontWeight: 600, marginTop: 2 } }, "Watch your Watch your games · jump to any event")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, color: C.greenB } }, "\u25B6")), !isPlayer && /* @__PURE__ */ React.createElement("button", { onClick: onVideoHub, style: {
-      width: "100%",
-      marginTop: 12,
-      padding: 18,
-      borderRadius: 14,
-      cursor: "pointer",
-      textAlign: "left",
-      background: C.bgCard,
-      border: "1px solid " + C.border,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between"
-    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.greenB } }, "Video tagger"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontWeight: 600, marginTop: 2 } }, "Tag a match back from footage into your dashboards")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, color: C.greenB } }, "\u25C6")), !isPlayer && club.join_code && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10, fontSize: 11, color: C.slateD, fontFamily: MONO, letterSpacing: 1 } }, "PLAYER JOIN CODE: ", /* @__PURE__ */ React.createElement("span", { style: { color: C.gold, fontWeight: 800 } }, club.join_code)), !isPlayer && hact && (function() {
+    var TILE = { width: "100%", marginTop: 12, padding: 16, borderRadius: 16, cursor: "pointer", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 14 };
+    function Badge(glyph, tint) {
+      return React.createElement("div", { style: { width: 40, height: 40, borderRadius: 12, background: tint + "1A", color: tint, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 700, lineHeight: 1, flexShrink: 0 } }, glyph);
+    }
+    function Pill(text, tint) {
+      return React.createElement("span", { style: { display: "inline-block", padding: "3px 9px", borderRadius: 999, background: tint + "1A", border: "1px solid " + tint + "4D", color: tint, fontSize: 9, fontWeight: 800, letterSpacing: 1, fontFamily: MONO, textTransform: "uppercase", whiteSpace: "nowrap" } }, text);
+    }
+    function Label(text) {
+      return React.createElement("div", { style: { fontSize: 9, letterSpacing: 2, color: C.slateD, fontFamily: MONO, fontWeight: 700, margin: "26px 0 2px" } }, text);
+    }
+    function Row(onClick, glyph, tint, title, sub, titleColor) {
+      return React.createElement("button", { onClick: onClick, style: TILE },
+        Badge(glyph, tint),
+        React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+          React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: titleColor || C.white, letterSpacing: -0.2 } }, title),
+          React.createElement("div", { style: { fontSize: 11.5, fontWeight: 500, color: C.slate, marginTop: 3, lineHeight: 1.4 } }, sub)),
+        React.createElement("span", { style: { fontSize: 15, color: C.slateD, flexShrink: 0 } }, "\u203A"));
+    }
+    return React.createElement("div", { className: "rs-wide", style: { minHeight: "100dvh", background: C.bg, color: C.white, padding: "20px 18px" } },
+      React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 22 } },
+        React.createElement("img", { src: LOGO, alt: "", width: 30, height: 30 }),
+        React.createElement("div", { style: { flex: 1 } }, React.createElement("div", { style: { fontSize: 13, fontWeight: 800, letterSpacing: -0.2 } }, "Rock Solid ", React.createElement("span", { style: { color: C.greenB } }, "Analytics"))),
+        React.createElement("button", { onClick: onSignOut, style: { background: "none", border: "1px solid " + C.border, borderRadius: 10, color: C.slate, fontSize: 11, padding: "7px 12px", cursor: "pointer", fontFamily: MONO } }, "Sign out")),
+      React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 16, padding: 20, borderRadius: 20, background: "linear-gradient(135deg," + (club.colour_primary || C.navy) + "," + C.bg + ")", border: "1px solid " + C.greenB + "4D", boxShadow: "0 0 0 1px " + C.greenB + "14, 0 10px 34px rgba(0,0,0,.55)" } },
+        (function() { var _crests = { "972a7387-aeaa-4567-ad09-0f24f3b79e3c": BRAY_CREST, "382a6343-a360-43de-94d6-752dc2842215": EADESTOWN_CREST }; var _cs = _crests[club.id]; return _cs ? React.createElement("img", { src: _cs, alt: "", style: { width: 72, height: 72, objectFit: "contain" } }) : React.createElement(Jersey, { primary: club.colour_primary, secondary: club.colour_secondary, size: 72 }); })(),
+        React.createElement("div", { style: { minWidth: 0 } },
+          React.createElement("div", { style: { fontSize: 22, fontWeight: 800, color: C.white, letterSpacing: -0.4 } }, club.name),
+          React.createElement("div", { style: { fontSize: 12.5, fontWeight: 500, color: C.slate, fontFamily: MONO, marginTop: 4 } }, club.county, " \xB7 ", sport ? sport.label : club.sport),
+          !club.verified && React.createElement("div", { style: { marginTop: 8 } }, Pill("Unverified", C.gold)))),
+      React.createElement("button", { onClick: onStats, style: { width: "100%", marginTop: 14, padding: 16, borderRadius: 16, cursor: "pointer", textAlign: "left", background: "linear-gradient(135deg," + C.greenB + "," + C.green + ")", border: "1px solid " + C.greenB + "66", boxShadow: "0 8px 28px " + C.greenB + "26", display: "flex", alignItems: "center", gap: 14 } },
+        React.createElement("div", { style: { width: 40, height: 40, borderRadius: 12, background: "rgba(0,0,0,.22)", color: "#04140a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 800, lineHeight: 1, flexShrink: 0 } }, "\u25A6"),
+        React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+          React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: "#04140a", letterSpacing: -0.2 } }, "Dashboard"),
+          React.createElement("div", { style: { fontSize: 11.5, fontWeight: 600, color: "#0c2a18", marginTop: 3 } }, "Season stats, scorers, " + restarts_() + " & positions")),
+        React.createElement("span", { style: { fontSize: 16, color: "#04140a", flexShrink: 0 } }, "\u2192")),
+      !isPlayer && Label("MATCH"),
+      Row(onNewMatch, "+", C.greenB, "New match", "Set up a game & squad, ready to tag"),
+      !isPlayer && resumeMatch && React.createElement("button", { onClick: function() { onResume(resumeMatch); }, style: { width: "100%", marginTop: 10, padding: 14, borderRadius: 16, background: C.greenB + "12", border: "1px solid " + C.greenB + "4D", boxShadow: "0 0 20px " + C.greenB + "1A", cursor: "pointer", display: "flex", alignItems: "center", gap: 14 } },
+        Badge("\u25B6", C.greenB),
+        React.createElement("div", { style: { textAlign: "left", flex: 1, minWidth: 0 } },
+          React.createElement("div", { style: { fontSize: 13, fontWeight: 800, color: C.greenB, letterSpacing: -0.2 } }, "Resume Tagging"),
+          React.createElement("div", { style: { fontSize: 11, fontWeight: 500, color: C.slate, marginTop: 2, fontFamily: MONO } }, resumeMatch.opponent || "TBC")),
+        Pill("Resume", C.greenB)),
+      Row(onImport, "\u2191", C.greenB, "Import data", "Upload match CSVs to build your history"),
+      !isPlayer && Row(onLineups, "\u2630", C.greenB, "Edit match information", "Line-ups, details, referee, venue and weather"),
+      !isPlayer && Row(onSquad, "\u25C9", C.greenB, "Squad", "Add players \xB7 set preferred positions"),
+      Label("ANALYSIS"),
+      isPlayer ? null : Row(onLivePad, "\u25C9", C.gold, "Live Stats Pad", "Follow a match in real time"),
+      Row(onGameFilm, "\u25B6", C.greenB, "Game film", "Watch your games \xB7 jump to any event", C.greenB),
+      !isPlayer && Row(onVideoHub, "\u25C6", C.greenB, "Video tagger", "Tag a match back from footage into your dashboards", C.greenB),
+      !isPlayer && club.join_code && React.createElement("div", { style: { marginTop: 12, display: "flex", alignItems: "center", gap: 9 } },
+        React.createElement("span", { style: { fontSize: 10, letterSpacing: 1, color: C.slateD, fontFamily: MONO } }, "PLAYER JOIN CODE"),
+        Pill(club.join_code, C.gold)),
+      !isPlayer && hact && (function() {
       var pls = hact.filter(function(a) { return a.role === "player"; });
       if (!pls.length) return null;
       var wk = pls.filter(function(a) { return a.last_seen && (Date.now() - new Date(a.last_seen + "T00:00:00").getTime()) / 864e5 <= 7; }).length;
-      return /* @__PURE__ */ React.createElement("button", { onClick: onSquad, style: { marginTop: 8, background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", gap: 7, fontFamily: MONO } },
-        /* @__PURE__ */ React.createElement("span", { style: { width: 7, height: 7, borderRadius: "50%", background: wk ? C.greenB : C.slateD } }),
-        /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slate, letterSpacing: 0.5 } }, /* @__PURE__ */ React.createElement("b", { style: { color: C.white } }, String(pls.length)), pls.length === 1 ? " player" : " players", " \u00b7 ", /* @__PURE__ */ React.createElement("b", { style: { color: wk ? C.greenB : C.slateD } }, String(wk)), " active this week"),
-        /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slateD } }, "\u203a"));
-    })(), !isPlayer && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: onLive, style: {
-      flex: 1,
-      minWidth: 0,
-      padding: 18,
-      borderRadius: 14,
-      cursor: "pointer",
-      textAlign: "left",
-      background: C.bgCard,
-      border: "1px solid " + C.border,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between"
-    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.gold } }, "Fan Zone"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontWeight: 600, marginTop: 2 } }, "Live scoreboard fans can follow \u2014 no login needed")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, color: C.gold } }, "\u2605")), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+      return React.createElement("button", { onClick: onSquad, style: { marginTop: 10, background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", gap: 7, fontFamily: MONO } },
+        React.createElement("span", { style: { width: 7, height: 7, borderRadius: "50%", background: wk ? C.greenB : C.slateD } }),
+        React.createElement("span", { style: { fontSize: 11, color: C.slate, letterSpacing: 0.5 } }, React.createElement("b", { style: { color: C.white } }, String(pls.length)), pls.length === 1 ? " player" : " players", " \u00b7 ", React.createElement("b", { style: { color: wk ? C.greenB : C.slateD } }, String(wk)), " active this week"),
+        React.createElement("span", { style: { fontSize: 11, color: C.slateD } }, "\u203a"));
+    })(),
+      !isPlayer && React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 12 } },
+        React.createElement("button", { onClick: onLive, style: { flex: 1, minWidth: 0, padding: 16, borderRadius: 16, cursor: "pointer", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 14 } },
+          Badge("\u2605", C.gold),
+          React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+            React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.gold, letterSpacing: -0.2 } }, "Fan Zone"),
+            React.createElement("div", { style: { fontSize: 11.5, fontWeight: 500, color: C.slate, marginTop: 3, lineHeight: 1.4 } }, "Live scoreboard fans can follow \u2014 no login needed"))),
+        React.createElement("button", { onClick: function() {
       var u = window.location.origin + window.location.pathname + "?live=" + club.id;
       if (navigator.share) {
         navigator.share({ title: "Live scoreboard \xB7 " + (club.name || ""), url: u }).catch(function() {
@@ -825,32 +804,17 @@
       } else {
         prompt("Copy this link:", u);
       }
-    }, style: { width: 76, flexShrink: 0, borderRadius: 14, cursor: "pointer", background: C.gold + "14", border: "1px solid " + C.gold + "66", color: C.gold, fontSize: 11, fontWeight: 800, fontFamily: MONO, letterSpacing: 1 } }, "SHARE", /* @__PURE__ */ React.createElement("br", null), "LINK")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 2, color: C.slateD, fontFamily: MONO, margin: "24px 0 2px" } }, "TOOLS"), /* @__PURE__ */ React.createElement("button", { onClick: onHelp, style: { width: "100%", marginTop: 12, padding: 18, borderRadius: 14, cursor: "pointer", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.white } }, "Help & support"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontWeight: 600, marginTop: 2 } }, "Ask the assistant \xB7 answers in seconds")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, color: C.greenB } }, "?")), /* @__PURE__ */ React.createElement("button", { onClick: onTactic, style: {
-      width: "100%",
-      marginTop: 12,
-      padding: 18,
-      borderRadius: 14,
-      cursor: "pointer",
-      textAlign: "left",
-      background: C.bgCard,
-      border: "1px solid " + C.border,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between"
-    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.white } }, "Tactical pad"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, marginTop: 2 } }, "Drag jerseys on a pitch to explain a setup")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, color: C.greenB } }, "\u26CA")), /* @__PURE__ */ React.createElement("button", { onClick: onTemplate, style: {
-      width: "100%",
-      marginTop: 12,
-      padding: 18,
-      borderRadius: 14,
-      cursor: "pointer",
-      textAlign: "left",
-      background: C.bgCard,
-      border: "1px solid " + C.border,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between"
-    } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.white } }, "Tagging template"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, marginTop: 2 } }, "Add your own bespoke events & outcomes")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, color: C.greenB } }, "\u2699")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: 16, borderRadius: 14, background: C.bgCard, border: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 2, color: C.slateD, fontFamily: MONO, marginBottom: 8 } }, "YOUR DATA"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: C.white, lineHeight: 1.55 } }, matchCount > 0 ? matchCount + " match" + (matchCount === 1 ? "" : "es") + " stored under your club." : "No matches yet \u2014 import your Performa history to begin.")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 24, textAlign: "center", fontSize: 11, color: C.slateD, fontFamily: MONO } }, "Signed in \xB7 data secured by row-level security"));
+    }, style: { width: 76, flexShrink: 0, borderRadius: 16, cursor: "pointer", background: C.gold + "14", border: "1px solid " + C.gold + "66", color: C.gold, fontSize: 10, fontWeight: 800, fontFamily: MONO, letterSpacing: 1 } }, "SHARE", React.createElement("br", null), "LINK")),
+      Label("TOOLS"),
+      Row(onHelp, "?", C.greenB, "Help & support", "Ask the assistant \xB7 answers in seconds"),
+      Row(onTactic, "\u26CA", C.greenB, "Tactical pad", "Drag jerseys on a pitch to explain a setup"),
+      Row(onTemplate, "\u2699", C.greenB, "Tagging template", "Add your own bespoke events & outcomes"),
+      React.createElement("div", { style: { marginTop: 16, padding: 16, borderRadius: 16, background: C.bgCard, border: "1px solid " + C.border } },
+        React.createElement("div", { style: { fontSize: 9, letterSpacing: 2, color: C.slateD, fontFamily: MONO, fontWeight: 700, marginBottom: 8 } }, "YOUR DATA"),
+        React.createElement("div", { style: { fontSize: 13, fontWeight: 500, color: C.white, lineHeight: 1.55 } }, matchCount > 0 ? matchCount + " match" + (matchCount === 1 ? "" : "es") + " stored under your club." : "No matches yet \u2014 import your Performa history to begin.")),
+      React.createElement("div", { style: { marginTop: 24, textAlign: "center", fontSize: 11, color: C.slateD, fontFamily: MONO } }, "Signed in \xB7 data secured by row-level security"));
   }
+
   function nrmL(v) {
     return (v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
   }
@@ -2698,7 +2662,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           window.location.href = window.location.pathname;
         };
         return React.createElement("div", { style: {
-            minHeight: "100dvh", background: "#070c18", color: "#eef2f8",
+            minHeight: "100dvh", background: "#09090B", color: "#FFFFFF",
             padding: 28, fontFamily: "system-ui, sans-serif"
           } },
           React.createElement("div", { style: { fontSize: 18, fontWeight: 800, color: "#e0584d", marginBottom: 10 } },
@@ -2706,13 +2670,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           React.createElement("div", { style: { fontSize: 13, color: "#b0bdd0", lineHeight: 1.6, marginBottom: 16 } },
             "Your tagged events are safe \u2014 they are stored on the server, not on this phone. Clearing local data below will not lose any match data."),
           React.createElement("pre", { style: {
-              fontSize: 11, color: "#f0c040", background: "#0d1525", padding: 12,
+              fontSize: 11, color: "#f0c040", background: "#141417", padding: 12,
               borderRadius: 8, whiteSpace: "pre-wrap", wordBreak: "break-word",
               maxHeight: 180, overflow: "auto", marginBottom: 18
             } }, String((this.state.err && (this.state.err.stack || this.state.err.message)) || this.state.err)),
           React.createElement("button", { onClick: wipe, style: {
               width: "100%", padding: 15, borderRadius: 11, border: "none",
-              background: "#34c967", color: "#070c18", fontWeight: 800, fontSize: 15, cursor: "pointer"
+              background: "#34c967", color: "#09090B", fontWeight: 800, fontSize: 15, cursor: "pointer"
             } }, "Clear local data & restart"),
           React.createElement("button", { onClick: function() { window.location.reload(); }, style: {
               width: "100%", padding: 13, borderRadius: 11, marginTop: 10,
@@ -4546,7 +4510,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         if (this.state.err) return React.createElement("div", { style: { padding: 40 } },
           React.createElement("div", { style: { color: "#e0584d", fontSize: 16, marginBottom: 10 } }, "EditMatch crashed:"),
           React.createElement("div", { style: { color: "#f0c040", fontSize: 13, fontFamily: "monospace", whiteSpace: "pre-wrap" } }, String(this.state.err.message || this.state.err)),
-          React.createElement("button", { onClick: () => this.setState({ err: null }), style: { marginTop: 16, padding: "8px 16px", background: "#34c967", border: "none", borderRadius: 6, color: "#070c18", fontWeight: 700 } }, "Retry"));
+          React.createElement("button", { onClick: () => this.setState({ err: null }), style: { marginTop: 16, padding: "8px 16px", background: "#34c967", border: "none", borderRadius: 6, color: "#09090B", fontWeight: 700 } }, "Retry"));
         return this.props.children;
       }
     }
@@ -6116,7 +6080,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? "#f0c040" : "#e0584d"; };
     return React.createElement("div", { style: { padding: "14px 16px", borderRadius: 12, background: C.bgCard, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", marginBottom: 12 } },
       React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 6 } },
-        React.createElement("div", { style: { width: 32, height: 32, borderRadius: "50%", background: clr(overall), display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: "#070c18", fontFamily: MONO } }, player.num || ""),
+        React.createElement("div", { style: { width: 32, height: 32, borderRadius: "50%", background: clr(overall), display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: "#09090B", fontFamily: MONO } }, player.num || ""),
         React.createElement("div", { style: { flex: 1 } },
           React.createElement("div", { style: { fontSize: 14, fontWeight: 700 } }, player.name),
           React.createElement("div", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO } }, roleLabel + " \u00B7 " + _pts(player) + "pts \u00B7 " + (player.sh||0) + " shots \u00B7 " + (player.tk||0) + " tackles")),
@@ -6136,7 +6100,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         dims.map(function(d) {
           return React.createElement("div", { key: d.key, style: { display: "flex", alignItems: "center", gap: 6, marginBottom: 3 } },
             React.createElement("span", { style: { flex: 1, fontSize: 10, color: "#b0bdd0" } }, d.label),
-            React.createElement("div", { style: { width: 50, height: 4, borderRadius: 2, background: "#172238" } },
+            React.createElement("div", { style: { width: 50, height: 4, borderRadius: 2, background: "#232327" } },
               React.createElement("div", { style: { width: Math.max(d.pct,2) + "%", height: 4, borderRadius: 2, background: clr(d.pct) } })),
             React.createElement("span", { style: { fontFamily: MONO, fontSize: 9, fontWeight: 800, color: clr(d.pct), minWidth: 20, textAlign: "right" } }, d.pct));
         })));
@@ -6198,11 +6162,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     
     // Half-time line
     elements.push(React.createElement("line", { key: "ht", x1: mx(1800), y1: pad.t, x2: mx(1800), y2: pad.t+ch, stroke: "#23344E", strokeWidth: 0.5, strokeDasharray: "3,2" }));
-    elements.push(React.createElement("text", { key: "htl", x: mx(1800), y: pad.t+ch+12, textAnchor: "middle", fill: "#536176", fontSize: 7, fontFamily: "Inter,system-ui,sans-serif" }, "HT"));
+    elements.push(React.createElement("text", { key: "htl", x: mx(1800), y: pad.t+ch+12, textAnchor: "middle", fill: "#6B7280", fontSize: 7, fontFamily: "Inter,system-ui,sans-serif" }, "HT"));
     
     // Time labels
     [0,10,20,30,40,50,60].forEach(function(m2, i) {
-      elements.push(React.createElement("text", { key: "t"+i, x: mx(m2*60), y: pad.t+ch+12, textAnchor: "middle", fill: "#536176", fontSize: 7, fontFamily: "Inter,system-ui,sans-serif" }, m2+"'"));
+      elements.push(React.createElement("text", { key: "t"+i, x: mx(m2*60), y: pad.t+ch+12, textAnchor: "middle", fill: "#6B7280", fontSize: 7, fontFamily: "Inter,system-ui,sans-serif" }, m2+"'"));
     });
     
     // Event spikes
@@ -6220,8 +6184,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       if (isScore) { col = isUs ? "#34c967" : "#e0584d"; h = isGoal ? 0.85 : 0.55; w = 2; opacity = 0.85; }
       else if (isKO) { col = "#f0c040"; h = 0.3; w = 1.2; opacity = 0.5; }
       else if (isTO) { col = "#eb6834"; h = 0.22; w = 1.2; opacity = 0.5; }
-      else if (isTackle) { col = "#536176"; h = 0.12; w = 0.6; opacity = 0.3; }
-      else { col = "#536176"; h = 0.1; w = 0.5; opacity = 0.2; }
+      else if (isTackle) { col = "#6B7280"; h = 0.12; w = 0.6; opacity = 0.3; }
+      else { col = "#6B7280"; h = 0.1; w = 0.5; opacity = 0.2; }
       
       elements.push(React.createElement("line", { key: "e"+i, x1: x, y1: mid, x2: x, y2: my(h, isUs), stroke: col, strokeWidth: w, opacity: opacity }));
       
@@ -6262,7 +6226,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     [0, 50, 100].forEach(function(pct) {
       var y = pad.t + ch - (pct / 100) * ch;
       elements.push(React.createElement("line", { key: "g"+pct, x1: pad.l, y1: y, x2: pad.l+cw, y2: y, stroke: "#23344E", strokeWidth: 0.3, strokeDasharray: pct === 50 ? "2,2" : "none" }));
-      elements.push(React.createElement("text", { key: "a"+pct, x: pad.l-3, y: y+3, fill: "#536176", fontSize: 7, textAnchor: "end", fontFamily: "Inter,system-ui,sans-serif" }, pct+"%"));
+      elements.push(React.createElement("text", { key: "a"+pct, x: pad.l-3, y: y+3, fill: "#6B7280", fontSize: 7, textAnchor: "end", fontFamily: "Inter,system-ui,sans-serif" }, pct+"%"));
     });
     
     return React.createElement("div", { style: { padding: "14px 16px", borderRadius: 12, background: C.bgCard, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", marginBottom: 12 } },
@@ -6271,11 +6235,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         wpPoints.length > 1 ? React.createElement("div", { style: { fontSize: 11, fontWeight: 800, fontFamily: MONO, color: wpPoints[wpPoints.length-1].prob >= 60 ? C.greenB : wpPoints[wpPoints.length-1].prob >= 40 ? "#f0c040" : "#e0584d" } }, wpPoints[wpPoints.length-1].prob + "% WIN") : null),
       React.createElement("svg", { viewBox: "0 0 " + W + " " + H, style: { width: "100%", height: "auto" } }, elements),
       React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 } },
-        React.createElement("span", { style: { fontSize: 8, color: "#536176", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 6, height: 6, borderRadius: 3, background: "#34c967", display: "inline-block" } }), club.name || "Us"),
-        React.createElement("span", { style: { fontSize: 8, color: "#536176", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 6, height: 6, borderRadius: 3, background: "#e0584d", display: "inline-block" } }), "Opp"),
-        React.createElement("span", { style: { fontSize: 8, color: "#536176", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 10, height: 2, borderRadius: 1, background: "#4a9eff", display: "inline-block" } }), "Win prob"),
-        React.createElement("span", { style: { fontSize: 8, color: "#536176", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 6, height: 2, background: "#f0c040", display: "inline-block" } }), RST()),
-        React.createElement("span", { style: { fontSize: 8, color: "#536176", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 4, height: 4, background: "#eb6834", display: "inline-block" } }), "TO")));
+        React.createElement("span", { style: { fontSize: 8, color: "#6B7280", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 6, height: 6, borderRadius: 3, background: "#34c967", display: "inline-block" } }), club.name || "Us"),
+        React.createElement("span", { style: { fontSize: 8, color: "#6B7280", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 6, height: 6, borderRadius: 3, background: "#e0584d", display: "inline-block" } }), "Opp"),
+        React.createElement("span", { style: { fontSize: 8, color: "#6B7280", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 10, height: 2, borderRadius: 1, background: "#4a9eff", display: "inline-block" } }), "Win prob"),
+        React.createElement("span", { style: { fontSize: 8, color: "#6B7280", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 6, height: 2, background: "#f0c040", display: "inline-block" } }), RST()),
+        React.createElement("span", { style: { fontSize: 8, color: "#6B7280", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 4, height: 4, background: "#eb6834", display: "inline-block" } }), "TO")));
   }
   function matchRatings(matches, allEvents) {
     if (!matches || matches.length < 2) return {};
@@ -6462,16 +6426,16 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           var sc=(e.score||0)>0; if(sc)scored++;
           if(sc){
             var isFree=e.event_type==="Scoreable free";
-            if(isFree) { svg+='<rect x="'+(px-5).toFixed(1)+'" y="'+(py-5).toFixed(1)+'" width="10" height="10" rx="2" fill="'+color+'" fill-opacity="0.85" stroke="#fff" stroke-width="0.5"/>'; if(e.player) { var _pn = e.player.match(/#(\\d+)/); if(_pn) svg+='<text x="'+px.toFixed(1)+'" y="'+(py+3).toFixed(1)+'" text-anchor="middle" fill="#070c18" font-size="7" font-weight="800" font-family="Inter,sans-serif">'+_pn[1]+'</text>'; } } else { svg+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="6" fill="'+color+'" fill-opacity="0.85" stroke="#fff" stroke-width="0.5"/>'; if(e.player) { var _pn2 = e.player.match(/#(\\d+)/); if(_pn2) svg+='<text x="'+px.toFixed(1)+'" y="'+(py+3).toFixed(1)+'" text-anchor="middle" fill="#070c18" font-size="7" font-weight="800" font-family="Inter,sans-serif">'+_pn2[1]+'</text>'; } }
+            if(isFree) { svg+='<rect x="'+(px-5).toFixed(1)+'" y="'+(py-5).toFixed(1)+'" width="10" height="10" rx="2" fill="'+color+'" fill-opacity="0.85" stroke="#fff" stroke-width="0.5"/>'; if(e.player) { var _pn = e.player.match(/#(\\d+)/); if(_pn) svg+='<text x="'+px.toFixed(1)+'" y="'+(py+3).toFixed(1)+'" text-anchor="middle" fill="#09090B" font-size="7" font-weight="800" font-family="Inter,sans-serif">'+_pn[1]+'</text>'; } } else { svg+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="6" fill="'+color+'" fill-opacity="0.85" stroke="#fff" stroke-width="0.5"/>'; if(e.player) { var _pn2 = e.player.match(/#(\\d+)/); if(_pn2) svg+='<text x="'+px.toFixed(1)+'" y="'+(py+3).toFixed(1)+'" text-anchor="middle" fill="#09090B" font-size="7" font-weight="800" font-family="Inter,sans-serif">'+_pn2[1]+'</text>'; } }
           }else{
             svg+='<g transform="translate('+px.toFixed(1)+','+py.toFixed(1)+')"><line x1="-5" y1="-5" x2="5" y2="5" stroke="#e0584d" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="-5" x2="-5" y2="5" stroke="#e0584d" stroke-width="2.5" stroke-linecap="round"/></g>';
           }
         }
       });
       // Legend
-      svg+='<circle cx="12" cy="'+(H-14)+'" r="5" fill="'+color+'" opacity="0.85"/><text x="22" y="'+(H-10)+'" fill="#eef2f8" font-size="10" font-family="Inter,sans-serif">Play</text>';
-      svg+='<rect x="57" y="'+(H-19)+'" width="10" height="10" rx="2" fill="'+color+'" opacity="0.85"/><text x="72" y="'+(H-10)+'" fill="#eef2f8" font-size="10" font-family="Inter,sans-serif">Free</text>';
-      svg+='<g transform="translate(82,'+(H-14)+')"><line x1="-4" y1="-4" x2="4" y2="4" stroke="#e0584d" stroke-width="2"/><line x1="4" y1="-4" x2="-4" y2="4" stroke="#e0584d" stroke-width="2"/></g><text x="92" y="'+(H-10)+'" fill="#eef2f8" font-size="10" font-family="Inter,sans-serif">Missed</text>';
+      svg+='<circle cx="12" cy="'+(H-14)+'" r="5" fill="'+color+'" opacity="0.85"/><text x="22" y="'+(H-10)+'" fill="#FFFFFF" font-size="10" font-family="Inter,sans-serif">Play</text>';
+      svg+='<rect x="57" y="'+(H-19)+'" width="10" height="10" rx="2" fill="'+color+'" opacity="0.85"/><text x="72" y="'+(H-10)+'" fill="#FFFFFF" font-size="10" font-family="Inter,sans-serif">Free</text>';
+      svg+='<g transform="translate(82,'+(H-14)+')"><line x1="-4" y1="-4" x2="4" y2="4" stroke="#e0584d" stroke-width="2"/><line x1="4" y1="-4" x2="-4" y2="4" stroke="#e0584d" stroke-width="2"/></g><text x="92" y="'+(H-10)+'" fill="#FFFFFF" font-size="10" font-family="Inter,sans-serif">Missed</text>';
       svg+='</svg>';
       var pct=total?Math.round(100*scored/total):0;
       return '<div><p style="font-size:11px;font-weight:700;color:'+color+';margin-bottom:6px">'+label+'</p>'+svg+'<p class="m" style="margin-top:6px">'+scored+'/'+total+' scored ('+pct+'%)</p></div>';
@@ -6518,8 +6482,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         }
       });
       // Legend
-      svg+='<circle cx="12" cy="'+(H-14)+'" r="5" fill="#34c967" opacity="0.85"/><text x="22" y="'+(H-10)+'" fill="#eef2f8" font-size="10" font-family="Inter,sans-serif">Won</text>';
-      svg+='<circle cx="72" cy="'+(H-14)+'" r="5" fill="#e0584d" opacity="0.85"/><text x="82" y="'+(H-10)+'" fill="#eef2f8" font-size="10" font-family="Inter,sans-serif">Lost</text>';
+      svg+='<circle cx="12" cy="'+(H-14)+'" r="5" fill="#34c967" opacity="0.85"/><text x="22" y="'+(H-10)+'" fill="#FFFFFF" font-size="10" font-family="Inter,sans-serif">Won</text>';
+      svg+='<circle cx="72" cy="'+(H-14)+'" r="5" fill="#e0584d" opacity="0.85"/><text x="82" y="'+(H-10)+'" fill="#FFFFFF" font-size="10" font-family="Inter,sans-serif">Lost</text>';
       svg+='</svg>';
       var pct=(won+lost)?Math.round(100*won/(won+lost)):0;
       return '<div><p style="font-size:11px;font-weight:700;color:'+color+';margin-bottom:6px">'+label+'</p>'+svg+'<p class="m" style="margin-top:6px">Won '+won+'/'+(won+lost)+' ('+pct+'%)</p></div>';
@@ -6542,7 +6506,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         for(var c=0;c<3;c++){
           var zn=z[row[1]+"_"+c];
           var p=zn.n?Math.round(100*zn.s/zn.n):0;
-          var cl=p>=50?"#34c967":p>0?"#f0c040":"#536176";
+          var cl=p>=50?"#34c967":p>0?"#f0c040":"#6B7280";
           t+='<td style="text-align:center;color:'+cl+'">'+p+'% <span style="font-size:9px;color:#536176">('+zn.n+')</span></td>';
         }
         t+='</tr>';
@@ -6651,10 +6615,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [koBand, setKoBand] = useState("all");
     const [dtab, setDtab] = useState("overview");
     const [psort, setPsort] = useState("score");
-    if (reportHtml) return React.createElement("div", { style: { minHeight: "100dvh", background: "#070c18" } },
-      React.createElement("div", { style: { position: "sticky", top: 0, zIndex: 10, background: "#070c18", borderBottom: "1px solid #172238", padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 } },
+    if (reportHtml) return React.createElement("div", { style: { minHeight: "100dvh", background: "#09090B" } },
+      React.createElement("div", { style: { position: "sticky", top: 0, zIndex: 10, background: "#09090B", borderBottom: "1px solid #172238", padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 } },
         React.createElement("button", { onClick: function() { setReportHtml(null); }, style: { background: "none", border: "none", color: "#34c967", fontSize: 18, cursor: "pointer", padding: "4px 8px" } }, "\u2039 Back"),
-        React.createElement("span", { style: { flex: 1, fontSize: 14, fontWeight: 800, color: "#eef2f8" } }, "Match Report"),
+        React.createElement("span", { style: { flex: 1, fontSize: 14, fontWeight: 800, color: "#FFFFFF" } }, "Match Report"),
         React.createElement("div", { style: { display: "flex", gap: 6 } },
         navigator.share ? React.createElement("button", { onClick: function() {
           var blob = new Blob([reportHtml], { type: "text/html" });
@@ -6717,12 +6681,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         var clr = function(v) { return v >= 70 ? "#34c967" : v >= 45 ? "#f0c040" : "#e0584d"; };
         function pill(label, icon, val) {
           return React.createElement("div", { style: { flex: 1, textAlign: "center", padding: "10px 4px", background: "#0a1020", borderRadius: 8 } },
-            React.createElement("div", { style: { fontSize: 9, color: "#536176", letterSpacing: 1, fontFamily: MONO } }, icon + " " + label),
+            React.createElement("div", { style: { fontSize: 9, color: "#6B7280", letterSpacing: 1, fontFamily: MONO } }, icon + " " + label),
             React.createElement("div", { style: { fontSize: 22, fontWeight: 900, color: clr(val), marginTop: 4 } }, val));
         }
         return React.createElement("div", { style: { padding: "14px 16px", borderRadius: 12, background: C.bgCard, boxShadow: "0 2px 8px rgba(0,0,0,0.2)", marginBottom: 12 } },
           React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 } },
-            React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: "#536176", fontFamily: MONO, fontWeight: 700 } }, "MATCH RATING"),
+            React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: "#6B7280", fontFamily: MONO, fontWeight: 700 } }, "MATCH RATING"),
             React.createElement("div", { style: { fontSize: 28, fontWeight: 900, color: clr(r.overall) } }, r.overall)),
           React.createElement("div", { style: { display: "flex", gap: 6 } },
             pill("ATK", "\uD83C\uDFAF", r.atk),
@@ -6749,13 +6713,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
               var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? "#f0c040" : "#e0584d"; };
               return groups.map(function(grp) {
                 return React.createElement("div", { key: grp.label, style: { marginBottom: 8 } },
-                  React.createElement("div", { style: { fontSize: 9, letterSpacing: 1, color: "#536176", fontFamily: MONO, marginBottom: 4 } }, grp.label),
+                  React.createElement("div", { style: { fontSize: 9, letterSpacing: 1, color: "#6B7280", fontFamily: MONO, marginBottom: 4 } }, grp.label),
                   grp.items.map(function(it) {
                     var d2 = r.detail[it.k]; if (!d2) return null;
                     return React.createElement("div", { key: it.k, style: { display: "flex", alignItems: "center", gap: 6, marginBottom: 3 } },
                       React.createElement("span", { style: { flex: 1, fontSize: 11, color: "#b0bdd0" } }, it.name),
-                      React.createElement("span", { style: { fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "#eef2f8", minWidth: 36, textAlign: "right" } }, d2.val + (it.pct ? "%" : "")),
-                      React.createElement("div", { style: { width: 50, height: 5, borderRadius: 3, background: "#172238" } },
+                      React.createElement("span", { style: { fontFamily: MONO, fontSize: 11, fontWeight: 700, color: "#FFFFFF", minWidth: 36, textAlign: "right" } }, d2.val + (it.pct ? "%" : "")),
+                      React.createElement("div", { style: { width: 50, height: 5, borderRadius: 3, background: "#232327" } },
                         React.createElement("div", { style: { width: d2.pct + "%", height: 5, borderRadius: 3, background: clr(d2.pct) } })),
                       React.createElement("span", { style: { fontFamily: MONO, fontSize: 10, fontWeight: 800, color: clr(d2.pct), minWidth: 22, textAlign: "right" } }, d2.pct));
                   }));
@@ -6808,10 +6772,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                 React.createElement("span", { style: { fontWeight: 700 } }, label),
                 React.createElement("span", { style: { fontFamily: MONO, color: C.slateD } }, data.won + "/" + total + " won (" + data.pct + "%)")),
               React.createElement("div", { style: { display: "flex", height: 16, borderRadius: 4, overflow: "hidden", gap: 1 } },
-                wonC > 0 ? React.createElement("div", { style: { flex: wonC, background: "#34c967", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: "#070c18" } }, "Won " + wonC) : null,
-                brkW > 0 ? React.createElement("div", { style: { flex: brkW, background: "#7ee8a4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: "#070c18" } }, "Brk\u2713 " + brkW) : null,
-                brkL > 0 ? React.createElement("div", { style: { flex: brkL, background: "#e8a07e", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: "#070c18" } }, "Brk\u2717 " + brkL) : null,
-                lost > 0 ? React.createElement("div", { style: { flex: lost, background: "#e0584d", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: "#070c18" } }, "Lost " + lost) : null));
+                wonC > 0 ? React.createElement("div", { style: { flex: wonC, background: "#34c967", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: "#09090B" } }, "Won " + wonC) : null,
+                brkW > 0 ? React.createElement("div", { style: { flex: brkW, background: "#7ee8a4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: "#09090B" } }, "Brk\u2713 " + brkW) : null,
+                brkL > 0 ? React.createElement("div", { style: { flex: brkL, background: "#e8a07e", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: "#09090B" } }, "Brk\u2717 " + brkL) : null,
+                lost > 0 ? React.createElement("div", { style: { flex: lost, background: "#e0584d", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: "#09090B" } }, "Lost " + lost) : null));
           }
           return React.createElement("div", null,
             outcomeBar(club.name || "Us", ko, ko.total),
@@ -6830,13 +6794,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: 11 } },
               React.createElement("thead", null,
                 React.createElement("tr", { style: { borderBottom: "2px solid #172238" } },
-                  React.createElement("th", { onClick: function(){setRSort("date");}, style: { padding: "8px 8px", textAlign: "left", color: rSort==="date"?C.greenB:"#536176", fontSize: 9, fontFamily: MONO, cursor: "pointer" } }, "DATE", rSort==="date"?" \u25BC":""),
-                  React.createElement("th", { style: { padding: "8px 6px", textAlign: "left", color: "#536176", fontSize: 9, fontFamily: MONO } }, "OPP"),
-                  React.createElement("th", { style: { padding: "8px 4px", textAlign: "center", color: "#536176", fontSize: 9 } }, ""),
+                  React.createElement("th", { onClick: function(){setRSort("date");}, style: { padding: "8px 8px", textAlign: "left", color: rSort==="date"?C.greenB:"#6B7280", fontSize: 9, fontFamily: MONO, cursor: "pointer" } }, "DATE", rSort==="date"?" \u25BC":""),
+                  React.createElement("th", { style: { padding: "8px 6px", textAlign: "left", color: "#6B7280", fontSize: 9, fontFamily: MONO } }, "OPP"),
+                  React.createElement("th", { style: { padding: "8px 4px", textAlign: "center", color: "#6B7280", fontSize: 9 } }, ""),
                   React.createElement("th", { onClick: function(){setRSort("atk");}, style: { padding: "8px 4px", textAlign: "center", fontSize: 9, cursor: "pointer", color: rSort==="atk"?C.greenB:"#8b9ab5" } }, "\uD83C\uDFAF", rSort==="atk"?" \u25BC":""),
                   React.createElement("th", { onClick: function(){setRSort("def");}, style: { padding: "8px 4px", textAlign: "center", fontSize: 9, cursor: "pointer", color: rSort==="def"?C.greenB:"#8b9ab5" } }, "\uD83D\uDEE1\uFE0F", rSort==="def"?" \u25BC":""),
                   React.createElement("th", { onClick: function(){setRSort("rst");}, style: { padding: "8px 4px", textAlign: "center", fontSize: 9, cursor: "pointer", color: rSort==="rst"?C.greenB:"#8b9ab5" } }, "\u21BB", rSort==="rst"?" \u25BC":""),
-                  React.createElement("th", { onClick: function(){setRSort("overall");}, style: { padding: "8px 4px", textAlign: "center", color: rSort==="overall"?C.greenB:"#536176", fontSize: 9, fontFamily: MONO, cursor: "pointer" } }, "OVR", rSort==="overall"?" \u25BC":""))),
+                  React.createElement("th", { onClick: function(){setRSort("overall");}, style: { padding: "8px 4px", textAlign: "center", color: rSort==="overall"?C.greenB:"#6B7280", fontSize: 9, fontFamily: MONO, cursor: "pointer" } }, "OVR", rSort==="overall"?" \u25BC":""))),
               React.createElement("tbody", null,
                 d.matches.slice().sort(function(a,b) { if (rSort === "date") return (b.date||"").localeCompare(a.date||""); var ra = d.ratings && d.ratings[a.id] ? d.ratings[a.id][rSort] || 0 : 0; var rb = d.ratings && d.ratings[b.id] ? d.ratings[b.id][rSort] || 0 : 0; return rb - ra; }).map(function(m2) {
                   var r = d.ratings ? d.ratings[m2.id] : null;
@@ -6846,11 +6810,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                     React.createElement("td", { style: { padding: "8px", fontFamily: MONO, fontSize: 10, color: "#8b9ab5" } }, (m2.date||"").slice(5).replace("-","/")),
                     React.createElement("td", { style: { padding: "8px 6px", fontSize: 12, fontWeight: 600, maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, m2.opponent),
                     React.createElement("td", { style: { padding: "8px 4px", textAlign: "center" } },
-                      React.createElement("span", { style: { width: 18, height: 18, borderRadius: 4, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, fontFamily: MONO, background: dr ? "#f0c040" : w2 ? C.greenB : "#e0584d", color: "#070c18" } }, dr ? "D" : w2 ? "W" : "L")),
-                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, color: r ? clr(r.atk) : "#536176" } }, r ? r.atk : "-"),
-                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, color: r ? clr(r.def) : "#536176" } }, r ? r.def : "-"),
-                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, color: r ? clr(r.rst) : "#536176" } }, r ? r.rst : "-"),
-                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: 12, color: r ? clr(r.overall) : "#536176" } }, r ? r.overall : "-"));
+                      React.createElement("span", { style: { width: 18, height: 18, borderRadius: 4, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, fontFamily: MONO, background: dr ? "#f0c040" : w2 ? C.greenB : "#e0584d", color: "#09090B" } }, dr ? "D" : w2 ? "W" : "L")),
+                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, color: r ? clr(r.atk) : "#6B7280" } }, r ? r.atk : "-"),
+                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, color: r ? clr(r.def) : "#6B7280" } }, r ? r.def : "-"),
+                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, color: r ? clr(r.rst) : "#6B7280" } }, r ? r.rst : "-"),
+                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: 12, color: r ? clr(r.overall) : "#6B7280" } }, r ? r.overall : "-"));
                 })), React.createElement("tfoot", null, (function() {
         var rated = d.matches.filter(function(m2) { return d.ratings && d.ratings[m2.id]; });
         if (!rated.length) return null;
@@ -6860,7 +6824,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         var avgA = Math.round(sA/n), avgD = Math.round(sD/n), avgR = Math.round(sR/n), avgO = Math.round(sO/n);
         var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? "#f0c040" : "#e0584d"; };
         return React.createElement("tr", { style: { borderTop: "2px solid #23344E" } },
-          React.createElement("td", { colSpan: 3, style: { padding: "10px 8px", fontSize: 10, fontWeight: 800, fontFamily: MONO, letterSpacing: 1, color: "#536176" } }, "AVG (" + n + " games)"),
+          React.createElement("td", { colSpan: 3, style: { padding: "10px 8px", fontSize: 10, fontWeight: 800, fontFamily: MONO, letterSpacing: 1, color: "#6B7280" } }, "AVG (" + n + " games)"),
           React.createElement("td", { style: { padding: "10px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: 12, color: clr(avgA) } }, avgA),
           React.createElement("td", { style: { padding: "10px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: 12, color: clr(avgD) } }, avgD),
           React.createElement("td", { style: { padding: "10px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: 12, color: clr(avgR) } }, avgR),
@@ -7751,7 +7715,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
               React.createElement("span", { style: { fontSize: 18 } }, _lspAlert.icon),
               React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: "#fff" } }, _lspAlert.msg)) : null,
             _wpVal !== null ? React.createElement("div", { style: { padding: "8px 14px", background: "#0a1020", display: "flex", justifyContent: "center", alignItems: "center", gap: 6, borderBottom: "1px solid #23344E" } },
-              React.createElement("span", { style: { fontSize: 11, color: "#536176", fontFamily: MONO } }, "WIN PROBABILITY"),
+              React.createElement("span", { style: { fontSize: 11, color: "#6B7280", fontFamily: MONO } }, "WIN PROBABILITY"),
               React.createElement("span", { style: { fontSize: 16, fontWeight: 900, fontFamily: MONO, color: _wpVal >= 60 ? "#34c967" : _wpVal >= 40 ? "#f0c040" : "#e0584d" } }, _wpVal + "%")) : null);
         }()),
         React.createElement(DashView, { d: d, club: club, scope: "match", match: sel, oppName: sel.opponent }));
