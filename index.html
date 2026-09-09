@@ -1847,6 +1847,16 @@
     const usAll = countShots(us), opAll = countShots(opp);
     // Split the shot profile. Overall accuracy blends placed balls with open
     // play and can mask either one.
+    // Frees won and turnovers won are new event types; older matches simply
+    // have none, so these read zero rather than breaking.
+    var usFreeWon = us.filter(function(e) { return e.event_type === "Free won"; }).length;
+    var opFreeWon = opp.filter(function(e) { return e.event_type === "Free won"; }).length;
+    var usToWon = us.filter(function(e) { return e.event_type === "Turnover won"; }).length;
+    var opToWon = opp.filter(function(e) { return e.event_type === "Turnover won"; }).length;
+    var usRuck = us.filter(function(e) { return e.event_type === "Ruck"; });
+    var opRuck = opp.filter(function(e) { return e.event_type === "Ruck"; });
+    var usRuckW = usRuck.filter(function(e) { return e.outcome === "Ruck Won" || e.outcome === "Won"; }).length;
+    var opRuckW = opRuck.filter(function(e) { return e.outcome === "Ruck Won" || e.outcome === "Won"; }).length;
     var usPlay = us.filter(function(e) { return e.event_type === "Shot from play"; });
     var opPlay = opp.filter(function(e) { return e.event_type === "Shot from play"; });
     var usPlaySc = usPlay.filter(function(e) { return (e.score || 0) > 0; }).length;
@@ -1905,6 +1915,10 @@
       { label: "Shots / 10 Poss", us: usPoss ? Math.round(100 * usAll / usPoss) / 10 : 0, opp: opPoss ? Math.round(100 * opAll / opPoss) / 10 : 0 },
       { label: "Possession", us: usPoss + opPoss ? Math.round(100 * usPoss / (usPoss + opPoss)) : 0, opp: usPoss + opPoss ? Math.round(100 * opPoss / (usPoss + opPoss)) : 0, pct: true },
       { label: "Tackles", us: usTk, opp: opTk }, { label: "Turnovers", us: countTO(us), opp: countTO(opp) },
+      { label: "Turnovers won", us: usToWon, opp: opToWon, hideIfZero: true },
+      { label: "Frees won", us: usFreeWon, opp: opFreeWon, hideIfZero: true },
+      { label: "Rucks won", us: usRuckW, opp: opRuckW, hideIfZero: true },
+      { label: "Ruck win %", us: usRuck.length ? Math.round(100*usRuckW/usRuck.length) : 0, opp: opRuck.length ? Math.round(100*opRuckW/opRuck.length) : 0, pct: true, hideIfZero: true },
       { label: "Tackles / 10 opp poss", us: opPoss ? Math.round(100 * usTk / opPoss) / 10 : 0, opp: usPoss ? Math.round(100 * opTk / usPoss) / 10 : 0 },
       { label: "Tackle foul % \u00B7 lower is better", us: usTk ? Math.round(100 * usTkF / usTk) : 0, opp: opTk ? Math.round(100 * opTkF / opTk) : 0, pct: true },
       { label: "Def. work rate", us: usDwr, opp: opDwr },
@@ -2294,6 +2308,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 12, marginTop: 10, justifyContent: "center" } }, item(C.greenB, "Point"), item("#b06cff", "2-pointer"), item(C.gold, "Goal"), item(C.red, "Wide / miss", true));
   }
   function CompareBars({ rows, club }) {
+    // New event types only exist in recently tagged matches. Rather than show a
+    // row of zeroes on every historic game, drop them when both sides are empty.
+    rows = (rows || []).filter(function(r) {
+      return !(r && r.hideIfZero && !r.us && !r.opp);
+    });
     return /* @__PURE__ */ React.createElement("div", { style: { padding: 16, borderRadius: 14, background: C.bgCard, border: "none", boxShadow: "0 2px 8px rgba(0,0,0,0.25)" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB, fontWeight: 800, fontSize: 13 } }, club.name), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontFamily: MONO, fontSize: 9, letterSpacing: 1 } }, "SEASON"), /* @__PURE__ */ React.createElement("span", { style: { color: C.blue, fontWeight: 800, fontSize: 13 } }, "Opposition")), rows.map(function(r) {
       return /* @__PURE__ */ React.createElement("div", { key: r.label, style: { marginBottom: 13 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontWeight: 800, fontFamily: MONO, fontSize: 13, width: 48 } }, r.us, r.pct ? "%" : ""), /* @__PURE__ */ React.createElement("span", { style: { color: C.slate, fontSize: 9, letterSpacing: 1, fontFamily: MONO } }, r.label.toUpperCase()), /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontWeight: 800, fontFamily: MONO, fontSize: 13, width: 48, textAlign: "right" } }, r.opp, r.pct ? "%" : "")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", height: 7, gap: 3 } }, /* @__PURE__ */ React.createElement("div", { style: { flexGrow: r.us + 0.01, flexBasis: 0, background: C.greenB, borderRadius: 4, minWidth: 3 } }), /* @__PURE__ */ React.createElement("div", { style: { flexGrow: r.opp + 0.01, flexBasis: 0, background: C.blue, borderRadius: 4, minWidth: 3 } })));
     }));
@@ -2383,19 +2402,26 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }));
     }));
   }
-  var EV_TYPE = { kickout: "Kickout", shot: "Shot from play", free: "Scoreable free", poss: "Possession lost", tackle: "Tackle", card: "Bookings" };
+  var EV_TYPE = { kickout: "Kickout", shot: "Shot from play", free: "Scoreable free", poss: "Possession lost", tackle: "Tackle", card: "Bookings", freewon: "Free won", towon: "Turnover won", ruck: "Ruck" };
   var TAG_EVENTS = [
-    { id: "kickout", l: "KICKOUT", pitch: true, outcomes: ["Won Clean", "Break Won", "Break Lost", "Lost Clean"] },
+    { id: "kickout", l: "KICKOUT", pitch: true, outcomes: ["Won Clean", "Break Won", "Break Lost", "Lost Clean", "Straight Over Sideline"] },
     { id: "shot", l: "SHOT", pitch: true, outcomes: ["Point", "2-Pointer", "Goal", "Wide", "Blocked", "Dropped Short", "Saved", "Woodwork"] },
     { id: "free", l: "FREE", pitch: true, outcomes: ["Point", "2-Pointer", "Goal", "Wide", "Dropped Short", "Saved", "Woodwork"] },
-    { id: "poss", l: "TURNOVER", pitch: false, outcomes: ["In Contact", "Kick Pass", "Hand Pass", "Handling", "Intercepted", "Foul", "Shot Dropped Short"] },
-    { id: "tackle", l: "TACKLE", pitch: false, outcomes: ["Contact Made", "Block", "Foul"] },
+    { id: "poss", l: "TURNOVER", pitch: false, outcomes: ["In Contact", "Kick Pass", "Hand Pass", "Handling", "Intercepted", "Foul", "Shot Dropped Short", "3-Man Breach"] },
+    { id: "towon", l: "TURNOVER WON", pitch: true, outcomes: ["Tackle", "Interception", "Loose Ball", "Forced Error"] },
+    { id: "tackle", l: "TACKLE", pitch: false, pitchOn: ["Foul"], outcomes: ["Contact Made", "Block", "Foul"] },
+    { id: "freewon", l: "FREE WON", pitch: true, outcomes: ["In Tackle", "Off The Ball", "Overcarry", "Frontal Contact", "Other"] },
     { id: "card", l: "CARD", pitch: false, outcomes: ["Yellow", "Black", "Red"] }
   ];
   function sportEvents(sport) {
     var isStick = sport === "camogie" || sport === "hurling";
     if (!isStick) return TAG_EVENTS;
-    return TAG_EVENTS.map(function(ev) {
+    // Ruck ball is a core phase in hurling and camogie, so it earns a button
+    // rather than living in a custom event. Slotted next to the restart since
+    // that is where most rucks originate.
+    var withRuck = TAG_EVENTS.slice();
+    withRuck.splice(1, 0, { id: "ruck", l: "RUCK", pitch: true, outcomes: ["Ruck Won", "Ruck Lost"] });
+    return withRuck.map(function(ev) {
       if (ev.id === "kickout") return Object.assign({}, ev, { l: "PUCKOUT" });
       if (ev.id === "poss") return Object.assign({}, ev, { outcomes: ev.outcomes.map(function(o) { return o === "Kick Pass" ? "Strike" : o; }) });
       return ev;
@@ -2601,6 +2627,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   }
   function TagPitchLand({ active, onTap }) {
     return /* @__PURE__ */ React.createElement(PitchSVGLand, { active, onTap: active ? onTap : void 0 });
+  }
+  // Some events only need a pitch location for certain outcomes. A tackle does
+  // not, but a foul does — the location is the whole point of a discipline map.
+  function needsPitch(ev, outcome) {
+    if (!ev) return false;
+    if (ev.pitch) return true;
+    return !!(ev.pitchOn && outcome && ev.pitchOn.indexOf(outcome) >= 0);
   }
   function evType(ev) {
     return ev.custom ? ev.name : EV_TYPE[ev.id];
@@ -3330,8 +3363,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var t = tx.current, us = score("us"), op = score("opp");
     var tc = t.team === "h" ? C.greenB : C.gold;
     var showOut = !!t.ev && !t.outcome;
-    var showPitch = !!t.ev && !!t.outcome && t.ev.pitch && !t.loc && !t.skip;
-    var showPl = !!t.ev && !!t.outcome && (!t.ev.pitch || !!t.loc || t.skip);
+    var showPitch = !!t.ev && !!t.outcome && needsPitch(t.ev, t.outcome) && !t.loc && !t.skip;
+    var showPl = !!t.ev && !!t.outcome && (!needsPitch(t.ev, t.outcome) || !!t.loc || t.skip);
     var idle = !t.ev && !t.outcome;
     var customEvts = (customEvents || []).map(function(d) {
       return Object.assign({}, d, { custom: true, l: (d.name || "").toUpperCase(), pitch: !!d.location });
@@ -5669,8 +5702,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }
     var ptc = credHome ? C.greenB : C.gold;
     var showOut = !!t.ev && !t.outcome;
-    var showPitch = !!t.ev && !!t.outcome && t.ev.pitch && !t.loc && !t.skip;
-    var showPl = !!t.ev && !!t.outcome && (!t.ev.pitch || !!t.loc || t.skip);
+    var showPitch = !!t.ev && !!t.outcome && needsPitch(t.ev, t.outcome) && !t.loc && !t.skip;
+    var showPl = !!t.ev && !!t.outcome && (!needsPitch(t.ev, t.outcome) || !!t.loc || t.skip);
     var idle = !t.ev && !t.outcome;
     var customEvts = (customEvents || []).map(function(d) {
       return Object.assign({}, d, { custom: true, l: (d.name || "").toUpperCase(), pitch: !!d.location });
@@ -6735,8 +6768,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           { icon: "\uD83C\uDFAF", label: "SHOOTING", keys: ["Score (pts)", "Shots", "Scores from play", "Accuracy", "Frees taken", "Frees scored", "Free accuracy", "Wides"] },
           { icon: "\uD83C\uDFC3", label: "POSSESSION", keys: ["Shots / 10 Poss", "Possession"] },
           { icon: "\uD83D\uDEE1\uFE0F", label: "DEFENCE", keys: ["Tackles", "Tackles / 10 opp poss", "Tackle foul % \u00B7 lower is better", "Def. work rate"] },
-          { icon: "\u21BB", label: "RESTARTS", keys: ["Restarts won", "Breaking ball won"] },
-          { icon: "\u2194\uFE0F", label: "TURNOVERS", keys: ["Turnovers"] }
+          { icon: "\u21BB", label: "RESTARTS", keys: ["Restarts won", "Breaking ball won", "Rucks won", "Ruck win %"] },
+          { icon: "\u2194\uFE0F", label: "TURNOVERS", keys: ["Turnovers", "Turnovers won", "Frees won"] }
         ];
         function barRow(r, idx) {
           var mx = Math.max(r.us || 0, r.opp || 0, 1);
