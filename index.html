@@ -6922,7 +6922,20 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
               cell(b.n ? pc(b.score, b.n) + "%" : "\u2013", C.white, true));
           })),
         /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slateD, lineHeight: 1.55, marginTop: 8 } },
-          "\u2192 Shot = won the restart and got a shot away before losing possession. Frees count as shots; the chain dies the moment the ball is turned over. A shot was conceded off " + (cs.all.n ? pc(cs.all.conc, cs.all.n) : 0) + "% of these restarts."));
+          "\u2192 Shot = won the restart and got a shot away before losing possession. Frees count as shots; the chain dies the moment the ball is turned over."),
+        /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: 12, borderRadius: 12, background: C.field, border: "1px solid " + C.border } },
+          /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, fontWeight: 700, marginBottom: 8 } }, "WHEN THE RESTART IS LOST"),
+          [["Short", "short"], ["Mid", "mid"], ["Long", "long"]].map(function(r) {
+            var b = cs[r[1]], lost = b.n - b.ret;
+            if (!lost) return null;
+            return /* @__PURE__ */ React.createElement("div", { key: r[1], style: { fontSize: 12, color: C.white, lineHeight: 1.75 } },
+              /* @__PURE__ */ React.createElement("span", { style: { display: "inline-block", width: 44, color: C.slateD, fontFamily: MONO, fontSize: 10, fontWeight: 700 } }, r[0].toUpperCase()),
+              "of the ", /* @__PURE__ */ React.createElement("b", null, String(lost)), " lost, ",
+              /* @__PURE__ */ React.createElement("b", { style: { color: C.red } }, String(b.conc)), " led to a shot",
+              /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontFamily: MONO, fontSize: 10 } }, "  " + Math.round(100 * b.conc / lost) + "%"));
+          }),
+          /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slateD, lineHeight: 1.55, marginTop: 8 } },
+            "No break in play between losing the ball and the shot.")));
     })(),
     dtab === "kickouts" && (/* @__PURE__ */ React.createElement(Section, { title: "RESTART SPEED \\u00b7 AVG" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, padding: "18px 8px", borderRadius: 12, background: C.bgCard, border: "1px solid " + C.border, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 22, fontWeight: 800, fontFamily: MONO, color: C.greenB } }, d.koSpeed.us, "s"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO, letterSpacing: 1, marginTop: 4 } }, "OWN")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, padding: "18px 8px", borderRadius: 12, background: C.bgCard, border: "1px solid " + C.border, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 22, fontWeight: 800, fontFamily: MONO, color: C.blue } }, d.koSpeed.opp, "s"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO, letterSpacing: 1, marginTop: 4 } }, "OPPOSITION"))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slateD, fontFamily: MONO, marginTop: 8, textAlign: "center" } }, "seconds from a score or wide to the restart"))),
     dtab === "kickouts" && (/* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 4, marginBottom: 16, background: C.bgCard, padding: 4, borderRadius: 11, border: "1px solid " + C.border } }, [["us", club.name], ["opp", ON]].map(function(t) {
