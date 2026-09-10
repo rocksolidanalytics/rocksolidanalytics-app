@@ -1865,6 +1865,56 @@
     const usTk = nTackle(us), opTk = nTackle(opp);
     const usTkF = nTkFoul(us), opTkF = nTkFoul(opp);
     const usDwr = usTk - nFoul(us) + nTOWon(opp), opDwr = opTk - nFoul(opp) + nTOWon(us);
+    // --- Chain metrics: restart-to-shot and turnover-to-shot -------------
+    // A chain dies the instant the winning side loses possession; a shot after
+    // a turnover does not count back to the restart. Scoreable frees count as
+    // shots. Bands reuse _koBand so this agrees with RESTARTS WON and the map.
+    var CH_SHOT = /* @__PURE__ */ new Set(["Shot from play", "Scoreable free"]);
+    var CH_LOSS = /* @__PURE__ */ new Set(["Possession lost", "Turnover"]);
+    var KO_LOST = /* @__PURE__ */ new Set(["Lost clean", "Break lost"]);
+    var chains = (function() {
+      function kb() { return { n: 0, ret: 0, shot: 0, score: 0, conc: 0 }; }
+      function tb() { return { n: 0, shot: 0, score: 0 }; }
+      var out = { ko: { us: { short: kb(), mid: kb(), long: kb(), all: kb() },
+                        opp: { short: kb(), mid: kb(), long: kb(), all: kb() } },
+                  to: { us: tb(), opp: tb() } };
+      var byMatch = {};
+      events.forEach(function(e) { (byMatch[e.match_id] || (byMatch[e.match_id] = [])).push(e); });
+      Object.keys(byMatch).forEach(function(mid) {
+        var list = byMatch[mid].slice().sort(function(a, b) { return (a.seq || 0) - (b.seq || 0); });
+        list.forEach(function(e, i) {
+          var isKo = e.event_type === "Kickout", winner = null;
+          if (isKo) {
+            if (KO_WON.has(e.outcome)) winner = e.team;
+            else if (KO_LOST.has(e.outcome)) winner = e.team === "us" ? "opp" : "us";
+            else return;
+          } else if (e.event_type === "Possession lost") {
+            winner = e.team === "us" ? "opp" : "us";
+          } else return;
+          var shot = false, scored = false;
+          for (var j = i + 1; j < list.length; j++) {
+            var nx = list[j];
+            if (nx.event_type === "Kickout") break;
+            if (nx.team !== winner) continue;
+            if (CH_LOSS.has(nx.event_type)) break;
+            if (CH_SHOT.has(nx.event_type)) { shot = true; scored = (nx.score || 0) > 0; break; }
+          }
+          if (isKo) {
+            var band = _koBand(e, e.team);
+            var slot = out.ko[e.team];
+            (band ? [slot[band], slot.all] : [slot.all]).forEach(function(b) {
+              b.n++;
+              if (winner === e.team) { b.ret++; if (shot) { b.shot++; if (scored) b.score++; } }
+              else if (shot) b.conc++;
+            });
+          } else {
+            var t = out.to[winner];
+            t.n++; if (shot) { t.shot++; if (scored) t.score++; }
+          }
+        });
+      });
+      return out;
+    })();
     const compare = [
       { label: "Score (pts)", us: sf, opp: sa },
       { label: "Shots", us: usAll, opp: opAll },
@@ -1880,6 +1930,7 @@
       { label: "Possession", us: usPoss + opPoss ? Math.round(100 * usPoss / (usPoss + opPoss)) : 0, opp: usPoss + opPoss ? Math.round(100 * opPoss / (usPoss + opPoss)) : 0, pct: true },
       { label: "Tackles", us: usTk, opp: opTk }, { label: "Turnovers", us: countTO(us), opp: countTO(opp) },
       { label: "Turnovers won", us: usToWon, opp: opToWon, hideIfZero: true },
+      { label: "Turnover \u2192 shot", us: chains.to.us.n ? Math.round(100 * chains.to.us.shot / chains.to.us.n) : 0, opp: chains.to.opp.n ? Math.round(100 * chains.to.opp.shot / chains.to.opp.n) : 0, pct: true },
       { label: "Frees won", us: usFreeWon, opp: opFreeWon, hideIfZero: true },
       { label: "Rucks won", us: usRuckW, opp: opRuckW, hideIfZero: true },
       { label: "Ruck win %", us: usRuck.length ? Math.round(100*usRuckW/usRuck.length) : 0, opp: opRuck.length ? Math.round(100*opRuckW/opRuck.length) : 0, pct: true, hideIfZero: true },
@@ -2160,6 +2211,7 @@
       compare,
       notes,
       defence,
+      chains,
       players,
       koSpeed,
       koSpeedGrid,
@@ -6733,7 +6785,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           { icon: "\uD83C\uDFC3", label: "POSSESSION", keys: ["Shots / 10 Poss", "Possession"] },
           { icon: "\uD83D\uDEE1\uFE0F", label: "DEFENCE", keys: ["Tackles", "Tackles / 10 opp poss", "Tackle foul % \u00B7 lower is better", "Def. work rate"] },
           { icon: "\u21BB", label: "RESTARTS", keys: ["Restarts won", "Breaking ball won", "Rucks won", "Ruck win %"] },
-          { icon: "\u2194\uFE0F", label: "TURNOVERS", keys: ["Turnovers", "Turnovers won", "Frees won"] }
+          { icon: "\u2194\uFE0F", label: "TURNOVERS", keys: ["Turnovers", "Turnovers won", "Frees won", "Turnover \u2192 shot"] }
         ];
         function barRow(r, idx) {
           var mx = Math.max(r.us || 0, r.opp || 0, 1);
@@ -6845,6 +6897,33 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       });
     })(), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, "by where each scorer started \\u00b7 goal = 3"))),
     dtab === "kickouts" && (/* @__PURE__ */ React.createElement(Section, { title: "RESTARTS WON" }, /* @__PURE__ */ React.createElement(Bar, { label: club.name, value: d.ko.pct, max: 100, suffix: "%", color: C.greenB }), /* @__PURE__ */ React.createElement(Bar, { label: ON, value: d.oko.pct, max: 100, suffix: "%", color: C.blue }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, "won = won clean + break won"))),
+    dtab === "kickouts" && (function() {
+      var cs = d.chains && d.chains.ko && d.chains.ko[team];
+      if (!cs || !cs.all.n) return null;
+      function pc(a, b) { return b ? Math.round(100 * a / b) : null; }
+      function cell(txt, col, bold) {
+        return /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, textAlign: "center", color: col, fontFamily: MONO, fontWeight: bold ? 800 : 400, padding: "9px 2px" } }, txt);
+      }
+      return /* @__PURE__ */ React.createElement(Section, { title: "RESTART TO SHOT \u00b7 " + (team === "us" ? "OWN" : ON.toUpperCase()) },
+        /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 0.72fr 0.62fr 0.72fr 0.78fr", gap: 2, alignItems: "center" } },
+          ["", "Restarts", "Won", "\u2192 Shot", "\u2192 Score"].map(function(hd, ix) {
+            return /* @__PURE__ */ React.createElement("div", { key: "h" + ix, style: { fontSize: 9, fontWeight: 800, fontFamily: MONO, color: C.slateD, letterSpacing: 0.5, textAlign: ix ? "center" : "left", padding: "6px 2px" } }, hd);
+          }),
+          [["Short", "short", "under 45m"], ["Mid", "mid", "45\u201365m"], ["Long", "long", "over 65m"], ["All", "all", ""]].map(function(r) {
+            var b = cs[r[1]], isAll = r[1] === "all";
+            return /* @__PURE__ */ React.createElement(React.Fragment, { key: r[1] },
+              /* @__PURE__ */ React.createElement("div", { style: { gridColumn: "1 / -1", height: 1, background: C.border } }),
+              /* @__PURE__ */ React.createElement("div", { style: { padding: "9px 2px" } },
+                /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, fontWeight: 800, color: isAll ? C.slate : C.white } }, r[0]),
+                r[2] && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO, marginTop: 1 } }, r[2])),
+              cell(String(b.n), C.slate),
+              cell(b.n ? pc(b.ret, b.n) + "%" : "\u2013", C.slate),
+              cell(b.n ? pc(b.shot, b.n) + "%" : "\u2013", C.greenB, true),
+              cell(b.n ? pc(b.score, b.n) + "%" : "\u2013", C.white, true));
+          })),
+        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slateD, lineHeight: 1.55, marginTop: 8 } },
+          "\u2192 Shot = won the restart and got a shot away before losing possession. Frees count as shots; the chain dies the moment the ball is turned over. A shot was conceded off " + (cs.all.n ? pc(cs.all.conc, cs.all.n) : 0) + "% of these restarts."));
+    })(),
     dtab === "kickouts" && (/* @__PURE__ */ React.createElement(Section, { title: "RESTART SPEED \\u00b7 AVG" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, padding: "18px 8px", borderRadius: 12, background: C.bgCard, border: "1px solid " + C.border, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 22, fontWeight: 800, fontFamily: MONO, color: C.greenB } }, d.koSpeed.us, "s"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO, letterSpacing: 1, marginTop: 4 } }, "OWN")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, padding: "18px 8px", borderRadius: 12, background: C.bgCard, border: "1px solid " + C.border, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 22, fontWeight: 800, fontFamily: MONO, color: C.blue } }, d.koSpeed.opp, "s"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO, letterSpacing: 1, marginTop: 4 } }, "OPPOSITION"))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slateD, fontFamily: MONO, marginTop: 8, textAlign: "center" } }, "seconds from a score or wide to the restart"))),
     dtab === "kickouts" && (/* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 4, marginBottom: 16, background: C.bgCard, padding: 4, borderRadius: 11, border: "1px solid " + C.border } }, [["us", club.name], ["opp", ON]].map(function(t) {
       return /* @__PURE__ */ React.createElement("button", { key: t[0], onClick: function() {
