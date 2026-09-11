@@ -631,10 +631,10 @@
             playerVars: { rel: 0, playsinline: 1, controls: 1, iv_load_policy: 3, start: Math.floor(startOf(0)) },
             events: {
               onReady: function(ev) { try { ev.target.seekTo(startOf(idxRef.current), true); ev.target.playVideo(); } catch (e) {} },
-              onError: function() { setApiFail(true); }
+              onError: function(ev) { setApiFail((ev && typeof ev.data === "number") ? ev.data : true); }
             }
           });
-        } catch (e) { setApiFail(true); }
+        } catch (e) { setApiFail("start"); }
         // auto-advance: when the current clip runs past its tail, move on
         watch = setInterval(function() {
           var p = ytRef.current;
@@ -653,9 +653,9 @@
         window.onYouTubeIframeAPIReady = function() { if (typeof prev === "function") { try { prev(); } catch (e) {} } mk(); };
         if (!document.getElementById("yt-api")) {
           var sc = document.createElement("script"); sc.id = "yt-api"; sc.src = "https://www.youtube.com/iframe_api";
-          sc.onerror = function() { setApiFail(true); }; document.head.appendChild(sc);
+          sc.onerror = function() { setApiFail("net"); }; document.head.appendChild(sc);
         }
-        setTimeout(function() { if (!dead && !(window.YT && window.YT.Player)) setApiFail(true); }, 6000);
+        setTimeout(function() { if (!dead && !(window.YT && window.YT.Player)) setApiFail("net"); }, 8000);
       }
       return function() {
         dead = true; if (watch) clearInterval(watch);
@@ -690,7 +690,15 @@
       vid && !apiFail
         ? /* @__PURE__ */ React.createElement("div", { ref: hostRef, style: { width: "100%", aspectRatio: "16/9", background: "#000", borderRadius: 14, overflow: "hidden", border: "1px solid " + C.border } })
         : /* @__PURE__ */ React.createElement("div", { style: { padding: 14, borderRadius: 14, background: C.field, border: "1px solid " + C.border, fontSize: 12, color: C.slate, lineHeight: 1.6 } },
-            apiFail ? "The video player could not load. The timestamps below still work in the source video."
+            apiFail ? (({
+              100: "This video is Private or has been deleted on YouTube. It must be Unlisted or Public for clips to play here \u2014 Private does not work even with the link.",
+              101: "The video owner has turned off embedding on YouTube, so it cannot play here.",
+              150: "The video owner has turned off embedding on YouTube, so it cannot play here.",
+              2: "The YouTube link saved against this match is not valid.",
+              5: "YouTube's player could not start on this device.",
+              net: "Could not reach YouTube. Check your connection and try again.",
+              start: "The video player could not start on this device."
+            })[apiFail] || "The video player could not load.") + " The timestamps below still work in the source video."
                     : "No playable video is linked to this match. The timestamps below are where each clip sits."),
       (clips[idx] || {}).note && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12, padding: 12, borderRadius: 12, background: "linear-gradient(135deg,#12211A,#0F1714)", border: "1px solid " + C.greenB + "33" } },
         /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 6 } }, "WHAT TO LOOK FOR"),
