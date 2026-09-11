@@ -4918,7 +4918,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return x.matchId !== id;
     }));
   }
-  function ClipsPlayer({ match, back }) {
+  function ClipsPlayer({ match, club, back }) {
     const vRef = useRef(null);
     const [src, setSrc] = useState(null);
     const [evs, setEvs] = useState(null);
@@ -4997,7 +4997,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return /* @__PURE__ */ React.createElement("button", { key: o[0], onClick: function() {
         setMode(o[0]);
       }, style: { flex: 1, padding: "7px 4px", borderRadius: 8, cursor: "pointer", fontSize: 11, fontWeight: 800, background: on ? C.blue : C.bgCard, border: "1px solid " + (on ? C.blue : C.border), color: on ? C.bg : C.slate } }, o[1]);
-    })), mode === "filters" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, [["all", "All"], ["us", club.name ? club.name.split(" ")[0] : "Us"], ["opp", "Opp"]].map(function(o) {
+    })), mode === "filters" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, [["all", "All"], ["us", club && club.name ? club.name.split(" ")[0] : "Us"], ["opp", "Opp"]].map(function(o) {
       var on = team === o[0];
       return /* @__PURE__ */ React.createElement("button", { key: o[0], onClick: function() {
         setTeam(o[0]);
@@ -5047,7 +5047,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var tc = e.team === "us" ? C.greenB : C.slate;
       return /* @__PURE__ */ React.createElement("button", { key: e.id, onClick: function() {
         play(e);
-      }, disabled: !hasv, style: { textAlign: "left", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, cursor: hasv ? "pointer" : "default", background: on ? C.greenB + "22" : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), opacity: hasv ? 1 : 0.45 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 7, height: 7, borderRadius: "50%", background: tc, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: C.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, e.event_type, e.outcome ? " \xB7 " + e.outcome : ""), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, e.team === "us" ? (club.name ? club.name.split(" ")[0] : "Us") : "Opp", e.player ? " \xB7 " + e.player : "", e.time_text ? " \xB7 " + e.time_text : "")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: hasv ? C.gold : C.slateD, fontFamily: MONO, flexShrink: 0 } }, hasv ? "\u25B6 " + fmt(e.video_ts) : "\u2014"));
+      }, disabled: !hasv, style: { textAlign: "left", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, cursor: hasv ? "pointer" : "default", background: on ? C.greenB + "22" : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), opacity: hasv ? 1 : 0.45 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 7, height: 7, borderRadius: "50%", background: tc, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: C.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, e.event_type, e.outcome ? " \xB7 " + e.outcome : ""), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, e.team === "us" ? (club && club.name ? club.name.split(" ")[0] : "Us") : "Opp", e.player ? " \xB7 " + e.player : "", e.time_text ? " \xB7 " + e.time_text : "")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: hasv ? C.gold : C.slateD, fontFamily: MONO, flexShrink: 0 } }, hasv ? "\u25B6 " + fmt(e.video_ts) : "\u2014"));
     }))));
   }
   function liveTot(events, tm) {
@@ -5271,7 +5271,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         }
       })();
     }, []);
-    if (clipMatch) return /* @__PURE__ */ React.createElement(ClipsPlayer, { match: clipMatch, back: function() {
+    if (clipMatch) return /* @__PURE__ */ React.createElement(ClipsPlayer, { match: clipMatch, club, back: function() {
       setClipMatch(null);
     } });
     if (scoutDash) return /* @__PURE__ */ React.createElement(ScoutDash, { m: scoutDash, club, back: function() {
