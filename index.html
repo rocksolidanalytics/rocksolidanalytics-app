@@ -685,6 +685,9 @@
         : /* @__PURE__ */ React.createElement("div", { style: { padding: 14, borderRadius: 14, background: C.field, border: "1px solid " + C.border, fontSize: 12, color: C.slate, lineHeight: 1.6 } },
             apiFail ? "The video player could not load. The timestamps below still work in the source video."
                     : "No playable video is linked to this match. The timestamps below are where each clip sits."),
+      (clips[idx] || {}).note && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12, padding: 12, borderRadius: 12, background: "linear-gradient(135deg,#12211A,#0F1714)", border: "1px solid " + C.greenB + "33" } },
+        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 6 } }, "WHAT TO LOOK FOR"),
+        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: C.white, lineHeight: 1.55 } }, clips[idx].note)),
       vid && !apiFail && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 10 } },
         /* @__PURE__ */ React.createElement("button", { onClick: function() { go(idx - 1); }, disabled: idx === 0,
           style: { flex: 1, padding: "10px 0", borderRadius: 10, cursor: "pointer", background: C.bgCard, border: "1px solid " + C.border, color: idx === 0 ? C.slateD : C.white, fontSize: 12, fontWeight: 800, fontFamily: MONO } }, "\u2190 PREV"),
@@ -699,9 +702,94 @@
             /* @__PURE__ */ React.createElement("div", { style: { width: 28, height: 28, flexShrink: 0, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontSize: 11, fontWeight: 800, background: on ? C.greenB : C.field, color: on ? C.bg : C.slateD } }, String(i + 1)),
             /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } },
               /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: on ? C.greenB : C.white, lineHeight: 1.3 } }, c.label || ("Clip " + (i + 1))),
-              /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, mmss(startOf(i)))));
+              /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, mmss(startOf(i))),
+              c.note && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, lineHeight: 1.45, marginTop: 4 } }, c.note)));
         })),
       /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18, textAlign: "center", fontSize: 10, color: C.slateD, fontFamily: MONO } }, "Rock Solid Analytics"));
+  }
+
+  function PlaylistPanel({ match }) {
+    const [pls, setPls] = useState(null);
+    const [open, setOpen] = useState(-1);
+    const [msg, setMsg] = useState("");
+    useEffect(function() {
+      if (!match || !match.id) return;
+      db.from("matches").select("playlists").eq("id", match.id).single().then(
+        function(r) { setPls((r.data && r.data.playlists) || []); },
+        function() { setPls([]); });
+    }, [match && match.id]);
+
+    function save(next) {
+      setPls(next);
+      db.from("matches").update({ playlists: next }).eq("id", match.id).then(function() {}, function() {
+        setMsg("Could not save \u2014 check your connection."); setTimeout(function() { setMsg(""); }, 4000);
+      });
+    }
+    function mintToken() {
+      var raw = "";
+      try { if (window.crypto && window.crypto.randomUUID) raw = window.crypto.randomUUID().replace(/-/g, ""); } catch (e) {}
+      if (raw.length < 24) raw = (Math.random().toString(36).slice(2) + Date.now().toString(36) + Math.random().toString(36).slice(2));
+      return "tok_" + raw.slice(0, 32);
+    }
+    function linkFor(t) { return window.location.origin + window.location.pathname + "?clips=" + t; }
+    function share(i) {
+      var next = (pls || []).slice();
+      var p = Object.assign({}, next[i]);
+      if (!p.token || String(p.token).length < 12) { p.token = mintToken(); next[i] = p; save(next); }
+      var url = linkFor(p.token);
+      if (navigator.share) { navigator.share({ title: p.name || "Clips", url: url }).catch(function() {}); }
+      else if (navigator.clipboard) { navigator.clipboard.writeText(url); setMsg("Link copied \u2014 paste it into WhatsApp."); setTimeout(function() { setMsg(""); }, 4000); }
+      else { prompt("Copy this link:", url); }
+    }
+    function revoke(i) {
+      var next = (pls || []).slice();
+      var p = Object.assign({}, next[i]); delete p.token; next[i] = p; save(next);
+      setMsg("Link revoked."); setTimeout(function() { setMsg(""); }, 3000);
+    }
+    function setNote(i, j, v) {
+      var next = (pls || []).slice();
+      var p = Object.assign({}, next[i]);
+      var evs = (p.events || []).slice();
+      evs[j] = Object.assign({}, evs[j], { note: v });
+      p.events = evs; next[i] = p; setPls(next);
+    }
+    function commitNote() { if (pls) save(pls); }
+
+    if (pls === null) return null;
+    var head = /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, fontWeight: 700, margin: "18px 0 8px" } }, "CLIP PLAYLISTS");
+    if (!pls.length) return /* @__PURE__ */ React.createElement("div", null, head,
+      /* @__PURE__ */ React.createElement("div", { style: { padding: 14, borderRadius: 12, background: C.field, border: "1px solid " + C.border, fontSize: 12, color: C.slate, lineHeight: 1.6 } },
+        "No playlists on this match yet. Build one in the Video Tagger, then come back here to add commentary and share it."));
+
+    return /* @__PURE__ */ React.createElement("div", null, head,
+      msg && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.greenB, fontFamily: MONO, marginBottom: 8 } }, msg),
+      pls.map(function(p, i) {
+        var evs = p.events || [], isOpen = open === i, shared = p.token && String(p.token).length >= 12;
+        return /* @__PURE__ */ React.createElement("div", { key: i, style: { marginBottom: 10, borderRadius: 12, background: C.bgCard, border: "1px solid " + (shared ? C.greenB + "33" : C.border), overflow: "hidden" } },
+          /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: 12 } },
+            /* @__PURE__ */ React.createElement("button", { onClick: function() { setOpen(isOpen ? -1 : i); },
+              style: { flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer" } },
+              /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 800, color: C.white } }, p.name || ("Playlist " + (i + 1))),
+              /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slateD, fontFamily: MONO, marginTop: 2 } },
+                evs.length + (evs.length === 1 ? " clip" : " clips") + (shared ? " \u00b7 SHARED" : " \u00b7 private"))),
+            /* @__PURE__ */ React.createElement("button", { onClick: function() { share(i); },
+              style: { flexShrink: 0, padding: "7px 12px", borderRadius: 999, cursor: "pointer", background: C.greenB, border: "none", color: C.bg, fontSize: 10, fontWeight: 800, fontFamily: MONO, letterSpacing: 0.5 } }, shared ? "SHARE" : "GET LINK"),
+            /* @__PURE__ */ React.createElement("button", { onClick: function() { setOpen(isOpen ? -1 : i); },
+              style: { flexShrink: 0, background: "none", border: "none", color: C.slateD, fontSize: 14, cursor: "pointer", padding: 0 } }, isOpen ? "\u2303" : "\u2304")),
+          isOpen && /* @__PURE__ */ React.createElement("div", { style: { padding: "0 12px 12px" } },
+            evs.map(function(c, j) {
+              return /* @__PURE__ */ React.createElement("div", { key: j, style: { paddingTop: 10, marginTop: 10, borderTop: "1px solid " + C.border } },
+                /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, fontWeight: 700, color: C.white, marginBottom: 6 } }, (j + 1) + ". " + (c.label || "Clip")),
+                /* @__PURE__ */ React.createElement("textarea", {
+                  value: c.note || "", rows: 2, placeholder: "What to look out for\u2026",
+                  onChange: function(e) { setNote(i, j, e.target.value); }, onBlur: commitNote,
+                  style: { width: "100%", boxSizing: "border-box", resize: "vertical", padding: "8px 10px", borderRadius: 8, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: 12, lineHeight: 1.5, fontFamily: "inherit", outline: "none" } }));
+            }),
+            shared && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginTop: 12 } },
+              /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontSize: 10, color: C.slateD, fontFamily: MONO, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, linkFor(p.token)),
+              /* @__PURE__ */ React.createElement("button", { onClick: function() { revoke(i); },
+                style: { flexShrink: 0, padding: "6px 10px", borderRadius: 999, cursor: "pointer", background: "none", border: "1px solid " + C.red + "66", color: C.red, fontSize: 10, fontWeight: 800, fontFamily: MONO } }, "REVOKE"))));
+      }));
   }
 
   function GameFilm({ club, role, back }) {
@@ -817,7 +905,7 @@
       return React.createElement("div", { className: "rsa-screen rs-wide", style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { className: "rsa-gf-detail", style: { flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" } }, React.createElement("div", { className: "rsa-gf-video", style: { position: "sticky", top: 0, zIndex: 5, background: C.bg, padding: "12px 14px 8px", borderBottom: "1px solid " + C.border } }, player, React.createElement("div", { style: { display: "flex", gap: 6, paddingTop: 8, alignItems: "stretch" } }, [[-10, "\u00ab 10"], [-5, "\u2039 5"], [0, "PP"], [5, "5 \u203a"], [10, "10 \u00bb"]].map(function(b) {
         if (b[0] === 0) return React.createElement("button", { key: "pp", onClick: toggle, style: { flex: 1.1, padding: "9px 0", borderRadius: 8, border: "1px solid " + C.greenB, background: C.greenB + "22", color: C.greenB, fontWeight: 800, fontSize: 13, cursor: "pointer" } }, playing ? "\u23F8" : "\u25B6");
         return React.createElement("button", { key: b[0], onClick: function() { nudge(b[0]); }, style: { flex: 1, padding: "9px 0", borderRadius: 8, border: "1px solid " + C.border, background: C.bgCard, color: C.slate, fontWeight: 800, fontSize: 12, fontFamily: MONO, cursor: "pointer" } }, b[1]);
-      })), React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, paddingTop: 8, fontFamily: MONO } }, "TAP AN EVENT \u00b7 STARTS 5s BEFORE")), React.createElement("div", { className: "rsa-gf-events", style: { padding: "0 14px 28px" } }, chips, gchips, body2)));
+      })), React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, paddingTop: 8, fontFamily: MONO } }, "TAP AN EVENT \u00b7 STARTS 5s BEFORE")), React.createElement("div", { className: "rsa-gf-events", style: { padding: "0 14px 28px" } }, React.createElement(PlaylistPanel, { match: sel }), chips, gchips, body2)));
     }
     var visible = (matches || []).filter(function(m) { return manage ? true : (m.video_enabled && ytId(m.video_url)); });
     var body = matches === null ? React.createElement("div", { style: { paddingTop: 4 } }, React.createElement(SkelRows, { n: 2, h: 92 })) : visible.length === 0 ? React.createElement("div", { style: { padding: 24, textAlign: "center", color: C.slateD, fontSize: 13 } }, manage ? "No video-tagged games yet." : isAnalyst ? "No games switched on yet. Tap Manage to add a link and enable one." : "No game film available yet.") : visible.map(function(m, i) {
