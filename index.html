@@ -1934,6 +1934,7 @@
       { label: "Tackles", us: usTk, opp: opTk }, { label: "Turnovers", us: countTO(us), opp: countTO(opp) },
       { label: "Turnovers won", us: usToWon, opp: opToWon, hideIfZero: true },
       { label: "Turnover \u2192 shot", us: chains.to.us.n ? Math.round(100 * chains.to.us.shot / chains.to.us.n) : 0, opp: chains.to.opp.n ? Math.round(100 * chains.to.opp.shot / chains.to.opp.n) : 0, pct: true },
+      { label: "Turnover \u2192 score", us: chains.to.us.n ? Math.round(100 * chains.to.us.score / chains.to.us.n) : 0, opp: chains.to.opp.n ? Math.round(100 * chains.to.opp.score / chains.to.opp.n) : 0, pct: true },
       { label: "Frees won", us: usFreeWon, opp: opFreeWon, hideIfZero: true },
       { label: "Rucks won", us: usRuckW, opp: opRuckW, hideIfZero: true },
       { label: "Ruck win %", us: usRuck.length ? Math.round(100*usRuckW/usRuck.length) : 0, opp: opRuck.length ? Math.round(100*opRuckW/opRuck.length) : 0, pct: true, hideIfZero: true },
@@ -6788,7 +6789,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           { icon: "\uD83C\uDFC3", label: "POSSESSION", keys: ["Shots / 10 Poss", "Possession"] },
           { icon: "\uD83D\uDEE1\uFE0F", label: "DEFENCE", keys: ["Tackles", "Tackles / 10 opp poss", "Tackle foul % \u00B7 lower is better", "Def. work rate"] },
           { icon: "\u21BB", label: "RESTARTS", keys: ["Restarts won", "Breaking ball won", "Rucks won", "Ruck win %"] },
-          { icon: "\u2194\uFE0F", label: "TURNOVERS", keys: ["Turnovers", "Turnovers won", "Frees won", "Turnover \u2192 shot"] }
+          { icon: "\u2194\uFE0F", label: "TURNOVERS", keys: ["Turnovers", "Turnovers won", "Frees won", "Turnover \u2192 shot", "Turnover \u2192 score"] }
         ];
         function barRow(r, idx) {
           var mx = Math.max(r.us || 0, r.opp || 0, 1);
