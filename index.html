@@ -5753,6 +5753,99 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setPlSaved(next);
       db.from("matches").update({ playlists: next }).eq("id", match.id).then(function(){},function(){});
     }
+    // --- Local clip export ------------------------------------------------
+    // The match file is already on this device (the tagger loads it via
+    // createObjectURL), so clips are cut here rather than fetched from anywhere.
+    // captureStream() on the <video> element feeds a MediaRecorder; the recorder
+    // is paused while we seek between clips, so the output is one continuous
+    // video of just the clips, with no seek gaps. Real time by necessity:
+    // recording 11 seconds of footage takes 11 seconds.
+    const [plExp, setPlExp] = useState(null);
+    const expAbort = useRef(false);
+    function expMime() {
+      var c = ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4",
+               "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+      for (var i = 0; i < c.length; i++) {
+        try { if (window.MediaRecorder && window.MediaRecorder.isTypeSupported(c[i])) return c[i]; } catch (e) {}
+      }
+      return null;
+    }
+    function expSeek(v, t) {
+      return new Promise(function(res) {
+        var done = function() { try { v.removeEventListener("seeked", done); } catch (e) {} res(); };
+        v.addEventListener("seeked", done);
+        try { v.currentTime = t; } catch (e) { done(); return; }
+        setTimeout(done, 5000);                       // never hang on a bad seek
+      });
+    }
+    function expRun(v, end) {
+      return new Promise(function(res) {
+        var iv = setInterval(function() {
+          if (expAbort.current || v.ended || v.currentTime >= end) {
+            clearInterval(iv); try { v.pause(); } catch (e) {} res();
+          }
+        }, 100);
+        var p; try { p = v.play(); } catch (e) { clearInterval(iv); res(); return; }
+        if (p && p.catch) p.catch(function() { clearInterval(iv); res(); });
+      });
+    }
+    async function plExport(pl) {
+      var v = vRef.current;
+      if (!v || !pl || !pl.events || !pl.events.length) return;
+      if (!window.MediaRecorder || !(v.captureStream || v.mozCaptureStream)) {
+        setPlExp({ err: "This browser can't export clips. Chrome on Android or a desktop browser will." }); return;
+      }
+      var mime = expMime();
+      if (!mime) { setPlExp({ err: "No supported recording format on this device." }); return; }
+      var PRE = 6, POST = 5, n = pl.events.length, per = PRE + POST;
+      var wasMuted = v.muted, wasT = v.currentTime;
+      expAbort.current = false;
+      var stream, rec, chunks = [];
+      try { stream = v.captureStream ? v.captureStream() : v.mozCaptureStream(); }
+      catch (e) { setPlExp({ err: "Could not capture video on this device." }); return; }
+      try { rec = new window.MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 4e6 }); }
+      catch (e) { setPlExp({ err: "Recording is not available on this device." }); return; }
+      rec.ondataavailable = function(e) { if (e.data && e.data.size) chunks.push(e.data); };
+      var finished = new Promise(function(res) { rec.onstop = res; setTimeout(res, 1000 * (n * per + 30)); });
+      v.muted = false;
+      setPlExp({ i: 0, n: n, secs: n * per });
+      try {
+        rec.start(500);
+        try { if (rec.state === "recording") rec.pause(); } catch (e) {}
+        for (var i = 0; i < n; i++) {
+          if (expAbort.current) break;
+          setPlExp({ i: i, n: n, secs: (n - i) * per });
+          var ts = pl.events[i].video_ts || 0;
+          await expSeek(v, Math.max(0, ts - PRE));
+          if (expAbort.current) break;
+          try { if (rec.state === "paused") rec.resume(); } catch (e) {}
+          await expRun(v, ts + POST);
+          try { if (rec.state === "recording") rec.pause(); } catch (e) {}
+        }
+      } catch (e) {}
+      try { if (rec.state !== "inactive") rec.stop(); } catch (e) {}
+      await finished;
+      v.muted = wasMuted;
+      try { v.currentTime = wasT; } catch (e) {}
+      if (expAbort.current || !chunks.length) { setPlExp(null); return; }
+      var ext = mime.indexOf("mp4") >= 0 ? "mp4" : "webm";
+      var blob = new Blob(chunks, { type: mime.split(";")[0] });
+      var fname = ((pl.name || "clips") + "-" + ((match && match.opponent) || "match")).replace(/[^\w-]+/g, "_") + "." + ext;
+      setPlExp(null);
+      try {
+        var file = new File([blob], fname, { type: blob.type });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: pl.name || "Clips" });
+          return;
+        }
+      } catch (e) {}
+      try {
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url; a.download = fname; document.body.appendChild(a); a.click();
+        setTimeout(function() { try { document.body.removeChild(a); URL.revokeObjectURL(url); } catch (e) {} }, 5000);
+      } catch (e) { setPlExp({ err: "Could not save the file on this device." }); }
+    }
     function plStart(pl) {
       if (!pl.events.length) return;
       setPlPlay(pl); setPlIdx(0);
@@ -6095,7 +6188,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5 } }, avail.map(function(p) {
             return /* @__PURE__ */ React.createElement("button", { key: p.id, onClick: function() { doVSub(vSubOff, vSubOn || nextN, p.name, p.id); }, style: { textAlign: "left", padding: "10px 12px", background: C.bgCard, border: "1px solid " + C.greenB + "44", borderRadius: 9, color: C.greenB, cursor: "pointer", fontSize: 13, fontWeight: 700 } }, p.name);
           }))));
-    })(), plMode && Object.keys(plSel).length > 0 && React.createElement("div", { style: { padding: "8px 6px", borderTop: "1px solid " + C.gold + "55", background: C.gold + "11", display: "flex", gap: 6, alignItems: "center" } }, React.createElement("input", { value: plName, onChange: function(e) { setPlName(e.target.value); }, placeholder: "Playlist name", style: { flex: 1, padding: "8px 10px", borderRadius: 7, border: "1px solid " + C.border, background: C.bg, color: C.white, fontSize: 12 } }), React.createElement("button", { onClick: plSave, style: { padding: "8px 14px", borderRadius: 7, border: "none", background: C.gold, color: "#000", fontWeight: 800, fontSize: 12, cursor: "pointer" } }, "\u2713 Save " + Object.keys(plSel).length)), plSaved.length > 0 && !plMode && React.createElement("div", { style: { padding: "4px 6px" } }, React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, padding: "6px 0 4px" } }, "PLAYLISTS"), plSaved.map(function(pl, pi) { return React.createElement("div", { key: pi, style: { display: "flex", alignItems: "center", gap: 6, padding: "6px 0", borderBottom: "1px solid " + C.border } }, React.createElement("button", { onClick: function() { plStart(pl); }, style: { flex: 1, textAlign: "left", background: "none", border: "none", color: C.white, cursor: "pointer", padding: 0 } }, React.createElement("div", { style: { fontSize: 13, fontWeight: 700 } }, pl.name), React.createElement("div", { style: { fontSize: 10, color: C.slateD } }, pl.events.length + " clips")), React.createElement("button", { onClick: function() { plStart(pl); }, style: { padding: "6px 12px", borderRadius: 7, border: "1px solid " + C.greenB, background: C.greenB + "18", color: C.greenB, fontWeight: 800, fontSize: 11, cursor: "pointer" } }, "\u25B6"), React.createElement("button", { onClick: function() { plDelete(pi); }, style: { padding: "6px 8px", borderRadius: 7, border: "1px solid " + C.red + "55", background: "none", color: C.red, fontSize: 11, cursor: "pointer" } }, "\u2715")); })), plPlay && React.createElement("div", { style: { position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50, background: C.bg, borderTop: "2px solid " + C.greenB, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 } }, React.createElement("button", { onClick: plPrev, disabled: plIdx <= 0, style: { padding: "8px 12px", borderRadius: 7, border: "1px solid " + C.border, background: "none", color: plIdx > 0 ? C.white : C.slateD, fontWeight: 800, cursor: "pointer" } }, "\u2039 Prev"), React.createElement("div", { style: { flex: 1, textAlign: "center" } }, React.createElement("div", { style: { fontSize: 12, fontWeight: 800, color: C.greenB } }, plPlay.name), React.createElement("div", { style: { fontSize: 10, color: C.slateD } }, "Clip " + (plIdx + 1) + " of " + plPlay.events.length + (plPlay.events[plIdx] ? " \u00b7 " + plPlay.events[plIdx].label.trim().slice(0,30) : ""))), React.createElement("button", { onClick: plNext, style: { padding: "8px 12px", borderRadius: 7, border: "1px solid " + C.border, background: "none", color: C.white, fontWeight: 800, cursor: "pointer" } }, plIdx >= plPlay.events.length - 1 ? "\u2715 End" : "Next \u203a"), React.createElement("button", { onClick: function() { setPlPlay(null); }, style: { padding: "8px", borderRadius: 7, border: "none", background: C.red + "33", color: C.red, fontSize: 10, fontWeight: 800, cursor: "pointer" } }, "Stop")), big && !land && t.ev && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 10, overflow: "auto", padding: "2px 2px 8px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: tc, textAlign: "center", fontWeight: 800, letterSpacing: 0.5 } }, teamName.toUpperCase(), " \u2014 ", t.ev.l), t.ev.pitch && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: tc, margin: "0 0 4px", display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", null, "TAP PITCH (optional)", t.loc ? " \xB7 SET \u2713" : ""), t.loc && /* @__PURE__ */ React.createElement("button", { onClick: function() {
+    })(), plMode && Object.keys(plSel).length > 0 && React.createElement("div", { style: { padding: "8px 6px", borderTop: "1px solid " + C.gold + "55", background: C.gold + "11", display: "flex", gap: 6, alignItems: "center" } }, React.createElement("input", { value: plName, onChange: function(e) { setPlName(e.target.value); }, placeholder: "Playlist name", style: { flex: 1, padding: "8px 10px", borderRadius: 7, border: "1px solid " + C.border, background: C.bg, color: C.white, fontSize: 12 } }), React.createElement("button", { onClick: plSave, style: { padding: "8px 14px", borderRadius: 7, border: "none", background: C.gold, color: "#000", fontWeight: 800, fontSize: 12, cursor: "pointer" } }, "\u2713 Save " + Object.keys(plSel).length)), plSaved.length > 0 && !plMode && React.createElement("div", { style: { padding: "4px 6px" } }, React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, padding: "6px 0 4px" } }, "PLAYLISTS"), plSaved.map(function(pl, pi) { return React.createElement("div", { key: pi, style: { display: "flex", alignItems: "center", gap: 6, padding: "6px 0", borderBottom: "1px solid " + C.border } }, React.createElement("button", { onClick: function() { plStart(pl); }, style: { flex: 1, textAlign: "left", background: "none", border: "none", color: C.white, cursor: "pointer", padding: 0 } }, React.createElement("div", { style: { fontSize: 13, fontWeight: 700 } }, pl.name), React.createElement("div", { style: { fontSize: 10, color: C.slateD } }, pl.events.length + " clips")), React.createElement("button", { onClick: function() { plStart(pl); }, style: { padding: "6px 12px", borderRadius: 7, border: "1px solid " + C.greenB, background: C.greenB + "18", color: C.greenB, fontWeight: 800, fontSize: 11, cursor: "pointer" } }, "\u25B6"), React.createElement("button", { onClick: function() { plExport(pl); }, disabled: !!plExp, title: "Export clips as one video", style: { padding: "6px 10px", borderRadius: 7, border: "1px solid " + C.border, background: C.bgCard, color: plExp ? C.slateD : C.white, fontSize: 11, fontWeight: 800, cursor: "pointer" } }, "\u2913"), React.createElement("button", { onClick: function() { plDelete(pi); }, style: { padding: "6px 8px", borderRadius: 7, border: "1px solid " + C.red + "55", background: "none", color: C.red, fontSize: 11, cursor: "pointer" } }, "\u2715")); })),plExp && React.createElement("div", { style: { position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 60, background: C.bg, borderTop: "2px solid " + (plExp.err ? C.red : C.greenB), padding: "12px 14px" } },plExp.err ? React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },   React.createElement("div", { style: { flex: 1, fontSize: 12, color: C.white, lineHeight: 1.5 } }, plExp.err),   React.createElement("button", { onClick: function() { setPlExp(null); }, style: { padding: "8px 14px", borderRadius: 8, border: "1px solid " + C.border, background: "none", color: C.slate, fontSize: 11, fontWeight: 800, fontFamily: MONO, cursor: "pointer" } }, "OK")) : React.createElement("div", null,   React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 8 } },     React.createElement("div", { style: { flex: 1, minWidth: 0 } },       React.createElement("div", { style: { fontSize: 13, fontWeight: 800, color: C.white } }, "Exporting clip " + (plExp.i + 1) + " of " + plExp.n),       React.createElement("div", { style: { fontSize: 10, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, "~" + plExp.secs + "s left \u00b7 runs in real time \u00b7 keep this screen on")),     React.createElement("button", { onClick: function() { expAbort.current = true; }, style: { padding: "8px 14px", borderRadius: 8, border: "1px solid " + C.red + "66", background: "none", color: C.red, fontSize: 11, fontWeight: 800, fontFamily: MONO, cursor: "pointer" } }, "CANCEL")),   React.createElement("div", { style: { height: 4, borderRadius: 3, background: C.field, overflow: "hidden" } },     React.createElement("div", { style: { width: Math.round(100 * plExp.i / Math.max(1, plExp.n)) + "%", height: "100%", background: C.greenB } })))), plPlay && React.createElement("div", { style: { position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50, background: C.bg, borderTop: "2px solid " + C.greenB, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 } }, React.createElement("button", { onClick: plPrev, disabled: plIdx <= 0, style: { padding: "8px 12px", borderRadius: 7, border: "1px solid " + C.border, background: "none", color: plIdx > 0 ? C.white : C.slateD, fontWeight: 800, cursor: "pointer" } }, "\u2039 Prev"), React.createElement("div", { style: { flex: 1, textAlign: "center" } }, React.createElement("div", { style: { fontSize: 12, fontWeight: 800, color: C.greenB } }, plPlay.name), React.createElement("div", { style: { fontSize: 10, color: C.slateD } }, "Clip " + (plIdx + 1) + " of " + plPlay.events.length + (plPlay.events[plIdx] ? " \u00b7 " + plPlay.events[plIdx].label.trim().slice(0,30) : ""))), React.createElement("button", { onClick: plNext, style: { padding: "8px 12px", borderRadius: 7, border: "1px solid " + C.border, background: "none", color: C.white, fontWeight: 800, cursor: "pointer" } }, plIdx >= plPlay.events.length - 1 ? "\u2715 End" : "Next \u203a"), React.createElement("button", { onClick: function() { setPlPlay(null); }, style: { padding: "8px", borderRadius: 7, border: "none", background: C.red + "33", color: C.red, fontSize: 10, fontWeight: 800, cursor: "pointer" } }, "Stop")), big && !land && t.ev && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 10, overflow: "auto", padding: "2px 2px 8px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: tc, textAlign: "center", fontWeight: 800, letterSpacing: 0.5 } }, teamName.toUpperCase(), " \u2014 ", t.ev.l), t.ev.pitch && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: tc, margin: "0 0 4px", display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", null, "TAP PITCH (optional)", t.loc ? " \xB7 SET \u2713" : ""), t.loc && /* @__PURE__ */ React.createElement("button", { onClick: function() {
       tx.current.loc = null;
       sync();
     }, style: { background: "none", border: "1px solid " + C.border, borderRadius: 6, color: C.slate, fontSize: 9, fontWeight: 700, padding: "2px 8px", cursor: "pointer" } }, "Clear")), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 500, margin: "0 auto", display: "flex", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(DirPitch, null))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: tc, margin: "0 0 5px", fontWeight: 700 } }, "SELECT OUTCOME"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: land ? "1fr 1fr" : "1fr 1fr 1fr 1fr", gap: 6 } }, evLabels(t.ev).map(function(oc) {
