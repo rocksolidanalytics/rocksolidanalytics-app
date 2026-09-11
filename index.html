@@ -587,6 +587,123 @@
   }
   function Skel({ h, w, mb }) { return React.createElement("div", { className: "rsa-skel", style: { height: h || 14, width: w || "100%", marginBottom: mb == null ? 8 : mb } }); }
   function SkelRows({ n, h }) { var a = []; for (var i = 0; i < (n || 5); i++) a.push(React.createElement(Skel, { key: i, h: h || 46 })); return React.createElement("div", {}, a); }
+  function PublicClips({ token }) {
+    const [data, setData] = useState(undefined);   // undefined = loading, null = not found
+    const [idx, setIdx] = useState(0);
+    const [apiFail, setApiFail] = useState(false);
+    const hostRef = useRef(null), ytRef = useRef(null), idxRef = useRef(0);
+    const PRE = 6, POST = 5;                       // seconds either side of the tagged moment
+
+    useEffect(function() {
+      db.rpc("clip_playlist", { p_token: token }).then(function(r) {
+        setData(r && r.data ? r.data : null);
+      }, function() { setData(null); });
+    }, [token]);
+
+    function ytId(u) { if (!u) return null; var m = String(u).match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/); return m ? m[1] : null; }
+    var clips = (data && data.clips) || [];
+    var vid = data ? ytId(data.video_url) : null;
+    function startOf(i) { return Math.max(0, ((clips[i] || {}).video_ts || 0) - PRE); }
+    function endOf(i) { return ((clips[i] || {}).video_ts || 0) + POST; }
+
+    useEffect(function() { idxRef.current = idx; }, [idx]);
+
+    // build the player once the clip list and video id are known
+    useEffect(function() {
+      if (!vid || !clips.length) return;
+      var dead = false, host = null, watch = null;
+      function mk() {
+        if (dead || !hostRef.current || !window.YT || !window.YT.Player) return;
+        hostRef.current.innerHTML = "";
+        host = document.createElement("div");
+        host.style.width = "100%"; host.style.height = "100%";
+        hostRef.current.appendChild(host);
+        try {
+          ytRef.current = new window.YT.Player(host, {
+            videoId: vid, width: "100%", height: "100%",
+            playerVars: { rel: 0, playsinline: 1, controls: 1, iv_load_policy: 3, start: Math.floor(startOf(0)) },
+            events: {
+              onReady: function(ev) { try { ev.target.seekTo(startOf(idxRef.current), true); ev.target.playVideo(); } catch (e) {} },
+              onError: function() { setApiFail(true); }
+            }
+          });
+        } catch (e) { setApiFail(true); }
+        // auto-advance: when the current clip runs past its tail, move on
+        watch = setInterval(function() {
+          var p = ytRef.current;
+          if (!p || !p.getCurrentTime) return;
+          var t = 0; try { t = p.getCurrentTime() || 0; } catch (e) { return; }
+          var i = idxRef.current;
+          if (t > endOf(i)) {
+            if (i < clips.length - 1) { idxRef.current = i + 1; setIdx(i + 1); try { p.seekTo(startOf(i + 1), true); } catch (e) {} }
+            else { try { p.pauseVideo(); } catch (e) {} }
+          }
+        }, 400);
+      }
+      if (window.YT && window.YT.Player) mk();
+      else {
+        var prev = window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady = function() { if (typeof prev === "function") { try { prev(); } catch (e) {} } mk(); };
+        if (!document.getElementById("yt-api")) {
+          var sc = document.createElement("script"); sc.id = "yt-api"; sc.src = "https://www.youtube.com/iframe_api";
+          sc.onerror = function() { setApiFail(true); }; document.head.appendChild(sc);
+        }
+        setTimeout(function() { if (!dead && !(window.YT && window.YT.Player)) setApiFail(true); }, 6000);
+      }
+      return function() {
+        dead = true; if (watch) clearInterval(watch);
+        try { if (ytRef.current && ytRef.current.destroy) ytRef.current.destroy(); } catch (e) {}
+        ytRef.current = null; if (hostRef.current) hostRef.current.innerHTML = "";
+      };
+    }, [vid, clips.length]);
+
+    function go(i) {
+      if (i < 0 || i >= clips.length) return;
+      idxRef.current = i; setIdx(i);
+      var p = ytRef.current;
+      if (p && p.seekTo) { try { p.seekTo(startOf(i), true); if (p.playVideo) p.playVideo(); } catch (e) {} }
+    }
+    function mmss(t) { t = Math.max(0, Math.round(t || 0)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); }
+
+    var wrap = { minHeight: "100dvh", background: C.bg, color: C.white, padding: "18px 16px" };
+    if (data === undefined) return /* @__PURE__ */ React.createElement("div", { className: "rs-wide", style: Object.assign({}, wrap, { display: "flex", alignItems: "center", justifyContent: "center" }) },
+      /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 12, color: C.slate } }, "Loading clips\u2026"));
+    if (!data) return /* @__PURE__ */ React.createElement("div", { className: "rs-wide", style: Object.assign({}, wrap, { display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }) },
+      /* @__PURE__ */ React.createElement("div", null,
+        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, marginBottom: 6 } }, "Playlist not found"),
+        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slate, fontFamily: MONO } }, "This link may have been revoked.")));
+
+    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide", style: wrap },
+      /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 14 } },
+        /* @__PURE__ */ React.createElement("img", { src: LOGO, alt: "", width: 24, height: 24 }),
+        /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+          /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, letterSpacing: -0.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, data.name),
+          /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontFamily: MONO, marginTop: 2 } },
+            (data.opponent || "") + (data.match_date ? " \u00b7 " + data.match_date : "") + " \u00b7 " + clips.length + (clips.length === 1 ? " clip" : " clips")))),
+      vid && !apiFail
+        ? /* @__PURE__ */ React.createElement("div", { ref: hostRef, style: { width: "100%", aspectRatio: "16/9", background: "#000", borderRadius: 14, overflow: "hidden", border: "1px solid " + C.border } })
+        : /* @__PURE__ */ React.createElement("div", { style: { padding: 14, borderRadius: 14, background: C.field, border: "1px solid " + C.border, fontSize: 12, color: C.slate, lineHeight: 1.6 } },
+            apiFail ? "The video player could not load. The timestamps below still work in the source video."
+                    : "No playable video is linked to this match. The timestamps below are where each clip sits."),
+      vid && !apiFail && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 10 } },
+        /* @__PURE__ */ React.createElement("button", { onClick: function() { go(idx - 1); }, disabled: idx === 0,
+          style: { flex: 1, padding: "10px 0", borderRadius: 10, cursor: "pointer", background: C.bgCard, border: "1px solid " + C.border, color: idx === 0 ? C.slateD : C.white, fontSize: 12, fontWeight: 800, fontFamily: MONO } }, "\u2190 PREV"),
+        /* @__PURE__ */ React.createElement("button", { onClick: function() { go(idx + 1); }, disabled: idx >= clips.length - 1,
+          style: { flex: 1, padding: "10px 0", borderRadius: 10, cursor: "pointer", background: C.bgCard, border: "1px solid " + C.border, color: idx >= clips.length - 1 ? C.slateD : C.white, fontSize: 12, fontWeight: 800, fontFamily: MONO } }, "NEXT \u2192")),
+      /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16 } },
+        clips.map(function(c, i) {
+          var on = i === idx;
+          return /* @__PURE__ */ React.createElement("button", { key: i, onClick: function() { go(i); },
+            style: { width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left", marginBottom: 8, padding: 12, borderRadius: 12, cursor: "pointer",
+                     background: on ? C.greenB + "14" : C.bgCard, border: "1px solid " + (on ? C.greenB + "4D" : C.border) } },
+            /* @__PURE__ */ React.createElement("div", { style: { width: 28, height: 28, flexShrink: 0, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontSize: 11, fontWeight: 800, background: on ? C.greenB : C.field, color: on ? C.bg : C.slateD } }, String(i + 1)),
+            /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+              /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: on ? C.greenB : C.white, lineHeight: 1.3 } }, c.label || ("Clip " + (i + 1))),
+              /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, mmss(startOf(i)))));
+        })),
+      /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18, textAlign: "center", fontSize: 10, color: C.slateD, fontFamily: MONO } }, "Rock Solid Analytics"));
+  }
+
   function GameFilm({ club, role, back }) {
     const [matches, setMatches] = useState(null);
     const [sel, setSel] = useState(null);
@@ -7970,6 +8087,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }, []);
     var liveParam = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("live") : null;
     if (liveParam) return /* @__PURE__ */ React.createElement(PublicLiveMirror, { clubId: liveParam });
+    var clipsParam = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("clips") : null;
+    if (clipsParam) return /* @__PURE__ */ React.createElement(PublicClips, { token: clipsParam });
     if (phase === "loading")
       return /* @__PURE__ */ React.createElement("div", { className: "rs-wide", style: { minHeight: "100dvh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.greenB }));
     if (phase === "demoUnavailable")
