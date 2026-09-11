@@ -1870,7 +1870,10 @@
     // a turnover does not count back to the restart. Scoreable frees count as
     // shots. Bands reuse _koBand so this agrees with RESTARTS WON and the map.
     var CH_SHOT = /* @__PURE__ */ new Set(["Shot from play", "Scoreable free"]);
-    var CH_LOSS = /* @__PURE__ */ new Set(["Possession lost", "Turnover"]);
+    // Possession lost is the only chain-breaker. A "Turnover" event records a
+    // turnover WON (outcomes: Interception / In contact), so the team on it is
+    // the side gaining the ball, not losing it - it must not break a chain.
+    var CH_LOSS = /* @__PURE__ */ new Set(["Possession lost"]);
     var KO_LOST = /* @__PURE__ */ new Set(["Lost clean", "Break lost"]);
     var chains = (function() {
       function kb() { return { n: 0, ret: 0, shot: 0, score: 0, conc: 0 }; }
