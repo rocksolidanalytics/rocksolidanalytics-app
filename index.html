@@ -708,7 +708,7 @@
       /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18, textAlign: "center", fontSize: 10, color: C.slateD, fontFamily: MONO } }, "Rock Solid Analytics"));
   }
 
-  function PlaylistPanel({ match }) {
+  function PlaylistPanel({ match, hideHead }) {
     const [pls, setPls] = useState(null);
     const [open, setOpen] = useState(-1);
     const [msg, setMsg] = useState("");
@@ -756,8 +756,8 @@
     function commitNote() { if (pls) save(pls); }
 
     if (pls === null) return null;
-    var head = /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, fontWeight: 700, margin: "18px 0 8px" } }, "CLIP PLAYLISTS");
-    if (!pls.length) return /* @__PURE__ */ React.createElement("div", null, head,
+    var head = hideHead ? null : /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, fontWeight: 700, margin: "18px 0 8px" } }, "CLIP PLAYLISTS");
+    if (!pls.length) return hideHead ? null : /* @__PURE__ */ React.createElement("div", null, head,
       /* @__PURE__ */ React.createElement("div", { style: { padding: 14, borderRadius: 12, background: C.field, border: "1px solid " + C.border, fontSize: 12, color: C.slate, lineHeight: 1.6 } },
         "No playlists on this match yet. Build one in the Video Tagger, then come back here to add commentary and share it."));
 
@@ -790,6 +790,45 @@
               /* @__PURE__ */ React.createElement("button", { onClick: function() { revoke(i); },
                 style: { flexShrink: 0, padding: "6px 10px", borderRadius: 999, cursor: "pointer", background: "none", border: "1px solid " + C.red + "66", color: C.red, fontSize: 10, fontWeight: 800, fontFamily: MONO } }, "REVOKE"))));
       }));
+  }
+
+  function ClipBank({ club }) {
+    const [rows, setRows] = useState(null);
+    const [open, setOpen] = useState(false);
+    useEffect(function() {
+      if (!club || !club.id) return;
+      db.from("matches").select("id,date,opponent,playlists").eq("club_id", club.id)
+        .order("date", { ascending: false }).then(function(r) {
+          setRows((r.data || []).filter(function(m) { return Array.isArray(m.playlists) && m.playlists.length; }));
+        }, function() { setRows([]); });
+    }, [club && club.id]);
+
+    if (rows === null || !rows.length) return null;
+    var nPl = 0, nClips = 0, nShared = 0;
+    rows.forEach(function(m) {
+      nPl += m.playlists.length;
+      m.playlists.forEach(function(p) {
+        nClips += (p.events || []).length;
+        if (p.token && String(p.token).length >= 12) nShared++;
+      });
+    });
+
+    return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16, borderRadius: 14, background: C.bgCard, border: "1px solid " + C.border, overflow: "hidden" } },
+      /* @__PURE__ */ React.createElement("button", { onClick: function() { setOpen(!open); },
+        style: { width: "100%", display: "flex", alignItems: "center", gap: 12, padding: 14, background: "none", border: "none", cursor: "pointer", textAlign: "left" } },
+        /* @__PURE__ */ React.createElement("div", { style: { width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: C.greenB + "1A", color: C.greenB, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700 } }, "\u25A4"),
+        /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+          /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.white, letterSpacing: -0.2 } }, "Clip bank"),
+          /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 500, color: C.slate, marginTop: 2, fontFamily: MONO } },
+            nClips + (nClips === 1 ? " clip" : " clips") + " \u00b7 " + nPl + (nPl === 1 ? " playlist" : " playlists") + " \u00b7 " + rows.length + (rows.length === 1 ? " match" : " matches") + (nShared ? " \u00b7 " + nShared + " shared" : ""))),
+        /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: C.slateD, flexShrink: 0 } }, open ? "\u2303" : "\u2304")),
+      open && /* @__PURE__ */ React.createElement("div", { style: { padding: "0 14px 14px" } },
+        rows.map(function(m) {
+          return /* @__PURE__ */ React.createElement("div", { key: m.id, style: { marginTop: 6 } },
+            /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 800, color: C.greenB, fontFamily: MONO, letterSpacing: 0.5, paddingTop: 10, borderTop: "1px solid " + C.border } },
+              (m.opponent || "Match") + (m.date ? "  \u00b7  " + m.date : "")),
+            /* @__PURE__ */ React.createElement(PlaylistPanel, { match: m, hideHead: true }));
+        })));
   }
 
   function GameFilm({ club, role, back }) {
@@ -920,7 +959,7 @@
       }
       return React.createElement("div", { key: m.id || i, style: { background: C.bgCard, border: "1px solid " + C.border, borderRadius: 12, padding: 14, marginBottom: 12 } }, kids);
     });
-    return React.createElement("div", { className: "rsa-screen rs-wide", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "14px 14px 24px" } }, body));
+    return React.createElement("div", { className: "rsa-screen rs-wide", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "14px 14px 24px" } }, React.createElement(ClipBank, { club: club }), body));
   }
   function Home({ club, onSignOut, onImport, onGameFilm, onLineups, onStats, onNewMatch, onVideoHub, onTemplate, onLive, onTactic, onHelp, onSquad, onLivePad, onResume, resumeMatch, matchCount, role }) {
     const [hact, setHact] = useState(null);
