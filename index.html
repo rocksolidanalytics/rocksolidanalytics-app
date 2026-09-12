@@ -5891,10 +5891,69 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var wasMuted = v.muted, wasT = v.currentTime;
       expAbort.current = false;
       var stream, rec, chunks = [];
-      try { stream = v.captureStream ? v.captureStream() : v.mozCaptureStream(); }
+      // Compose through a canvas so each clip's coaching note is burned into the
+      // exported video. Capturing the <video> element directly would give clean
+      // footage with no notes, which is no use once it is in a WhatsApp group.
+      var srcStream = null;
+      try { srcStream = v.captureStream ? v.captureStream() : v.mozCaptureStream(); }
       catch (e) { setPlExp({ err: "Could not capture video on this device." }); return; }
+      var cvs = null, ctx = null, raf = 0, drawing = false, curNote = "", curPos = "";
+      var vw = v.videoWidth || 1280, vh = v.videoHeight || 720;
+      var sc = Math.min(1, 1280 / Math.max(1, vw));
+      var cw = Math.max(2, Math.round(vw * sc)), chh = Math.max(2, Math.round(vh * sc));
+      try {
+        cvs = document.createElement("canvas");
+        cvs.width = cw; cvs.height = chh;
+        ctx = cvs.getContext("2d");
+        if (!ctx || !cvs.captureStream) throw new Error("no canvas capture");
+        stream = cvs.captureStream(30);
+        var at = srcStream.getAudioTracks ? srcStream.getAudioTracks() : [];
+        if (at && at[0]) stream.addTrack(at[0]);
+        drawing = true;
+      } catch (e) { stream = srcStream; ctx = null; }   // fall back to plain capture
+      function wrapLines(txt, maxW) {
+        var words = String(txt).split(/\s+/), lines = [], line = "";
+        for (var wi = 0; wi < words.length; wi++) {
+          var trial = line ? line + " " + words[wi] : words[wi];
+          if (ctx.measureText(trial).width > maxW && line) { lines.push(line); line = words[wi]; }
+          else line = trial;
+        }
+        if (line) lines.push(line);
+        return lines.slice(0, 3);
+      }
+      function paint() {
+        if (!drawing) return;
+        try {
+          ctx.drawImage(v, 0, 0, cw, chh);
+          var fs = Math.max(15, Math.round(chh * 0.045));
+          if (curPos) {
+            ctx.font = "800 " + Math.round(fs * 0.8) + "px Inter, system-ui, sans-serif";
+            ctx.textBaseline = "top";
+            var pw = ctx.measureText(curPos).width + fs;
+            ctx.fillStyle = "rgba(0,0,0,0.55)";
+            ctx.fillRect(0, 0, pw, Math.round(fs * 1.7));
+            ctx.fillStyle = "#34c967";
+            ctx.fillText(curPos, fs * 0.5, Math.round(fs * 0.45));
+          }
+          if (curNote) {
+            ctx.font = "600 " + fs + "px Inter, system-ui, sans-serif";
+            var lines = wrapLines(curNote, cw - fs * 2.5);
+            var lh = Math.round(fs * 1.32), pad = Math.round(fs * 0.7);
+            var boxH = lines.length * lh + pad * 2;
+            ctx.fillStyle = "rgba(0,0,0,0.66)";
+            ctx.fillRect(0, chh - boxH, cw, boxH);
+            ctx.fillStyle = "#34c967";
+            ctx.fillRect(0, chh - boxH, Math.max(3, Math.round(fs * 0.22)), boxH);
+            ctx.fillStyle = "#ffffff";
+            ctx.textBaseline = "top";
+            for (var li = 0; li < lines.length; li++) ctx.fillText(lines[li], fs, chh - boxH + pad + li * lh);
+          }
+        } catch (e) {}
+        raf = (window.requestAnimationFrame || function(f) { return setTimeout(f, 33); })(paint);
+      }
+      if (drawing) paint();
       try { rec = new window.MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 4e6 }); }
-      catch (e) { setPlExp({ err: "Recording is not available on this device." }); return; }
+      catch (e) { drawing = false; setPlExp({ err: "Recording is not available on this device." }); return; }
       rec.ondataavailable = function(e) { if (e.data && e.data.size) chunks.push(e.data); };
       var finished = new Promise(function(res) { rec.onstop = res; setTimeout(res, 1000 * (total + 30)); });
       v.muted = false;
@@ -5906,6 +5965,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           if (expAbort.current) break;
           var left = 0; for (var q2 = i; q2 < n; q2++) left += clipLen(pl.events[q2]);
           setPlExp({ i: i, n: n, secs: Math.round(left) });
+          curNote = pl.events[i].note || "";
+          curPos = (i + 1) + " / " + n;
           await expSeek(v, clipStart(pl.events[i]));
           if (expAbort.current) break;
           try { if (rec.state === "paused") rec.resume(); } catch (e) {}
@@ -5915,6 +5976,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       } catch (e) {}
       try { if (rec.state !== "inactive") rec.stop(); } catch (e) {}
       await finished;
+      drawing = false;
+      try { if (raf) (window.cancelAnimationFrame || clearTimeout)(raf); } catch (e) {}
       v.muted = wasMuted;
       try { v.currentTime = wasT; } catch (e) {}
       if (expAbort.current || !chunks.length) { setPlExp(null); return; }
