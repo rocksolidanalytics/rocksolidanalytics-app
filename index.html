@@ -729,14 +729,16 @@
     const [msg, setMsg] = useState("");
     useEffect(function() {
       if (!match || !match.id) return;
-      db.from("matches").select("playlists").eq("id", match.id).single().then(
-        function(r) { setPls((r.data && r.data.playlists) || []); },
+      db.from("playlists").select("id,name,clips,token").eq("match_id", match.id).order("created_at", { ascending: true }).then(
+        function(r) { setPls((r.data || []).map(function(x) { return { id: x.id, name: x.name, events: x.clips || [], token: x.token }; })); },
         function() { setPls([]); });
     }, [match && match.id]);
 
-    function save(next) {
+    function save(next, i) {
       setPls(next);
-      db.from("matches").update({ playlists: next }).eq("id", match.id).then(function() {}, function() {
+      var row = next[i];
+      if (!row || !row.id) return;
+      db.from("playlists").update({ name: row.name, clips: row.events || [], token: row.token || null }).eq("id", row.id).then(function() {}, function() {
         setMsg("Could not save \u2014 check your connection."); setTimeout(function() { setMsg(""); }, 4000);
       });
     }
@@ -750,7 +752,7 @@
     function share(i) {
       var next = (pls || []).slice();
       var p = Object.assign({}, next[i]);
-      if (!p.token || String(p.token).length < 12) { p.token = mintToken(); next[i] = p; save(next); }
+      if (!p.token || String(p.token).length < 12) { p.token = mintToken(); next[i] = p; save(next, i); }
       var url = linkFor(p.token);
       if (navigator.share) { navigator.share({ title: p.name || "Clips", url: url }).catch(function() {}); }
       else if (navigator.clipboard) { navigator.clipboard.writeText(url); setMsg("Link copied \u2014 paste it into WhatsApp."); setTimeout(function() { setMsg(""); }, 4000); }
@@ -758,7 +760,7 @@
     }
     function revoke(i) {
       var next = (pls || []).slice();
-      var p = Object.assign({}, next[i]); delete p.token; next[i] = p; save(next);
+      var p = Object.assign({}, next[i]); p.token = null; next[i] = p; save(next, i);
       setMsg("Link revoked."); setTimeout(function() { setMsg(""); }, 3000);
     }
     function setSpan(i, j, field, v) {
@@ -766,7 +768,7 @@
       var p = Object.assign({}, next[i]);
       var evs = (p.events || []).slice();
       evs[j] = Object.assign({}, evs[j], field === "pre" ? { pre: v } : { post: v });
-      p.events = evs; next[i] = p; save(next);
+      p.events = evs; next[i] = p; save(next, i);
     }
     function setNote(i, j, v) {
       var next = (pls || []).slice();
@@ -775,7 +777,7 @@
       evs[j] = Object.assign({}, evs[j], { note: v });
       p.events = evs; next[i] = p; setPls(next);
     }
-    function commitNote() { if (pls) save(pls); }
+    function commitNote(i) { if (pls) save(pls, i); }
 
     if (pls === null) return null;
     var head = hideHead ? null : /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, fontWeight: 700, margin: "18px 0 8px" } }, "CLIP PLAYLISTS");
@@ -817,7 +819,7 @@
                 }),
                 /* @__PURE__ */ React.createElement("textarea", {
                   value: c.note || "", rows: 2, placeholder: "What to look out for\u2026",
-                  onChange: function(e) { setNote(i, j, e.target.value); }, onBlur: commitNote,
+                  onChange: function(e) { setNote(i, j, e.target.value); }, onBlur: function() { commitNote(i); },
                   style: { width: "100%", boxSizing: "border-box", resize: "vertical", padding: "8px 10px", borderRadius: 8, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: 12, lineHeight: 1.5, fontFamily: "inherit", outline: "none" } }));
             }),
             shared && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginTop: 12 } },
@@ -832,9 +834,17 @@
     const [open, setOpen] = useState(false);
     useEffect(function() {
       if (!club || !club.id) return;
-      db.from("matches").select("id,date,opponent,playlists").eq("club_id", club.id)
-        .order("date", { ascending: false }).then(function(r) {
-          setRows((r.data || []).filter(function(m) { return Array.isArray(m.playlists) && m.playlists.length; }));
+      db.from("playlists").select("id,name,clips,token,match_id,matches(id,date,opponent)").eq("club_id", club.id)
+        .then(function(r) {
+          var byMatch = {};
+          (r.data || []).forEach(function(p) {
+            var m = p.matches || {}; var k = p.match_id;
+            if (!byMatch[k]) byMatch[k] = { id: k, date: m.date, opponent: m.opponent, playlists: [] };
+            byMatch[k].playlists.push({ id: p.id, name: p.name, events: p.clips || [], token: p.token });
+          });
+          var out = Object.keys(byMatch).map(function(k) { return byMatch[k]; });
+          out.sort(function(a, b) { return String(b.date || "").localeCompare(String(a.date || "")); });
+          setRows(out);
         }, function() { setRows([]); });
     }, [club && club.id]);
 
@@ -5505,7 +5515,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         setNameMap(mp);
       });
       db.from("players").select("id,name").eq("club_id", club.id).then(function(r) { setVtSquad(r.data || []); });
-      db.from("matches").select("playlists").eq("id", match.id).single().then(function(r) { if (r.data && r.data.playlists) setPlSaved(r.data.playlists); });
+      db.from("playlists").select("id,name,clips,token").eq("match_id", match.id).order("created_at", { ascending: true }).then(function(r) {
+        setPlSaved((r.data || []).map(function(x) { return { id: x.id, name: x.name, events: x.clips || [], token: x.token }; }));
+      }, function() {});
       db.from("events").select("id,team,event_type,outcome,player,x,y,period,time_text,seq,score,video_ts").eq("match_id", match.id).order("seq", { ascending: true }).then(function(r) {
         var rows = r.data || [];
         setExisting(0);
@@ -5816,17 +5828,22 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var evts = Object.values(plSel).sort(function(a,b) { return (a.video_ts||0) - (b.video_ts||0); });
       if (!evts.length) return;
       var name = plName.trim() || ("Playlist " + (plSaved.length + 1));
-      var next = plSaved.concat([{ name: name, events: evts }]);
-      setPlSaved(next);
-      db.from("matches").update({ playlists: next }).eq("id", match.id).then(function(){},function(){});
       setPlSel({}); setPlName(""); setPlMode(false);
-      setPlOpen(next.length - 1);
+      db.from("playlists").insert({ club_id: club.id, match_id: match.id, name: name, clips: evts }).select("id").single().then(function(r) {
+        var row = { id: r && r.data ? r.data.id : null, name: name, events: evts };
+        setPlSaved(function(cur) { var nx = (cur || []).concat([row]); setPlOpen(nx.length - 1); return nx; });
+      }, function() { say("Could not save the playlist \u2014 check your connection"); });
       say("\u2713 " + name + " saved \u00b7 " + evts.length + " clips \u2014 open it below to set clip lengths, add notes and export");
     }
     const [plOpen, setPlOpen] = useState(-1);
-    function plWrite(next) {
+    // Writes only the playlist that changed, so two analysts editing the same
+    // match no longer overwrite each other's work.
+    function plWrite(next, pi) {
       setPlSaved(next);
-      db.from("matches").update({ playlists: next }).eq("id", match.id).then(function(){}, function(){});
+      var i = (pi == null ? plOpen : pi);
+      var row = next[i];
+      if (!row || !row.id) return;
+      db.from("playlists").update({ name: row.name, clips: row.events || [] }).eq("id", row.id).then(function(){}, function(){});
     }
     function plPatch(pi, ci, patch, commit) {
       var next = plSaved.slice();
@@ -5834,12 +5851,14 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var evs = (p.events || []).slice();
       evs[ci] = Object.assign({}, evs[ci], patch);
       p.events = evs; next[pi] = p;
-      if (commit) plWrite(next); else setPlSaved(next);
+      if (commit) plWrite(next, pi); else setPlSaved(next);
     }
     function plDelete(idx) {
+      var row = plSaved[idx];
       var next = plSaved.filter(function(_,i) { return i !== idx; });
       setPlSaved(next);
-      db.from("matches").update({ playlists: next }).eq("id", match.id).then(function(){},function(){});
+      if (plOpen === idx) setPlOpen(-1);
+      if (row && row.id) db.from("playlists").delete().eq("id", row.id).then(function(){},function(){});
     }
     // --- Local clip export ------------------------------------------------
     // The match file is already on this device (the tagger loads it via
