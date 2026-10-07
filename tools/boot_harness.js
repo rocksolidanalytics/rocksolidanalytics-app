@@ -1,9 +1,9 @@
-// node boot_harness.js index.html [shot.png] [width]
+// node boot_harness.js index.html [shot.png] [width] [#hash]
 // Loads the real page in Chromium with CDN scripts served from local vendor copies and Supabase stubbed offline.
 const { dir, req } = require('./resolve');
 const { chromium } = req('playwright');
 const path = require('path'), fs = require('fs');
-const file = path.resolve(process.argv[2]); const shot = process.argv[3]; const width = +(process.argv[4] || 390);
+const file = path.resolve(process.argv[2]); const shot = process.argv[3]; const width = +(process.argv[4] || 390); const hash = process.argv[5] || '';
 const LOCAL = {
   'react.production.min.js': dir('react') + '/umd/react.production.min.js',
   'react-dom.production.min.js': dir('react-dom') + '/umd/react-dom.production.min.js',
@@ -22,13 +22,13 @@ const LOCAL = {
     if (u.includes('fonts.g')) return r.continue();
     return r.abort();
   });
-  await pg.goto('http://app.local/' + path.basename(file));
+  await pg.goto('http://app.local/' + path.basename(file) + hash);
   let ok = false;
   try { await pg.waitForFunction(() => { const r = document.getElementById('root'); return r && r.innerText.trim().length > 20; }, null, { timeout: 15000 }); ok = true; } catch (e) {}
   await pg.waitForTimeout(600);
   if (shot) await pg.screenshot({ path: shot, fullPage: true });
   const blank = await pg.evaluate(() => /Something went wrong|blank/i.test(document.body.innerText));
   await b.close();
-  if (ok && !errs.length && !blank) console.log('PASS __RENDER_REACHED__');
+  if (ok && !errs.length && !blank) console.log('PASS __RENDER_REACHED__' + (hash ? ' ' + hash : ''));
   else { console.log('FAIL', ok ? '' : 'root-empty', blank ? 'error-boundary' : '', errs.join(' | ')); process.exitCode = 1; }
 })();

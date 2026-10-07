@@ -12,7 +12,7 @@ SHOT=out.png ./validate.sh       # also screenshots the logged-out boot screen
 | gate | file | fails when |
 |---|---|---|
 | 1 syntax | `extract.js` + `node --check` | the inline bundle does not parse |
-| 2 boot | `boot_harness.js` | `#root` stays empty, a page error fires, or the error boundary shows |
+| 2 boot | `boot_harness.js` | `#root` stays empty, a page error fires, or the error boundary shows. Runs on the sign-in route and the password-reset route (`#type=recovery`) |
 | 3 shadowing | `dupscan.js` | any name is declared twice in one hoisting scope, or cross-scope reused function names rise above 22 |
 | 4 metrics | `cs_snapshot.js` | `computeStats`, `computeBenchmark` or `matchRatings` output differs from `baseline/computeStats.json` |
 
