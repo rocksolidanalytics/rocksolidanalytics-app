@@ -13,19 +13,28 @@
   html, body { margin: 0; background: #0A0A0D; }
   body { font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
   input { font-family: inherit; }
-  input::placeholder { color: #6B7280; }
+  input::placeholder { color: #858C99; }
   button:focus-visible, input:focus-visible { outline: 2px solid #34c967; outline-offset: 2px; }
   @keyframes rsSpin { to { transform: rotate(360deg); } }
   .rs-spin { animation: rsSpin .8s linear infinite; transform-origin: 12px 12px; }
   @keyframes rsRise { from { opacity:0; transform: translateY(10px) scale(.96);} to {opacity:1; transform:none;} }
-  .rs-rise { animation: rsRise .6s cubic-bezier(.2,.7,.2,1) both; }
+  .rs-rise { animation: rsRise .18s cubic-bezier(.2,.7,.2,1) both; }
   @media (min-width: 760px){
     body { background:#050506; }
     #root > div { max-width: 560px; margin-left:auto; margin-right:auto;
       box-shadow: 0 0 0 1px rgba(255,255,255,0.10), 0 30px 80px rgba(0,0,0,.6); }
     #root > div.rs-wide { max-width: 1040px; }
   }
-@keyframes rsaIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.rsa-screen{animation:rsaIn .17s ease-out}@media (min-width:760px){.rsa-home-tiles{display:grid!important;grid-template-columns:1fr 1fr;gap:12px}.rsa-home-tiles>button{margin-top:0!important}.rsa-gf-detail{flex-direction:row!important;flex:1;min-height:0}.rsa-gf-video{position:sticky!important;top:0;width:55%!important;flex-shrink:0;align-self:flex-start}.rsa-gf-events{flex:1;overflow-y:auto!important;min-height:0}}@keyframes rsaShim{0%{background-position:-220px 0}100%{background-position:220px 0}}.rsa-skel{background:#141417;background-image:linear-gradient(90deg,#141417 0px,#1F1F24 110px,#141417 220px);background-size:440px 100%;animation:rsaShim 1.1s linear infinite;border-radius:8px}@media (prefers-reduced-motion:reduce){.rsa-screen{animation:none}.rsa-skel{animation:none}}@keyframes rsaCount{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.rsa-count{animation:rsaCount .4s ease-out}.rsa-noscroll{scrollbar-width:none;-ms-overflow-style:none}.rsa-noscroll::-webkit-scrollbar{display:none;width:0;height:0}@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes rsaIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.rsa-screen{animation:rsaIn .17s ease-out}@media (min-width:760px){.rsa-home-tiles{display:grid!important;grid-template-columns:1fr 1fr;gap:12px}.rsa-home-tiles>button{margin-top:0!important}.rsa-gf-detail{flex-direction:row!important;flex:1;min-height:0}.rsa-gf-video{position:sticky!important;top:0;width:55%!important;flex-shrink:0;align-self:flex-start}.rsa-gf-events{flex:1;overflow-y:auto!important;min-height:0}}@keyframes rsaShim{0%{background-position:-220px 0}100%{background-position:220px 0}}.rsa-skel{background:#141417;background-image:linear-gradient(90deg,#141417 0px,#1F1F24 110px,#141417 220px);background-size:440px 100%;animation:rsaShim 1.1s linear infinite;border-radius:8px}@media (prefers-reduced-motion:reduce){.rsa-screen{animation:none}.rsa-skel{animation:none}}@keyframes rsaCount{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.rsa-count{animation:rsaCount .18s ease-out}.rsa-noscroll{scrollbar-width:none;-ms-overflow-style:none}.rsa-noscroll::-webkit-scrollbar{display:none;width:0;height:0}@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+  /* Touch feedback, opt-in per surface via the rsa-fb class on its root. Pressed state only, no hover. */
+  .rsa-fb button { -webkit-tap-highlight-color: transparent; transition: transform .12s ease-out, box-shadow .12s ease-out, background-color .12s ease-out, border-color .12s ease-out, color .12s ease-out; }
+  .rsa-fb button:active:not(:disabled) { transform: scale(.97); box-shadow: inset 0 0 0 999px rgba(255,255,255,0.10); }
+  .rsa-fb button:disabled { cursor: default; }
+  @media (prefers-reduced-motion: reduce) {
+    .rs-rise, .rsa-count { animation: none; }
+    .rsa-fb button { transition: none; }
+    .rsa-fb button:active:not(:disabled) { transform: none; }
+  }
 </style>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -66,11 +75,21 @@
     gold: "#f0c040",
     red: "#e0584d",
     slate: "#9CA3AF",
-    slateD: "#6B7280",
+    slateD: "#858C99",
     white: "#FFFFFF",
-    navyL: "#1C1C21"
+    navyL: "#1C1C21",
+    black: "#000000",
+    purple: "#B06CFF",
+    orange: "#EB6834",
+    teal: "#3FB6A8"
   };
   const MONO = "ui-monospace, 'SF Mono', Menlo, monospace";
+  // Design tokens. Taggers keep their hand-tuned font sizes and do not use FS.
+  const FS = { xs: 9, sm: 11, md: 13, lg: 15, xl: 18, h2: 22, h1: 30, hero: 46 };
+  const RAD = { sm: 4, md: 8, lg: 12, xl: 16, pill: 999 };
+  const ALPHA = { faint: "14", soft: "22", mid: "44", strong: "66" };
+  const PITCH = { deep: "#08160C", base: "#0C4A22", stripe: "#0F6A32", line: "rgba(255,255,255,0.62)" };
+  const LED = { amber: "#FFB024", bg: "#05070A", panel: "#0E1626", red: "#FF3B3B" };
   const FORMATION = [[1], [2, 3, 4], [5, 6, 7], [8, 9], [10, 11, 12], [13, 14, 15]];
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const strip = (s) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
