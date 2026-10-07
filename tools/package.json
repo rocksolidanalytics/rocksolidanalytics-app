@@ -1,0 +1,11 @@
+{
+  "name": "rsa-tools",
+  "private": true,
+  "description": "Offline validation gates for index.html. See README.md.",
+  "dependencies": {
+    "@supabase/supabase-js": "2.x",
+    "papaparse": "5.4.1",
+    "react": "18.x",
+    "react-dom": "18.x"
+  }
+}
