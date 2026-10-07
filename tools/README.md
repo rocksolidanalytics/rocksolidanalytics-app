@@ -24,3 +24,10 @@ Notes
 - The metrics baseline is 13 seeded synthetic cases (football, hurling, half filters, empty match).
   Regenerate it only for an intended metric change:
   `node cs_snapshot.js ../index.html baseline/computeStats.json`.
+
+Screens behind sign-in
+- `page.js` exports `openApp(file, { fixtures, hash, width, height })`, which opens the real page in Chromium.
+- With `fixtures`, supabase-js is replaced by `fake_supabase.js`: a fixed session, rows per table
+  (eq filters, single/maybeSingle), writes that succeed, and `INITIAL_SESSION` fired on subscribe.
+- Example, an analyst with no club lands on Onboarding:
+  `openApp('../index.html', { fixtures: { session: { user: { id: 'u1' } }, tables: { profiles: [{ id: 'u1', club_id: null }] } } })`
