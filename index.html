@@ -1988,10 +1988,7 @@
     // Distance banding, identical to kickData so the table agrees with the map.
     function _koBand(e, side) {
       if (e.x == null) return null;
-      var flip = side === "us" ? String(e.period) === "2" : String(e.period) !== "2";
-      var x = e.x, y = e.y == null ? 0.5 : e.y;
-      if (flip) { x = 1 - x; y = 1 - y; }
-      var f = koFixOrient({ x: x, y: y });
+      var f = koOrient(e.x, e.y == null ? 0.5 : e.y, side, e.period);
       var dist = (1 - f.x) * 144;
       return dist < 45 ? "short" : dist <= 65 ? "mid" : "long";
     }
@@ -2026,15 +2023,9 @@
       const grid = { short: blankRow(), mid: blankRow(), long: blankRow() };
       const pts = [];
       evs.filter((e) => e.event_type === "Kickout" && e.x != null && e.y != null).forEach(function(e) {
-        var flip = side === "us" ? String(e.period) === "2" : String(e.period) !== "2";
-        var x = e.x, y = e.y;
-        if (flip) {
-          x = 1 - x;
-          y = 1 - y;
-        }
         var won = KO_WON.has(e.outcome);
-        var _f = koFixOrient({ x: x, y: y });
-        x = _f.x; y = _f.y;
+        var _f = koOrient(e.x, e.y, side, e.period);
+        var x = _f.x, y = _f.y;
         pts.push({ x, y, won, player: e.player || null, num: _koNumMap[e.player] || (e.player && e.player.charAt(0) === "#" ? e.player.slice(1) : null) });
         var dist = (1 - x) * 144;
         var row = dist < 45 ? "short" : dist <= 65 ? "mid" : "long";
@@ -2275,39 +2266,9 @@
       }, 0) / a.length) / 10 : 0;
     }
     const koSpeed = { us: avgN(koSp.us), opp: avgN(koSp.opp) };
-    function scoreSourceOf(arr, i, X) {
-      var Y = X === "us" ? "opp" : "us";
-      var sawFree = false;
-      for (var j = i - 1; j >= 0; j--) {
-        var e = arr[j], et = e.event_type, oc = e.outcome || "", tm = e.team, sc2 = e.score || 0;
-        if (et === "Kickout" && tm === X && (oc === "Won clean" || oc === "Break won")) return "ownKO";
-        if (et === "Kickout" && tm === Y && (oc === "Lost clean" || oc === "Break lost")) return "oppKO";
-        if (et === "Possession lost" && tm === Y) {
-          var lc = oc.toLowerCase();
-          return lc === "kick pass" ? "toKick" : lc === "hand pass" ? "toHand" : lc === "in contact" ? "toContact" : "toOther";
-        }
-        if (et === "Free conceded" && tm === Y) {
-          sawFree = true;
-          continue;
-        }
-        if (et === "Scoreable free" && tm === X) {
-          sawFree = true;
-          continue;
-        }
-        if (et === "Possession lost" && tm === X) break;
-        if (et === "Free conceded" && tm === X) break;
-        if (et === "Kickout" && tm === X && (oc === "Lost clean" || oc === "Break lost")) break;
-        if (et === "Kickout" && tm === Y && (oc === "Won clean" || oc === "Break won")) break;
-        if ((et === "Shot from play" || et === "Scoreable free") && tm === Y) break;
-        if (et === "Shot from play" && tm === X) break;
-      }
-      return sawFree ? "toOther" : "unclear";
-    }
     var scoreSrc = { us: {}, opp: {} }, scoreTot = { us: 0, opp: 0 };
     Object.keys(byMatch).forEach(function(mid) {
-      var arr = byMatch[mid].slice().sort(function(a, b) {
-        return (a.seq || 0) - (b.seq || 0);
-      });
+      var arr = byMatch[mid].slice().sort(evOrder);
       arr.forEach(function(e, i) {
         if ((e.event_type === "Shot from play" || e.event_type === "Scoreable free") && (e.score || 0) > 0) {
           var X = e.team;
@@ -2582,6 +2543,40 @@
 function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(function(s){ return s.player === pl; }) : (list || []); }
   function fKo(list, band){ if(!band || band === "all") return list || []; return (list || []).filter(function(p){ var dd = (1 - p.x) * 144; var b = dd < 45 ? "short" : dd <= 65 ? "mid" : "long"; return b === band; }); }
   function koFixOrient(p){ var K0=0.854, PL=144, MX=70; function ok(v){ var k=(K0-v)*PL; return k>=-2 && k<=MX; } if(!ok(p.x) && ok(1-p.x)){ return { x: 1-p.x, y: 1-p.y }; } return p; }
+  // Tagging order within a match: seq first, then period and clock where seq is missing or tied.
+  function evOrder(a, b) {
+    return (a.seq || 0) - (b.seq || 0) || (Number(a.period) || 0) - (Number(b.period) || 0) || (a.time_secs || 0) - (b.time_secs || 0);
+  }
+  // Walk back from a score to the event that gave the scoring side (X) the ball. Shared by the season
+  // SCORE SOURCE panel and the per-10-minute table so the two cannot drift apart.
+  function scoreSourceOf(arr, i, X) {
+    var Y = X === "us" ? "opp" : "us";
+    var sawFree = false;
+    for (var j = i - 1; j >= 0; j--) {
+      var e = arr[j], et = e.event_type, oc = e.outcome || "", tm = e.team;
+      if (et === "Kickout" && tm === X && (oc === "Won clean" || oc === "Break won")) return "ownKO";
+      if (et === "Kickout" && tm === Y && (oc === "Lost clean" || oc === "Break lost" || oc === "Straight Over Sideline")) return "oppKO";
+      if (et === "Possession lost" && tm === Y) {
+        var lc = oc.toLowerCase();
+        return lc === "kick pass" ? "toKick" : lc === "hand pass" ? "toHand" : lc === "in contact" ? "toContact" : "toOther";
+      }
+      if (et === "Turnover won" && tm === X) return "toOther";
+      if ((et === "Free conceded" && tm === Y) || (et === "Free won" && tm === X)) { sawFree = true; continue; }
+      if (et === "Scoreable free" && tm === X) { sawFree = true; continue; }
+      if (et === "Possession lost" && tm === X) break;
+      if (et === "Turnover won" && tm === Y) break;
+      if ((et === "Free conceded" && tm === X) || (et === "Free won" && tm === Y)) break;
+      if (et === "Kickout" && tm === X && (oc === "Lost clean" || oc === "Break lost" || oc === "Straight Over Sideline")) break;
+      if (et === "Kickout" && tm === Y && (oc === "Won clean" || oc === "Break won")) break;
+      if ((et === "Shot from play" || et === "Scoreable free") && tm === Y) break;
+      if (et === "Shot from play" && tm === X) break;
+    }
+    return sawFree ? "toOther" : "unclear";
+  }
+  // Every restart point goes through here: turn the raw tag into the restarting side's own-goal frame (us attack
+  // the far end in period 1, opp in period 2), then let koFixOrient catch a tag made facing the wrong way.
+  // Skipping the period flip leaves the heuristic alone, and it cannot tell a long second-half restart from a short one.
+  function koOrient(x, y, side, period){ var flip = side === "us" ? String(period) === "2" : String(period) !== "2"; if (flip) { x = 1 - x; y = 1 - y; } return koFixOrient({ x: x, y: y }); }
   function PitchMap({ shots }) {
     const W = 300, H = 400, cx = W / 2;
     const m = (d) => d / 72 * H;
@@ -3720,10 +3715,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       // Restart distance bands, same thresholds as the kickout map.
       function bandOf(r, tm) {
         if (r.x == null) return null;
-        var flip = tm === "us" ? String(r.period) === "2" : String(r.period) !== "2";
-        var x = r.x, y = r.y == null ? 0.5 : r.y;
-        if (flip) { x = 1 - x; y = 1 - y; }
-        var fo = koFixOrient({ x: x, y: y });
+        var fo = koOrient(r.x, r.y == null ? 0.5 : r.y, tm, r.period);
         var dd = (1 - fo.x) * 144;
         return dd < 45 ? "short" : dd <= 65 ? "mid" : "long";
       }
@@ -3826,13 +3818,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return tagged.filter(function(r) {
         return r.event_type === "Kickout" && r.team === tm && inHalf(r) && r.x != null;
       }).map(function(r) {
-        var flip = tm === "us" ? String(r.period) === "2" : String(r.period) !== "2";
-        var x = r.x, y = r.y;
-        if (flip) {
-          x = 1 - x;
-          y = 1 - y;
-        }
-        var _f = koFixOrient({ x: x, y: y });
+        var _f = koOrient(r.x, r.y, tm, r.period);
         return { x: _f.x, y: _f.y, won: r.outcome === "Won clean" || r.outcome === "Break won",
                  player: r.player || null, num: liveNum(r.player, tm) };
       });
@@ -7075,7 +7061,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var won=0,lost=0;
       teamEvs.forEach(function(e){
         if(e.event_type==="Kickout"&&e.x!=null&&e.y!=null){
-          var pt=koFixOrient({x:e.x,y:e.y});
+          var pt=koOrient(e.x,e.y,teamKey,e.period);
           var px=L+(pt.y*(R-L));
           var py=T+(pt.x*PL);
           var w=KO_WON.has(e.outcome); if(w)won++;else lost++;
@@ -7554,28 +7540,6 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         }
       });
       var brkPctUs = blocks.map(function(_, bi) { return brkTUs[bi] ? Math.round(100 * brkWUs[bi] / brkTUs[bi]) : null; });
-      function _srcOf(arr, i, X) {
-        var Y = X === "us" ? "opp" : "us";
-        var sawFree = false;
-        for (var j = i - 1; j >= 0; j--) {
-          var e = arr[j], et = e.event_type, oc = e.outcome || "", tm = e.team;
-          if (et === "Kickout" && tm === X && (oc === "Won clean" || oc === "Break won")) return "ownKO";
-          if (et === "Kickout" && tm === Y && (oc === "Lost clean" || oc === "Break lost")) return "oppKO";
-          if (et === "Possession lost" && tm === Y) {
-            var lc = oc.toLowerCase();
-            return lc === "kick pass" ? "toKick" : lc === "hand pass" ? "toHand" : lc === "in contact" ? "toContact" : "toOther";
-          }
-          if (et === "Free conceded" && tm === Y) { sawFree = true; continue; }
-          if (et === "Scoreable free" && tm === X) { sawFree = true; continue; }
-          if (et === "Possession lost" && tm === X) break;
-          if (et === "Free conceded" && tm === X) break;
-          if (et === "Kickout" && tm === X && (oc === "Lost clean" || oc === "Break lost")) break;
-          if (et === "Kickout" && tm === Y && (oc === "Won clean" || oc === "Break won")) break;
-          if ((et === "Shot from play" || et === "Scoreable free") && tm === Y) break;
-          if (et === "Shot from play" && tm === X) break;
-        }
-        return sawFree ? "toOther" : "unclear";
-      }
       var shotTypes = [["Goal","Goals",C.red],["Pt2Play","2pt play","#a970ff"],["Pt2Free","2pt free","#7d8fe0"],["PtPlay","Point play",C.greenB],["PtFree","Point free",C.gold]];
       var stGrid = { us: {}, opp: {} };
       shotTypes.forEach(function(t) { stGrid.us[t[0]] = blocks.map(function(){return 0;}); stGrid.opp[t[0]] = blocks.map(function(){return 0;}); });
@@ -7602,14 +7566,14 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var byMatch = {};
       evs.forEach(function(e) { var mid = e.match_id || "_"; (byMatch[mid] = byMatch[mid] || []).push(e); });
       Object.keys(byMatch).forEach(function(mid) {
-        var arr = byMatch[mid].slice().sort(function(a,b) { return (a.seq || 0) - (b.seq || 0); });
+        var arr = byMatch[mid].slice().sort(evOrder);
         arr.forEach(function(e, i) {
           var sc = e.score || 0; if (sc <= 0) return;
           if (e.team !== "us" && e.team !== "opp") return;
           var secs = e.time_secs != null ? e.time_secs : 0;
           var bi = -1; for (var k = 0; k < ranges.length; k++) { if (inBlock(secs, k)) { bi = k; break; } }
           if (bi < 0) return;
-          var src = _srcOf(arr, i, e.team);
+          var src = scoreSourceOf(arr, i, e.team);
           var mergedKey = (src === "toKick" || src === "toHand" || src === "toContact" || src === "toOther") ? "turnover" : src;
           if (srcGrid[e.team][mergedKey]) srcGrid[e.team][mergedKey][bi] += sc;
         });
