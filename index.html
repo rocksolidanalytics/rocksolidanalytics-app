@@ -1480,7 +1480,7 @@
         setBusy(false);
       }
     }
-    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", justifyContent: "center", padding: "44px 22px 30px" } }, /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 380 } }, /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", marginBottom: 26 } }, /* @__PURE__ */ React.createElement("img", { src: LOGO, alt: "", width: 84, height: 84 }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800, marginTop: 6 } }, "Set a new password"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: C.slate, marginTop: 6 } }, "Choose a new password for your account.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "0 12px", background: C.field, border: `1px solid ${C.border}`, borderRadius: 11, height: 50 } }, /* @__PURE__ */ React.createElement(LockI, { s: 17, c: C.slateD }), /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", justifyContent: "center", padding: "44px 22px 30px" } }, /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 380 } }, /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", marginBottom: 26 } }, /* @__PURE__ */ React.createElement("img", { src: LOGO, alt: "", width: 84, height: 84 }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xl, fontWeight: 800, marginTop: 6 } }, "Set a new password"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, color: C.slate, marginTop: 6 } }, "Choose a new password for your account.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { className: "rsa-field", style: { "--rsa-ring": C.greenB, display: "flex", alignItems: "center", gap: 10, padding: "0 12px", background: C.field, border: `1px solid ${C.border}`, borderRadius: RAD.lg, height: 50 } }, /* @__PURE__ */ React.createElement(LockI, { s: 17, c: C.slateD }), /* @__PURE__ */ React.createElement(
       "input",
       {
         type: show ? "text" : "password",
@@ -1491,9 +1491,9 @@
         onKeyDown: (e) => {
           if (e.key === "Enter") save();
         },
-        style: { flex: 1, background: "transparent", border: "none", outline: "none", color: C.white, fontSize: 15, height: "100%" }
+        style: { flex: 1, minWidth: 0, background: "transparent", border: "none", outline: "none", color: C.white, fontSize: FS.lg, height: "100%" }
       }
-    ), /* @__PURE__ */ React.createElement("button", { onClick: () => setShow((x) => !x), style: { background: "none", border: "none", cursor: "pointer", color: C.slateD, display: "flex" } }, /* @__PURE__ */ React.createElement(EyeI, { s: 17 }))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "0 12px", background: C.field, border: `1px solid ${C.border}`, borderRadius: 11, height: 50 } }, /* @__PURE__ */ React.createElement(LockI, { s: 17, c: C.slateD }), /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React.createElement("button", { onClick: () => setShow((x) => !x), style: { background: "none", border: "none", cursor: "pointer", color: C.slateD, display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, flexShrink: 0, padding: 0, marginRight: -8, borderRadius: RAD.md } }, /* @__PURE__ */ React.createElement(EyeI, { s: 17 }))), /* @__PURE__ */ React.createElement("div", { className: "rsa-field", style: { "--rsa-ring": C.greenB, display: "flex", alignItems: "center", gap: 10, padding: "0 12px", background: C.field, border: `1px solid ${C.border}`, borderRadius: RAD.lg, height: 50 } }, /* @__PURE__ */ React.createElement(LockI, { s: 17, c: C.slateD }), /* @__PURE__ */ React.createElement(
       "input",
       {
         type: show ? "text" : "password",
@@ -1504,18 +1504,18 @@
         onKeyDown: (e) => {
           if (e.key === "Enter") save();
         },
-        style: { flex: 1, background: "transparent", border: "none", outline: "none", color: C.white, fontSize: 15, height: "100%" }
+        style: { flex: 1, minWidth: 0, background: "transparent", border: "none", outline: "none", color: C.white, fontSize: FS.lg, height: "100%" }
       }
-    ))), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: "10px 12px", background: `${C.red}14`, border: `1px solid ${C.red}55`, borderRadius: 9, color: C.red, fontSize: 13 } }, err), /* @__PURE__ */ React.createElement("button", { onClick: save, disabled: busy, style: {
+    ))), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: "10px 12px", background: C.red + ALPHA.faint, border: "1px solid " + C.red + ALPHA.mid, borderRadius: RAD.lg, color: C.red, fontSize: FS.md } }, err), /* @__PURE__ */ React.createElement("button", { onClick: save, disabled: busy, style: {
       width: "100%",
       height: 52,
       marginTop: 18,
-      borderRadius: 12,
+      borderRadius: RAD.lg,
       border: "none",
       cursor: busy ? "default" : "pointer",
       background: `linear-gradient(135deg,${C.greenB},${C.green})`,
       color: C.bg,
-      fontSize: 15,
+      fontSize: FS.lg,
       fontWeight: 800,
       display: "flex",
       alignItems: "center",
