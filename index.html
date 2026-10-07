@@ -30,9 +30,12 @@
   .rsa-fb button { -webkit-tap-highlight-color: transparent; transition: transform .12s ease-out, box-shadow .12s ease-out, background-color .12s ease-out, border-color .12s ease-out, color .12s ease-out; }
   .rsa-fb button:active:not(:disabled) { transform: scale(.97); box-shadow: inset 0 0 0 999px rgba(255,255,255,0.10); }
   .rsa-fb button:disabled { cursor: default; }
+  .rsa-fb .rsa-field { transition: box-shadow .12s ease-out, border-color .12s ease-out; }
+  .rsa-fb .rsa-field:focus-within { box-shadow: 0 0 0 1px var(--rsa-ring, #34C967); }
   @media (prefers-reduced-motion: reduce) {
     .rs-rise, .rsa-count { animation: none; }
     .rsa-fb button { transition: none; }
+    .rsa-fb .rsa-field { transition: none; }
     .rsa-fb button:active:not(:disabled) { transform: none; }
   }
 </style>
@@ -168,14 +171,15 @@
     return /* @__PURE__ */ React.createElement("svg", { width: size, height: size, viewBox: "0 0 100 100" }, /* @__PURE__ */ React.createElement("path", { d: "M30 18 L16 30 L24 44 L34 36 Z", fill: secondary || C.border }), /* @__PURE__ */ React.createElement("path", { d: "M70 18 L84 30 L76 44 L66 36 Z", fill: secondary || C.border }), /* @__PURE__ */ React.createElement("path", { d: "M34 18 C40 26 60 26 66 18 L66 86 L34 86 Z", fill: primary || C.bgCard, stroke: "#00000022", strokeWidth: "0.5" }), /* @__PURE__ */ React.createElement("rect", { x: "34", y: "52", width: "32", height: "9", fill: secondary || C.border }), /* @__PURE__ */ React.createElement("path", { d: "M40 18 C44 24 56 24 60 18 L57 14 C53 18 47 18 43 14 Z", fill: secondary || C.border }));
   }
   function AuthField({ icon, type, val, set, ph, error, ac, right, onEnter }) {
-    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: {
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "rsa-field", style: {
+      "--rsa-ring": error ? C.red : C.greenB,
       display: "flex",
       alignItems: "center",
       gap: 10,
       padding: "0 12px",
       background: C.field,
-      border: `1px solid ${error ? C.red + "88" : C.border}`,
-      borderRadius: 11,
+      border: `1px solid ${error ? C.red : C.border}`,
+      borderRadius: RAD.lg,
       height: 50
     } }, icon, /* @__PURE__ */ React.createElement(
       "input",
@@ -188,9 +192,9 @@
         onKeyDown: (e) => {
           if (e.key === "Enter" && onEnter) onEnter();
         },
-        style: { flex: 1, background: "transparent", border: "none", outline: "none", color: C.white, fontSize: 15, height: "100%" }
+        style: { flex: 1, minWidth: 0, background: "transparent", border: "none", outline: "none", color: C.white, fontSize: FS.lg, height: "100%" }
       }
-    ), right), error && /* @__PURE__ */ React.createElement("div", { style: { color: C.red, fontSize: 11, marginTop: 6, fontFamily: MONO } }, error));
+    ), right), error && /* @__PURE__ */ React.createElement("div", { style: { color: C.red, fontSize: FS.sm, marginTop: 6, fontFamily: MONO } }, error));
   }
   function Auth() {
     const [mode, setMode] = useState("signin");
@@ -242,7 +246,7 @@
       setResetSent(true);
       setBusy(false);
     }
-    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", justifyContent: "center", padding: "44px 22px 30px" } }, /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 380 } }, /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", marginBottom: 26 }, className: "rs-rise" }, /* @__PURE__ */ React.createElement("img", { src: LOGO, alt: "", width: 84, height: 84 }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800, marginTop: 6 } }, "Rock Solid ", /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "Analytics")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: C.slate, marginTop: 6 } }, isForgot ? "Reset your password." : isSignup ? "Create your account to set up your club." : "Sign in to your club.")), isForgot ? /* @__PURE__ */ React.createElement("div", null, resetSent ? /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 14px", background: `${C.greenB}12`, border: `1px solid ${C.greenB}44`, borderRadius: 11, color: C.white, fontSize: 13, lineHeight: 1.55 } }, "If an account exists for ", email, ", a password-reset link is on its way. Open it on this phone to set a new password.") : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "0 12px", background: C.field, border: `1px solid ${err.email ? C.red + "88" : C.border}`, borderRadius: 11, height: 50 } }, /* @__PURE__ */ React.createElement(MailI, { s: 17, c: err.email ? C.red : C.slateD }), /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", justifyContent: "center", padding: "44px 22px 30px" } }, /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 380 } }, /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", marginBottom: 26 }, className: "rs-rise" }, /* @__PURE__ */ React.createElement("img", { src: LOGO, alt: "", width: 84, height: 84 }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xl, fontWeight: 800, marginTop: 6 } }, "Rock Solid ", /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB } }, "Analytics")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, color: C.slate, marginTop: 6 } }, isForgot ? "Reset your password." : isSignup ? "Create your account to set up your club." : "Sign in to your club.")), isForgot ? /* @__PURE__ */ React.createElement("div", null, resetSent ? /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 14px", background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB + ALPHA.mid, borderRadius: RAD.lg, color: C.white, fontSize: FS.md, lineHeight: 1.55 } }, "If an account exists for ", email, ", a password-reset link is on its way. Open it on this phone to set a new password.") : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { className: "rsa-field", style: { "--rsa-ring": err.email ? C.red : C.greenB, display: "flex", alignItems: "center", gap: 10, padding: "0 12px", background: C.field, border: `1px solid ${err.email ? C.red : C.border}`, borderRadius: RAD.lg, height: 50 } }, /* @__PURE__ */ React.createElement(MailI, { s: 17, c: err.email ? C.red : C.slateD }), /* @__PURE__ */ React.createElement(
       "input",
       {
         type: "email",
@@ -256,17 +260,17 @@
         onKeyDown: (e) => {
           if (e.key === "Enter") sendReset();
         },
-        style: { flex: 1, background: "transparent", border: "none", outline: "none", color: C.white, fontSize: 15, height: "100%" }
+        style: { flex: 1, minWidth: 0, background: "transparent", border: "none", outline: "none", color: C.white, fontSize: FS.lg, height: "100%" }
       }
-    )), err.email && /* @__PURE__ */ React.createElement("div", { style: { color: C.red, fontSize: 11, fontFamily: MONO } }, err.email), /* @__PURE__ */ React.createElement("button", { onClick: sendReset, disabled: busy, style: {
+    )), err.email && /* @__PURE__ */ React.createElement("div", { style: { color: C.red, fontSize: FS.sm, fontFamily: MONO } }, err.email), /* @__PURE__ */ React.createElement("button", { onClick: sendReset, disabled: busy, style: {
       width: "100%",
       height: 52,
-      borderRadius: 12,
+      borderRadius: RAD.lg,
       border: "none",
       cursor: busy ? "default" : "pointer",
       background: `linear-gradient(135deg,${C.greenB},${C.green})`,
       color: C.bg,
-      fontSize: 15,
+      fontSize: FS.lg,
       fontWeight: 800,
       display: "flex",
       alignItems: "center",
@@ -281,7 +285,7 @@
           setFormErr("");
           setResetSent(false);
         },
-        style: { background: "none", border: "none", color: C.greenB, fontWeight: 700, cursor: "pointer", fontSize: 13 }
+        style: { background: "none", border: "none", color: C.greenB, fontWeight: 700, cursor: "pointer", fontSize: FS.md, padding: "15px 6px", margin: "-15px 0" }
       },
       "Back to sign in"
     ))) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } }, /* @__PURE__ */ React.createElement(
@@ -313,7 +317,7 @@
         ph: "Password",
         error: err.pw,
         ac: isSignup ? "new-password" : "current-password",
-        right: /* @__PURE__ */ React.createElement("button", { onClick: () => setShow((s) => !s), style: { background: "none", border: "none", cursor: "pointer", color: C.slateD, display: "flex" } }, /* @__PURE__ */ React.createElement(EyeI, { s: 17 }))
+        right: /* @__PURE__ */ React.createElement("button", { onClick: () => setShow((s) => !s), style: { background: "none", border: "none", cursor: "pointer", color: C.slateD, display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, flexShrink: 0, padding: 0, marginRight: -8, borderRadius: RAD.md } }, /* @__PURE__ */ React.createElement(EyeI, { s: 17 }))
       }
     ), isSignup && /* @__PURE__ */ React.createElement(
       AuthField,
@@ -339,25 +343,25 @@
           setFormErr("");
           setResetSent(false);
         },
-        style: { background: "none", border: "none", color: C.slate, fontSize: 11, cursor: "pointer", fontFamily: MONO }
+        style: { background: "none", border: "none", color: C.slate, fontSize: FS.sm, cursor: "pointer", fontFamily: MONO, padding: "16px 6px", margin: "-16px 0" }
       },
       "Forgot password?"
-    )), formErr && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: "10px 12px", background: `${C.red}14`, border: `1px solid ${C.red}55`, borderRadius: 9, color: C.red, fontSize: 13 } }, formErr), /* @__PURE__ */ React.createElement("button", { onClick: submit, disabled: busy, style: {
+    )), formErr && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: "10px 12px", background: C.red + ALPHA.faint, border: "1px solid " + C.red + ALPHA.mid, borderRadius: RAD.lg, color: C.red, fontSize: FS.md } }, formErr), /* @__PURE__ */ React.createElement("button", { onClick: submit, disabled: busy, style: {
       width: "100%",
       height: 52,
       marginTop: 18,
-      borderRadius: 12,
+      borderRadius: RAD.lg,
       border: "none",
       cursor: busy ? "default" : "pointer",
       background: `linear-gradient(135deg,${C.greenB},${C.green})`,
       color: C.bg,
-      fontSize: 15,
+      fontSize: FS.lg,
       fontWeight: 800,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       gap: 8
-    } }, busy ? /* @__PURE__ */ React.createElement(Spin, { s: 18, c: C.bg }) : isSignup ? "Create account" : "Sign in", !busy && /* @__PURE__ */ React.createElement(Arrow, { s: 18, c: C.bg })), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", marginTop: 22, fontSize: 13, color: C.slate } }, isSignup ? "Already set up? " : "New club? ", /* @__PURE__ */ React.createElement(
+    } }, busy ? /* @__PURE__ */ React.createElement(Spin, { s: 18, c: C.bg }) : isSignup ? "Create account" : "Sign in", !busy && /* @__PURE__ */ React.createElement(Arrow, { s: 18, c: C.bg })), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", marginTop: 22, fontSize: FS.md, color: C.slate } }, isSignup ? "Already set up? " : "New club? ", /* @__PURE__ */ React.createElement(
       "button",
       {
         onClick: () => {
@@ -365,7 +369,7 @@
           setErr({});
           setFormErr("");
         },
-        style: { background: "none", border: "none", color: C.greenB, fontWeight: 700, cursor: "pointer", fontSize: 13 }
+        style: { background: "none", border: "none", color: C.greenB, fontWeight: 700, cursor: "pointer", fontSize: FS.md, padding: "15px 6px", margin: "-15px 0" }
       },
       isSignup ? "Sign in" : "Create an account"
     )))));
