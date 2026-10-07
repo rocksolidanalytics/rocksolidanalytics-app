@@ -1039,48 +1039,48 @@
     }, [role]);
     var isPlayer = role === "player";
     const sport = SPORTS.find((s) => s.id === club.sport);
-    var TILE = { width: "100%", marginTop: 12, padding: 14, borderRadius: 16, cursor: "pointer", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 12 };
+    var TILE = { width: "100%", marginTop: 12, padding: 14, borderRadius: RAD.xl, cursor: "pointer", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 12 };
     function Badge(glyph, tint, gs) {
-      return React.createElement("div", { style: { width: 36, height: 36, borderRadius: 10, background: tint + "1A", color: tint, display: "flex", alignItems: "center", justifyContent: "center", fontSize: gs || 16, fontWeight: 700, lineHeight: 1, flexShrink: 0 } }, glyph);
+      return React.createElement("div", { style: { width: 36, height: 36, borderRadius: RAD.lg, background: tint + ALPHA.faint, color: tint, display: "flex", alignItems: "center", justifyContent: "center", fontSize: gs || FS.lg, fontWeight: 700, lineHeight: 1, flexShrink: 0 } }, glyph);
     }
     function Pill(text, tint) {
-      return React.createElement("span", { style: { display: "inline-block", padding: "3px 9px", borderRadius: 999, background: tint + "1A", border: "1px solid " + tint + "4D", color: tint, fontSize: 9, fontWeight: 800, letterSpacing: 1, fontFamily: MONO, textTransform: "uppercase", whiteSpace: "nowrap" } }, text);
+      return React.createElement("span", { style: { display: "inline-block", padding: "3px 9px", borderRadius: RAD.pill, background: tint + ALPHA.faint, border: "1px solid " + tint + ALPHA.mid, color: tint, fontSize: FS.xs, fontWeight: 800, letterSpacing: 1, fontFamily: MONO, textTransform: "uppercase", whiteSpace: "nowrap" } }, text);
     }
     function Label(text) {
-      return React.createElement("div", { style: { fontSize: 9, letterSpacing: 2, color: C.slateD, fontFamily: MONO, fontWeight: 700, margin: "26px 0 2px" } }, text);
+      return React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 2, color: C.slateD, fontFamily: MONO, fontWeight: 700, margin: "26px 0 2px" } }, text);
     }
     function Row(onClick, glyph, tint, title, sub, titleColor, gs) {
       return React.createElement("button", { onClick: onClick, style: TILE },
         Badge(glyph, tint, gs),
         React.createElement("div", { style: { flex: 1, minWidth: 0 } },
-          React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: titleColor || C.white, letterSpacing: -0.2 } }, title),
-          React.createElement("div", { style: { fontSize: 11, fontWeight: 500, color: C.slate, marginTop: 2, lineHeight: 1.35 } }, sub)),
-        React.createElement("span", { style: { fontSize: 15, color: C.slateD, flexShrink: 0 } }, "\u203A"));
+          React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, color: titleColor || C.white, letterSpacing: -0.2 } }, title),
+          React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 500, color: C.slate, marginTop: 2, lineHeight: 1.35 } }, sub)),
+        React.createElement("span", { style: { fontSize: FS.lg, color: C.slateD, flexShrink: 0 } }, "\u203A"));
     }
-    return React.createElement("div", { className: "rs-wide", style: { minHeight: "100dvh", background: C.bg, color: C.white, padding: "20px 18px" } },
+    return React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, padding: "20px 18px" } },
       React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 22 } },
         React.createElement("img", { src: LOGO, alt: "", width: 30, height: 30 }),
-        React.createElement("div", { style: { flex: 1 } }, React.createElement("div", { style: { fontSize: 13, fontWeight: 800, letterSpacing: -0.2 } }, "Rock Solid ", React.createElement("span", { style: { color: C.greenB } }, "Analytics"))),
-        React.createElement("button", { onClick: onSignOut, style: { background: "none", border: "1px solid " + C.border, borderRadius: 10, color: C.slate, fontSize: 11, padding: "7px 12px", cursor: "pointer", fontFamily: MONO } }, "Sign out")),
-      React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 16, padding: 20, borderRadius: 20, background: "linear-gradient(135deg," + (club.colour_primary || C.navy) + "," + C.bg + ")", border: "1px solid " + C.greenB + "4D", boxShadow: "0 0 0 1px " + C.greenB + "14, 0 10px 34px rgba(0,0,0,.55)" } },
+        React.createElement("div", { style: { flex: 1 } }, React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800, letterSpacing: -0.2 } }, "Rock Solid ", React.createElement("span", { style: { color: C.greenB } }, "Analytics"))),
+        React.createElement("button", { onClick: onSignOut, style: { minHeight: 44, margin: "-8px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { border: "1px solid " + C.border, borderRadius: RAD.lg, color: C.slate, fontSize: FS.sm, padding: "7px 12px", fontFamily: MONO } }, "Sign out"))),
+      React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 16, padding: 20, borderRadius: RAD.xl, background: "linear-gradient(135deg," + (club.colour_primary || C.navy) + "," + C.bg + ")", border: "1px solid " + C.greenB + ALPHA.mid, boxShadow: "0 0 0 1px " + C.greenB + ALPHA.faint + ", 0 10px 34px " + C.black + ALPHA.strong } },
         (function() { var _crests = { "972a7387-aeaa-4567-ad09-0f24f3b79e3c": BRAY_CREST, "382a6343-a360-43de-94d6-752dc2842215": EADESTOWN_CREST }; var _cs = _crests[club.id]; return _cs ? React.createElement("img", { src: _cs, alt: "", style: { width: 72, height: 72, objectFit: "contain" } }) : React.createElement(Jersey, { primary: club.colour_primary, secondary: club.colour_secondary, size: 72 }); })(),
         React.createElement("div", { style: { minWidth: 0 } },
-          React.createElement("div", { style: { fontSize: 22, fontWeight: 800, color: C.white, letterSpacing: -0.4 } }, club.name),
-          React.createElement("div", { style: { fontSize: 12.5, fontWeight: 500, color: C.slate, fontFamily: MONO, marginTop: 4 } }, club.county, " \xB7 ", sport ? sport.label : club.sport),
+          React.createElement("div", { style: { fontSize: FS.h2, fontWeight: 800, color: C.white, letterSpacing: -0.4 } }, club.name),
+          React.createElement("div", { style: { fontSize: FS.md, fontWeight: 500, color: C.slate, fontFamily: MONO, marginTop: 4 } }, club.county, " \xB7 ", sport ? sport.label : club.sport),
           !club.verified && React.createElement("div", { style: { marginTop: 8 } }, Pill("Unverified", C.gold)))),
-      React.createElement("button", { onClick: onStats, style: { width: "100%", marginTop: 14, padding: 16, borderRadius: 16, cursor: "pointer", textAlign: "left", background: "linear-gradient(135deg," + C.greenB + "," + C.green + ")", border: "1px solid " + C.greenB + "66", boxShadow: "0 8px 28px " + C.greenB + "26", display: "flex", alignItems: "center", gap: 14 } },
-        React.createElement("div", { style: { width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.26)", color: "#04140a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, lineHeight: 1, flexShrink: 0 } }, "\u25A6"),
+      React.createElement("button", { onClick: onStats, style: { width: "100%", marginTop: 14, padding: "16px 14px", borderRadius: RAD.xl, cursor: "pointer", textAlign: "left", background: "linear-gradient(135deg," + C.greenB + "," + C.green + ")", border: "1px solid " + C.greenB + ALPHA.strong, boxShadow: "0 8px 28px " + C.greenB + ALPHA.soft, display: "flex", alignItems: "center", gap: 12 } },
+        React.createElement("div", { style: { width: 36, height: 36, borderRadius: RAD.lg, background: C.white + ALPHA.mid, color: C.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: FS.lg, fontWeight: 800, lineHeight: 1, flexShrink: 0 } }, "\u25A6"),
         React.createElement("div", { style: { flex: 1, minWidth: 0 } },
-          React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: "#04140a", letterSpacing: -0.2 } }, "Dashboard"),
-          React.createElement("div", { style: { fontSize: 11, fontWeight: 600, color: "#0c2a18", marginTop: 2 } }, "Season stats, scorers, " + restarts_() + " & positions")),
-        React.createElement("span", { style: { fontSize: 16, color: "#04140a", flexShrink: 0 } }, "\u2192")),
+          React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, color: C.bg, letterSpacing: -0.2 } }, "Dashboard"),
+          React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 600, color: C.bg, marginTop: 2 } }, "Season stats, scorers, " + restarts_() + " & positions")),
+        React.createElement("span", { style: { fontSize: FS.lg, color: C.bg, flexShrink: 0 } }, "\u2192")),
       !isPlayer && Label("MATCH"),
       Row(onNewMatch, "+", C.greenB, "New match", "Set up a game & squad, ready to tag", null, 20),
-      !isPlayer && resumeMatch && React.createElement("button", { onClick: function() { onResume(resumeMatch); }, style: { width: "100%", marginTop: 10, padding: 14, borderRadius: 16, background: C.greenB + "12", border: "1px solid " + C.greenB + "4D", boxShadow: "0 0 20px " + C.greenB + "1A", cursor: "pointer", display: "flex", alignItems: "center", gap: 14 } },
+      !isPlayer && resumeMatch && React.createElement("button", { onClick: function() { onResume(resumeMatch); }, style: { width: "100%", marginTop: 12, padding: 14, borderRadius: RAD.xl, background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB + ALPHA.mid, boxShadow: "0 0 20px " + C.greenB + ALPHA.faint, cursor: "pointer", display: "flex", alignItems: "center", gap: 12 } },
         Badge("\u25B6", C.greenB, 12),
         React.createElement("div", { style: { textAlign: "left", flex: 1, minWidth: 0 } },
-          React.createElement("div", { style: { fontSize: 13, fontWeight: 800, color: C.greenB, letterSpacing: -0.2 } }, "Resume Tagging"),
-          React.createElement("div", { style: { fontSize: 11, fontWeight: 500, color: C.slate, marginTop: 2, fontFamily: MONO } }, resumeMatch.opponent || "TBC")),
+          React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800, color: C.greenB, letterSpacing: -0.2 } }, "Resume Tagging"),
+          React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 500, color: C.slate, marginTop: 2, fontFamily: MONO } }, resumeMatch.opponent || "TBC")),
         Pill("Resume", C.greenB)),
       Row(onImport, "\u2191", C.greenB, "Import data", "Upload match CSVs to build your history", null, 17),
       !isPlayer && Row(onLineups, "\u2630", C.greenB, "Edit match information", "Line-ups, details, referee, venue and weather", null, 14),
@@ -1090,23 +1090,23 @@
       Row(onGameFilm, "\u25B6", C.greenB, "Game film", "Watch your games \xB7 jump to any event", C.greenB, 13),
       !isPlayer && Row(onVideoHub, "\u25C6", C.greenB, "Video tagger", "Tag a match back from footage into your dashboards", C.greenB, 13),
       !isPlayer && club.join_code && React.createElement("div", { style: { marginTop: 12, display: "flex", alignItems: "center", gap: 9 } },
-        React.createElement("span", { style: { fontSize: 10, letterSpacing: 1, color: C.slateD, fontFamily: MONO } }, "PLAYER JOIN CODE"),
+        React.createElement("span", { style: { fontSize: FS.sm, letterSpacing: 1, color: C.slateD, fontFamily: MONO } }, "PLAYER JOIN CODE"),
         Pill(club.join_code, C.gold)),
       !isPlayer && hact && (function() {
       var pls = hact.filter(function(a) { return a.role === "player"; });
       if (!pls.length) return null;
       var wk = pls.filter(function(a) { return a.last_seen && (Date.now() - new Date(a.last_seen + "T00:00:00").getTime()) / 864e5 <= 7; }).length;
-      return React.createElement("button", { onClick: onSquad, style: { marginTop: 10, background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", gap: 7, fontFamily: MONO } },
+      return React.createElement("button", { onClick: onSquad, style: { minHeight: 44, marginTop: -6, marginBottom: -16, background: "none", border: "none", boxShadow: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", gap: 7, fontFamily: MONO } },
         React.createElement("span", { style: { width: 7, height: 7, borderRadius: "50%", background: wk ? C.greenB : C.slateD } }),
-        React.createElement("span", { style: { fontSize: 11, color: C.slate, letterSpacing: 0.5 } }, React.createElement("b", { style: { color: C.white } }, String(pls.length)), pls.length === 1 ? " player" : " players", " \u00b7 ", React.createElement("b", { style: { color: wk ? C.greenB : C.slateD } }, String(wk)), " active this week"),
-        React.createElement("span", { style: { fontSize: 11, color: C.slateD } }, "\u203a"));
+        React.createElement("span", { style: { fontSize: FS.sm, color: C.slate, letterSpacing: 0.5 } }, React.createElement("b", { style: { color: C.white } }, String(pls.length)), pls.length === 1 ? " player" : " players", " \u00b7 ", React.createElement("b", { style: { color: wk ? C.greenB : C.slateD } }, String(wk)), " active this week"),
+        React.createElement("span", { style: { fontSize: FS.sm, color: C.slateD } }, "\u203a"));
     })(),
       !isPlayer && React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 12 } },
-        React.createElement("button", { onClick: onLive, style: { flex: 1, minWidth: 0, padding: 16, borderRadius: 16, cursor: "pointer", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 14 } },
+        React.createElement("button", { onClick: onLive, style: { flex: 1, minWidth: 0, padding: "16px 14px", borderRadius: RAD.xl, cursor: "pointer", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 12 } },
           Badge("\u2605", C.gold, 15),
           React.createElement("div", { style: { flex: 1, minWidth: 0 } },
-            React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.gold, letterSpacing: -0.2 } }, "Fan Zone"),
-            React.createElement("div", { style: { fontSize: 11, fontWeight: 500, color: C.slate, marginTop: 2, lineHeight: 1.35 } }, "Live scoreboard fans can follow \u2014 no login needed"))),
+            React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, color: C.gold, letterSpacing: -0.2 } }, "Fan Zone"),
+            React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 500, color: C.slate, marginTop: 2, lineHeight: 1.35 } }, "Live scoreboard fans can follow \u2014 no login needed"))),
         React.createElement("button", { onClick: function() {
       var u = window.location.origin + window.location.pathname + "?live=" + club.id;
       if (navigator.share) {
@@ -1118,15 +1118,15 @@
       } else {
         prompt("Copy this link:", u);
       }
-    }, style: { width: 76, flexShrink: 0, borderRadius: 16, cursor: "pointer", background: C.gold + "14", border: "1px solid " + C.gold + "66", color: C.gold, fontSize: 10, fontWeight: 800, fontFamily: MONO, letterSpacing: 1 } }, "SHARE", React.createElement("br", null), "LINK")),
+    }, style: { width: 76, flexShrink: 0, borderRadius: RAD.xl, cursor: "pointer", background: C.gold + ALPHA.faint, border: "1px solid " + C.gold + ALPHA.strong, color: C.gold, fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, letterSpacing: 1 } }, "SHARE", React.createElement("br", null), "LINK")),
       Label("TOOLS"),
       Row(onHelp, "?", C.greenB, "Help & support", "Ask the assistant \xB7 answers in seconds", null, 17),
       Row(onTactic, "\u26CA", C.greenB, "Tactical pad", "Drag jerseys on a pitch to explain a setup", null, 17),
       Row(onTemplate, "\u2699", C.greenB, "Tagging template", "Add your own bespoke events & outcomes", null, 16),
-      React.createElement("div", { style: { marginTop: 16, padding: 16, borderRadius: 16, background: C.bgCard, border: "1px solid " + C.border } },
-        React.createElement("div", { style: { fontSize: 9, letterSpacing: 2, color: C.slateD, fontFamily: MONO, fontWeight: 700, marginBottom: 8 } }, "YOUR DATA"),
-        React.createElement("div", { style: { fontSize: 13, fontWeight: 500, color: C.white, lineHeight: 1.55 } }, matchCount > 0 ? matchCount + " match" + (matchCount === 1 ? "" : "es") + " stored under your club." : "No matches yet \u2014 import your Performa history to begin.")),
-      React.createElement("div", { style: { marginTop: 24, textAlign: "center", fontSize: 11, color: C.slateD, fontFamily: MONO } }, "Signed in \xB7 data secured by row-level security"));
+      React.createElement("div", { style: { marginTop: 16, padding: 16, borderRadius: RAD.xl, background: C.bgCard, border: "1px solid " + C.border } },
+        React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 2, color: C.slateD, fontFamily: MONO, fontWeight: 700, marginBottom: 8 } }, "YOUR DATA"),
+        React.createElement("div", { style: { fontSize: FS.md, fontWeight: 500, color: C.white, lineHeight: 1.55 } }, matchCount > 0 ? matchCount + " match" + (matchCount === 1 ? "" : "es") + " stored under your club." : "No matches yet \u2014 import your Performa history to begin.")),
+      React.createElement("div", { style: { marginTop: 24, textAlign: "center", fontSize: FS.sm, color: C.slateD, fontFamily: MONO } }, "Signed in \xB7 data secured by row-level security"));
   }
 
   function nrmL(v) {
