@@ -1,4 +1,5 @@
-// openApp(file, { fixtures, hash, width, height }) -> { browser, page, errors }
+// openApp(file, { fixtures, hash, width, height, init }) -> { browser, page, errors }
+// init: a function run in the page before any app script (for example to stub window.YT).
 // Real index.html in Chromium; CDN scripts from tools/node_modules; supabase-js replaced by fake_supabase.js when fixtures are given.
 const path = require('path');
 const { dir, req } = require('./resolve');
@@ -16,6 +17,7 @@ async function openApp(file, o) {
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text().split('\n')[0]); });
   if (o.fixtures) await page.addInitScript(f => { window.__RSA_FIX = f; }, o.fixtures);
+  if (o.init) await page.addInitScript(o.init);
   await page.route('**/*', r => {
     const u = r.request().url();
     if (u.startsWith('http://app.local/')) return r.fulfill({ path: path.resolve(file) });

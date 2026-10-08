@@ -698,23 +698,23 @@
     function mmss(t) { t = Math.max(0, Math.round(t || 0)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); }
 
     var wrap = { minHeight: "100dvh", background: C.bg, color: C.white, padding: "18px 16px" };
-    if (data === undefined) return /* @__PURE__ */ React.createElement("div", { className: "rs-wide", style: Object.assign({}, wrap, { display: "flex", alignItems: "center", justifyContent: "center" }) },
-      /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 12, color: C.slate } }, "Loading clips\u2026"));
-    if (!data) return /* @__PURE__ */ React.createElement("div", { className: "rs-wide", style: Object.assign({}, wrap, { display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }) },
+    if (data === undefined) return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: Object.assign({}, wrap, { display: "flex", alignItems: "center", justifyContent: "center" }) },
+      /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: FS.md, color: C.slate } }, "Loading clips\u2026"));
+    if (!data) return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: Object.assign({}, wrap, { display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }) },
       /* @__PURE__ */ React.createElement("div", null,
-        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, marginBottom: 6 } }, "Playlist not found"),
-        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slate, fontFamily: MONO } }, "This link may have been revoked.")));
+        /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, marginBottom: 6 } }, "Playlist not found"),
+        /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, color: C.slate, fontFamily: MONO } }, "This link may have been revoked.")));
 
-    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide", style: wrap },
+    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: wrap },
       /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 14 } },
         /* @__PURE__ */ React.createElement("img", { src: LOGO, alt: "", width: 24, height: 24 }),
         /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } },
-          /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, letterSpacing: -0.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, data.name),
-          /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontFamily: MONO, marginTop: 2 } },
+          /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, letterSpacing: -0.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, data.name),
+          /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, fontFamily: MONO, marginTop: 2 } },
             (data.opponent || "") + (data.match_date ? " \u00b7 " + data.match_date : "") + " \u00b7 " + clips.length + (clips.length === 1 ? " clip" : " clips")))),
       vid && !apiFail
-        ? /* @__PURE__ */ React.createElement("div", { ref: hostRef, style: { width: "100%", aspectRatio: "16/9", background: "#000", borderRadius: 14, overflow: "hidden", border: "1px solid " + C.border } })
-        : /* @__PURE__ */ React.createElement("div", { style: { padding: 14, borderRadius: 14, background: C.field, border: "1px solid " + C.border, fontSize: 12, color: C.slate, lineHeight: 1.6 } },
+        ? /* @__PURE__ */ React.createElement("div", { ref: hostRef, style: { width: "100%", aspectRatio: "16/9", background: C.black, borderRadius: RAD.xl, overflow: "hidden", border: "1px solid " + C.border } })
+        : /* @__PURE__ */ React.createElement("div", { style: { padding: 14, borderRadius: RAD.xl, background: C.field, border: "1px solid " + C.border, fontSize: FS.md, color: C.slate, lineHeight: 1.6 } },
             apiFail ? (({
               100: "This video is Private or has been deleted on YouTube. It must be Unlisted or Public for clips to play here \u2014 Private does not work even with the link.",
               101: "The video owner has turned off embedding on YouTube, so it cannot play here.",
@@ -725,27 +725,27 @@
               start: "The video player could not start on this device."
             })[apiFail] || "The video player could not load.") + " The timestamps below still work in the source video."
                     : "No playable video is linked to this match. The timestamps below are where each clip sits."),
-      (clips[idx] || {}).note && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12, padding: 12, borderRadius: 12, background: "linear-gradient(135deg,#12211A,#0F1714)", border: "1px solid " + C.greenB + "33" } },
-        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 6 } }, "WHAT TO LOOK FOR"),
-        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: C.white, lineHeight: 1.55 } }, clips[idx].note)),
+      (clips[idx] || {}).note && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12, padding: 12, borderRadius: RAD.lg, background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB + ALPHA.soft } },
+        /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 6 } }, "WHAT TO LOOK FOR"),
+        /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, color: C.white, lineHeight: 1.55 } }, clips[idx].note)),
       vid && !apiFail && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 10 } },
         /* @__PURE__ */ React.createElement("button", { onClick: function() { go(idx - 1); }, disabled: idx === 0,
-          style: { flex: 1, padding: "10px 0", borderRadius: 10, cursor: "pointer", background: C.bgCard, border: "1px solid " + C.border, color: idx === 0 ? C.slateD : C.white, fontSize: 12, fontWeight: 800, fontFamily: MONO } }, "\u2190 PREV"),
+          style: { flex: 1, minHeight: 44, padding: "10px 0", borderRadius: RAD.lg, cursor: "pointer", background: C.bgCard, border: "1px solid " + C.border, color: idx === 0 ? C.slateD : C.white, fontSize: FS.md, fontWeight: 800, fontFamily: MONO } }, "\u2190 PREV"),
         /* @__PURE__ */ React.createElement("button", { onClick: function() { go(idx + 1); }, disabled: idx >= clips.length - 1,
-          style: { flex: 1, padding: "10px 0", borderRadius: 10, cursor: "pointer", background: C.bgCard, border: "1px solid " + C.border, color: idx >= clips.length - 1 ? C.slateD : C.white, fontSize: 12, fontWeight: 800, fontFamily: MONO } }, "NEXT \u2192")),
+          style: { flex: 1, minHeight: 44, padding: "10px 0", borderRadius: RAD.lg, cursor: "pointer", background: C.bgCard, border: "1px solid " + C.border, color: idx >= clips.length - 1 ? C.slateD : C.white, fontSize: FS.md, fontWeight: 800, fontFamily: MONO } }, "NEXT \u2192")),
       /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16 } },
         clips.map(function(c, i) {
           var on = i === idx;
           return /* @__PURE__ */ React.createElement("button", { key: i, onClick: function() { go(i); },
-            style: { width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left", marginBottom: 8, padding: 12, borderRadius: 12, cursor: "pointer",
-                     background: on ? C.greenB + "14" : C.bgCard, border: "1px solid " + (on ? C.greenB + "4D" : C.border) } },
-            /* @__PURE__ */ React.createElement("div", { style: { width: 28, height: 28, flexShrink: 0, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontSize: 11, fontWeight: 800, background: on ? C.greenB : C.field, color: on ? C.bg : C.slateD } }, String(i + 1)),
+            style: { width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left", marginBottom: 8, padding: 12, borderRadius: RAD.lg, cursor: "pointer",
+                     background: on ? C.greenB + ALPHA.faint : C.bgCard, border: "1px solid " + (on ? C.greenB + ALPHA.mid : C.border) } },
+            /* @__PURE__ */ React.createElement("div", { style: { width: 28, height: 28, flexShrink: 0, borderRadius: RAD.md, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontSize: FS.sm, fontWeight: 800, background: on ? C.greenB : C.field, color: on ? C.bg : C.slateD } }, String(i + 1)),
             /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } },
-              /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: on ? C.greenB : C.white, lineHeight: 1.3 } }, c.label || ("Clip " + (i + 1))),
-              /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, mmss(startOf(i))),
-              c.note && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, lineHeight: 1.45, marginTop: 4 } }, c.note)));
+              /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, fontWeight: 700, color: on ? C.greenB : C.white, lineHeight: 1.3 } }, c.label || ("Clip " + (i + 1))),
+              /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, mmss(startOf(i))),
+              c.note && /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, lineHeight: 1.45, marginTop: 4 } }, c.note)));
         })),
-      /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18, textAlign: "center", fontSize: 10, color: C.slateD, fontFamily: MONO } }, "Rock Solid Analytics"));
+      /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18, textAlign: "center", fontSize: FS.sm, color: C.slateD, fontFamily: MONO } }, "Rock Solid Analytics"));
   }
 
   function PlaylistPanel({ match, hideHead }) {
