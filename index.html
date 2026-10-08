@@ -6684,32 +6684,32 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var polyPts = dims.map(function(d,i) { return pt(i, Math.max(d.pct,5)/100).join(","); }).join(" ");
     var gridPts = function(f) { return dims.map(function(_,i){return pt(i,f).join(",");}).join(" "); };
     var labelPos = dims.map(function(d,i) { return pt(i, 1.25); });
-    var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? "#f0c040" : "#e0584d"; };
-    return React.createElement("div", { style: { padding: "14px 16px", borderRadius: 12, background: C.bgCard, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", marginBottom: 12 } },
+    var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? C.gold : C.red; };
+    return React.createElement("div", { style: { padding: "14px 16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid, marginBottom: 12 } },
       React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 6 } },
-        React.createElement("div", { style: { width: 32, height: 32, borderRadius: "50%", background: clr(overall), display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: "#0A0A0D", fontFamily: MONO } }, player.num || ""),
+        React.createElement("div", { style: { width: 32, height: 32, borderRadius: "50%", background: clr(overall), display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: FS.md, color: C.bg, fontFamily: MONO } }, player.num || ""),
         React.createElement("div", { style: { flex: 1 } },
-          React.createElement("div", { style: { fontSize: 14, fontWeight: 700 } }, player.name),
-          React.createElement("div", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO } }, roleLabel + " \u00B7 " + _pts(player) + "pts \u00B7 " + (player.sh||0) + " shots \u00B7 " + (player.tk||0) + " tackles")),
+          React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 700 } }, player.name),
+          React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO } }, roleLabel + " \u00B7 " + _pts(player) + "pts \u00B7 " + (player.sh||0) + " shots \u00B7 " + (player.tk||0) + " tackles")),
         React.createElement("div", { style: { textAlign: "right" } },
-          React.createElement("div", { style: { fontSize: 22, fontWeight: 900, color: clr(overall) } }, overall),
-          React.createElement("div", { style: { fontSize: 7, color: C.slateD, letterSpacing: 1, fontFamily: MONO } }, "DNA SCORE")),
-        React.createElement("div", { onClick: function() { if (onClose) onClose(); }, style: { width: 24, height: 24, borderRadius: 4, background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 12, cursor: "pointer" } }, "\u2715")),
+          React.createElement("div", { style: { fontSize: FS.h2, fontWeight: 900, color: clr(overall) } }, overall),
+          React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, letterSpacing: 1, fontFamily: MONO } }, "DNA SCORE")),
+        React.createElement("button", { onClick: function() { if (onClose) onClose(); }, title: "Close", style: { width: 44, height: 44, margin: -10, padding: 0, flexShrink: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement("span", { style: { width: 24, height: 24, borderRadius: RAD.sm, background: C.white + ALPHA.faint, display: "flex", alignItems: "center", justifyContent: "center", color: C.white, fontSize: FS.md } }, "\u2715"))),
       React.createElement("svg", { viewBox: "0 0 180 190", style: { width: "100%", maxWidth: 260, display: "block", margin: "0 auto" } },
-        React.createElement("polygon", { points: gridPts(1), fill: "none", stroke: "#2A2A30", strokeWidth: 0.5 }),
-        React.createElement("polygon", { points: gridPts(0.66), fill: "none", stroke: "#2A2A30", strokeWidth: 0.3 }),
-        React.createElement("polygon", { points: gridPts(0.33), fill: "none", stroke: "#2A2A30", strokeWidth: 0.3 }),
-        angles.map(function(_,i) { var p2 = pt(i,1); return React.createElement("line", { key: "ax"+i, x1: cx, y1: cy, x2: p2[0], y2: p2[1], stroke: "#2A2A30", strokeWidth: 0.3 }); }),
+        React.createElement("polygon", { points: gridPts(1), fill: "none", stroke: C.borderB, strokeWidth: 0.5 }),
+        React.createElement("polygon", { points: gridPts(0.66), fill: "none", stroke: C.borderB, strokeWidth: 0.3 }),
+        React.createElement("polygon", { points: gridPts(0.33), fill: "none", stroke: C.borderB, strokeWidth: 0.3 }),
+        angles.map(function(_,i) { var p2 = pt(i,1); return React.createElement("line", { key: "ax"+i, x1: cx, y1: cy, x2: p2[0], y2: p2[1], stroke: C.borderB, strokeWidth: 0.3 }); }),
         React.createElement("polygon", { points: polyPts, fill: C.greenB, fillOpacity: 0.15, stroke: C.greenB, strokeWidth: 1.5 }),
         dims.map(function(d,i) { var p2 = pt(i, Math.max(d.pct,5)/100); return React.createElement("circle", { key: "d"+i, cx: p2[0], cy: p2[1], r: 3, fill: C.greenB }); }),
-        dims.map(function(d,i) { return React.createElement("text", { key: "l"+i, x: labelPos[i][0], y: +labelPos[i][1]+3, textAnchor: "middle", fill: "#8b9ab5", fontSize: 8, fontFamily: "Inter,system-ui,sans-serif" }, d.label); })),
+        dims.map(function(d,i) { return React.createElement("text", { key: "l"+i, x: labelPos[i][0], y: +labelPos[i][1]+3, textAnchor: "middle", fill: C.slate, fontSize: 8, fontFamily: "Inter,system-ui,sans-serif" }, d.label); })),
       React.createElement("div", { style: { marginTop: 6 } },
         dims.map(function(d) {
           return React.createElement("div", { key: d.key, style: { display: "flex", alignItems: "center", gap: 6, marginBottom: 3 } },
-            React.createElement("span", { style: { flex: 1, fontSize: 10, color: "#b0bdd0" } }, d.label),
-            React.createElement("div", { style: { width: 50, height: 4, borderRadius: 2, background: "#232327" } },
-              React.createElement("div", { style: { width: Math.max(d.pct,2) + "%", height: 4, borderRadius: 2, background: clr(d.pct) } })),
-            React.createElement("span", { style: { fontFamily: MONO, fontSize: 9, fontWeight: 800, color: clr(d.pct), minWidth: 20, textAlign: "right" } }, d.pct));
+            React.createElement("span", { style: { flex: 1, fontSize: FS.sm, color: C.slate } }, d.label),
+            React.createElement("div", { style: { width: 50, height: 4, borderRadius: RAD.sm, background: C.border } },
+              React.createElement("div", { style: { width: Math.max(d.pct,2) + "%", height: 4, borderRadius: RAD.sm, background: clr(d.pct) } })),
+            React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.xs, fontWeight: 800, color: clr(d.pct), minWidth: 20, textAlign: "right" } }, d.pct));
         })));
   }
   function PulseTimeline({ events, match, club, result }) {
