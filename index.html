@@ -805,52 +805,52 @@
     function commitNote(i) { if (pls) save(pls, i); }
 
     if (pls === null) return null;
-    var head = hideHead ? null : /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, fontWeight: 700, margin: "18px 0 8px" } }, "CLIP PLAYLISTS");
+    var head = hideHead ? null : /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, fontWeight: 700, margin: "18px 0 8px" } }, "CLIP PLAYLISTS");
     if (!pls.length) return hideHead ? null : /* @__PURE__ */ React.createElement("div", null, head,
-      /* @__PURE__ */ React.createElement("div", { style: { padding: 14, borderRadius: 12, background: C.field, border: "1px solid " + C.border, fontSize: 12, color: C.slate, lineHeight: 1.6 } },
+      /* @__PURE__ */ React.createElement("div", { style: { padding: 14, borderRadius: RAD.lg, background: C.field, border: "1px solid " + C.border, fontSize: FS.md, color: C.slate, lineHeight: 1.6 } },
         "No playlists on this match yet. Build one in the Video Tagger, then come back here to add commentary and share it."));
 
     return /* @__PURE__ */ React.createElement("div", null, head,
-      msg && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.greenB, fontFamily: MONO, marginBottom: 8 } }, msg),
+      msg && /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.greenB, fontFamily: MONO, marginBottom: 8 } }, msg),
       pls.map(function(p, i) {
         var evs = p.events || [], isOpen = open === i, shared = p.token && String(p.token).length >= 12;
-        return /* @__PURE__ */ React.createElement("div", { key: i, style: { marginBottom: 10, borderRadius: 12, background: C.bgCard, border: "1px solid " + (shared ? C.greenB + "33" : C.border), overflow: "hidden" } },
+        return /* @__PURE__ */ React.createElement("div", { key: i, style: { marginBottom: 10, borderRadius: RAD.lg, background: C.bgCard, border: "1px solid " + (shared ? C.greenB + ALPHA.soft : C.border), overflow: "hidden" } },
           /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: 12 } },
             /* @__PURE__ */ React.createElement("button", { onClick: function() { setOpen(isOpen ? -1 : i); },
-              style: { flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer" } },
-              /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 800, color: C.white } }, p.name || ("Playlist " + (i + 1))),
-              /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slateD, fontFamily: MONO, marginTop: 2 } },
+              style: { flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", boxShadow: "none", padding: "8px 0", margin: "-8px 0", cursor: "pointer" } },
+              /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800, color: C.white } }, p.name || ("Playlist " + (i + 1))),
+              /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, marginTop: 2 } },
                 evs.length + (evs.length === 1 ? " clip" : " clips") + (shared ? " \u00b7 SHARED" : " \u00b7 private"))),
             /* @__PURE__ */ React.createElement("button", { onClick: function() { share(i); },
-              style: { flexShrink: 0, padding: "7px 12px", borderRadius: 999, cursor: "pointer", background: C.greenB, border: "none", color: C.bg, fontSize: 10, fontWeight: 800, fontFamily: MONO, letterSpacing: 0.5 } }, shared ? "SHARE" : "GET LINK"),
+              style: { flexShrink: 0, margin: "-10px 0", minHeight: 44, padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement("span", { style: { padding: "7px 12px", borderRadius: RAD.pill, background: C.greenB, color: C.bg, fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, letterSpacing: 0.5 } }, shared ? "SHARE" : "GET LINK")),
             /* @__PURE__ */ React.createElement("button", { onClick: function() { setOpen(isOpen ? -1 : i); },
-              style: { flexShrink: 0, background: "none", border: "none", color: C.slateD, fontSize: 14, cursor: "pointer", padding: 0 } }, isOpen ? "\u2303" : "\u2304")),
+              title: isOpen ? "Collapse" : "Expand", style: { flexShrink: 0, background: "none", border: "none", color: C.slateD, fontSize: FS.lg, cursor: "pointer", padding: 0, width: 44, height: 44, margin: "-14px -14px -14px -10px", borderRadius: RAD.md } }, isOpen ? "\u2303" : "\u2304")),
           isOpen && /* @__PURE__ */ React.createElement("div", { style: { padding: "0 12px 12px" } },
             evs.map(function(c, j) {
               return /* @__PURE__ */ React.createElement("div", { key: j, style: { paddingTop: 10, marginTop: 10, borderTop: "1px solid " + C.border } },
                 /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 } },
-                  /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontSize: 12, fontWeight: 700, color: C.white } }, (j + 1) + ". " + (c.label || "Clip")),
-                  /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slateD, fontFamily: MONO, flexShrink: 0 } }, Math.round(clipLen(c)) + "s")),
+                  /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontSize: FS.md, fontWeight: 700, color: C.white } }, (j + 1) + ". " + (c.label || "Clip")),
+                  /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, flexShrink: 0 } }, Math.round(clipLen(c)) + "s")),
                 [["pre", "LEAD", [3, 6, 10, 15, 30]], ["post", "TAIL", [2, 5, 10, 20]]].map(function(g) {
                   var cur = g[0] === "pre" ? clipPre(c) : clipPost(c);
-                  return /* @__PURE__ */ React.createElement("div", { key: g[0], style: { display: "flex", alignItems: "center", gap: 4, marginBottom: 5 } },
-                    /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO, letterSpacing: 0.5, width: 32, flexShrink: 0 } }, g[1]),
+                  return /* @__PURE__ */ React.createElement("div", { key: g[0], style: { display: "flex", alignItems: "center", gap: 4 } },
+                    /* @__PURE__ */ React.createElement("span", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO, letterSpacing: 0.5, width: 32, flexShrink: 0 } }, g[1]),
                     g[2].map(function(o) {
                       var on = cur === o;
                       return /* @__PURE__ */ React.createElement("button", { key: o, onClick: function() { setSpan(i, j, g[0], o); },
-                        style: { padding: "4px 8px", borderRadius: 999, cursor: "pointer", fontSize: 10, fontWeight: 800, fontFamily: MONO,
-                                 background: on ? C.greenB : "transparent", border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.bg : C.slate } }, o + "s");
+                        style: { minWidth: 40, minHeight: 44, padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement("span", { style: { padding: "4px 8px", borderRadius: RAD.pill, fontSize: FS.sm, fontWeight: 800, fontFamily: MONO,
+                                 background: on ? C.greenB : "transparent", border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.bg : C.slate } }, o + "s"));
                     }));
                 }),
                 /* @__PURE__ */ React.createElement("textarea", {
                   value: c.note || "", rows: 2, placeholder: "What to look out for\u2026",
                   onChange: function(e) { setNote(i, j, e.target.value); }, onBlur: function() { commitNote(i); },
-                  style: { width: "100%", boxSizing: "border-box", resize: "vertical", padding: "8px 10px", borderRadius: 8, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: 12, lineHeight: 1.5, fontFamily: "inherit", outline: "none" } }));
+                  className: "rsa-field", style: { "--rsa-ring": C.greenB, width: "100%", boxSizing: "border-box", resize: "vertical", padding: "8px 10px", borderRadius: RAD.md, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: FS.md, lineHeight: 1.5, fontFamily: "inherit", outline: "none" } }));
             }),
             shared && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginTop: 12 } },
-              /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontSize: 10, color: C.slateD, fontFamily: MONO, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, linkFor(p.token)),
+              /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontSize: FS.sm, color: C.slateD, fontFamily: MONO, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, linkFor(p.token)),
               /* @__PURE__ */ React.createElement("button", { onClick: function() { revoke(i); },
-                style: { flexShrink: 0, padding: "6px 10px", borderRadius: 999, cursor: "pointer", background: "none", border: "1px solid " + C.red + "66", color: C.red, fontSize: 10, fontWeight: 800, fontFamily: MONO } }, "REVOKE"))));
+                style: { flexShrink: 0, margin: "-10px 0", minHeight: 44, padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement("span", { style: { padding: "6px 10px", borderRadius: RAD.pill, border: "1px solid " + C.red + ALPHA.strong, color: C.red, fontSize: FS.sm, fontWeight: 800, fontFamily: MONO } }, "REVOKE")))));
       }));
   }
 
