@@ -8,6 +8,7 @@ const cases = [
   ['clean file passes', src, 'PASSED'],
   ['shadowed plSave is caught', plant('    function plSave(', '    function plSave() {}\n    function plSave('), 'FAILED'],
   ['RESTARTS recursion is caught', plant('  function App() {', '  function App() { RESTARTS = function() { return RESTARTS(); }; RESTARTS();'), 'FAILED'],
+  ['double-escaped text is caught', plant('"Save line-up")', '"Save line-up\\\\u2026")'), 'FAILED'],
   ['computeStats change is caught', plant('    const scorers = Object.entries(sc)', '    sf += 1;\n    const scorers = Object.entries(sc)'), 'FAILED'],
 ];
 let bad = 0;
