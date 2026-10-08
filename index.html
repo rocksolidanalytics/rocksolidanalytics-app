@@ -4870,9 +4870,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       static getDerivedStateFromError(err) { return { err: err }; }
       render() {
         if (this.state.err) return React.createElement("div", { style: { padding: 40 } },
-          React.createElement("div", { style: { color: "#e0584d", fontSize: 16, marginBottom: 10 } }, "EditMatch crashed:"),
-          React.createElement("div", { style: { color: "#f0c040", fontSize: 13, fontFamily: "monospace", whiteSpace: "pre-wrap" } }, String(this.state.err.message || this.state.err)),
-          React.createElement("button", { onClick: () => this.setState({ err: null }), style: { marginTop: 16, padding: "8px 16px", background: "#34c967", border: "none", borderRadius: 6, color: "#0A0A0D", fontWeight: 700 } }, "Retry"));
+          React.createElement("div", { style: { color: C.red, fontSize: FS.lg, marginBottom: 10 } }, "EditMatch crashed:"),
+          React.createElement("div", { style: { color: C.gold, fontSize: FS.md, fontFamily: MONO, whiteSpace: "pre-wrap" } }, String(this.state.err.message || this.state.err)),
+          React.createElement("button", { onClick: () => this.setState({ err: null }), style: { marginTop: 16, minHeight: 44, padding: "8px 16px", background: C.greenB, border: "none", borderRadius: RAD.md, color: C.bg, fontWeight: 700 } }, "Retry"));
         return this.props.children;
       }
     }
@@ -4893,8 +4893,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [err, setErr] = useState("");
     var COMPS = ["Championship", "League", "Challenge"];
     var WX = ["Dry", "Dry & Windy", "Light Rain", "Heavy Rain", "Rain & Wind", "Other"];
-    var fld = { width: "100%", padding: "12px 14px", borderRadius: 10, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: 15, fontFamily: "inherit", outline: "none", boxSizing: "border-box" };
-    var lab = { fontSize: 9, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, marginBottom: 7, marginTop: 16 };
+    var fld = { "--rsa-ring": C.greenB, width: "100%", minHeight: 44, padding: "12px 14px", borderRadius: RAD.lg, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: FS.lg, fontFamily: "inherit", outline: "none", boxSizing: "border-box" };
+    var lab = { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, marginBottom: 7, marginTop: 16 };
     useEffect(function() {
       db.from("matches").select("*").eq("id", match.id).single().then(function(r) {
         if (r.data) {
@@ -4932,34 +4932,34 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         setBusy(false);
       }
     }
-    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 11, letterSpacing: 1, color: C.slate } }, "MATCH DETAILS")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800, marginBottom: 2 } }, club.name, " v ", opponent || match.opponent), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slate, fontFamily: MONO, marginBottom: 6 } }, "Edit details \u2014 fill in weather, referee and the rest after the game."), React.createElement("div", { style: lab }, isScout ? "AWAY TEAM" : "OPPONENT"), /* @__PURE__ */ React.createElement("input", { value: opponent, onChange: function(e) {
+    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.sm, letterSpacing: 1, color: C.slate } }, "MATCH DETAILS")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xl, fontWeight: 800, marginBottom: 2 } }, club.name, " v ", opponent || match.opponent), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, fontFamily: MONO, marginBottom: 6 } }, "Edit details \u2014 fill in weather, referee and the rest after the game."), React.createElement("div", { style: lab }, isScout ? "AWAY TEAM" : "OPPONENT"), /* @__PURE__ */ React.createElement("input", { value: opponent, onChange: function(e) {
       setOpp(e.target.value);
-    }, style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "COMPETITION"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, COMPS.map(function(c) {
+    }, className: "rsa-field", style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "COMPETITION"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, COMPS.map(function(c) {
       var on = competition === c;
       return /* @__PURE__ */ React.createElement("button", { key: c, onClick: function() {
         setComp(c);
-      }, style: { flex: 1, padding: "11px 4px", borderRadius: 9, cursor: "pointer", fontSize: 13, fontWeight: 700, background: on ? C.greenB : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.bg : C.slate } }, c);
+      }, style: { flex: 1, minHeight: 44, padding: "11px 4px", borderRadius: RAD.md, cursor: "pointer", fontSize: FS.md, fontWeight: 700, background: on ? C.greenB : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.bg : C.slate } }, c);
     })), /* @__PURE__ */ React.createElement("div", { style: lab }, competition === "Championship" ? "ROUND / STAGE" : "ROUND"), /* @__PURE__ */ React.createElement("input", { value: round, onChange: function(e) {
       setRound(e.target.value);
-    }, placeholder: competition === "Championship" ? "e.g. Quarter-final" : "e.g. Round 5", style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "VENUE"), /* @__PURE__ */ React.createElement("input", { value: venue, onChange: function(e) {
+    }, placeholder: competition === "Championship" ? "e.g. Quarter-final" : "e.g. Round 5", className: "rsa-field", style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "VENUE"), /* @__PURE__ */ React.createElement("input", { value: venue, onChange: function(e) {
       setVenue(e.target.value);
-    }, placeholder: "e.g. Your club", style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "HOME / AWAY / NEUTRAL"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, [["H", "Home"], ["A", "Away"], ["N", "Neutral"]].map(function(o) {
+    }, placeholder: "e.g. Your club", className: "rsa-field", style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "HOME / AWAY / NEUTRAL"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, [["H", "Home"], ["A", "Away"], ["N", "Neutral"]].map(function(o) {
       var on = venueType === o[0];
       return /* @__PURE__ */ React.createElement("button", { key: o[0], onClick: function() {
         setVenueType(o[0]);
-      }, style: { flex: 1, padding: "11px 4px", borderRadius: 9, cursor: "pointer", fontSize: 13, fontWeight: 700, background: on ? C.greenB : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.bg : C.slate } }, o[1]);
+      }, style: { flex: 1, minHeight: 44, padding: "11px 4px", borderRadius: RAD.md, cursor: "pointer", fontSize: FS.md, fontWeight: 700, background: on ? C.greenB : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.bg : C.slate } }, o[1]);
     })), /* @__PURE__ */ React.createElement("div", { style: lab }, "DATE"), /* @__PURE__ */ React.createElement("input", { type: "date", value: date, onChange: function(e) {
       setDate(e.target.value);
-    }, style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "REFEREE"), /* @__PURE__ */ React.createElement("input", { value: referee, onChange: function(e) {
+    }, className: "rsa-field", style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "REFEREE"), /* @__PURE__ */ React.createElement("input", { value: referee, onChange: function(e) {
       setRef(e.target.value);
-    }, placeholder: "Referee name", style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "WEATHER"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 } }, WX.map(function(w) {
+    }, placeholder: "Referee name", className: "rsa-field", style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "WEATHER"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 } }, WX.map(function(w) {
       var on = weather === w;
       return /* @__PURE__ */ React.createElement("button", { key: w, onClick: function() {
         setWx(w);
-      }, style: { padding: "11px 4px", borderRadius: 9, cursor: "pointer", fontSize: 11, fontWeight: 600, background: on ? C.greenB : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.bg : C.slate } }, w);
-    })), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16, color: C.red, fontSize: 11 } }, err), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+      }, style: { minHeight: 44, padding: "11px 4px", borderRadius: RAD.md, cursor: "pointer", fontSize: FS.sm, fontWeight: 600, background: on ? C.greenB : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.bg : C.slate } }, w);
+    })), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16, color: C.red, fontSize: FS.sm } }, err), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       if (window.__rsaEditCustom) window.__rsaEditCustom();
-    }, style: { marginTop: 18, width: "100%", padding: 13, borderRadius: 11, border: "1px solid " + C.border, cursor: "pointer", background: C.bgCard, color: C.white, fontWeight: 700, fontSize: 13, display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", null, "Custom events for this match"), /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, "\u203A")), /* @__PURE__ */ React.createElement("button", { onClick: save, disabled: busy, style: { marginTop: 14, width: "100%", padding: 15, borderRadius: 12, border: "none", cursor: busy ? "default" : "pointer", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 15, opacity: busy ? 0.6 : 1 } }, busy ? "Saving\u2026" : "Save details")));
+    }, style: { marginTop: 18, width: "100%", minHeight: 44, padding: 13, borderRadius: RAD.lg, border: "1px solid " + C.border, cursor: "pointer", background: C.bgCard, color: C.white, fontWeight: 700, fontSize: FS.md, display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", null, "Custom events for this match"), /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, "\u203A")), /* @__PURE__ */ React.createElement("button", { onClick: save, disabled: busy, style: { marginTop: 14, width: "100%", padding: 15, borderRadius: RAD.lg, border: "none", cursor: busy ? "default" : "pointer", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: FS.lg, opacity: busy ? 0.6 : 1 } }, busy ? "Saving\u2026" : "Save details")));
   }
   function lockerOK() {
     return typeof navigator !== "undefined" && navigator.storage && typeof navigator.storage.getDirectory === "function";
