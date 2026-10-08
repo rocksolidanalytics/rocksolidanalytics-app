@@ -883,19 +883,19 @@
       });
     });
 
-    return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16, borderRadius: 14, background: C.bgCard, border: "1px solid " + C.border, overflow: "hidden" } },
+    return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16, borderRadius: RAD.xl, background: C.bgCard, border: "1px solid " + C.border, overflow: "hidden" } },
       /* @__PURE__ */ React.createElement("button", { onClick: function() { setOpen(!open); },
         style: { width: "100%", display: "flex", alignItems: "center", gap: 12, padding: 14, background: "none", border: "none", cursor: "pointer", textAlign: "left" } },
-        /* @__PURE__ */ React.createElement("div", { style: { width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: C.greenB + "1A", color: C.greenB, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700 } }, "\u25A4"),
+        /* @__PURE__ */ React.createElement("div", { style: { width: 36, height: 36, borderRadius: RAD.lg, flexShrink: 0, background: C.greenB + ALPHA.faint, color: C.greenB, display: "flex", alignItems: "center", justifyContent: "center", fontSize: FS.lg, fontWeight: 700 } }, "\u25A4"),
         /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } },
-          /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.white, letterSpacing: -0.2 } }, "Clip bank"),
-          /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 500, color: C.slate, marginTop: 2, fontFamily: MONO } },
+          /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, color: C.white, letterSpacing: -0.2 } }, "Clip bank"),
+          /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 500, color: C.slate, marginTop: 2, fontFamily: MONO } },
             nClips + (nClips === 1 ? " clip" : " clips") + " \u00b7 " + nPl + (nPl === 1 ? " playlist" : " playlists") + " \u00b7 " + rows.length + (rows.length === 1 ? " match" : " matches") + (nShared ? " \u00b7 " + nShared + " shared" : ""))),
-        /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: C.slateD, flexShrink: 0 } }, open ? "\u2303" : "\u2304")),
+        /* @__PURE__ */ React.createElement("span", { style: { fontSize: FS.lg, color: C.slateD, flexShrink: 0 } }, open ? "\u2303" : "\u2304")),
       open && /* @__PURE__ */ React.createElement("div", { style: { padding: "0 14px 14px" } },
         rows.map(function(m) {
           return /* @__PURE__ */ React.createElement("div", { key: m.id, style: { marginTop: 6 } },
-            /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 800, color: C.greenB, fontFamily: MONO, letterSpacing: 0.5, paddingTop: 10, borderTop: "1px solid " + C.border } },
+            /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 800, color: C.greenB, fontFamily: MONO, letterSpacing: 0.5, paddingTop: 10, borderTop: "1px solid " + C.border } },
               (m.opponent || "Match") + (m.date ? "  \u00b7  " + m.date : "")),
             /* @__PURE__ */ React.createElement(PlaylistPanel, { match: m, hideHead: true }));
         })));
