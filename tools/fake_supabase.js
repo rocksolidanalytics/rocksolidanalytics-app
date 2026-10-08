@@ -1,5 +1,6 @@
 // Browser-side stand-in for supabase-js, served in place of the CDN script.
-// Reads window.__RSA_FIX = { session, tables: { name: [rows] }, rpc: { name: data } }.
+// Reads window.__RSA_FIX = { session, tables: { name: [rows] }, rpc: { name: data }, delay: { table: ms } }.
+// delay holds a table read back so loading states can be captured.
 // Reads filter rows by eq; writes succeed and echo their payload. No network.
 (function () {
   function fix() { return window.__RSA_FIX || {}; }
@@ -15,7 +16,7 @@
       return { data: rows, error: null, count: rows.length };
     }
     b = new Proxy({}, { get: function (_, k) {
-      if (k === 'then') return function (ok, bad) { return Promise.resolve(result()).then(ok, bad); };
+      if (k === 'then') return function (ok, bad) { var ms = (fix().delay || {})[table] || 0; return new Promise(function (r) { setTimeout(function () { r(result()); }, ms); }).then(ok, bad); };
       if (k === 'eq') return function (c, v) { st.eq.push([c, v]); return b; };
       if (k === 'single' || k === 'maybeSingle') return function () { st.one = k; return b; };
       if (k === 'insert' || k === 'upsert' || k === 'update') return function (p) { st.write = { kind: k, payload: Array.isArray(p) ? p : Object.assign({ id: 'fake-' + table }, p) }; return b; };
