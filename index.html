@@ -6765,15 +6765,15 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var elements = [];
     
     // Centre line
-    elements.push(React.createElement("line", { key: "mid", x1: pad.l, y1: mid, x2: pad.l+cw, y2: mid, stroke: "#2A2A30", strokeWidth: 0.5 }));
+    elements.push(React.createElement("line", { key: "mid", x1: pad.l, y1: mid, x2: pad.l+cw, y2: mid, stroke: C.borderB, strokeWidth: 0.5 }));
     
     // Half-time line
-    elements.push(React.createElement("line", { key: "ht", x1: mx(1800), y1: pad.t, x2: mx(1800), y2: pad.t+ch, stroke: "#2A2A30", strokeWidth: 0.5, strokeDasharray: "3,2" }));
-    elements.push(React.createElement("text", { key: "htl", x: mx(1800), y: pad.t+ch+12, textAnchor: "middle", fill: "#6B7280", fontSize: 7, fontFamily: "Inter,system-ui,sans-serif" }, "HT"));
+    elements.push(React.createElement("line", { key: "ht", x1: mx(1800), y1: pad.t, x2: mx(1800), y2: pad.t+ch, stroke: C.borderB, strokeWidth: 0.5, strokeDasharray: "3,2" }));
+    elements.push(React.createElement("text", { key: "htl", x: mx(1800), y: pad.t+ch+12, textAnchor: "middle", fill: C.slateD, fontSize: 7, fontFamily: "Inter,system-ui,sans-serif" }, "HT"));
     
     // Time labels
     [0,10,20,30,40,50,60].forEach(function(m2, i) {
-      elements.push(React.createElement("text", { key: "t"+i, x: mx(m2*60), y: pad.t+ch+12, textAnchor: "middle", fill: "#6B7280", fontSize: 7, fontFamily: "Inter,system-ui,sans-serif" }, m2+"'"));
+      elements.push(React.createElement("text", { key: "t"+i, x: mx(m2*60), y: pad.t+ch+12, textAnchor: "middle", fill: C.slateD, fontSize: 7, fontFamily: "Inter,system-ui,sans-serif" }, m2+"'"));
     });
     
     // Event spikes
@@ -6788,11 +6788,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var isTackle = e.type === "Tackle";
       
       var col, h, w, opacity;
-      if (isScore) { col = isUs ? "#34c967" : "#e0584d"; h = isGoal ? 0.85 : 0.55; w = 2; opacity = 0.85; }
-      else if (isKO) { col = "#f0c040"; h = 0.3; w = 1.2; opacity = 0.5; }
-      else if (isTO) { col = "#eb6834"; h = 0.22; w = 1.2; opacity = 0.5; }
-      else if (isTackle) { col = "#6B7280"; h = 0.12; w = 0.6; opacity = 0.3; }
-      else { col = "#6B7280"; h = 0.1; w = 0.5; opacity = 0.2; }
+      if (isScore) { col = isUs ? C.greenB : C.red; h = isGoal ? 0.85 : 0.55; w = 2; opacity = 0.85; }
+      else if (isKO) { col = C.gold; h = 0.3; w = 1.2; opacity = 0.5; }
+      else if (isTO) { col = C.orange; h = 0.22; w = 1.2; opacity = 0.5; }
+      else if (isTackle) { col = C.slateD; h = 0.12; w = 0.6; opacity = 0.3; }
+      else { col = C.slateD; h = 0.1; w = 0.5; opacity = 0.2; }
       
       elements.push(React.createElement("line", { key: "e"+i, x1: x, y1: mid, x2: x, y2: my(h, isUs), stroke: col, strokeWidth: w, opacity: opacity }));
       
@@ -6806,11 +6806,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var wpPath = "M" + wpPoints.map(function(p) {
         return mx(p.secs).toFixed(1) + "," + (pad.t + ch - (p.prob / 100) * ch).toFixed(1);
       }).join(" L");
-      elements.push(React.createElement("path", { key: "wp", d: wpPath, fill: "none", stroke: "#4a9eff", strokeWidth: 1.5, opacity: 0.8 }));
+      elements.push(React.createElement("path", { key: "wp", d: wpPath, fill: "none", stroke: C.blue, strokeWidth: 1.5, opacity: 0.8 }));
       
       // Fill under curve
       var fillPath = wpPath + " L" + mx(wpPoints[wpPoints.length-1].secs).toFixed(1) + "," + (pad.t+ch) + " L" + pad.l + "," + (pad.t+ch) + " Z";
-      elements.push(React.createElement("path", { key: "wpf", d: fillPath, fill: "#4a9eff", opacity: 0.06 }));
+      elements.push(React.createElement("path", { key: "wpf", d: fillPath, fill: C.blue, opacity: 0.06 }));
       
       // Pin final point to known result
       var finalWP = match.our_total > match.opp_total ? 100 : match.our_total === match.opp_total ? 50 : 0;
@@ -6819,34 +6819,34 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var peakWP = wpPoints.reduce(function(best, p) { return p.prob > best.prob ? p : best; }, wpPoints[0]);
       if (peakWP && peakWP.prob > wpPoints[wpPoints.length-1].prob + 5) {
         var peakX = mx(peakWP.secs), peakY = pad.t + ch - (peakWP.prob / 100) * ch;
-        elements.push(React.createElement("circle", { key: "peak", cx: peakX, cy: peakY, r: 3, fill: "none", stroke: "#4a9eff", strokeWidth: 1.5 }));
-        elements.push(React.createElement("text", { key: "peakl", x: peakX, y: peakY - 6, textAnchor: "middle", fill: "#4a9eff", fontSize: 8, fontWeight: 700, fontFamily: "Inter,system-ui,sans-serif" }, "\u25B2 " + peakWP.prob + "%"));
+        elements.push(React.createElement("circle", { key: "peak", cx: peakX, cy: peakY, r: 3, fill: "none", stroke: C.blue, strokeWidth: 1.5 }));
+        elements.push(React.createElement("text", { key: "peakl", x: peakX, y: peakY - 6, textAnchor: "middle", fill: C.blue, fontSize: 8, fontWeight: 700, fontFamily: "Inter,system-ui,sans-serif" }, "\u25B2 " + peakWP.prob + "%"));
       }
       // Start and end WP labels
       var first = wpPoints[0], last = wpPoints[wpPoints.length-1];
-      elements.push(React.createElement("text", { key: "wps", x: mx(first.secs)+2, y: pad.t+ch-(first.prob/100)*ch-5, fill: "#4a9eff", fontSize: 8, fontWeight: 700, fontFamily: "Inter,system-ui,sans-serif" }, first.prob+"%"));
-      elements.push(React.createElement("text", { key: "wpe", x: mx(last.secs)-2, y: pad.t+ch-(last.prob/100)*ch-5, fill: "#4a9eff", fontSize: 8, fontWeight: 700, textAnchor: "end", fontFamily: "Inter,system-ui,sans-serif" }, last.prob+"%"));
+      elements.push(React.createElement("text", { key: "wps", x: mx(first.secs)+2, y: pad.t+ch-(first.prob/100)*ch-5, fill: C.blue, fontSize: 8, fontWeight: 700, fontFamily: "Inter,system-ui,sans-serif" }, first.prob+"%"));
+      elements.push(React.createElement("text", { key: "wpe", x: mx(last.secs)-2, y: pad.t+ch-(last.prob/100)*ch-5, fill: C.blue, fontSize: 8, fontWeight: 700, textAnchor: "end", fontFamily: "Inter,system-ui,sans-serif" }, last.prob+"%"));
     }
     
     // WP axis labels
     // Y-axis: 0%, 50%, 100% with gridlines
     [0, 50, 100].forEach(function(pct) {
       var y = pad.t + ch - (pct / 100) * ch;
-      elements.push(React.createElement("line", { key: "g"+pct, x1: pad.l, y1: y, x2: pad.l+cw, y2: y, stroke: "#2A2A30", strokeWidth: 0.3, strokeDasharray: pct === 50 ? "2,2" : "none" }));
-      elements.push(React.createElement("text", { key: "a"+pct, x: pad.l-3, y: y+3, fill: "#6B7280", fontSize: 7, textAnchor: "end", fontFamily: "Inter,system-ui,sans-serif" }, pct+"%"));
+      elements.push(React.createElement("line", { key: "g"+pct, x1: pad.l, y1: y, x2: pad.l+cw, y2: y, stroke: C.borderB, strokeWidth: 0.3, strokeDasharray: pct === 50 ? "2,2" : "none" }));
+      elements.push(React.createElement("text", { key: "a"+pct, x: pad.l-3, y: y+3, fill: C.slateD, fontSize: 7, textAnchor: "end", fontFamily: "Inter,system-ui,sans-serif" }, pct+"%"));
     });
     
-    return React.createElement("div", { style: { padding: "14px 16px", borderRadius: 12, background: C.bgCard, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", marginBottom: 12 } },
+    return React.createElement("div", { style: { padding: "14px 16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid, marginBottom: 12 } },
       React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 } },
-        React.createElement("div", { style: { fontSize: 10, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700 } }, "\u2764\uFE0F\u200D\uD83D\uDD25 MATCH PULSE"),
-        wpPoints.length > 1 ? React.createElement("div", { style: { fontSize: 11, fontWeight: 800, fontFamily: MONO, color: wpPoints[wpPoints.length-1].prob >= 60 ? C.greenB : wpPoints[wpPoints.length-1].prob >= 40 ? "#f0c040" : "#e0584d" } }, wpPoints[wpPoints.length-1].prob + "% WIN") : null),
+        React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700 } }, "\u2764\uFE0F\u200D\uD83D\uDD25 MATCH PULSE"),
+        wpPoints.length > 1 ? React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, color: wpPoints[wpPoints.length-1].prob >= 60 ? C.greenB : wpPoints[wpPoints.length-1].prob >= 40 ? C.gold : C.red } }, wpPoints[wpPoints.length-1].prob + "% WIN") : null),
       React.createElement("svg", { viewBox: "0 0 " + W + " " + H, style: { width: "100%", height: "auto" } }, elements),
       React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 } },
-        React.createElement("span", { style: { fontSize: 8, color: "#6B7280", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 6, height: 6, borderRadius: 3, background: "#34c967", display: "inline-block" } }), club.name || "Us"),
-        React.createElement("span", { style: { fontSize: 8, color: "#6B7280", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 6, height: 6, borderRadius: 3, background: "#e0584d", display: "inline-block" } }), "Opp"),
-        React.createElement("span", { style: { fontSize: 8, color: "#6B7280", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 10, height: 2, borderRadius: 1, background: "#4a9eff", display: "inline-block" } }), "Win prob"),
-        React.createElement("span", { style: { fontSize: 8, color: "#6B7280", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 6, height: 2, background: "#f0c040", display: "inline-block" } }), RST()),
-        React.createElement("span", { style: { fontSize: 8, color: "#6B7280", display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 4, height: 4, background: "#eb6834", display: "inline-block" } }), "TO")));
+        React.createElement("span", { style: { fontSize: FS.xs, color: C.slateD, display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 6, height: 6, borderRadius: RAD.sm, background: C.greenB, display: "inline-block" } }), club.name || "Us"),
+        React.createElement("span", { style: { fontSize: FS.xs, color: C.slateD, display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 6, height: 6, borderRadius: RAD.sm, background: C.red, display: "inline-block" } }), "Opp"),
+        React.createElement("span", { style: { fontSize: FS.xs, color: C.slateD, display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 10, height: 2, borderRadius: RAD.sm, background: C.blue, display: "inline-block" } }), "Win prob"),
+        React.createElement("span", { style: { fontSize: FS.xs, color: C.slateD, display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 6, height: 2, background: C.gold, display: "inline-block" } }), RST()),
+        React.createElement("span", { style: { fontSize: FS.xs, color: C.slateD, display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 4, height: 4, background: C.orange, display: "inline-block" } }), "TO")));
   }
   function matchRatings(matches, allEvents) {
     if (!matches || matches.length < 2) return {};
