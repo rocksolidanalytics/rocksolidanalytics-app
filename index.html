@@ -84,7 +84,10 @@
     black: "#000000",
     purple: "#B06CFF",
     orange: "#EB6834",
-    teal: "#3FB6A8"
+    teal: "#3FB6A8",
+    greenL: "#7EE8A4",
+    redL: "#E8A07E",
+    indigo: "#7D8FE0"
   };
   const MONO = "ui-monospace, 'SF Mono', Menlo, monospace";
   // Design tokens. Taggers keep their hand-tuned font sizes and do not use FS.
@@ -7220,9 +7223,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [dtab, setDtab] = useState("overview");
     const [psort, setPsort] = useState("score");
     if (reportHtml) return React.createElement("div", { className: "rsa-fb", style: { minHeight: "100dvh", background: C.bg } },
-      React.createElement("div", { style: { position: "sticky", top: 0, zIndex: 10, background: "#0A0A0D", borderBottom: "1px solid #172238", padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 } },
+      React.createElement("div", { style: { position: "sticky", top: 0, zIndex: 10, background: C.bg, borderBottom: "1px solid " + C.border, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 } },
         React.createElement("button", { onClick: function() { setReportHtml(null); }, title: "Back", style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, borderRadius: RAD.lg } }, React.createElement(Back, { s: 20 })),
-        React.createElement("span", { style: { flex: 1, fontSize: FS.lg, fontWeight: 800, color: "#FFFFFF" } }, "Match Report"),
+        React.createElement("span", { style: { flex: 1, fontSize: FS.lg, fontWeight: 800, color: C.white } }, "Match Report"),
         React.createElement("div", { style: { display: "flex", gap: 6 } },
         navigator.share ? React.createElement("button", { onClick: function() {
           var blob = new Blob([reportHtml], { type: "text/html" });
@@ -7249,45 +7252,45 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         var on = half === hf[0];
         return /* @__PURE__ */ React.createElement("button", { key: hf[0], onClick: function() { setHalf(hf[0]); }, style: { minHeight: 44, margin: "-10px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement("span", { style: { padding: "6px 14px", borderRadius: RAD.md, fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, letterSpacing: 0.5, background: on ? C.greenB : "transparent", color: on ? C.bg : C.slateD } }, hf[1]));
       })),
-    dtab === "overview" && !isMatch && (d.notes && d.notes.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { padding: 16, borderRadius: RAD.xl, background: "linear-gradient(135deg,#12211A,#0F1714)", border: "1px solid " + C.greenB + "33", marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 12 } }, isMatch ? "MATCH READ" : "SEASON READ"), d.notes.map(function(n, i) {
+    dtab === "overview" && !isMatch && (d.notes && d.notes.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { padding: 16, borderRadius: RAD.xl, background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB + ALPHA.soft, marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 12 } }, isMatch ? "MATCH READ" : "SEASON READ"), d.notes.map(function(n, i) {
       return /* @__PURE__ */ React.createElement("div", { key: i, style: { fontSize: FS.md, lineHeight: 1.6, color: C.white, marginBottom: i < d.notes.length - 1 ? 10 : 0 } }, n);
     }))),
     dtab === "overview" && React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } },
-      isMatch && match && React.createElement("div", { style: { padding: "16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px rgba(0,0,0,0.2)" } },
+      isMatch && match && React.createElement("div", { style: { padding: "16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid } },
         React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } },
           React.createElement("div", { style: { textAlign: "center", flex: 1 } },
             React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 2 } }, (club.name || "Us").toUpperCase().slice(0,14)),
             React.createElement("div", { style: { fontSize: FS.h1, fontWeight: 900, color: C.white } }, match.our_score || "0-00")),
           React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, padding: "0 6px" } }, "v"),
           React.createElement("div", { style: { textAlign: "center", flex: 1 } },
-            React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1, color: "#4a9eff", fontFamily: MONO, fontWeight: 700, marginBottom: 2 } }, ON.toUpperCase().slice(0,14)),
+            React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1, color: C.blue, fontFamily: MONO, fontWeight: 700, marginBottom: 2 } }, ON.toUpperCase().slice(0,14)),
             React.createElement("div", { style: { fontSize: FS.h1, fontWeight: 900, color: C.white } }, match.opp_score || "0-00"))),
         React.createElement("div", { style: { display: "flex", gap: 12, marginTop: 10 } },
           React.createElement("div", { style: { flex: 1 } },
             (d.scorers || []).filter(function(s) { return s.total > 0; }).slice(0, 8).map(function(s, idx) {
               return React.createElement("div", { key: idx, style: { display: "flex", justifyContent: "space-between", padding: "2px 0", fontSize: FS.sm } },
-                React.createElement("span", { style: { color: "#cfd9e8" } }, s.name),
+                React.createElement("span", { style: { color: C.white } }, s.name),
                 React.createElement("span", { style: { fontFamily: MONO, color: C.greenB, fontWeight: 700 } }, s.g + "-" + (s.ptot < 10 ? "0" : "") + s.ptot));
             })))),
       isMatch && match && d._events && React.createElement(PulseTimeline, { events: (d._events || []).filter(function(e) { return e.match_id === match.id; }), match: match, club: club }),
       d.ratings && match && d.ratings[match.id] && (function() {
         var r = d.ratings[match.id];
-        var clr = function(v) { return v >= 70 ? "#34c967" : v >= 45 ? "#f0c040" : "#e0584d"; };
+        var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? C.gold : C.red; };
         function pill(label, icon, val) {
-          return React.createElement("div", { style: { flex: 1, textAlign: "center", padding: "10px 4px", background: "#0a1020", borderRadius: RAD.md } },
-            React.createElement("div", { style: { fontSize: FS.xs, color: "#6B7280", letterSpacing: 1, fontFamily: MONO } }, icon + " " + label),
+          return React.createElement("div", { style: { flex: 1, textAlign: "center", padding: "10px 4px", background: C.field, borderRadius: RAD.md } },
+            React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, letterSpacing: 1, fontFamily: MONO } }, icon + " " + label),
             React.createElement("div", { style: { fontSize: FS.h2, fontWeight: 900, color: clr(val), marginTop: 4 } }, val));
         }
-        return React.createElement("div", { style: { padding: "14px 16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px rgba(0,0,0,0.2)", marginBottom: 12 } },
+        return React.createElement("div", { style: { padding: "14px 16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid, marginBottom: 12 } },
           React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 } },
-            React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 2, color: "#6B7280", fontFamily: MONO, fontWeight: 700 } }, "MATCH RATING"),
+            React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 2, color: C.slateD, fontFamily: MONO, fontWeight: 700 } }, "MATCH RATING"),
             React.createElement("div", { style: { fontSize: FS.h1, fontWeight: 900, color: clr(r.overall) } }, r.overall)),
           React.createElement("div", { style: { display: "flex", gap: 6 } },
             pill("ATK", "\uD83C\uDFAF", r.atk),
             pill("DEF", "\uD83D\uDEE1\uFE0F", r.def),
             pill("RST", "\u21BB", r.rst)),
           React.createElement("div", { onClick: function() { setROpen(!rOpen); }, style: { textAlign: "center", marginTop: 10, cursor: "pointer", fontSize: FS.sm, color: C.slateD, fontFamily: MONO } }, rOpen ? "\u25B2 Hide breakdown" : "\u25BC Show breakdown"),
-          rOpen && r.detail && React.createElement("div", { style: { marginTop: 10, borderTop: "1px solid #172238", paddingTop: 10 } },
+          rOpen && r.detail && React.createElement("div", { style: { marginTop: 10, borderTop: "1px solid " + C.border, paddingTop: 10 } },
             (function() {
               var groups = [
                 { label: "\uD83C\uDFAF ATTACK", items: [
@@ -7304,16 +7307,16 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                   { name: "Breaking ball", k: "rst_brkPct", pct: true },
                   { name: "Opp " + RST() + " steals", k: "rst_oppSteal" }]}
               ];
-              var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? "#f0c040" : "#e0584d"; };
+              var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? C.gold : C.red; };
               return groups.map(function(grp) {
                 return React.createElement("div", { key: grp.label, style: { marginBottom: 8 } },
-                  React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1, color: "#6B7280", fontFamily: MONO, marginBottom: 4 } }, grp.label),
+                  React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1, color: C.slateD, fontFamily: MONO, marginBottom: 4 } }, grp.label),
                   grp.items.map(function(it) {
                     var d2 = r.detail[it.k]; if (!d2) return null;
                     return React.createElement("div", { key: it.k, style: { display: "flex", alignItems: "center", gap: 6, marginBottom: 3 } },
-                      React.createElement("span", { style: { flex: 1, fontSize: FS.sm, color: "#b0bdd0" } }, it.name),
-                      React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.sm, fontWeight: 700, color: "#FFFFFF", minWidth: 36, textAlign: "right" } }, d2.val + (it.pct ? "%" : "")),
-                      React.createElement("div", { style: { width: 50, height: 5, borderRadius: RAD.sm, background: "#232327" } },
+                      React.createElement("span", { style: { flex: 1, fontSize: FS.sm, color: C.slate } }, it.name),
+                      React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.sm, fontWeight: 700, color: C.white, minWidth: 36, textAlign: "right" } }, d2.val + (it.pct ? "%" : "")),
+                      React.createElement("div", { style: { width: 50, height: 5, borderRadius: RAD.sm, background: C.border } },
                         React.createElement("div", { style: { width: d2.pct + "%", height: 5, borderRadius: RAD.sm, background: clr(d2.pct) } })),
                       React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.sm, fontWeight: 800, color: clr(d2.pct), minWidth: 22, textAlign: "right" } }, d2.pct));
                   }));
@@ -7335,23 +7338,23 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: FS.sm, marginBottom: 3 } },
               React.createElement("span", { style: { fontWeight: 700, color: C.greenB, fontFamily: MONO } }, r.us + (r.pct ? "%" : "")),
               React.createElement("span", { style: { color: C.slateD, fontSize: FS.sm } }, r.label),
-              React.createElement("span", { style: { fontWeight: 700, color: "#4a9eff", fontFamily: MONO } }, r.opp + (r.pct ? "%" : ""))),
+              React.createElement("span", { style: { fontWeight: 700, color: C.blue, fontFamily: MONO } }, r.opp + (r.pct ? "%" : ""))),
             React.createElement("div", { style: { display: "flex", gap: 3, height: 6 } },
               React.createElement("div", { style: { flex: 1, display: "flex", justifyContent: "flex-end" } },
                 React.createElement("div", { style: { width: Math.round(100 * (r.us || 0) / mx) + "%", height: 6, borderRadius: RAD.sm, background: C.greenB } })),
               React.createElement("div", { style: { flex: 1 } },
-                React.createElement("div", { style: { width: Math.round(100 * (r.opp || 0) / mx) + "%", height: 6, borderRadius: RAD.sm, background: "#4a9eff" } }))));
+                React.createElement("div", { style: { width: Math.round(100 * (r.opp || 0) / mx) + "%", height: 6, borderRadius: RAD.sm, background: C.blue } }))));
         }
         return React.createElement(React.Fragment, null,
           groups.map(function(grp) {
             var rows = grp.keys.map(function(k) { return c2.find(function(r) { return r.label === k; }); }).filter(Boolean);
             if (!rows.length) return null;
-            return React.createElement("div", { key: grp.label, style: { padding: "14px 16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px rgba(0,0,0,0.15)" } },
+            return React.createElement("div", { key: grp.label, style: { padding: "14px 16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid } },
               React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 10 } }, grp.icon + "  " + grp.label),
               rows.map(function(r, idx) { return barRow(r, idx); }));
           }));
       }()),
-      d.ko && d.ko.total > 0 && React.createElement("div", { style: { padding: "14px 16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px rgba(0,0,0,0.15)" } },
+      d.ko && d.ko.total > 0 && React.createElement("div", { style: { padding: "14px 16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid } },
         React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 10 } }, "\u21BB RESTART OUTCOMES"),
         (function() {
           var ko = d.ko || {}, oko = d.oko || {};
@@ -7366,10 +7369,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                 React.createElement("span", { style: { fontWeight: 700 } }, label),
                 React.createElement("span", { style: { fontFamily: MONO, color: C.slateD } }, data.won + "/" + total + " won (" + data.pct + "%)")),
               React.createElement("div", { style: { display: "flex", height: 16, borderRadius: RAD.sm, overflow: "hidden", gap: 1 } },
-                wonC > 0 ? React.createElement("div", { style: { flex: wonC, background: "#34c967", display: "flex", alignItems: "center", justifyContent: "center", fontSize: FS.xs, fontWeight: 800, color: "#0A0A0D" } }, "Won " + wonC) : null,
-                brkW > 0 ? React.createElement("div", { style: { flex: brkW, background: "#7ee8a4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: FS.xs, fontWeight: 800, color: "#0A0A0D" } }, "Brk\u2713 " + brkW) : null,
-                brkL > 0 ? React.createElement("div", { style: { flex: brkL, background: "#e8a07e", display: "flex", alignItems: "center", justifyContent: "center", fontSize: FS.xs, fontWeight: 800, color: "#0A0A0D" } }, "Brk\u2717 " + brkL) : null,
-                lost > 0 ? React.createElement("div", { style: { flex: lost, background: "#e0584d", display: "flex", alignItems: "center", justifyContent: "center", fontSize: FS.xs, fontWeight: 800, color: "#0A0A0D" } }, "Lost " + lost) : null));
+                wonC > 0 ? React.createElement("div", { style: { flex: wonC, background: C.greenB, display: "flex", alignItems: "center", justifyContent: "center", fontSize: FS.xs, fontWeight: 800, color: C.bg } }, "Won " + wonC) : null,
+                brkW > 0 ? React.createElement("div", { style: { flex: brkW, background: C.greenL, display: "flex", alignItems: "center", justifyContent: "center", fontSize: FS.xs, fontWeight: 800, color: C.bg } }, "Brk\u2713 " + brkW) : null,
+                brkL > 0 ? React.createElement("div", { style: { flex: brkL, background: C.redL, display: "flex", alignItems: "center", justifyContent: "center", fontSize: FS.xs, fontWeight: 800, color: C.bg } }, "Brk\u2717 " + brkL) : null,
+                lost > 0 ? React.createElement("div", { style: { flex: lost, background: C.red, display: "flex", alignItems: "center", justifyContent: "center", fontSize: FS.xs, fontWeight: 800, color: C.bg } }, "Lost " + lost) : null));
           }
           return React.createElement("div", null,
             outcomeBar(club.name || "Us", ko, ko.total),
@@ -7387,28 +7390,28 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           React.createElement("div", { style: { overflowX: "auto" } },
             React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: FS.sm } },
               React.createElement("thead", null,
-                React.createElement("tr", { style: { borderBottom: "2px solid #172238" } },
-                  React.createElement("th", { onClick: function(){setRSort("date");}, style: { padding: "8px 8px", textAlign: "left", color: rSort==="date"?C.greenB:"#6B7280", fontSize: FS.xs, fontFamily: MONO, cursor: "pointer" } }, "DATE", rSort==="date"?" \u25BC":""),
-                  React.createElement("th", { style: { padding: "8px 6px", textAlign: "left", color: "#6B7280", fontSize: FS.xs, fontFamily: MONO } }, "OPP"),
-                  React.createElement("th", { style: { padding: "8px 4px", textAlign: "center", color: "#6B7280", fontSize: FS.xs } }, ""),
-                  React.createElement("th", { onClick: function(){setRSort("atk");}, style: { padding: "8px 4px", textAlign: "center", fontSize: FS.xs, cursor: "pointer", color: rSort==="atk"?C.greenB:"#8b9ab5" } }, "\uD83C\uDFAF", rSort==="atk"?" \u25BC":""),
-                  React.createElement("th", { onClick: function(){setRSort("def");}, style: { padding: "8px 4px", textAlign: "center", fontSize: FS.xs, cursor: "pointer", color: rSort==="def"?C.greenB:"#8b9ab5" } }, "\uD83D\uDEE1\uFE0F", rSort==="def"?" \u25BC":""),
-                  React.createElement("th", { onClick: function(){setRSort("rst");}, style: { padding: "8px 4px", textAlign: "center", fontSize: FS.xs, cursor: "pointer", color: rSort==="rst"?C.greenB:"#8b9ab5" } }, "\u21BB", rSort==="rst"?" \u25BC":""),
-                  React.createElement("th", { onClick: function(){setRSort("overall");}, style: { padding: "8px 4px", textAlign: "center", color: rSort==="overall"?C.greenB:"#6B7280", fontSize: FS.xs, fontFamily: MONO, cursor: "pointer" } }, "OVR", rSort==="overall"?" \u25BC":""))),
+                React.createElement("tr", { style: { borderBottom: "2px solid " + C.border } },
+                  React.createElement("th", { onClick: function(){setRSort("date");}, style: { padding: "8px 8px", textAlign: "left", color: rSort==="date"?C.greenB:C.slateD, fontSize: FS.xs, fontFamily: MONO, cursor: "pointer" } }, "DATE", rSort==="date"?" \u25BC":""),
+                  React.createElement("th", { style: { padding: "8px 6px", textAlign: "left", color: C.slateD, fontSize: FS.xs, fontFamily: MONO } }, "OPP"),
+                  React.createElement("th", { style: { padding: "8px 4px", textAlign: "center", color: C.slateD, fontSize: FS.xs } }, ""),
+                  React.createElement("th", { onClick: function(){setRSort("atk");}, style: { padding: "8px 4px", textAlign: "center", fontSize: FS.xs, cursor: "pointer", color: rSort==="atk"?C.greenB:C.slate } }, "\uD83C\uDFAF", rSort==="atk"?" \u25BC":""),
+                  React.createElement("th", { onClick: function(){setRSort("def");}, style: { padding: "8px 4px", textAlign: "center", fontSize: FS.xs, cursor: "pointer", color: rSort==="def"?C.greenB:C.slate } }, "\uD83D\uDEE1\uFE0F", rSort==="def"?" \u25BC":""),
+                  React.createElement("th", { onClick: function(){setRSort("rst");}, style: { padding: "8px 4px", textAlign: "center", fontSize: FS.xs, cursor: "pointer", color: rSort==="rst"?C.greenB:C.slate } }, "\u21BB", rSort==="rst"?" \u25BC":""),
+                  React.createElement("th", { onClick: function(){setRSort("overall");}, style: { padding: "8px 4px", textAlign: "center", color: rSort==="overall"?C.greenB:C.slateD, fontSize: FS.xs, fontFamily: MONO, cursor: "pointer" } }, "OVR", rSort==="overall"?" \u25BC":""))),
               React.createElement("tbody", null,
                 d.matches.slice().sort(function(a,b) { if (rSort === "date") return (b.date||"").localeCompare(a.date||""); var ra = d.ratings && d.ratings[a.id] ? d.ratings[a.id][rSort] || 0 : 0; var rb = d.ratings && d.ratings[b.id] ? d.ratings[b.id][rSort] || 0 : 0; return rb - ra; }).map(function(m2) {
                   var r = d.ratings ? d.ratings[m2.id] : null;
                   var w2 = (m2.our_total||0) > (m2.opp_total||0), dr = (m2.our_total||0) === (m2.opp_total||0);
-                  var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? "#f0c040" : "#e0584d"; };
-                  return React.createElement("tr", { key: m2.id, onClick: function() { setSelMatch(m2); }, style: { borderBottom: "1px solid #17223844", cursor: "pointer" } },
-                    React.createElement("td", { style: { padding: "8px", fontFamily: MONO, fontSize: FS.sm, color: "#8b9ab5" } }, (m2.date||"").slice(5).replace("-","/")),
+                  var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? C.gold : C.red; };
+                  return React.createElement("tr", { key: m2.id, onClick: function() { setSelMatch(m2); }, style: { borderBottom: "1px solid " + C.border, cursor: "pointer" } },
+                    React.createElement("td", { style: { padding: "8px", fontFamily: MONO, fontSize: FS.sm, color: C.slate } }, (m2.date||"").slice(5).replace("-","/")),
                     React.createElement("td", { style: { padding: "8px 6px", fontSize: FS.md, fontWeight: 600, maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, m2.opponent),
                     React.createElement("td", { style: { padding: "8px 4px", textAlign: "center" } },
-                      React.createElement("span", { style: { width: 18, height: 18, borderRadius: RAD.sm, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: FS.xs, fontWeight: 800, fontFamily: MONO, background: dr ? "#f0c040" : w2 ? C.greenB : "#e0584d", color: "#0A0A0D" } }, dr ? "D" : w2 ? "W" : "L")),
-                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, color: r ? clr(r.atk) : "#6B7280" } }, r ? r.atk : "-"),
-                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, color: r ? clr(r.def) : "#6B7280" } }, r ? r.def : "-"),
-                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, color: r ? clr(r.rst) : "#6B7280" } }, r ? r.rst : "-"),
-                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: FS.md, color: r ? clr(r.overall) : "#6B7280" } }, r ? r.overall : "-"));
+                      React.createElement("span", { style: { width: 18, height: 18, borderRadius: RAD.sm, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: FS.xs, fontWeight: 800, fontFamily: MONO, background: dr ? C.gold : w2 ? C.greenB : C.red, color: C.bg } }, dr ? "D" : w2 ? "W" : "L")),
+                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, color: r ? clr(r.atk) : C.slateD } }, r ? r.atk : "-"),
+                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, color: r ? clr(r.def) : C.slateD } }, r ? r.def : "-"),
+                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, color: r ? clr(r.rst) : C.slateD } }, r ? r.rst : "-"),
+                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: FS.md, color: r ? clr(r.overall) : C.slateD } }, r ? r.overall : "-"));
                 })), React.createElement("tfoot", null, (function() {
         var rated = d.matches.filter(function(m2) { return d.ratings && d.ratings[m2.id]; });
         if (!rated.length) return null;
@@ -7416,9 +7419,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         rated.forEach(function(m2) { var r = d.ratings[m2.id]; sA += r.atk; sD += r.def; sR += r.rst; sO += r.overall; });
         var n = rated.length;
         var avgA = Math.round(sA/n), avgD = Math.round(sD/n), avgR = Math.round(sR/n), avgO = Math.round(sO/n);
-        var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? "#f0c040" : "#e0584d"; };
-        return React.createElement("tr", { style: { borderTop: "2px solid #2A2A30" } },
-          React.createElement("td", { colSpan: 3, style: { padding: "10px 8px", fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, letterSpacing: 1, color: "#6B7280" } }, "AVG (" + n + " games)"),
+        var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? C.gold : C.red; };
+        return React.createElement("tr", { style: { borderTop: "2px solid " + C.borderB } },
+          React.createElement("td", { colSpan: 3, style: { padding: "10px 8px", fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, letterSpacing: 1, color: C.slateD } }, "AVG (" + n + " games)"),
           React.createElement("td", { style: { padding: "10px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: FS.md, color: clr(avgA) } }, avgA),
           React.createElement("td", { style: { padding: "10px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: FS.md, color: clr(avgD) } }, avgD),
           React.createElement("td", { style: { padding: "10px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: FS.md, color: clr(avgR) } }, avgR),
@@ -7579,7 +7582,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         }
         return sawFree ? "toOther" : "unclear";
       }
-      var shotTypes = [["Goal","Goals",C.red],["Pt2Play","2pt play","#a970ff"],["Pt2Free","2pt free","#7d8fe0"],["PtPlay","Point play",C.greenB],["PtFree","Point free",C.gold]];
+      var shotTypes = [["Goal","Goals",C.red],["Pt2Play","2pt play",C.purple],["Pt2Free","2pt free",C.indigo],["PtPlay","Point play",C.greenB],["PtFree","Point free",C.gold]];
       var stGrid = { us: {}, opp: {} };
       shotTypes.forEach(function(t) { stGrid.us[t[0]] = blocks.map(function(){return 0;}); stGrid.opp[t[0]] = blocks.map(function(){return 0;}); });
       evs.forEach(function(e) {
@@ -7618,7 +7621,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         });
       });
       function stTable(team, teamColour, teamLabel) {
-        return React.createElement("div", { style: { overflowX: "auto", marginBottom: 16, background: C.bgCard, borderRadius: RAD.xl, boxShadow: "0 2px 8px rgba(0,0,0,0.25)", padding: "16px 14px" } },
+        return React.createElement("div", { style: { overflowX: "auto", marginBottom: 16, background: C.bgCard, borderRadius: RAD.xl, boxShadow: "0 2px 8px " + C.black + ALPHA.mid, padding: "16px 14px" } },
           React.createElement("div", { style: { fontSize: FS.sm, fontFamily: MONO, letterSpacing: 1.5, color: teamColour, fontWeight: 800, marginBottom: 12 } }, teamLabel),
           React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: FS.md, fontFamily: MONO } },
             React.createElement("thead", null, React.createElement("tr", null,
@@ -7628,18 +7631,18 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
               var row = stGrid[team][t[0]];
               var peak = -1, pv = -1;
               row.forEach(function(v, ci) { if (v > pv) { pv = v; peak = ci; } });
-              return React.createElement("tr", { key: si, style: { borderBottom: "1px solid " + C.border + "55" } },
+              return React.createElement("tr", { key: si, style: { borderBottom: "1px solid " + C.border + ALPHA.mid } },
                 React.createElement("td", { style: { padding: "10px 8px", color: C.slate, fontSize: FS.md, fontWeight: 600, whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 10 } },
                   React.createElement("span", { style: { width: 12, height: 12, borderRadius: RAD.sm, background: t[2], flexShrink: 0 } }), t[1]),
                 row.map(function(v, ci) {
                   var isHigh = v > 0;
                   var isPeak = ci === peak && pv > 0;
-                  return React.createElement("td", { key: ci, style: { textAlign: "center", padding: "10px 14px", color: isHigh ? t[2] : C.slateD + "88", fontWeight: isHigh ? 800 : 400, background: isPeak ? t[2] + "18" : "none", borderRadius: isPeak ? RAD.md : 0, whiteSpace: "nowrap" } }, isHigh ? String(v) : "\u2014");
+                  return React.createElement("td", { key: ci, style: { textAlign: "center", padding: "10px 14px", color: isHigh ? t[2] : C.slateD, fontWeight: isHigh ? 800 : 400, background: isPeak ? t[2] + ALPHA.faint : "none", borderRadius: isPeak ? RAD.md : 0, whiteSpace: "nowrap" } }, isHigh ? String(v) : "\u2014");
                 }));
             }))));
       }
       function srcTable(team, teamColour, teamLabel) {
-        return React.createElement("div", { style: { overflowX: "auto", marginBottom: 16, background: C.bgCard, borderRadius: RAD.xl, boxShadow: "0 2px 8px rgba(0,0,0,0.25)", padding: "16px 14px" } },
+        return React.createElement("div", { style: { overflowX: "auto", marginBottom: 16, background: C.bgCard, borderRadius: RAD.xl, boxShadow: "0 2px 8px " + C.black + ALPHA.mid, padding: "16px 14px" } },
           React.createElement("div", { style: { fontSize: FS.sm, fontFamily: MONO, letterSpacing: 1.5, color: teamColour, fontWeight: 800, marginBottom: 12 } }, teamLabel),
           React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: FS.md, fontFamily: MONO } },
             React.createElement("thead", null, React.createElement("tr", null,
@@ -7649,12 +7652,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
               var row = srcGrid[team][s[0]];
               var peak = -1, pv = -1;
               row.forEach(function(v, ci) { if (v > pv) { pv = v; peak = ci; } });
-              return React.createElement("tr", { key: si, style: { borderBottom: "1px solid " + C.border + "55" } },
+              return React.createElement("tr", { key: si, style: { borderBottom: "1px solid " + C.border + ALPHA.mid } },
                 React.createElement("td", { style: { padding: "10px 8px", color: C.slate, fontSize: FS.md, fontWeight: 600, whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 10 } }, React.createElement("span", { style: { width: 12, height: 12, borderRadius: RAD.sm, background: s[2], flexShrink: 0 } }), s[1]),
                 row.map(function(v, ci) {
                   var isHigh = v > 0;
                   var isPeak = ci === peak && pv > 0;
-                  return React.createElement("td", { key: ci, style: { textAlign: "center", padding: "10px 14px", color: isHigh ? teamColour : C.slateD + "88", fontWeight: isHigh ? 800 : 400, background: isPeak ? teamColour + "18" : "none", borderRadius: isPeak ? RAD.md : 0, whiteSpace: "nowrap" } }, isHigh ? String(v) : "\u2014");
+                  return React.createElement("td", { key: ci, style: { textAlign: "center", padding: "10px 14px", color: isHigh ? teamColour : C.slateD, fontWeight: isHigh ? 800 : 400, background: isPeak ? teamColour + ALPHA.faint : "none", borderRadius: isPeak ? RAD.md : 0, whiteSpace: "nowrap" } }, isHigh ? String(v) : "\u2014");
                 }));
             }))));
       }
@@ -7679,7 +7682,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var accUs = [], accOpp = [], runUs = 0, runOpp = 0;
       blocks.forEach(function(_, bi) { runUs += grid.score_us[bi]; runOpp += grid.score_opp[bi]; accUs.push(runUs); accOpp.push(runOpp); });
 
-      var tbl = React.createElement("div", { style: { overflowX: "auto", marginBottom: 24, background: C.bgCard, borderRadius: RAD.xl, boxShadow: "0 2px 8px rgba(0,0,0,0.25)", padding: "16px 14px" } },
+      var tbl = React.createElement("div", { style: { overflowX: "auto", marginBottom: 24, background: C.bgCard, borderRadius: RAD.xl, boxShadow: "0 2px 8px " + C.black + ALPHA.mid, padding: "16px 14px" } },
         React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: FS.md, fontFamily: MONO } },
           React.createElement("thead", { style: { position: "sticky", top: 0, zIndex: 2, background: C.bgCard } }, React.createElement("tr", null,
             React.createElement("th", { style: { textAlign: "left", padding: "8px 6px", borderBottom: "2px solid " + C.border, color: C.slateD, fontSize: FS.xs, letterSpacing: 1, background: C.bgCard } }, ""),
@@ -7700,13 +7703,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
               // find the peak block for this row to highlight
               var peak = -1, pv = -1;
               row[1].forEach(function(v, ci) { if (typeof v === "number" && v > pv) { pv = v; peak = ci; } });
-              return React.createElement("tr", { key: ri, style: { borderBottom: "1px solid " + C.border + "55" } },
+              return React.createElement("tr", { key: ri, style: { borderBottom: "1px solid " + C.border + ALPHA.mid } },
                 React.createElement("td", { style: { padding: "10px 8px", color: C.slate, fontSize: FS.md, fontWeight: 600, whiteSpace: "nowrap" } }, row[0]),
                 row[1].map(function(v, ci) {
                   var val = v == null ? "\u2014" : (row[0].indexOf("%") >= 0 ? v + "%" : String(v));
                   var isHigh = typeof v === "number" && v > 0;
                   var isPeak = ci === peak && pv > 0;
-                  return React.createElement("td", { key: ci, style: { textAlign: "center", padding: "10px 14px", color: isHigh ? row[2] : C.slateD + "88", fontWeight: isHigh ? 800 : 400, background: isPeak ? row[2] + "18" : "none", borderRadius: isPeak ? RAD.md : 0, whiteSpace: "nowrap" } }, val);
+                  return React.createElement("td", { key: ci, style: { textAlign: "center", padding: "10px 14px", color: isHigh ? row[2] : C.slateD, fontWeight: isHigh ? 800 : 400, background: isPeak ? row[2] + ALPHA.faint : "none", borderRadius: isPeak ? RAD.md : 0, whiteSpace: "nowrap" } }, val);
                 })
               );
             })
@@ -7738,7 +7741,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
 
       return React.createElement(React.Fragment, null,
         React.createElement(Section, { title: nM > 1 ? "AVG CUMULATIVE SCORE \u00b7 " + nM + " GAMES" : "CUMULATIVE SCORE" },
-          React.createElement("div", { style: { background: C.bgCard, borderRadius: RAD.xl, boxShadow: "0 2px 8px rgba(0,0,0,0.25)", padding: "16px 12px 10px" } },
+          React.createElement("div", { style: { background: C.bgCard, borderRadius: RAD.xl, boxShadow: "0 2px 8px " + C.black + ALPHA.mid, padding: "16px 12px 10px" } },
           React.createElement("div", { style: { display: "flex", gap: 16, justifyContent: "center", marginBottom: 10 } },
             React.createElement("span", { style: { fontSize: FS.sm, color: C.greenB, fontWeight: 700 } }, "\u2014 " + (club.name || "Us")),
             React.createElement("span", { style: { fontSize: FS.sm, color: C.blue, fontWeight: 700 } }, "- - " + (ON || "Opposition"))
