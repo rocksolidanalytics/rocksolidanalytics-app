@@ -2853,7 +2853,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const boxRef = useRef(null), dragRef = useRef(null);
     const [tokens, setTokens] = useState(tacticFormation);
     const [show, setShow] = useState({ 0: true, 1: true });
-    var brayCol = club.colour_primary || "#1e5c38", oppCol = "#3f7bd6";
+    var brayCol = club.colour_primary || C.green, oppCol = C.blue;
     function pt(e) {
       var r = boxRef.current.getBoundingClientRect();
       return { x: Math.max(8, Math.min(216, (e.clientX - r.left) / r.width * 224)), y: Math.max(8, Math.min(352, (e.clientY - r.top) / r.height * 360)) };
@@ -2874,9 +2874,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function up() {
       dragRef.current = null;
     }
-    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 16px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", fontSize: 13, fontWeight: 700 } }, "\u2039 Back"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800, flex: 1 } }, "Tactical pad"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 16px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, title: "Back", style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, flex: 1 } }, "Tactical pad"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setTokens(tacticFormation());
-    }, style: { background: "none", border: "1px solid " + C.border, borderRadius: 9, color: C.slate, fontSize: 11, fontWeight: 700, padding: "6px 11px", cursor: "pointer" } }, "Reset")), /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 14px 6px", display: "flex", gap: 8, justifyContent: "center" } }, [[0, club.name || "Club", brayCol], [1, "Opposition", oppCol]].map(function(o) {
+    }, style: { minHeight: 44, margin: "-9px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slate, fontSize: FS.sm, fontWeight: 700, padding: "6px 11px" } }, "Reset"))), /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 14px 6px", display: "flex", gap: 8, justifyContent: "center" } }, [[0, club.name || "Club", brayCol], [1, "Opposition", oppCol]].map(function(o) {
       var on = show[o[0]];
       return /* @__PURE__ */ React.createElement("button", { key: o[0], onClick: function() {
         setShow(function(s) {
@@ -2884,7 +2884,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           n[o[0]] = !n[o[0]];
           return n;
         });
-      }, style: { display: "flex", alignItems: "center", gap: 7, padding: "6px 11px", borderRadius: 20, cursor: "pointer", fontSize: 11, fontWeight: 700, background: on ? C.bgCard : "transparent", border: "1px solid " + (on ? o[2] : C.border), color: on ? C.white : C.slateD } }, /* @__PURE__ */ React.createElement("span", { style: { width: 11, height: 11, borderRadius: "50%", background: o[2], opacity: on ? 1 : 0.4 } }), o[1]);
+      }, style: { minHeight: 44, margin: "-8px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { display: "flex", alignItems: "center", gap: 7, padding: "6px 11px", borderRadius: RAD.pill, fontSize: FS.sm, fontWeight: 700, background: on ? C.bgCard : "transparent", border: "1px solid " + (on ? o[2] : C.border), color: on ? C.white : C.slateD } }, /* @__PURE__ */ React.createElement("span", { style: { width: 11, height: 11, borderRadius: "50%", background: o[2], opacity: on ? 1 : 0.4 } }), o[1]));
     })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "8px 14px 20px" } }, /* @__PURE__ */ React.createElement(
       "div",
       {
@@ -2892,7 +2892,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         onPointerMove: move,
         onPointerUp: up,
         onPointerLeave: up,
-        style: { position: "relative", width: "100%", maxWidth: 420, aspectRatio: "224 / 360", touchAction: "none", borderRadius: 10, overflow: "hidden", boxShadow: "0 10px 40px rgba(0,0,0,0.45)" }
+        style: { position: "relative", width: "100%", maxWidth: 420, aspectRatio: "224 / 360", touchAction: "none", borderRadius: RAD.lg, overflow: "hidden", boxShadow: "0 10px 40px " + C.black + ALPHA.strong }
       },
       /* @__PURE__ */ React.createElement(PitchSVG, null, tokens.filter(function(t) {
         return t.team === "ball" || show[t.team];
@@ -2900,14 +2900,14 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         if (t.team === "ball") {
           return /* @__PURE__ */ React.createElement("g", { key: t.id, onPointerDown: function(e) {
             down(t.id, e);
-          }, style: { cursor: "grab" } }, /* @__PURE__ */ React.createElement("ellipse", { cx: t.x, cy: t.y + 5.6, rx: "5", ry: "1.6", fill: "#000", opacity: "0.28" }), /* @__PURE__ */ React.createElement("circle", { cx: t.x, cy: t.y, r: "6", fill: "#f4f6f8", stroke: "#0c1118", strokeWidth: "1" }), /* @__PURE__ */ React.createElement("circle", { cx: t.x - 1.7, cy: t.y - 1.9, r: "1.9", fill: "#ffffff", opacity: "0.95" }), /* @__PURE__ */ React.createElement("path", { d: "M " + (t.x - 4.3) + " " + (t.y + 0.8) + " Q " + t.x + " " + (t.y - 3.4) + " " + (t.x + 4.3) + " " + (t.y + 0.8), stroke: "#9fb0c4", strokeWidth: "0.7", fill: "none" }));
+          }, style: { cursor: "grab" } }, /* @__PURE__ */ React.createElement("ellipse", { cx: t.x, cy: t.y + 5.6, rx: "5", ry: "1.6", fill: C.black, opacity: "0.28" }), /* @__PURE__ */ React.createElement("circle", { cx: t.x, cy: t.y, r: "6", fill: C.white, stroke: C.bg, strokeWidth: "1" }), /* @__PURE__ */ React.createElement("circle", { cx: t.x - 1.7, cy: t.y - 1.9, r: "1.9", fill: C.white, opacity: "0.95" }), /* @__PURE__ */ React.createElement("path", { d: "M " + (t.x - 4.3) + " " + (t.y + 0.8) + " Q " + t.x + " " + (t.y - 3.4) + " " + (t.x + 4.3) + " " + (t.y + 0.8), stroke: C.slate, strokeWidth: "0.7", fill: "none" }));
         }
         var col = t.team === 0 ? brayCol : oppCol;
         return /* @__PURE__ */ React.createElement("g", { key: t.id, onPointerDown: function(e) {
           down(t.id, e);
-        }, style: { cursor: "grab" } }, /* @__PURE__ */ React.createElement("circle", { cx: t.x, cy: t.y, r: "9.5", fill: col, stroke: "#091018", strokeWidth: "1.6" }), /* @__PURE__ */ React.createElement("text", { x: t.x, y: t.y + 3.4, textAnchor: "middle", fontSize: "9.5", fontWeight: "800", fill: "#fff", style: { pointerEvents: "none", userSelect: "none" } }, t.num));
+        }, style: { cursor: "grab" } }, /* @__PURE__ */ React.createElement("circle", { cx: t.x, cy: t.y, r: "9.5", fill: col, stroke: C.bg, strokeWidth: "1.6" }), /* @__PURE__ */ React.createElement("text", { x: t.x, y: t.y + 3.4, textAnchor: "middle", fontSize: "9.5", fontWeight: "800", fill: C.white, style: { pointerEvents: "none", userSelect: "none" } }, t.num));
       }))
-    )), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", fontSize: 11, color: C.slateD, padding: "0 18px 18px" } }, "Drag the jerseys to set up a shape. Toggle a team off to focus on one."));
+    )), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", fontSize: FS.sm, color: C.slateD, padding: "0 18px 18px" } }, "Drag the jerseys to set up a shape. Toggle a team off to focus on one."));
   }
   function TagPitch({ active, onTap }) {
     return /* @__PURE__ */ React.createElement(PitchSVG, { active, onTap: active ? onTap : void 0 });
