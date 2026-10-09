@@ -856,6 +856,490 @@
     "xsd": 0.352
    }
   ],
+  "possLen": {
+   "dropped": {
+    "long": 32,
+    "neg": 0
+   },
+   "opp": {
+    "alive": [
+     {
+      "n": 17,
+      "ppp": 0.8235294117647058,
+      "score": 0.4117647058823529,
+      "shot": 0.7647058823529411,
+      "t": 0
+     },
+     {
+      "n": 17,
+      "ppp": 0.8235294117647058,
+      "score": 0.4117647058823529,
+      "shot": 0.7647058823529411,
+      "t": 10
+     },
+     {
+      "n": 16,
+      "ppp": 0.8125,
+      "score": 0.375,
+      "shot": 0.75,
+      "t": 20
+     },
+     {
+      "n": 12,
+      "ppp": 0.8333333333333334,
+      "score": 0.4166666666666667,
+      "shot": 0.8333333333333334,
+      "t": 30
+     },
+     {
+      "n": 11,
+      "ppp": 0.9090909090909091,
+      "score": 0.45454545454545453,
+      "shot": 0.8181818181818182,
+      "t": 45
+     },
+     {
+      "n": 11,
+      "ppp": 0.9090909090909091,
+      "score": 0.45454545454545453,
+      "shot": 0.8181818181818182,
+      "t": 60
+     }
+    ],
+    "bands": [
+     {
+      "hi": 10,
+      "lo": 0,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 20,
+      "lo": 10,
+      "n": 1,
+      "ppp": 1,
+      "score": 1,
+      "shot": 1
+     },
+     {
+      "hi": 30,
+      "lo": 20,
+      "n": 4,
+      "ppp": 0.75,
+      "score": 0.25,
+      "shot": 0.5
+     },
+     {
+      "hi": 45,
+      "lo": 30,
+      "n": 1,
+      "ppp": 0,
+      "score": 0,
+      "shot": 1
+     },
+     {
+      "hi": 60,
+      "lo": 45,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": null,
+      "lo": 60,
+      "n": 11,
+      "ppp": 0.9090909090909091,
+      "score": 0.45454545454545453,
+      "shot": 0.8181818181818182
+     }
+    ],
+    "med": 94,
+    "n": 17
+   },
+   "ref": 30,
+   "sport": "football",
+   "ts": [
+    0,
+    10,
+    20,
+    30,
+    45,
+    60
+   ],
+   "us": {
+    "alive": [
+     {
+      "n": 10,
+      "ppp": 1,
+      "score": 0.5,
+      "shot": 0.5,
+      "t": 0
+     },
+     {
+      "n": 9,
+      "ppp": 0.8888888888888888,
+      "score": 0.4444444444444444,
+      "shot": 0.4444444444444444,
+      "t": 10
+     },
+     {
+      "n": 9,
+      "ppp": 0.8888888888888888,
+      "score": 0.4444444444444444,
+      "shot": 0.4444444444444444,
+      "t": 20
+     },
+     {
+      "n": 9,
+      "ppp": 0.8888888888888888,
+      "score": 0.4444444444444444,
+      "shot": 0.4444444444444444,
+      "t": 30
+     },
+     {
+      "n": 9,
+      "ppp": 0.8888888888888888,
+      "score": 0.4444444444444444,
+      "shot": 0.4444444444444444,
+      "t": 45
+     },
+     {
+      "n": 7,
+      "ppp": 1,
+      "score": 0.42857142857142855,
+      "shot": 0.42857142857142855,
+      "t": 60
+     }
+    ],
+    "bands": [
+     {
+      "hi": 10,
+      "lo": 0,
+      "n": 1,
+      "ppp": 2,
+      "score": 1,
+      "shot": 1
+     },
+     {
+      "hi": 20,
+      "lo": 10,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 30,
+      "lo": 20,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 45,
+      "lo": 30,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 60,
+      "lo": 45,
+      "n": 2,
+      "ppp": 0.5,
+      "score": 0.5,
+      "shot": 0.5
+     },
+     {
+      "hi": null,
+      "lo": 60,
+      "n": 7,
+      "ppp": 1,
+      "score": 0.42857142857142855,
+      "shot": 0.42857142857142855
+     }
+    ],
+    "med": 76,
+    "n": 10
+   }
+  },
+  "possPairs": [
+   {
+    "dur": 89,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 124,
+    "team": "us"
+   },
+   {
+    "dur": 20,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 213,
+    "team": "opp"
+   },
+   {
+    "dur": 29,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 213,
+    "team": "opp"
+   },
+   {
+    "dur": 60,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 233,
+    "team": "us"
+   },
+   {
+    "dur": 29,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 293,
+    "team": "opp"
+   },
+   {
+    "dur": 1,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 2,
+    "src": "other",
+    "start": 479,
+    "team": "us"
+   },
+   {
+    "dur": 125,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 2,
+    "src": "other",
+    "start": 479,
+    "team": "us"
+   },
+   {
+    "dur": 164,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 863,
+    "team": "opp"
+   },
+   {
+    "dur": 55,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1154,
+    "team": "us"
+   },
+   {
+    "dur": 115,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 2,
+    "src": "restart",
+    "start": 1154,
+    "team": "us"
+   },
+   {
+    "dur": 94,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 1209,
+    "team": "opp"
+   },
+   {
+    "dur": 123,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1518,
+    "team": "opp"
+   },
+   {
+    "dur": 107,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2201,
+    "team": "opp"
+   },
+   {
+    "dur": 108,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2308,
+    "team": "us"
+   },
+   {
+    "dur": 15,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 2416,
+    "team": "opp"
+   },
+   {
+    "dur": 57,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 1,
+    "src": "restart",
+    "start": 2625,
+    "team": "us"
+   },
+   {
+    "dur": 63,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2668,
+    "team": "us"
+   },
+   {
+    "dur": 158,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 1,
+    "src": "restart",
+    "start": 2796,
+    "team": "opp"
+   },
+   {
+    "dur": 162,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2796,
+    "team": "opp"
+   },
+   {
+    "dur": 161,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 2958,
+    "team": "us"
+   },
+   {
+    "dur": 27,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3414,
+    "team": "opp"
+   },
+   {
+    "dur": 38,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3414,
+    "team": "opp"
+   },
+   {
+    "dur": 129,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3414,
+    "team": "opp"
+   },
+   {
+    "dur": 66,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 3886,
+    "team": "opp"
+   },
+   {
+    "dur": 100,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 2,
+    "src": "other",
+    "start": 3886,
+    "team": "opp"
+   },
+   {
+    "dur": 139,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3886,
+    "team": "opp"
+   },
+   {
+    "dur": 77,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 4122,
+    "team": "opp"
+   }
+  ],
   "record": {
    "d": 1,
    "l": 0,
@@ -1381,6 +1865,68 @@
      "p": 5
     }
    }
+  },
+  "timeBlocks": {
+   "opp": [
+    {
+     "pts": 3,
+     "shots": 3
+    },
+    {
+     "pts": 3,
+     "shots": 5
+    },
+    {
+     "pts": 3,
+     "shots": 2
+    },
+    {
+     "pts": 4,
+     "shots": 3
+    },
+    {
+     "pts": 2,
+     "shots": 2
+    },
+    {
+     "pts": 7,
+     "shots": 5
+    },
+    {
+     "pts": 3,
+     "shots": 6
+    }
+   ],
+   "us": [
+    {
+     "pts": 5,
+     "shots": 3
+    },
+    {
+     "pts": 3,
+     "shots": 5
+    },
+    {
+     "pts": 5,
+     "shots": 4
+    },
+    {
+     "pts": 0,
+     "shots": 1
+    },
+    {
+     "pts": 3,
+     "shots": 3
+    },
+    {
+     "pts": 3,
+     "shots": 1
+    },
+    {
+     "pts": 6,
+     "shots": 2
+    }
+   ]
   },
   "winLoss": null
  },
@@ -2168,6 +2714,350 @@
     "xsd": -0.18
    }
   ],
+  "possLen": {
+   "dropped": {
+    "long": 19,
+    "neg": 0
+   },
+   "opp": {
+    "alive": [
+     {
+      "n": 8,
+      "ppp": 0.375,
+      "score": 0.125,
+      "shot": 0.875,
+      "t": 0
+     },
+     {
+      "n": 8,
+      "ppp": 0.375,
+      "score": 0.125,
+      "shot": 0.875,
+      "t": 10
+     },
+     {
+      "n": 8,
+      "ppp": 0.375,
+      "score": 0.125,
+      "shot": 0.875,
+      "t": 20
+     },
+     {
+      "n": 8,
+      "ppp": 0.375,
+      "score": 0.125,
+      "shot": 0.875,
+      "t": 30
+     },
+     {
+      "n": 7,
+      "ppp": 0.42857142857142855,
+      "score": 0.14285714285714285,
+      "shot": 0.8571428571428571,
+      "t": 45
+     },
+     {
+      "n": 5,
+      "ppp": 0.6,
+      "score": 0.2,
+      "shot": 0.8,
+      "t": 60
+     }
+    ],
+    "bands": [
+     {
+      "hi": 10,
+      "lo": 0,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 20,
+      "lo": 10,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 30,
+      "lo": 20,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 45,
+      "lo": 30,
+      "n": 1,
+      "ppp": 0,
+      "score": 0,
+      "shot": 1
+     },
+     {
+      "hi": 60,
+      "lo": 45,
+      "n": 2,
+      "ppp": 0,
+      "score": 0,
+      "shot": 1
+     },
+     {
+      "hi": null,
+      "lo": 60,
+      "n": 5,
+      "ppp": 0.6,
+      "score": 0.2,
+      "shot": 0.8
+     }
+    ],
+    "med": 103.5,
+    "n": 8
+   },
+   "ref": 30,
+   "sport": "football",
+   "ts": [
+    0,
+    10,
+    20,
+    30,
+    45,
+    60
+   ],
+   "us": {
+    "alive": [
+     {
+      "n": 5,
+      "ppp": 1,
+      "score": 0.6,
+      "shot": 1,
+      "t": 0
+     },
+     {
+      "n": 5,
+      "ppp": 1,
+      "score": 0.6,
+      "shot": 1,
+      "t": 10
+     },
+     {
+      "n": 5,
+      "ppp": 1,
+      "score": 0.6,
+      "shot": 1,
+      "t": 20
+     },
+     {
+      "n": 5,
+      "ppp": 1,
+      "score": 0.6,
+      "shot": 1,
+      "t": 30
+     },
+     {
+      "n": 5,
+      "ppp": 1,
+      "score": 0.6,
+      "shot": 1,
+      "t": 45
+     },
+     {
+      "n": 4,
+      "ppp": 1,
+      "score": 0.5,
+      "shot": 1,
+      "t": 60
+     }
+    ],
+    "bands": [
+     {
+      "hi": 10,
+      "lo": 0,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 20,
+      "lo": 10,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 30,
+      "lo": 20,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 45,
+      "lo": 30,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 60,
+      "lo": 45,
+      "n": 1,
+      "ppp": 1,
+      "score": 1,
+      "shot": 1
+     },
+     {
+      "hi": null,
+      "lo": 60,
+      "n": 4,
+      "ppp": 1,
+      "score": 0.5,
+      "shot": 1
+     }
+    ],
+    "med": 116,
+    "n": 5
+   }
+  },
+  "possPairs": [
+   {
+    "dur": 109,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1211,
+    "team": "opp"
+   },
+   {
+    "dur": 98,
+    "kind": "lost",
+    "match_id": "m22",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1419,
+    "team": "opp"
+   },
+   {
+    "dur": 148,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2111,
+    "team": "opp"
+   },
+   {
+    "dur": 53,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2228,
+    "team": "opp"
+   },
+   {
+    "dur": 31,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2622,
+    "team": "opp"
+   },
+   {
+    "dur": 114,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2770,
+    "team": "opp"
+   },
+   {
+    "dur": 49,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3012,
+    "team": "opp"
+   },
+   {
+    "dur": 86,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3245,
+    "team": "us"
+   },
+   {
+    "dur": 116,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3245,
+    "team": "us"
+   },
+   {
+    "dur": 117,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 3584,
+    "team": "opp"
+   },
+   {
+    "dur": 59,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 3842,
+    "team": "us"
+   },
+   {
+    "dur": 156,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 3842,
+    "team": "us"
+   },
+   {
+    "dur": 176,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 3842,
+    "team": "us"
+   }
+  ],
   "record": {
    "d": 0,
    "l": 0,
@@ -2606,6 +3496,68 @@
      "p": 10
     }
    }
+  },
+  "timeBlocks": {
+   "opp": [
+    {
+     "pts": 1,
+     "shots": 2
+    },
+    {
+     "pts": 4,
+     "shots": 2
+    },
+    {
+     "pts": 0,
+     "shots": 1
+    },
+    {
+     "pts": 0,
+     "shots": 2
+    },
+    {
+     "pts": 0,
+     "shots": 3
+    },
+    {
+     "pts": 0,
+     "shots": 1
+    },
+    {
+     "pts": 8,
+     "shots": 4
+    }
+   ],
+   "us": [
+    {
+     "pts": 5,
+     "shots": 3
+    },
+    {
+     "pts": 0,
+     "shots": 1
+    },
+    {
+     "pts": 0,
+     "shots": 2
+    },
+    {
+     "pts": 7,
+     "shots": 3
+    },
+    {
+     "pts": 2,
+     "shots": 7
+    },
+    {
+     "pts": 2,
+     "shots": 4
+    },
+    {
+     "pts": 5,
+     "shots": 4
+    }
+   ]
   },
   "winLoss": null
  },
@@ -3433,6 +4385,410 @@
     "xsd": 0.8200000000000001
    }
   ],
+  "possLen": {
+   "dropped": {
+    "long": 17,
+    "neg": 4
+   },
+   "opp": {
+    "alive": [
+     {
+      "n": 6,
+      "ppp": 0.6666666666666666,
+      "score": 0.3333333333333333,
+      "shot": 0.5,
+      "t": 0
+     },
+     {
+      "n": 4,
+      "ppp": 1,
+      "score": 0.5,
+      "shot": 0.75,
+      "t": 10
+     },
+     {
+      "n": 4,
+      "ppp": 1,
+      "score": 0.5,
+      "shot": 0.75,
+      "t": 20
+     },
+     {
+      "n": 4,
+      "ppp": 1,
+      "score": 0.5,
+      "shot": 0.75,
+      "t": 30
+     },
+     {
+      "n": 3,
+      "ppp": 1,
+      "score": 0.3333333333333333,
+      "shot": 0.6666666666666666,
+      "t": 45
+     },
+     {
+      "n": 3,
+      "ppp": 1,
+      "score": 0.3333333333333333,
+      "shot": 0.6666666666666666,
+      "t": 60
+     }
+    ],
+    "bands": [
+     {
+      "hi": 10,
+      "lo": 0,
+      "n": 2,
+      "ppp": 0,
+      "score": 0,
+      "shot": 0
+     },
+     {
+      "hi": 20,
+      "lo": 10,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 30,
+      "lo": 20,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 45,
+      "lo": 30,
+      "n": 1,
+      "ppp": 1,
+      "score": 1,
+      "shot": 1
+     },
+     {
+      "hi": 60,
+      "lo": 45,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": null,
+      "lo": 60,
+      "n": 3,
+      "ppp": 1,
+      "score": 0.3333333333333333,
+      "shot": 0.6666666666666666
+     }
+    ],
+    "med": 45.5,
+    "n": 6
+   },
+   "ref": 30,
+   "sport": "football",
+   "ts": [
+    0,
+    10,
+    20,
+    30,
+    45,
+    60
+   ],
+   "us": {
+    "alive": [
+     {
+      "n": 13,
+      "ppp": 0.38461538461538464,
+      "score": 0.15384615384615385,
+      "shot": 0.6153846153846154,
+      "t": 0
+     },
+     {
+      "n": 13,
+      "ppp": 0.38461538461538464,
+      "score": 0.15384615384615385,
+      "shot": 0.6153846153846154,
+      "t": 10
+     },
+     {
+      "n": 12,
+      "ppp": 0.4166666666666667,
+      "score": 0.16666666666666666,
+      "shot": 0.5833333333333334,
+      "t": 20
+     },
+     {
+      "n": 12,
+      "ppp": 0.4166666666666667,
+      "score": 0.16666666666666666,
+      "shot": 0.5833333333333334,
+      "t": 30
+     },
+     {
+      "n": 12,
+      "ppp": 0.4166666666666667,
+      "score": 0.16666666666666666,
+      "shot": 0.5833333333333334,
+      "t": 45
+     },
+     {
+      "n": 10,
+      "ppp": 0.5,
+      "score": 0.2,
+      "shot": 0.6,
+      "t": 60
+     }
+    ],
+    "bands": [
+     {
+      "hi": 10,
+      "lo": 0,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 20,
+      "lo": 10,
+      "n": 1,
+      "ppp": 0,
+      "score": 0,
+      "shot": 1
+     },
+     {
+      "hi": 30,
+      "lo": 20,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 45,
+      "lo": 30,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 60,
+      "lo": 45,
+      "n": 2,
+      "ppp": 0,
+      "score": 0,
+      "shot": 0.5
+     },
+     {
+      "hi": null,
+      "lo": 60,
+      "n": 10,
+      "ppp": 0.5,
+      "score": 0.2,
+      "shot": 0.6
+     }
+    ],
+    "med": 72,
+    "n": 13
+   }
+  },
+  "possPairs": [
+   {
+    "dur": 62,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 2,
+    "src": "restart",
+    "start": 219,
+    "team": "us"
+   },
+   {
+    "dur": 160,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 219,
+    "team": "us"
+   },
+   {
+    "dur": 103,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 646,
+    "team": "us"
+   },
+   {
+    "dur": 145,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 646,
+    "team": "us"
+   },
+   {
+    "dur": 5,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1067,
+    "team": "opp"
+   },
+   {
+    "dur": 31,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 1,
+    "src": "other",
+    "start": 1067,
+    "team": "opp"
+   },
+   {
+    "dur": 66,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 1072,
+    "team": "us"
+   },
+   {
+    "dur": 107,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1072,
+    "team": "us"
+   },
+   {
+    "dur": 90,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1172,
+    "team": "opp"
+   },
+   {
+    "dur": 97,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1362,
+    "team": "us"
+   },
+   {
+    "dur": 60,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1459,
+    "team": "opp"
+   },
+   {
+    "dur": 69,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1683,
+    "team": "us"
+   },
+   {
+    "dur": 57,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1683,
+    "team": "us"
+   },
+   {
+    "dur": 18,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1976,
+    "team": "us"
+   },
+   {
+    "dur": 90,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 2843,
+    "team": "opp"
+   },
+   {
+    "dur": 7,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 3038,
+    "team": "opp"
+   },
+   {
+    "dur": 72,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3045,
+    "team": "us"
+   },
+   {
+    "dur": 147,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3045,
+    "team": "us"
+   },
+   {
+    "dur": 45,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 3278,
+    "team": "us"
+   }
+  ],
   "record": {
    "d": 0,
    "l": 0,
@@ -3875,6 +5231,68 @@
      "p": 6
     }
    }
+  },
+  "timeBlocks": {
+   "opp": [
+    {
+     "pts": 6,
+     "shots": 6
+    },
+    {
+     "pts": 1,
+     "shots": 2
+    },
+    {
+     "pts": 3,
+     "shots": 2
+    },
+    {
+     "pts": 1,
+     "shots": 2
+    },
+    {
+     "pts": 3,
+     "shots": 1
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 1
+    }
+   ],
+   "us": [
+    {
+     "pts": 5,
+     "shots": 6
+    },
+    {
+     "pts": 3,
+     "shots": 5
+    },
+    {
+     "pts": 0,
+     "shots": 1
+    },
+    {
+     "pts": 8,
+     "shots": 6
+    },
+    {
+     "pts": 8,
+     "shots": 4
+    },
+    {
+     "pts": 3,
+     "shots": 3
+    },
+    {
+     "pts": 2,
+     "shots": 5
+    }
+   ]
   },
   "winLoss": null
  },
@@ -4417,6 +5835,219 @@
     "xsd": 0
    }
   ],
+  "possLen": {
+   "dropped": {
+    "long": 0,
+    "neg": 0
+   },
+   "opp": {
+    "alive": [
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 0
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 10
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 20
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 30
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 45
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 60
+     }
+    ],
+    "bands": [
+     {
+      "hi": 10,
+      "lo": 0,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 20,
+      "lo": 10,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 30,
+      "lo": 20,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 45,
+      "lo": 30,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 60,
+      "lo": 45,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": null,
+      "lo": 60,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     }
+    ],
+    "med": null,
+    "n": 0
+   },
+   "ref": 30,
+   "sport": "football",
+   "ts": [
+    0,
+    10,
+    20,
+    30,
+    45,
+    60
+   ],
+   "us": {
+    "alive": [
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 0
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 10
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 20
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 30
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 45
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 60
+     }
+    ],
+    "bands": [
+     {
+      "hi": 10,
+      "lo": 0,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 20,
+      "lo": 10,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 30,
+      "lo": 20,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 45,
+      "lo": 30,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 60,
+      "lo": 45,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": null,
+      "lo": 60,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     }
+    ],
+    "med": null,
+    "n": 0
+   }
+  },
+  "possPairs": [],
   "record": {
    "d": 1,
    "l": 0,
@@ -4453,6 +6084,68 @@
     "us": 0
    },
    "us": {}
+  },
+  "timeBlocks": {
+   "opp": [
+    {
+     "pts": 0,
+     "shots": 1
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    }
+   ],
+   "us": [
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    }
+   ]
   },
   "winLoss": null
  },
@@ -5590,6 +7283,810 @@
     "tol": 0,
     "xs": 2.712,
     "xsd": 0.2879999999999998
+   }
+  ],
+  "possLen": {
+   "dropped": {
+    "long": 68,
+    "neg": 4
+   },
+   "opp": {
+    "alive": [
+     {
+      "n": 31,
+      "ppp": 0.6774193548387096,
+      "score": 0.3225806451612903,
+      "shot": 0.7419354838709677,
+      "t": 0
+     },
+     {
+      "n": 29,
+      "ppp": 0.7241379310344828,
+      "score": 0.3448275862068966,
+      "shot": 0.7931034482758621,
+      "t": 10
+     },
+     {
+      "n": 28,
+      "ppp": 0.7142857142857143,
+      "score": 0.32142857142857145,
+      "shot": 0.7857142857142857,
+      "t": 20
+     },
+     {
+      "n": 24,
+      "ppp": 0.7083333333333334,
+      "score": 0.3333333333333333,
+      "shot": 0.8333333333333334,
+      "t": 30
+     },
+     {
+      "n": 21,
+      "ppp": 0.7619047619047619,
+      "score": 0.3333333333333333,
+      "shot": 0.8095238095238095,
+      "t": 45
+     },
+     {
+      "n": 19,
+      "ppp": 0.8421052631578947,
+      "score": 0.3684210526315789,
+      "shot": 0.7894736842105263,
+      "t": 60
+     }
+    ],
+    "bands": [
+     {
+      "hi": 10,
+      "lo": 0,
+      "n": 2,
+      "ppp": 0,
+      "score": 0,
+      "shot": 0
+     },
+     {
+      "hi": 20,
+      "lo": 10,
+      "n": 1,
+      "ppp": 1,
+      "score": 1,
+      "shot": 1
+     },
+     {
+      "hi": 30,
+      "lo": 20,
+      "n": 4,
+      "ppp": 0.75,
+      "score": 0.25,
+      "shot": 0.5
+     },
+     {
+      "hi": 45,
+      "lo": 30,
+      "n": 3,
+      "ppp": 0.3333333333333333,
+      "score": 0.3333333333333333,
+      "shot": 1
+     },
+     {
+      "hi": 60,
+      "lo": 45,
+      "n": 2,
+      "ppp": 0,
+      "score": 0,
+      "shot": 1
+     },
+     {
+      "hi": null,
+      "lo": 60,
+      "n": 19,
+      "ppp": 0.8421052631578947,
+      "score": 0.3684210526315789,
+      "shot": 0.7894736842105263
+     }
+    ],
+    "med": 90,
+    "n": 31
+   },
+   "ref": 30,
+   "sport": "football",
+   "ts": [
+    0,
+    10,
+    20,
+    30,
+    45,
+    60
+   ],
+   "us": {
+    "alive": [
+     {
+      "n": 28,
+      "ppp": 0.7142857142857143,
+      "score": 0.35714285714285715,
+      "shot": 0.6428571428571429,
+      "t": 0
+     },
+     {
+      "n": 27,
+      "ppp": 0.6666666666666666,
+      "score": 0.3333333333333333,
+      "shot": 0.6296296296296297,
+      "t": 10
+     },
+     {
+      "n": 26,
+      "ppp": 0.6923076923076923,
+      "score": 0.34615384615384615,
+      "shot": 0.6153846153846154,
+      "t": 20
+     },
+     {
+      "n": 26,
+      "ppp": 0.6923076923076923,
+      "score": 0.34615384615384615,
+      "shot": 0.6153846153846154,
+      "t": 30
+     },
+     {
+      "n": 26,
+      "ppp": 0.6923076923076923,
+      "score": 0.34615384615384615,
+      "shot": 0.6153846153846154,
+      "t": 45
+     },
+     {
+      "n": 21,
+      "ppp": 0.7619047619047619,
+      "score": 0.3333333333333333,
+      "shot": 0.6190476190476191,
+      "t": 60
+     }
+    ],
+    "bands": [
+     {
+      "hi": 10,
+      "lo": 0,
+      "n": 1,
+      "ppp": 2,
+      "score": 1,
+      "shot": 1
+     },
+     {
+      "hi": 20,
+      "lo": 10,
+      "n": 1,
+      "ppp": 0,
+      "score": 0,
+      "shot": 1
+     },
+     {
+      "hi": 30,
+      "lo": 20,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 45,
+      "lo": 30,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 60,
+      "lo": 45,
+      "n": 5,
+      "ppp": 0.4,
+      "score": 0.4,
+      "shot": 0.6
+     },
+     {
+      "hi": null,
+      "lo": 60,
+      "n": 21,
+      "ppp": 0.7619047619047619,
+      "score": 0.3333333333333333,
+      "shot": 0.6190476190476191
+     }
+    ],
+    "med": 87.5,
+    "n": 28
+   }
+  },
+  "possPairs": [
+   {
+    "dur": 89,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 124,
+    "team": "us"
+   },
+   {
+    "dur": 20,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 213,
+    "team": "opp"
+   },
+   {
+    "dur": 29,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 213,
+    "team": "opp"
+   },
+   {
+    "dur": 60,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 233,
+    "team": "us"
+   },
+   {
+    "dur": 29,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 293,
+    "team": "opp"
+   },
+   {
+    "dur": 1,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 2,
+    "src": "other",
+    "start": 479,
+    "team": "us"
+   },
+   {
+    "dur": 125,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 2,
+    "src": "other",
+    "start": 479,
+    "team": "us"
+   },
+   {
+    "dur": 164,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 863,
+    "team": "opp"
+   },
+   {
+    "dur": 55,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1154,
+    "team": "us"
+   },
+   {
+    "dur": 115,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 2,
+    "src": "restart",
+    "start": 1154,
+    "team": "us"
+   },
+   {
+    "dur": 94,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 1209,
+    "team": "opp"
+   },
+   {
+    "dur": 123,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1518,
+    "team": "opp"
+   },
+   {
+    "dur": 107,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2201,
+    "team": "opp"
+   },
+   {
+    "dur": 108,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2308,
+    "team": "us"
+   },
+   {
+    "dur": 15,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 2416,
+    "team": "opp"
+   },
+   {
+    "dur": 57,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 1,
+    "src": "restart",
+    "start": 2625,
+    "team": "us"
+   },
+   {
+    "dur": 63,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2668,
+    "team": "us"
+   },
+   {
+    "dur": 158,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 1,
+    "src": "restart",
+    "start": 2796,
+    "team": "opp"
+   },
+   {
+    "dur": 162,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2796,
+    "team": "opp"
+   },
+   {
+    "dur": 161,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 2958,
+    "team": "us"
+   },
+   {
+    "dur": 27,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3414,
+    "team": "opp"
+   },
+   {
+    "dur": 38,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3414,
+    "team": "opp"
+   },
+   {
+    "dur": 129,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3414,
+    "team": "opp"
+   },
+   {
+    "dur": 66,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 3886,
+    "team": "opp"
+   },
+   {
+    "dur": 100,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 2,
+    "src": "other",
+    "start": 3886,
+    "team": "opp"
+   },
+   {
+    "dur": 139,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3886,
+    "team": "opp"
+   },
+   {
+    "dur": 77,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 4122,
+    "team": "opp"
+   },
+   {
+    "dur": 109,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1211,
+    "team": "opp"
+   },
+   {
+    "dur": 98,
+    "kind": "lost",
+    "match_id": "m22",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1419,
+    "team": "opp"
+   },
+   {
+    "dur": 148,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2111,
+    "team": "opp"
+   },
+   {
+    "dur": 53,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2228,
+    "team": "opp"
+   },
+   {
+    "dur": 31,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2622,
+    "team": "opp"
+   },
+   {
+    "dur": 114,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2770,
+    "team": "opp"
+   },
+   {
+    "dur": 49,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3012,
+    "team": "opp"
+   },
+   {
+    "dur": 86,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3245,
+    "team": "us"
+   },
+   {
+    "dur": 116,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3245,
+    "team": "us"
+   },
+   {
+    "dur": 117,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 3584,
+    "team": "opp"
+   },
+   {
+    "dur": 59,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 3842,
+    "team": "us"
+   },
+   {
+    "dur": 156,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 3842,
+    "team": "us"
+   },
+   {
+    "dur": 176,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 3842,
+    "team": "us"
+   },
+   {
+    "dur": 62,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 2,
+    "src": "restart",
+    "start": 219,
+    "team": "us"
+   },
+   {
+    "dur": 160,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 219,
+    "team": "us"
+   },
+   {
+    "dur": 103,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 646,
+    "team": "us"
+   },
+   {
+    "dur": 145,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 646,
+    "team": "us"
+   },
+   {
+    "dur": 5,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1067,
+    "team": "opp"
+   },
+   {
+    "dur": 31,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 1,
+    "src": "other",
+    "start": 1067,
+    "team": "opp"
+   },
+   {
+    "dur": 66,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 1072,
+    "team": "us"
+   },
+   {
+    "dur": 107,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1072,
+    "team": "us"
+   },
+   {
+    "dur": 90,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1172,
+    "team": "opp"
+   },
+   {
+    "dur": 97,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1362,
+    "team": "us"
+   },
+   {
+    "dur": 60,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1459,
+    "team": "opp"
+   },
+   {
+    "dur": 69,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1683,
+    "team": "us"
+   },
+   {
+    "dur": 57,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1683,
+    "team": "us"
+   },
+   {
+    "dur": 18,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1976,
+    "team": "us"
+   },
+   {
+    "dur": 90,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 2843,
+    "team": "opp"
+   },
+   {
+    "dur": 7,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 3038,
+    "team": "opp"
+   },
+   {
+    "dur": 72,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3045,
+    "team": "us"
+   },
+   {
+    "dur": 147,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3045,
+    "team": "us"
+   },
+   {
+    "dur": 45,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 3278,
+    "team": "us"
    }
   ],
   "record": {
@@ -6792,6 +9289,68 @@
      "p": 21
     }
    }
+  },
+  "timeBlocks": {
+   "opp": [
+    {
+     "pts": 10,
+     "shots": 12
+    },
+    {
+     "pts": 8,
+     "shots": 9
+    },
+    {
+     "pts": 6,
+     "shots": 5
+    },
+    {
+     "pts": 5,
+     "shots": 7
+    },
+    {
+     "pts": 5,
+     "shots": 6
+    },
+    {
+     "pts": 7,
+     "shots": 6
+    },
+    {
+     "pts": 11,
+     "shots": 11
+    }
+   ],
+   "us": [
+    {
+     "pts": 15,
+     "shots": 12
+    },
+    {
+     "pts": 6,
+     "shots": 11
+    },
+    {
+     "pts": 5,
+     "shots": 7
+    },
+    {
+     "pts": 15,
+     "shots": 10
+    },
+    {
+     "pts": 13,
+     "shots": 14
+    },
+    {
+     "pts": 8,
+     "shots": 8
+    },
+    {
+     "pts": 13,
+     "shots": 11
+    }
+   ]
   },
   "winLoss": {
    "nL": 1,
@@ -7969,6 +10528,810 @@
     "xsd": 0.2879999999999998
    }
   ],
+  "possLen": {
+   "dropped": {
+    "long": 68,
+    "neg": 4
+   },
+   "opp": {
+    "alive": [
+     {
+      "n": 31,
+      "ppp": 0.6774193548387096,
+      "score": 0.3225806451612903,
+      "shot": 0.7419354838709677,
+      "t": 0
+     },
+     {
+      "n": 29,
+      "ppp": 0.7241379310344828,
+      "score": 0.3448275862068966,
+      "shot": 0.7931034482758621,
+      "t": 10
+     },
+     {
+      "n": 28,
+      "ppp": 0.7142857142857143,
+      "score": 0.32142857142857145,
+      "shot": 0.7857142857142857,
+      "t": 20
+     },
+     {
+      "n": 24,
+      "ppp": 0.7083333333333334,
+      "score": 0.3333333333333333,
+      "shot": 0.8333333333333334,
+      "t": 30
+     },
+     {
+      "n": 21,
+      "ppp": 0.7619047619047619,
+      "score": 0.3333333333333333,
+      "shot": 0.8095238095238095,
+      "t": 45
+     },
+     {
+      "n": 19,
+      "ppp": 0.8421052631578947,
+      "score": 0.3684210526315789,
+      "shot": 0.7894736842105263,
+      "t": 60
+     }
+    ],
+    "bands": [
+     {
+      "hi": 10,
+      "lo": 0,
+      "n": 2,
+      "ppp": 0,
+      "score": 0,
+      "shot": 0
+     },
+     {
+      "hi": 20,
+      "lo": 10,
+      "n": 1,
+      "ppp": 1,
+      "score": 1,
+      "shot": 1
+     },
+     {
+      "hi": 30,
+      "lo": 20,
+      "n": 4,
+      "ppp": 0.75,
+      "score": 0.25,
+      "shot": 0.5
+     },
+     {
+      "hi": 45,
+      "lo": 30,
+      "n": 3,
+      "ppp": 0.3333333333333333,
+      "score": 0.3333333333333333,
+      "shot": 1
+     },
+     {
+      "hi": 60,
+      "lo": 45,
+      "n": 2,
+      "ppp": 0,
+      "score": 0,
+      "shot": 1
+     },
+     {
+      "hi": null,
+      "lo": 60,
+      "n": 19,
+      "ppp": 0.8421052631578947,
+      "score": 0.3684210526315789,
+      "shot": 0.7894736842105263
+     }
+    ],
+    "med": 90,
+    "n": 31
+   },
+   "ref": 30,
+   "sport": "football",
+   "ts": [
+    0,
+    10,
+    20,
+    30,
+    45,
+    60
+   ],
+   "us": {
+    "alive": [
+     {
+      "n": 28,
+      "ppp": 0.7142857142857143,
+      "score": 0.35714285714285715,
+      "shot": 0.6428571428571429,
+      "t": 0
+     },
+     {
+      "n": 27,
+      "ppp": 0.6666666666666666,
+      "score": 0.3333333333333333,
+      "shot": 0.6296296296296297,
+      "t": 10
+     },
+     {
+      "n": 26,
+      "ppp": 0.6923076923076923,
+      "score": 0.34615384615384615,
+      "shot": 0.6153846153846154,
+      "t": 20
+     },
+     {
+      "n": 26,
+      "ppp": 0.6923076923076923,
+      "score": 0.34615384615384615,
+      "shot": 0.6153846153846154,
+      "t": 30
+     },
+     {
+      "n": 26,
+      "ppp": 0.6923076923076923,
+      "score": 0.34615384615384615,
+      "shot": 0.6153846153846154,
+      "t": 45
+     },
+     {
+      "n": 21,
+      "ppp": 0.7619047619047619,
+      "score": 0.3333333333333333,
+      "shot": 0.6190476190476191,
+      "t": 60
+     }
+    ],
+    "bands": [
+     {
+      "hi": 10,
+      "lo": 0,
+      "n": 1,
+      "ppp": 2,
+      "score": 1,
+      "shot": 1
+     },
+     {
+      "hi": 20,
+      "lo": 10,
+      "n": 1,
+      "ppp": 0,
+      "score": 0,
+      "shot": 1
+     },
+     {
+      "hi": 30,
+      "lo": 20,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 45,
+      "lo": 30,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 60,
+      "lo": 45,
+      "n": 5,
+      "ppp": 0.4,
+      "score": 0.4,
+      "shot": 0.6
+     },
+     {
+      "hi": null,
+      "lo": 60,
+      "n": 21,
+      "ppp": 0.7619047619047619,
+      "score": 0.3333333333333333,
+      "shot": 0.6190476190476191
+     }
+    ],
+    "med": 87.5,
+    "n": 28
+   }
+  },
+  "possPairs": [
+   {
+    "dur": 89,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 124,
+    "team": "us"
+   },
+   {
+    "dur": 20,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 213,
+    "team": "opp"
+   },
+   {
+    "dur": 29,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 213,
+    "team": "opp"
+   },
+   {
+    "dur": 60,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 233,
+    "team": "us"
+   },
+   {
+    "dur": 29,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 293,
+    "team": "opp"
+   },
+   {
+    "dur": 1,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 2,
+    "src": "other",
+    "start": 479,
+    "team": "us"
+   },
+   {
+    "dur": 125,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 2,
+    "src": "other",
+    "start": 479,
+    "team": "us"
+   },
+   {
+    "dur": 164,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 863,
+    "team": "opp"
+   },
+   {
+    "dur": 55,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1154,
+    "team": "us"
+   },
+   {
+    "dur": 115,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 2,
+    "src": "restart",
+    "start": 1154,
+    "team": "us"
+   },
+   {
+    "dur": 94,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 1209,
+    "team": "opp"
+   },
+   {
+    "dur": 123,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1518,
+    "team": "opp"
+   },
+   {
+    "dur": 107,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2201,
+    "team": "opp"
+   },
+   {
+    "dur": 108,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2308,
+    "team": "us"
+   },
+   {
+    "dur": 15,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 2416,
+    "team": "opp"
+   },
+   {
+    "dur": 57,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 1,
+    "src": "restart",
+    "start": 2625,
+    "team": "us"
+   },
+   {
+    "dur": 63,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2668,
+    "team": "us"
+   },
+   {
+    "dur": 158,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 1,
+    "src": "restart",
+    "start": 2796,
+    "team": "opp"
+   },
+   {
+    "dur": 162,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2796,
+    "team": "opp"
+   },
+   {
+    "dur": 161,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 2958,
+    "team": "us"
+   },
+   {
+    "dur": 27,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3414,
+    "team": "opp"
+   },
+   {
+    "dur": 38,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3414,
+    "team": "opp"
+   },
+   {
+    "dur": 129,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3414,
+    "team": "opp"
+   },
+   {
+    "dur": 66,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 3886,
+    "team": "opp"
+   },
+   {
+    "dur": 100,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 2,
+    "src": "other",
+    "start": 3886,
+    "team": "opp"
+   },
+   {
+    "dur": 139,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3886,
+    "team": "opp"
+   },
+   {
+    "dur": 77,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 4122,
+    "team": "opp"
+   },
+   {
+    "dur": 109,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1211,
+    "team": "opp"
+   },
+   {
+    "dur": 98,
+    "kind": "lost",
+    "match_id": "m22",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1419,
+    "team": "opp"
+   },
+   {
+    "dur": 148,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2111,
+    "team": "opp"
+   },
+   {
+    "dur": 53,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2228,
+    "team": "opp"
+   },
+   {
+    "dur": 31,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2622,
+    "team": "opp"
+   },
+   {
+    "dur": 114,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2770,
+    "team": "opp"
+   },
+   {
+    "dur": 49,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3012,
+    "team": "opp"
+   },
+   {
+    "dur": 86,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3245,
+    "team": "us"
+   },
+   {
+    "dur": 116,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3245,
+    "team": "us"
+   },
+   {
+    "dur": 117,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 3584,
+    "team": "opp"
+   },
+   {
+    "dur": 59,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 3842,
+    "team": "us"
+   },
+   {
+    "dur": 156,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 3842,
+    "team": "us"
+   },
+   {
+    "dur": 176,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 3842,
+    "team": "us"
+   },
+   {
+    "dur": 62,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 2,
+    "src": "restart",
+    "start": 219,
+    "team": "us"
+   },
+   {
+    "dur": 160,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 219,
+    "team": "us"
+   },
+   {
+    "dur": 103,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 646,
+    "team": "us"
+   },
+   {
+    "dur": 145,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 646,
+    "team": "us"
+   },
+   {
+    "dur": 5,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1067,
+    "team": "opp"
+   },
+   {
+    "dur": 31,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 1,
+    "src": "other",
+    "start": 1067,
+    "team": "opp"
+   },
+   {
+    "dur": 66,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 1072,
+    "team": "us"
+   },
+   {
+    "dur": 107,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1072,
+    "team": "us"
+   },
+   {
+    "dur": 90,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1172,
+    "team": "opp"
+   },
+   {
+    "dur": 97,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1362,
+    "team": "us"
+   },
+   {
+    "dur": 60,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1459,
+    "team": "opp"
+   },
+   {
+    "dur": 69,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1683,
+    "team": "us"
+   },
+   {
+    "dur": 57,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1683,
+    "team": "us"
+   },
+   {
+    "dur": 18,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1976,
+    "team": "us"
+   },
+   {
+    "dur": 90,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 2843,
+    "team": "opp"
+   },
+   {
+    "dur": 7,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 3038,
+    "team": "opp"
+   },
+   {
+    "dur": 72,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3045,
+    "team": "us"
+   },
+   {
+    "dur": 147,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3045,
+    "team": "us"
+   },
+   {
+    "dur": 45,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 3278,
+    "team": "us"
+   }
+  ],
   "record": {
    "d": 2,
    "l": 0,
@@ -9169,6 +12532,68 @@
      "p": 21
     }
    }
+  },
+  "timeBlocks": {
+   "opp": [
+    {
+     "pts": 10,
+     "shots": 12
+    },
+    {
+     "pts": 8,
+     "shots": 9
+    },
+    {
+     "pts": 6,
+     "shots": 5
+    },
+    {
+     "pts": 5,
+     "shots": 7
+    },
+    {
+     "pts": 5,
+     "shots": 6
+    },
+    {
+     "pts": 7,
+     "shots": 6
+    },
+    {
+     "pts": 11,
+     "shots": 11
+    }
+   ],
+   "us": [
+    {
+     "pts": 15,
+     "shots": 12
+    },
+    {
+     "pts": 6,
+     "shots": 11
+    },
+    {
+     "pts": 5,
+     "shots": 7
+    },
+    {
+     "pts": 15,
+     "shots": 10
+    },
+    {
+     "pts": 13,
+     "shots": 14
+    },
+    {
+     "pts": 8,
+     "shots": 8
+    },
+    {
+     "pts": 13,
+     "shots": 11
+    }
+   ]
   },
   "winLoss": {
    "nL": 1,
@@ -10346,6 +13771,810 @@
     "xsd": 0.2879999999999998
    }
   ],
+  "possLen": {
+   "dropped": {
+    "long": 68,
+    "neg": 4
+   },
+   "opp": {
+    "alive": [
+     {
+      "n": 31,
+      "ppp": 0.6774193548387096,
+      "score": 0.3225806451612903,
+      "shot": 0.7419354838709677,
+      "t": 0
+     },
+     {
+      "n": 29,
+      "ppp": 0.7241379310344828,
+      "score": 0.3448275862068966,
+      "shot": 0.7931034482758621,
+      "t": 10
+     },
+     {
+      "n": 28,
+      "ppp": 0.7142857142857143,
+      "score": 0.32142857142857145,
+      "shot": 0.7857142857142857,
+      "t": 20
+     },
+     {
+      "n": 24,
+      "ppp": 0.7083333333333334,
+      "score": 0.3333333333333333,
+      "shot": 0.8333333333333334,
+      "t": 30
+     },
+     {
+      "n": 21,
+      "ppp": 0.7619047619047619,
+      "score": 0.3333333333333333,
+      "shot": 0.8095238095238095,
+      "t": 45
+     },
+     {
+      "n": 19,
+      "ppp": 0.8421052631578947,
+      "score": 0.3684210526315789,
+      "shot": 0.7894736842105263,
+      "t": 60
+     }
+    ],
+    "bands": [
+     {
+      "hi": 10,
+      "lo": 0,
+      "n": 2,
+      "ppp": 0,
+      "score": 0,
+      "shot": 0
+     },
+     {
+      "hi": 20,
+      "lo": 10,
+      "n": 1,
+      "ppp": 1,
+      "score": 1,
+      "shot": 1
+     },
+     {
+      "hi": 30,
+      "lo": 20,
+      "n": 4,
+      "ppp": 0.75,
+      "score": 0.25,
+      "shot": 0.5
+     },
+     {
+      "hi": 45,
+      "lo": 30,
+      "n": 3,
+      "ppp": 0.3333333333333333,
+      "score": 0.3333333333333333,
+      "shot": 1
+     },
+     {
+      "hi": 60,
+      "lo": 45,
+      "n": 2,
+      "ppp": 0,
+      "score": 0,
+      "shot": 1
+     },
+     {
+      "hi": null,
+      "lo": 60,
+      "n": 19,
+      "ppp": 0.8421052631578947,
+      "score": 0.3684210526315789,
+      "shot": 0.7894736842105263
+     }
+    ],
+    "med": 90,
+    "n": 31
+   },
+   "ref": 30,
+   "sport": "football",
+   "ts": [
+    0,
+    10,
+    20,
+    30,
+    45,
+    60
+   ],
+   "us": {
+    "alive": [
+     {
+      "n": 28,
+      "ppp": 0.7142857142857143,
+      "score": 0.35714285714285715,
+      "shot": 0.6428571428571429,
+      "t": 0
+     },
+     {
+      "n": 27,
+      "ppp": 0.6666666666666666,
+      "score": 0.3333333333333333,
+      "shot": 0.6296296296296297,
+      "t": 10
+     },
+     {
+      "n": 26,
+      "ppp": 0.6923076923076923,
+      "score": 0.34615384615384615,
+      "shot": 0.6153846153846154,
+      "t": 20
+     },
+     {
+      "n": 26,
+      "ppp": 0.6923076923076923,
+      "score": 0.34615384615384615,
+      "shot": 0.6153846153846154,
+      "t": 30
+     },
+     {
+      "n": 26,
+      "ppp": 0.6923076923076923,
+      "score": 0.34615384615384615,
+      "shot": 0.6153846153846154,
+      "t": 45
+     },
+     {
+      "n": 21,
+      "ppp": 0.7619047619047619,
+      "score": 0.3333333333333333,
+      "shot": 0.6190476190476191,
+      "t": 60
+     }
+    ],
+    "bands": [
+     {
+      "hi": 10,
+      "lo": 0,
+      "n": 1,
+      "ppp": 2,
+      "score": 1,
+      "shot": 1
+     },
+     {
+      "hi": 20,
+      "lo": 10,
+      "n": 1,
+      "ppp": 0,
+      "score": 0,
+      "shot": 1
+     },
+     {
+      "hi": 30,
+      "lo": 20,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 45,
+      "lo": 30,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 60,
+      "lo": 45,
+      "n": 5,
+      "ppp": 0.4,
+      "score": 0.4,
+      "shot": 0.6
+     },
+     {
+      "hi": null,
+      "lo": 60,
+      "n": 21,
+      "ppp": 0.7619047619047619,
+      "score": 0.3333333333333333,
+      "shot": 0.6190476190476191
+     }
+    ],
+    "med": 87.5,
+    "n": 28
+   }
+  },
+  "possPairs": [
+   {
+    "dur": 89,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 124,
+    "team": "us"
+   },
+   {
+    "dur": 20,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 213,
+    "team": "opp"
+   },
+   {
+    "dur": 29,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 213,
+    "team": "opp"
+   },
+   {
+    "dur": 60,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 233,
+    "team": "us"
+   },
+   {
+    "dur": 29,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 293,
+    "team": "opp"
+   },
+   {
+    "dur": 1,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 2,
+    "src": "other",
+    "start": 479,
+    "team": "us"
+   },
+   {
+    "dur": 125,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 2,
+    "src": "other",
+    "start": 479,
+    "team": "us"
+   },
+   {
+    "dur": 164,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 863,
+    "team": "opp"
+   },
+   {
+    "dur": 55,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1154,
+    "team": "us"
+   },
+   {
+    "dur": 115,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 2,
+    "src": "restart",
+    "start": 1154,
+    "team": "us"
+   },
+   {
+    "dur": 94,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 1209,
+    "team": "opp"
+   },
+   {
+    "dur": 123,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1518,
+    "team": "opp"
+   },
+   {
+    "dur": 107,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2201,
+    "team": "opp"
+   },
+   {
+    "dur": 108,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2308,
+    "team": "us"
+   },
+   {
+    "dur": 15,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 2416,
+    "team": "opp"
+   },
+   {
+    "dur": 57,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 1,
+    "src": "restart",
+    "start": 2625,
+    "team": "us"
+   },
+   {
+    "dur": 63,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2668,
+    "team": "us"
+   },
+   {
+    "dur": 158,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 1,
+    "src": "restart",
+    "start": 2796,
+    "team": "opp"
+   },
+   {
+    "dur": 162,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2796,
+    "team": "opp"
+   },
+   {
+    "dur": 161,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 2958,
+    "team": "us"
+   },
+   {
+    "dur": 27,
+    "kind": "lost",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3414,
+    "team": "opp"
+   },
+   {
+    "dur": 38,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3414,
+    "team": "opp"
+   },
+   {
+    "dur": 129,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3414,
+    "team": "opp"
+   },
+   {
+    "dur": 66,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 3886,
+    "team": "opp"
+   },
+   {
+    "dur": 100,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 2,
+    "src": "other",
+    "start": 3886,
+    "team": "opp"
+   },
+   {
+    "dur": 139,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3886,
+    "team": "opp"
+   },
+   {
+    "dur": 77,
+    "kind": "shot",
+    "match_id": "m1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 4122,
+    "team": "opp"
+   },
+   {
+    "dur": 109,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1211,
+    "team": "opp"
+   },
+   {
+    "dur": 98,
+    "kind": "lost",
+    "match_id": "m22",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1419,
+    "team": "opp"
+   },
+   {
+    "dur": 148,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2111,
+    "team": "opp"
+   },
+   {
+    "dur": 53,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2228,
+    "team": "opp"
+   },
+   {
+    "dur": 31,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2622,
+    "team": "opp"
+   },
+   {
+    "dur": 114,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2770,
+    "team": "opp"
+   },
+   {
+    "dur": 49,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3012,
+    "team": "opp"
+   },
+   {
+    "dur": 86,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3245,
+    "team": "us"
+   },
+   {
+    "dur": 116,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3245,
+    "team": "us"
+   },
+   {
+    "dur": 117,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 3584,
+    "team": "opp"
+   },
+   {
+    "dur": 59,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 3842,
+    "team": "us"
+   },
+   {
+    "dur": 156,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 3842,
+    "team": "us"
+   },
+   {
+    "dur": 176,
+    "kind": "shot",
+    "match_id": "m22",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 3842,
+    "team": "us"
+   },
+   {
+    "dur": 62,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 2,
+    "src": "restart",
+    "start": 219,
+    "team": "us"
+   },
+   {
+    "dur": 160,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 219,
+    "team": "us"
+   },
+   {
+    "dur": 103,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 646,
+    "team": "us"
+   },
+   {
+    "dur": 145,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 646,
+    "team": "us"
+   },
+   {
+    "dur": 5,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1067,
+    "team": "opp"
+   },
+   {
+    "dur": 31,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 1,
+    "src": "other",
+    "start": 1067,
+    "team": "opp"
+   },
+   {
+    "dur": 66,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 1072,
+    "team": "us"
+   },
+   {
+    "dur": 107,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1072,
+    "team": "us"
+   },
+   {
+    "dur": 90,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1172,
+    "team": "opp"
+   },
+   {
+    "dur": 97,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1362,
+    "team": "us"
+   },
+   {
+    "dur": 60,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1459,
+    "team": "opp"
+   },
+   {
+    "dur": 69,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1683,
+    "team": "us"
+   },
+   {
+    "dur": 57,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1683,
+    "team": "us"
+   },
+   {
+    "dur": 18,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1976,
+    "team": "us"
+   },
+   {
+    "dur": 90,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 2843,
+    "team": "opp"
+   },
+   {
+    "dur": 7,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 3038,
+    "team": "opp"
+   },
+   {
+    "dur": 72,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3045,
+    "team": "us"
+   },
+   {
+    "dur": 147,
+    "kind": "lost",
+    "match_id": "m333",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3045,
+    "team": "us"
+   },
+   {
+    "dur": 45,
+    "kind": "shot",
+    "match_id": "m333",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 3278,
+    "team": "us"
+   }
+  ],
   "record": {
    "d": 2,
    "l": 0,
@@ -11547,6 +15776,68 @@
     }
    }
   },
+  "timeBlocks": {
+   "opp": [
+    {
+     "pts": 10,
+     "shots": 12
+    },
+    {
+     "pts": 8,
+     "shots": 9
+    },
+    {
+     "pts": 6,
+     "shots": 5
+    },
+    {
+     "pts": 5,
+     "shots": 7
+    },
+    {
+     "pts": 5,
+     "shots": 6
+    },
+    {
+     "pts": 7,
+     "shots": 6
+    },
+    {
+     "pts": 11,
+     "shots": 11
+    }
+   ],
+   "us": [
+    {
+     "pts": 15,
+     "shots": 12
+    },
+    {
+     "pts": 6,
+     "shots": 11
+    },
+    {
+     "pts": 5,
+     "shots": 7
+    },
+    {
+     "pts": 15,
+     "shots": 10
+    },
+    {
+     "pts": 13,
+     "shots": 14
+    },
+    {
+     "pts": 8,
+     "shots": 8
+    },
+    {
+     "pts": 13,
+     "shots": 11
+    }
+   ]
+  },
   "winLoss": {
    "nL": 1,
    "nW": 2,
@@ -12091,6 +16382,219 @@
   },
   "played": 0,
   "players": [],
+  "possLen": {
+   "dropped": {
+    "long": 0,
+    "neg": 0
+   },
+   "opp": {
+    "alive": [
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 0
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 10
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 20
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 30
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 45
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 60
+     }
+    ],
+    "bands": [
+     {
+      "hi": 10,
+      "lo": 0,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 20,
+      "lo": 10,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 30,
+      "lo": 20,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 45,
+      "lo": 30,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 60,
+      "lo": 45,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": null,
+      "lo": 60,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     }
+    ],
+    "med": null,
+    "n": 0
+   },
+   "ref": 30,
+   "sport": "football",
+   "ts": [
+    0,
+    10,
+    20,
+    30,
+    45,
+    60
+   ],
+   "us": {
+    "alive": [
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 0
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 10
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 20
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 30
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 45
+     },
+     {
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null,
+      "t": 60
+     }
+    ],
+    "bands": [
+     {
+      "hi": 10,
+      "lo": 0,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 20,
+      "lo": 10,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 30,
+      "lo": 20,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 45,
+      "lo": 30,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 60,
+      "lo": 45,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": null,
+      "lo": 60,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     }
+    ],
+    "med": null,
+    "n": 0
+   }
+  },
+  "possPairs": [],
   "record": {
    "d": 0,
    "l": 0,
@@ -12117,6 +16621,68 @@
     "us": 0
    },
    "us": {}
+  },
+  "timeBlocks": {
+   "opp": [
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    }
+   ],
+   "us": [
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    },
+    {
+     "pts": 0,
+     "shots": 0
+    }
+   ]
   },
   "winLoss": null
  },
@@ -12923,6 +17489,510 @@
     "xsd": 0.235
    }
   ],
+  "possLen": {
+   "dropped": {
+    "long": 17,
+    "neg": 0
+   },
+   "opp": {
+    "alive": [
+     {
+      "n": 12,
+      "ppp": 0.4166666666666667,
+      "score": 0.25,
+      "shot": 0.75,
+      "t": 0
+     },
+     {
+      "n": 12,
+      "ppp": 0.4166666666666667,
+      "score": 0.25,
+      "shot": 0.75,
+      "t": 6
+     },
+     {
+      "n": 12,
+      "ppp": 0.4166666666666667,
+      "score": 0.25,
+      "shot": 0.75,
+      "t": 12
+     },
+     {
+      "n": 12,
+      "ppp": 0.4166666666666667,
+      "score": 0.25,
+      "shot": 0.75,
+      "t": 18
+     },
+     {
+      "n": 10,
+      "ppp": 0.5,
+      "score": 0.3,
+      "shot": 0.7,
+      "t": 27
+     },
+     {
+      "n": 9,
+      "ppp": 0.4444444444444444,
+      "score": 0.2222222222222222,
+      "shot": 0.6666666666666666,
+      "t": 36
+     }
+    ],
+    "bands": [
+     {
+      "hi": 6,
+      "lo": 0,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 12,
+      "lo": 6,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 18,
+      "lo": 12,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 27,
+      "lo": 18,
+      "n": 2,
+      "ppp": 0,
+      "score": 0,
+      "shot": 1
+     },
+     {
+      "hi": 36,
+      "lo": 27,
+      "n": 1,
+      "ppp": 1,
+      "score": 1,
+      "shot": 1
+     },
+     {
+      "hi": null,
+      "lo": 36,
+      "n": 9,
+      "ppp": 0.4444444444444444,
+      "score": 0.2222222222222222,
+      "shot": 0.6666666666666666
+     }
+    ],
+    "med": 91,
+    "n": 12
+   },
+   "ref": 18,
+   "sport": "hurling",
+   "ts": [
+    0,
+    6,
+    12,
+    18,
+    27,
+    36
+   ],
+   "us": {
+    "alive": [
+     {
+      "n": 17,
+      "ppp": 0.47058823529411764,
+      "score": 0.23529411764705882,
+      "shot": 0.6470588235294118,
+      "t": 0
+     },
+     {
+      "n": 16,
+      "ppp": 0.5,
+      "score": 0.25,
+      "shot": 0.6875,
+      "t": 6
+     },
+     {
+      "n": 16,
+      "ppp": 0.5,
+      "score": 0.25,
+      "shot": 0.6875,
+      "t": 12
+     },
+     {
+      "n": 14,
+      "ppp": 0.35714285714285715,
+      "score": 0.21428571428571427,
+      "shot": 0.6428571428571429,
+      "t": 18
+     },
+     {
+      "n": 11,
+      "ppp": 0.18181818181818182,
+      "score": 0.09090909090909091,
+      "shot": 0.5454545454545454,
+      "t": 27
+     },
+     {
+      "n": 11,
+      "ppp": 0.18181818181818182,
+      "score": 0.09090909090909091,
+      "shot": 0.5454545454545454,
+      "t": 36
+     }
+    ],
+    "bands": [
+     {
+      "hi": 6,
+      "lo": 0,
+      "n": 1,
+      "ppp": 0,
+      "score": 0,
+      "shot": 0
+     },
+     {
+      "hi": 12,
+      "lo": 6,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 18,
+      "lo": 12,
+      "n": 2,
+      "ppp": 1.5,
+      "score": 0.5,
+      "shot": 1
+     },
+     {
+      "hi": 27,
+      "lo": 18,
+      "n": 3,
+      "ppp": 1,
+      "score": 0.6666666666666666,
+      "shot": 1
+     },
+     {
+      "hi": 36,
+      "lo": 27,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": null,
+      "lo": 36,
+      "n": 11,
+      "ppp": 0.18181818181818182,
+      "score": 0.09090909090909091,
+      "shot": 0.5454545454545454
+     }
+    ],
+    "med": 59,
+    "n": 17
+   }
+  },
+  "possPairs": [
+   {
+    "dur": 59,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 150,
+    "team": "us"
+   },
+   {
+    "dur": 55,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 194,
+    "team": "us"
+   },
+   {
+    "dur": 47,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 194,
+    "team": "us"
+   },
+   {
+    "dur": 73,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 324,
+    "team": "opp"
+   },
+   {
+    "dur": 134,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 422,
+    "team": "opp"
+   },
+   {
+    "dur": 33,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 1,
+    "score": 1,
+    "src": "restart",
+    "start": 933,
+    "team": "opp"
+   },
+   {
+    "dur": 128,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1103,
+    "team": "opp"
+   },
+   {
+    "dur": 166,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1103,
+    "team": "opp"
+   },
+   {
+    "dur": 141,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1735,
+    "team": "us"
+   },
+   {
+    "dur": 15,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 2010,
+    "team": "us"
+   },
+   {
+    "dur": 81,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2150,
+    "team": "us"
+   },
+   {
+    "dur": 152,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2150,
+    "team": "us"
+   },
+   {
+    "dur": 157,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2302,
+    "team": "opp"
+   },
+   {
+    "dur": 26,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 2,
+    "src": "restart",
+    "start": 2498,
+    "team": "us"
+   },
+   {
+    "dur": 76,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2498,
+    "team": "us"
+   },
+   {
+    "dur": 78,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2664,
+    "team": "us"
+   },
+   {
+    "dur": 79,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 2773,
+    "team": "opp"
+   },
+   {
+    "dur": 103,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 2773,
+    "team": "opp"
+   },
+   {
+    "dur": 4,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 3047,
+    "team": "us"
+   },
+   {
+    "dur": 21,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 1,
+    "src": "restart",
+    "start": 3047,
+    "team": "us"
+   },
+   {
+    "dur": 66,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 3047,
+    "team": "us"
+   },
+   {
+    "dur": 26,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3113,
+    "team": "opp"
+   },
+   {
+    "dur": 23,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 3276,
+    "team": "opp"
+   },
+   {
+    "dur": 126,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3352,
+    "team": "opp"
+   },
+   {
+    "dur": 120,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 3427,
+    "team": "us"
+   },
+   {
+    "dur": 22,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3915,
+    "team": "us"
+   },
+   {
+    "dur": 17,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 4008,
+    "team": "us"
+   },
+   {
+    "dur": 66,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 2,
+    "src": "other",
+    "start": 4008,
+    "team": "us"
+   },
+   {
+    "dur": 51,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 4043,
+    "team": "opp"
+   }
+  ],
   "record": {
    "d": 0,
    "l": 1,
@@ -13327,6 +18397,68 @@
      "p": 1
     }
    }
+  },
+  "timeBlocks": {
+   "opp": [
+    {
+     "pts": 0,
+     "shots": 1
+    },
+    {
+     "pts": 2,
+     "shots": 3
+    },
+    {
+     "pts": 0,
+     "shots": 3
+    },
+    {
+     "pts": 6,
+     "shots": 4
+    },
+    {
+     "pts": 9,
+     "shots": 5
+    },
+    {
+     "pts": 0,
+     "shots": 2
+    },
+    {
+     "pts": 0,
+     "shots": 1
+    }
+   ],
+   "us": [
+    {
+     "pts": 0,
+     "shots": 1
+    },
+    {
+     "pts": 0,
+     "shots": 1
+    },
+    {
+     "pts": 1,
+     "shots": 1
+    },
+    {
+     "pts": 0,
+     "shots": 3
+    },
+    {
+     "pts": 2,
+     "shots": 3
+    },
+    {
+     "pts": 1,
+     "shots": 2
+    },
+    {
+     "pts": 10,
+     "shots": 5
+    }
+   ]
   },
   "winLoss": null
  },
@@ -14124,6 +19256,470 @@
     "xsd": 0.236
    }
   ],
+  "possLen": {
+   "dropped": {
+    "long": 33,
+    "neg": 1
+   },
+   "opp": {
+    "alive": [
+     {
+      "n": 11,
+      "ppp": 0.9090909090909091,
+      "score": 0.45454545454545453,
+      "shot": 0.8181818181818182,
+      "t": 0
+     },
+     {
+      "n": 10,
+      "ppp": 0.8,
+      "score": 0.4,
+      "shot": 0.8,
+      "t": 6
+     },
+     {
+      "n": 10,
+      "ppp": 0.8,
+      "score": 0.4,
+      "shot": 0.8,
+      "t": 12
+     },
+     {
+      "n": 10,
+      "ppp": 0.8,
+      "score": 0.4,
+      "shot": 0.8,
+      "t": 18
+     },
+     {
+      "n": 10,
+      "ppp": 0.8,
+      "score": 0.4,
+      "shot": 0.8,
+      "t": 27
+     },
+     {
+      "n": 9,
+      "ppp": 0.8888888888888888,
+      "score": 0.4444444444444444,
+      "shot": 0.7777777777777778,
+      "t": 36
+     }
+    ],
+    "bands": [
+     {
+      "hi": 6,
+      "lo": 0,
+      "n": 1,
+      "ppp": 2,
+      "score": 1,
+      "shot": 1
+     },
+     {
+      "hi": 12,
+      "lo": 6,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 18,
+      "lo": 12,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 27,
+      "lo": 18,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 36,
+      "lo": 27,
+      "n": 1,
+      "ppp": 0,
+      "score": 0,
+      "shot": 1
+     },
+     {
+      "hi": null,
+      "lo": 36,
+      "n": 9,
+      "ppp": 0.8888888888888888,
+      "score": 0.4444444444444444,
+      "shot": 0.7777777777777778
+     }
+    ],
+    "med": 86,
+    "n": 11
+   },
+   "ref": 18,
+   "sport": "hurling",
+   "ts": [
+    0,
+    6,
+    12,
+    18,
+    27,
+    36
+   ],
+   "us": {
+    "alive": [
+     {
+      "n": 14,
+      "ppp": 0.21428571428571427,
+      "score": 0.14285714285714285,
+      "shot": 0.7857142857142857,
+      "t": 0
+     },
+     {
+      "n": 13,
+      "ppp": 0.23076923076923078,
+      "score": 0.15384615384615385,
+      "shot": 0.7692307692307693,
+      "t": 6
+     },
+     {
+      "n": 13,
+      "ppp": 0.23076923076923078,
+      "score": 0.15384615384615385,
+      "shot": 0.7692307692307693,
+      "t": 12
+     },
+     {
+      "n": 13,
+      "ppp": 0.23076923076923078,
+      "score": 0.15384615384615385,
+      "shot": 0.7692307692307693,
+      "t": 18
+     },
+     {
+      "n": 12,
+      "ppp": 0.25,
+      "score": 0.16666666666666666,
+      "shot": 0.75,
+      "t": 27
+     },
+     {
+      "n": 12,
+      "ppp": 0.25,
+      "score": 0.16666666666666666,
+      "shot": 0.75,
+      "t": 36
+     }
+    ],
+    "bands": [
+     {
+      "hi": 6,
+      "lo": 0,
+      "n": 1,
+      "ppp": 0,
+      "score": 0,
+      "shot": 1
+     },
+     {
+      "hi": 12,
+      "lo": 6,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 18,
+      "lo": 12,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 27,
+      "lo": 18,
+      "n": 1,
+      "ppp": 0,
+      "score": 0,
+      "shot": 1
+     },
+     {
+      "hi": 36,
+      "lo": 27,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": null,
+      "lo": 36,
+      "n": 12,
+      "ppp": 0.25,
+      "score": 0.16666666666666666,
+      "shot": 0.75
+     }
+    ],
+    "med": 61.5,
+    "n": 14
+   }
+  },
+  "possPairs": [
+   {
+    "dur": 83,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 2,
+    "src": "restart",
+    "start": 65,
+    "team": "us"
+   },
+   {
+    "dur": 84,
+    "kind": "lost",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 65,
+    "team": "us"
+   },
+   {
+    "dur": 34,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 342,
+    "team": "opp"
+   },
+   {
+    "dur": 133,
+    "kind": "lost",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 342,
+    "team": "opp"
+   },
+   {
+    "dur": 50,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 475,
+    "team": "us"
+   },
+   {
+    "dur": 39,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 808,
+    "team": "opp"
+   },
+   {
+    "dur": 49,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 808,
+    "team": "opp"
+   },
+   {
+    "dur": 143,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 1,
+    "src": "restart",
+    "start": 1166,
+    "team": "opp"
+   },
+   {
+    "dur": 38,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1232,
+    "team": "us"
+   },
+   {
+    "dur": 24,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1359,
+    "team": "us"
+   },
+   {
+    "dur": 66,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1359,
+    "team": "us"
+   },
+   {
+    "dur": 119,
+    "kind": "lost",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1359,
+    "team": "us"
+   },
+   {
+    "dur": 45,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1484,
+    "team": "us"
+   },
+   {
+    "dur": 137,
+    "kind": "lost",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1478,
+    "team": "opp"
+   },
+   {
+    "dur": 38,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1615,
+    "team": "us"
+   },
+   {
+    "dur": 114,
+    "kind": "lost",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1615,
+    "team": "us"
+   },
+   {
+    "dur": 59,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 1,
+    "src": "other",
+    "start": 1729,
+    "team": "opp"
+   },
+   {
+    "dur": 114,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 1729,
+    "team": "opp"
+   },
+   {
+    "dur": 86,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 1729,
+    "team": "opp"
+   },
+   {
+    "dur": 5,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 2,
+    "score": 2,
+    "src": "other",
+    "start": 2324,
+    "team": "opp"
+   },
+   {
+    "dur": 57,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2432,
+    "team": "us"
+   },
+   {
+    "dur": 0,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2549,
+    "team": "us"
+   },
+   {
+    "dur": 133,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3068,
+    "team": "opp"
+   },
+   {
+    "dur": 133,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 3567,
+    "team": "us"
+   },
+   {
+    "dur": 180,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3567,
+    "team": "us"
+   }
+  ],
   "record": {
    "d": 0,
    "l": 1,
@@ -14593,6 +20189,68 @@
      "p": 1
     }
    }
+  },
+  "timeBlocks": {
+   "opp": [
+    {
+     "pts": 2,
+     "shots": 2
+    },
+    {
+     "pts": 3,
+     "shots": 4
+    },
+    {
+     "pts": 4,
+     "shots": 3
+    },
+    {
+     "pts": 10,
+     "shots": 5
+    },
+    {
+     "pts": 0,
+     "shots": 2
+    },
+    {
+     "pts": 1,
+     "shots": 2
+    },
+    {
+     "pts": 0,
+     "shots": 1
+    }
+   ],
+   "us": [
+    {
+     "pts": 2,
+     "shots": 3
+    },
+    {
+     "pts": 3,
+     "shots": 4
+    },
+    {
+     "pts": 0,
+     "shots": 5
+    },
+    {
+     "pts": 0,
+     "shots": 1
+    },
+    {
+     "pts": 0,
+     "shots": 4
+    },
+    {
+     "pts": 0,
+     "shots": 2
+    },
+    {
+     "pts": 7,
+     "shots": 5
+    }
+   ]
   },
   "winLoss": null
  },
@@ -15505,6 +21163,760 @@
     "xsd": 0.05499999999999994
    }
   ],
+  "possLen": {
+   "dropped": {
+    "long": 50,
+    "neg": 1
+   },
+   "opp": {
+    "alive": [
+     {
+      "n": 23,
+      "ppp": 0.6521739130434783,
+      "score": 0.34782608695652173,
+      "shot": 0.782608695652174,
+      "t": 0
+     },
+     {
+      "n": 22,
+      "ppp": 0.5909090909090909,
+      "score": 0.3181818181818182,
+      "shot": 0.7727272727272727,
+      "t": 6
+     },
+     {
+      "n": 22,
+      "ppp": 0.5909090909090909,
+      "score": 0.3181818181818182,
+      "shot": 0.7727272727272727,
+      "t": 12
+     },
+     {
+      "n": 22,
+      "ppp": 0.5909090909090909,
+      "score": 0.3181818181818182,
+      "shot": 0.7727272727272727,
+      "t": 18
+     },
+     {
+      "n": 20,
+      "ppp": 0.65,
+      "score": 0.35,
+      "shot": 0.75,
+      "t": 27
+     },
+     {
+      "n": 18,
+      "ppp": 0.6666666666666666,
+      "score": 0.3333333333333333,
+      "shot": 0.7222222222222222,
+      "t": 36
+     }
+    ],
+    "bands": [
+     {
+      "hi": 6,
+      "lo": 0,
+      "n": 1,
+      "ppp": 2,
+      "score": 1,
+      "shot": 1
+     },
+     {
+      "hi": 12,
+      "lo": 6,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 18,
+      "lo": 12,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 27,
+      "lo": 18,
+      "n": 2,
+      "ppp": 0,
+      "score": 0,
+      "shot": 1
+     },
+     {
+      "hi": 36,
+      "lo": 27,
+      "n": 2,
+      "ppp": 0.5,
+      "score": 0.5,
+      "shot": 1
+     },
+     {
+      "hi": null,
+      "lo": 36,
+      "n": 18,
+      "ppp": 0.6666666666666666,
+      "score": 0.3333333333333333,
+      "shot": 0.7222222222222222
+     }
+    ],
+    "med": 86,
+    "n": 23
+   },
+   "ref": 18,
+   "sport": "hurling",
+   "ts": [
+    0,
+    6,
+    12,
+    18,
+    27,
+    36
+   ],
+   "us": {
+    "alive": [
+     {
+      "n": 31,
+      "ppp": 0.3548387096774194,
+      "score": 0.1935483870967742,
+      "shot": 0.7096774193548387,
+      "t": 0
+     },
+     {
+      "n": 29,
+      "ppp": 0.3793103448275862,
+      "score": 0.20689655172413793,
+      "shot": 0.7241379310344828,
+      "t": 6
+     },
+     {
+      "n": 29,
+      "ppp": 0.3793103448275862,
+      "score": 0.20689655172413793,
+      "shot": 0.7241379310344828,
+      "t": 12
+     },
+     {
+      "n": 27,
+      "ppp": 0.2962962962962963,
+      "score": 0.18518518518518517,
+      "shot": 0.7037037037037037,
+      "t": 18
+     },
+     {
+      "n": 23,
+      "ppp": 0.21739130434782608,
+      "score": 0.13043478260869565,
+      "shot": 0.6521739130434783,
+      "t": 27
+     },
+     {
+      "n": 23,
+      "ppp": 0.21739130434782608,
+      "score": 0.13043478260869565,
+      "shot": 0.6521739130434783,
+      "t": 36
+     }
+    ],
+    "bands": [
+     {
+      "hi": 6,
+      "lo": 0,
+      "n": 2,
+      "ppp": 0,
+      "score": 0,
+      "shot": 0.5
+     },
+     {
+      "hi": 12,
+      "lo": 6,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": 18,
+      "lo": 12,
+      "n": 2,
+      "ppp": 1.5,
+      "score": 0.5,
+      "shot": 1
+     },
+     {
+      "hi": 27,
+      "lo": 18,
+      "n": 4,
+      "ppp": 0.75,
+      "score": 0.5,
+      "shot": 1
+     },
+     {
+      "hi": 36,
+      "lo": 27,
+      "n": 0,
+      "ppp": null,
+      "score": null,
+      "shot": null
+     },
+     {
+      "hi": null,
+      "lo": 36,
+      "n": 23,
+      "ppp": 0.21739130434782608,
+      "score": 0.13043478260869565,
+      "shot": 0.6521739130434783
+     }
+    ],
+    "med": 59,
+    "n": 31
+   }
+  },
+  "possPairs": [
+   {
+    "dur": 59,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 150,
+    "team": "us"
+   },
+   {
+    "dur": 55,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 194,
+    "team": "us"
+   },
+   {
+    "dur": 47,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 194,
+    "team": "us"
+   },
+   {
+    "dur": 73,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 324,
+    "team": "opp"
+   },
+   {
+    "dur": 134,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 422,
+    "team": "opp"
+   },
+   {
+    "dur": 33,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 1,
+    "score": 1,
+    "src": "restart",
+    "start": 933,
+    "team": "opp"
+   },
+   {
+    "dur": 128,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1103,
+    "team": "opp"
+   },
+   {
+    "dur": 166,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1103,
+    "team": "opp"
+   },
+   {
+    "dur": 141,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1735,
+    "team": "us"
+   },
+   {
+    "dur": 15,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 2010,
+    "team": "us"
+   },
+   {
+    "dur": 81,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2150,
+    "team": "us"
+   },
+   {
+    "dur": 152,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2150,
+    "team": "us"
+   },
+   {
+    "dur": 157,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2302,
+    "team": "opp"
+   },
+   {
+    "dur": 26,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 2,
+    "src": "restart",
+    "start": 2498,
+    "team": "us"
+   },
+   {
+    "dur": 76,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2498,
+    "team": "us"
+   },
+   {
+    "dur": 78,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2664,
+    "team": "us"
+   },
+   {
+    "dur": 79,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 2773,
+    "team": "opp"
+   },
+   {
+    "dur": 103,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 2773,
+    "team": "opp"
+   },
+   {
+    "dur": 4,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 3047,
+    "team": "us"
+   },
+   {
+    "dur": 21,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 1,
+    "src": "restart",
+    "start": 3047,
+    "team": "us"
+   },
+   {
+    "dur": 66,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 3047,
+    "team": "us"
+   },
+   {
+    "dur": 26,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3113,
+    "team": "opp"
+   },
+   {
+    "dur": 23,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 3276,
+    "team": "opp"
+   },
+   {
+    "dur": 126,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3352,
+    "team": "opp"
+   },
+   {
+    "dur": 120,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 3427,
+    "team": "us"
+   },
+   {
+    "dur": 22,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3915,
+    "team": "us"
+   },
+   {
+    "dur": 17,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 3,
+    "src": "other",
+    "start": 4008,
+    "team": "us"
+   },
+   {
+    "dur": 66,
+    "kind": "shot",
+    "match_id": "h1",
+    "period": 2,
+    "score": 2,
+    "src": "other",
+    "start": 4008,
+    "team": "us"
+   },
+   {
+    "dur": 51,
+    "kind": "lost",
+    "match_id": "h1",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 4043,
+    "team": "opp"
+   },
+   {
+    "dur": 83,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 2,
+    "src": "restart",
+    "start": 65,
+    "team": "us"
+   },
+   {
+    "dur": 84,
+    "kind": "lost",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 65,
+    "team": "us"
+   },
+   {
+    "dur": 34,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 342,
+    "team": "opp"
+   },
+   {
+    "dur": 133,
+    "kind": "lost",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 342,
+    "team": "opp"
+   },
+   {
+    "dur": 50,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 475,
+    "team": "us"
+   },
+   {
+    "dur": 39,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 808,
+    "team": "opp"
+   },
+   {
+    "dur": 49,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 808,
+    "team": "opp"
+   },
+   {
+    "dur": 143,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 1,
+    "src": "restart",
+    "start": 1166,
+    "team": "opp"
+   },
+   {
+    "dur": 38,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1232,
+    "team": "us"
+   },
+   {
+    "dur": 24,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1359,
+    "team": "us"
+   },
+   {
+    "dur": 66,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1359,
+    "team": "us"
+   },
+   {
+    "dur": 119,
+    "kind": "lost",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1359,
+    "team": "us"
+   },
+   {
+    "dur": 45,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "restart",
+    "start": 1484,
+    "team": "us"
+   },
+   {
+    "dur": 137,
+    "kind": "lost",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1478,
+    "team": "opp"
+   },
+   {
+    "dur": 38,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1615,
+    "team": "us"
+   },
+   {
+    "dur": 114,
+    "kind": "lost",
+    "match_id": "h22",
+    "period": 1,
+    "score": 0,
+    "src": "other",
+    "start": 1615,
+    "team": "us"
+   },
+   {
+    "dur": 59,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 1,
+    "src": "other",
+    "start": 1729,
+    "team": "opp"
+   },
+   {
+    "dur": 114,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 1729,
+    "team": "opp"
+   },
+   {
+    "dur": 86,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 1,
+    "score": 3,
+    "src": "other",
+    "start": 1729,
+    "team": "opp"
+   },
+   {
+    "dur": 5,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 2,
+    "score": 2,
+    "src": "other",
+    "start": 2324,
+    "team": "opp"
+   },
+   {
+    "dur": 57,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 2,
+    "score": 0,
+    "src": "restart",
+    "start": 2432,
+    "team": "us"
+   },
+   {
+    "dur": 0,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 2549,
+    "team": "us"
+   },
+   {
+    "dur": 133,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3068,
+    "team": "opp"
+   },
+   {
+    "dur": 133,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 2,
+    "score": 1,
+    "src": "other",
+    "start": 3567,
+    "team": "us"
+   },
+   {
+    "dur": 180,
+    "kind": "shot",
+    "match_id": "h22",
+    "period": 2,
+    "score": 0,
+    "src": "other",
+    "start": 3567,
+    "team": "us"
+   }
+  ],
   "record": {
    "d": 0,
    "l": 2,
@@ -16286,6 +22698,68 @@
      "p": 2
     }
    }
+  },
+  "timeBlocks": {
+   "opp": [
+    {
+     "pts": 2,
+     "shots": 3
+    },
+    {
+     "pts": 5,
+     "shots": 7
+    },
+    {
+     "pts": 4,
+     "shots": 6
+    },
+    {
+     "pts": 16,
+     "shots": 9
+    },
+    {
+     "pts": 9,
+     "shots": 7
+    },
+    {
+     "pts": 1,
+     "shots": 4
+    },
+    {
+     "pts": 0,
+     "shots": 2
+    }
+   ],
+   "us": [
+    {
+     "pts": 2,
+     "shots": 4
+    },
+    {
+     "pts": 3,
+     "shots": 5
+    },
+    {
+     "pts": 1,
+     "shots": 6
+    },
+    {
+     "pts": 0,
+     "shots": 4
+    },
+    {
+     "pts": 2,
+     "shots": 7
+    },
+    {
+     "pts": 1,
+     "shots": 4
+    },
+    {
+     "pts": 17,
+     "shots": 10
+    }
+   ]
   },
   "winLoss": null
  },

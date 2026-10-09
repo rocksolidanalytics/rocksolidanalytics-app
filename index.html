@@ -2216,6 +2216,124 @@
       });
       return out;
     })();
+    // --- Time-based metrics: shared foundations (docs/RSA-SPEC-time-metrics.md, Part 1) ---
+    // Display-time only. Stored event_type and outcome values are never modified.
+    // 1.1 Whole-match clock. The second half does not restart at zero, so no period offset.
+    function evSecs(e) {
+      if (e.time_secs != null && e.time_secs > 0) return e.time_secs;
+      var t = String(e.time_text || "");
+      var p = t.split(":").map(Number);
+      if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2];
+      if (p.length === 2) return p[0] * 60 + p[1];
+      return 0;
+    }
+    // 1.2 Read-time outcome normaliser: lowercase and map the live variant groups.
+    var _OC_CANON = { "2 pointer": "2 Pointer", "2-pointer": "2 Pointer", "saved": "Saved", "save": "Saved",
+      "dropped short": "Dropped Short", "short": "Dropped Short", "hand pass": "Hand Pass", "kick pass": "Kick Pass",
+      "in contact": "In Contact", "ruck won": "Won", "won": "Won", "ruck lost": "Lost", "lost": "Lost",
+      "shot dropped short": "Shot Dropped Short", "shot short": "Shot Dropped Short" };
+    function canonOutcome(s) {
+      var k = String(s == null ? "" : s).trim();
+      return _OC_CANON[k.toLowerCase()] || k;
+    }
+    // 1.3 Possession model. Gain: which team takes the ball on this event, or null.
+    function _otherTeam(t) { return t === "us" ? "opp" : "us"; }
+    function possGainOf(e) {
+      var et = e.event_type, oc = canonOutcome(e.outcome);
+      if (et === "Kickout") {
+        if (oc === "Won clean" || oc === "Break won") return e.team;
+        if (oc === "Lost clean" || oc === "Break lost") return _otherTeam(e.team);
+        return null;
+      }
+      if (et === "Possession lost" || et === "Free conceded") return _otherTeam(e.team);
+      if (et === "Turnover") return (oc === "Turnover won" || oc === "In Contact" || oc === "Interception") ? e.team : null;
+      if (et === "Ruck") return oc === "Won" ? e.team : null;
+      if (et === "Tackle") return oc === "Dispossession" ? e.team : null;
+      return null;
+    }
+    // End: how the tagged team possession terminates on this event, or null.
+    function possEndOf(e) {
+      var et = e.event_type;
+      if (et === "Shot from play" || et === "Scoreable free") return "shot";
+      if (et === "Possession lost" || et === "Free conceded") return "lost";
+      if (et === "Turnover" && /^turnover lost/i.test(String(e.outcome || ""))) return "lost";
+      return null;
+    }
+    // Pair each END back to the most recent GAIN for the same team, same match and
+    // period, lower seq. Never forward from gains, which double-counts.
+    // 1.4 guards: negative durations dropped, over 180s dropped, no pairing across periods.
+    var possPairs = (function() {
+      var out = [], neg = 0, long = 0, byM = {};
+      events.forEach(function(e) { (byM[e.match_id] || (byM[e.match_id] = [])).push(e); });
+      Object.keys(byM).forEach(function(mid) {
+        var list = byM[mid].slice().sort(function(a, b) { return (a.seq || 0) - (b.seq || 0); });
+        var last = { us: null, opp: null };
+        list.forEach(function(e) {
+          var kind = possEndOf(e);
+          if (kind && (e.team === "us" || e.team === "opp")) {
+            var g = last[e.team];
+            if (g && String(g.period) === String(e.period) && (g.seq || 0) < (e.seq || 0)) {
+              var dur = evSecs(e) - evSecs(g);
+              if (dur < 0) neg++;
+              else if (dur > 180) long++;
+              else out.push({ match_id: mid, team: e.team, period: e.period, start: evSecs(g), dur: dur, kind: kind,
+                score: kind === "shot" ? (e.score || 0) : 0, src: g.event_type === "Kickout" ? "restart" : "other" });
+            }
+          }
+          var gt = possGainOf(e);
+          if (gt === "us" || gt === "opp") last[gt] = e;
+        });
+      });
+      return { list: out, neg: neg, long: long };
+    })();
+    // --- Group 1.1: block profile. Seven 10-minute blocks on the continuous clock.
+    // Block 6 (60+) mixes 60- and 70-minute formats and is not compared across matches.
+    var timeBlocks = (function() {
+      function _tbRow() { return [0, 1, 2, 3, 4, 5, 6].map(function() { return { pts: 0, shots: 0 }; }); }
+      var tb = { us: _tbRow(), opp: _tbRow() };
+      events.forEach(function(e) {
+        if (e.team !== "us" && e.team !== "opp") return;
+        var b = Math.min(Math.floor(evSecs(e) / 600), 6);
+        if (!(b >= 0)) return;
+        var isShot = e.event_type === "Shot from play" || e.event_type === "Scoreable free";
+        if (isShot) tb[e.team][b].shots++;
+        if ((e.score || 0) > 0) tb[e.team][b].pts += e.score;
+      });
+      return tb;
+    })();
+    // --- Group 1.2: possession length. Thresholds are sport-relative: the reference
+    // is a typical median possession for the sport (football 30s, hurling and camogie 18s),
+    // and the cut points are fixed fractions of it, so football reads 10/20/30/45/60s.
+    var possLen = (function() {
+      var sp = String(club && club.sport || "football").toLowerCase();
+      var ref = (sp === "hurling" || sp === "camogie") ? 18 : 30;
+      var ts = [0, Math.round(ref / 3), Math.round(ref * 2 / 3), ref, Math.round(ref * 1.5), ref * 2];
+      function med(a) {
+        if (!a.length) return null;
+        var s = a.slice().sort(function(x, y) { return x - y; }), n = s.length;
+        return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
+      }
+      function agg(list) {
+        var n = list.length, sh = 0, sc = 0, pts = 0;
+        list.forEach(function(p) { if (p.kind === "shot") sh++; if (p.score > 0) sc++; pts += p.score; });
+        return { n: n, shot: n ? sh / n : null, score: n ? sc / n : null, ppp: n ? pts / n : null };
+      }
+      function side(team) {
+        var ps = possPairs.list.filter(function(p) { return p.team === team; });
+        return {
+          n: ps.length,
+          med: med(ps.map(function(p) { return p.dur; })),
+          // Headline: of possessions still alive at t seconds, how many end in a shot.
+          alive: ts.map(function(t) { return Object.assign({ t: t }, agg(ps.filter(function(p) { return p.dur >= t; }))); }),
+          // Descriptive only: duration is measured to the end event.
+          bands: ts.map(function(lo, i) {
+            var hi = i + 1 < ts.length ? ts[i + 1] : null;
+            return Object.assign({ lo: lo, hi: hi }, agg(ps.filter(function(p) { return p.dur >= lo && (hi == null || p.dur < hi); })));
+          })
+        };
+      }
+      return { sport: sp, ref: ref, ts: ts, us: side("us"), opp: side("opp"), dropped: { neg: possPairs.neg, long: possPairs.long } };
+    })();
     const compare = [
       { label: "Score (pts)", us: sf, opp: sa },
       { label: "Shots", us: usAll, opp: opAll },
@@ -2522,6 +2640,9 @@
       notes,
       defence,
       chains,
+      possPairs: possPairs.list,
+      timeBlocks,
+      possLen,
       players,
       koSpeed,
       koSpeedGrid,
@@ -7799,6 +7920,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             React.createElement("span", { style: { fontSize: FS.sm, color: C.greenB, fontWeight: 700 } }, "\u2014 " + (club.name || "Us")),
             React.createElement("span", { style: { fontSize: FS.sm, color: C.blue, fontWeight: 700 } }, "- - " + (ON || "Opposition"))
           ), chart)),
+        React.createElement(Section, { title: nM > 1 ? "BLOCK PROFILE \u00b7 " + nM + " GAMES" : "BLOCK PROFILE" }, React.createElement(BlockProfile, { tb: d && d.timeBlocks, club: club, oppName: ON, nM: nM })),
+        React.createElement(Section, { title: "POSSESSION LENGTH" }, React.createElement(PossLength, { pl: d && d.possLen, club: club, oppName: ON })),
         React.createElement(Section, { title: nM > 1 ? "AVG PERIOD BREAKDOWN \u00b7 " + nM + " GAMES" : "PERIOD BREAKDOWN" }, tbl),
         React.createElement("div", { style: { marginBottom: 28 } },
           React.createElement("button", { onClick: function() { setOpenTypes(!openTypes); }, style: { width: "100%", minHeight: 44, background: "none", border: "none", boxShadow: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: -14, marginBottom: openTypes ? -2 : -14 } },
@@ -8179,6 +8302,105 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px 0", borderBottom: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, club.crest ? React.createElement("img", { src: club.crest, style: { width: 26, height: 26, objectFit: "contain" } }) : null, React.createElement("span", { style: { fontSize: FS.lg, fontWeight: 800 } }, club.name)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, color: C.slate, fontFamily: MONO } }, (yearF === "all" ? "ALL SEASONS" : yearF + " SEASON"), " \xB7 ", sport ? sport.label.toUpperCase() : ""))), React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 10 } }, React.createElement("select", { value: comp, onChange: function(e) { var v = e.target.value; setComp(v); if (v === "scout" && tab === "season") setTab("matches"); }, style: { flex: 1, minHeight: 44, padding: "7px 12px", borderRadius: RAD.pill, background: C.field, border: "1px solid transparent", color: comp === "all" ? C.slate : C.greenB, fontSize: FS.sm, fontWeight: 700, fontFamily: MONO, outline: "none" } }, React.createElement("option", { value: "all" }, "ALL COMPS"), React.createElement("option", { value: "League" }, "LEAGUE"), React.createElement("option", { value: "Championship" }, "CHAMPIONSHIP"), React.createElement("option", { value: "Challenge" }, "CHALLENGE"), React.createElement("option", { value: "League,Championship" }, "LEAGUE + CHAMP"), React.createElement("option", { value: "scout" }, "SCOUT")), (function() { var yrs = {}; (raw && raw.matches || []).forEach(function(m2) { if (m2.date) yrs[m2.date.slice(0,4)] = 1; }); var ks = Object.keys(yrs).sort().reverse(); return ks.length > 1 ? React.createElement("select", { value: yearF, onChange: function(e) { setYearF(e.target.value); }, style: { minHeight: 44, padding: "7px 12px", borderRadius: RAD.pill, background: C.field, border: "1px solid transparent", color: yearF === "all" ? C.slate : C.greenB, fontSize: FS.sm, fontWeight: 700, fontFamily: MONO, outline: "none" } }, React.createElement("option", { value: "all" }, "ALL YEARS"), ks.map(function(y) { return React.createElement("option", { key: y, value: y }, y); })) : null; }())), /* @__PURE__ */ React.createElement("div", { className: "rsa-noscroll", style: { display: "flex", overflowX: "auto", WebkitOverflowScrolling: "touch" } }, /* @__PURE__ */ React.createElement(Tab, { id: "season", label: "Season" }), /* @__PURE__ */ React.createElement(Tab, { id: "matches", label: "Matches" }), /* @__PURE__ */ React.createElement(Tab, { id: "bench", label: "Benchmark" }), /* @__PURE__ */ React.createElement(Tab, { id: "cond", label: "Conditions" }), /* @__PURE__ */ React.createElement(Tab, { id: "rank", label: "vs Others" }))),   /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, err && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 12px", background: C.red + ALPHA.faint, border: "1px solid " + C.red + ALPHA.mid, borderRadius: RAD.lg, color: C.red, fontSize: FS.md } }, err), !d && !err && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 60 } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.greenB })), d && tab === "season" && (d.matches.length ? /* @__PURE__ */ React.createElement(DashView, { d, club, scope: "season" }) : /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: FS.md, paddingTop: 40, lineHeight: 1.6 } }, "No ", comp === "all" ? "" : comp.toLowerCase() + " ", "games yet.", /* @__PURE__ */ React.createElement("br", null), "Matches appear here once they have a final score.")), d && tab === "bench" && (d.benchmark && d.benchmark.length > 1 ? /* @__PURE__ */ React.createElement(Benchmark, { rows: d.benchmark, club }) : /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: FS.md, paddingTop: 40, lineHeight: 1.6 } }, "Not enough teams yet.", /* @__PURE__ */ React.createElement("br", null), "Tag a couple of matches and the benchmark fills out.")), d && tab === "cond" && /* @__PURE__ */ React.createElement(Conditions, { matches: d.matches, events: d._events, club }), d && tab === "rank" && /* @__PURE__ */ React.createElement(RankView, { club }), d && tab === "matches" && (selMatch ? editingMatch ? React.createElement(EditMatch, { club: club, match: editingMatch, back: function() { setEditingMatch(null); }, onSaved: function() { setEditingMatch(null); } }) : selMatch.scouting ? React.createElement(ScoutDash, { m: selMatch, club: club, back: function() { setSelMatch(null); } }) : React.createElement(DashView, { key: selMatch.id, d: Object.assign({}, matchStats(selMatch), { ratings: d.ratings }), club, scope: "match", match: selMatch, onEdit: function(mm) { setEditingMatch(mm); }, onBack: function() {
       setSelMatch(null);
     } }) : /* @__PURE__ */ React.createElement(MatchList, { matches: d.matches, onPick: setSelMatch }))));
+  }
+  // Group 1 of docs/RSA-SPEC-time-metrics.md. Read-only views over computeStats output,
+  // drawn with the same card and table styling as the period breakdown.
+  var _TM_CARD = { overflowX: "auto", background: C.bgCard, borderRadius: RAD.xl, boxShadow: "0 2px 8px " + C.black + ALPHA.mid, padding: "16px 14px" };
+  var _TM_TH = { textAlign: "center", padding: "10px 12px", borderBottom: "2px solid " + C.border, color: C.slate, fontSize: FS.sm, fontWeight: 700, whiteSpace: "nowrap" };
+  var _TM_TD = { textAlign: "center", padding: "10px 12px", whiteSpace: "nowrap" };
+  var _TM_LBL = { padding: "10px 8px", color: C.slate, fontSize: FS.md, fontWeight: 600, whiteSpace: "nowrap", textAlign: "left" };
+  var _TM_NOTE = { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, marginTop: 10, lineHeight: 1.5 };
+  function _tmSigned(v) { return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v); }
+  function BlockProfile({ tb, club, oppName, nM }) {
+    if (!tb) return null;
+    var labels = ["0-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60+"];
+    var diff = tb.us.map(function(u, i) { return u.pts - tb.opp[i].pts; });
+    // Best and worst are picked from the comparable blocks only (0-59).
+    var best = -1, worst = -1;
+    diff.slice(0, 6).forEach(function(v, i) { if (best < 0 || v > diff[best]) best = i; if (worst < 0 || v < diff[worst]) worst = i; });
+    function pps(x) { return x.shots ? (x.pts / x.shots).toFixed(2) : "—"; }
+    function half(a, b) { var s = 0; for (var i = a; i <= b; i++) s += diff[i]; return s; }
+    var usN = (club && club.name) || "Us", opN = oppName || "Opposition";
+    var rows = [
+      ["Points · " + usN, tb.us.map(function(x) { return x.pts; }), C.greenB],
+      ["Points · " + opN, tb.opp.map(function(x) { return x.pts; }), C.blue],
+      ["Difference", diff, null],
+      ["Shots · " + usN, tb.us.map(function(x) { return x.shots; }), C.slate],
+      ["Shots · " + opN, tb.opp.map(function(x) { return x.shots; }), C.slate],
+      ["Pts per shot · " + usN, tb.us.map(pps), C.greenB],
+      ["Pts per shot · " + opN, tb.opp.map(pps), C.blue]
+    ];
+    return React.createElement("div", null,
+      React.createElement("div", { style: _TM_CARD },
+        React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: FS.md, fontFamily: MONO } },
+          React.createElement("thead", null, React.createElement("tr", null,
+            React.createElement("th", { style: Object.assign({}, _TM_TH, { textAlign: "left" }) }, "MIN"),
+            labels.map(function(l, i) { return React.createElement("th", { key: i, style: Object.assign({}, _TM_TH, i === 6 ? { color: C.slateD } : null) }, l + (i === 6 ? "*" : "")); }))),
+          React.createElement("tbody", null, rows.map(function(r, ri) {
+            return React.createElement("tr", { key: ri, style: { borderBottom: "1px solid " + C.border + ALPHA.mid } },
+              React.createElement("td", { style: _TM_LBL }, r[0]),
+              r[1].map(function(v, ci) {
+                var muted = ci === 6, col = r[2], bg = "none";
+                if (r[2] === null) {
+                  col = v > 0 ? C.greenB : v < 0 ? C.red : C.slate;
+                  if (ci === best && diff[best] > 0) bg = C.greenB + ALPHA.faint;
+                  if (ci === worst && diff[worst] < 0) bg = C.red + ALPHA.faint;
+                }
+                return React.createElement("td", { key: ci, style: Object.assign({}, _TM_TD, { color: muted ? C.slateD : col, fontWeight: r[2] === null ? 800 : 600, background: muted ? "none" : bg, borderRadius: bg !== "none" && !muted ? RAD.md : 0 }) },
+                  r[2] === null ? _tmSigned(v) : String(v));
+              }));
+          })))),
+      React.createElement("div", { style: _TM_NOTE },
+        "0-29 ", _tmSigned(half(0, 2)), " · 30-59 ", _tmSigned(half(3, 5)), " · 60+ ", _tmSigned(diff[6]),
+        nM > 1 ? " · totals across " + nM + " games" : "",
+        React.createElement("br", null),
+        "* 60+ mixes 60- and 70-minute games, so it is left out of block comparisons.",
+        nM > 1 ? " Tagging density differs by analyst, so compare within one competition." : ""));
+  }
+  function PossLength({ pl, club, oppName }) {
+    if (!pl) return null;
+    var usN = (club && club.name) || "Us", opN = oppName || "Opposition";
+    function _tmPc(x) { return x == null ? "—" : Math.round(100 * x) + "%"; }
+    function pp(x) { return x == null ? "—" : x.toFixed(2); }
+    if (pl.us.n + pl.opp.n < 20) return React.createElement("div", { style: Object.assign({}, _TM_CARD, { fontSize: FS.sm, color: C.slateD, lineHeight: 1.6 }) },
+      "Not enough possessions tagged yet. A possession runs from a won ", restart_(), ", turnover or free to the next shot or loss.");
+    var ai = pl.ts.indexOf(pl.ref), uA = pl.us.alive[ai], u0 = pl.us.alive[0];
+    function bandLbl(b) { return b.hi == null ? b.lo + "s+" : b.lo + "-" + (b.hi - 1) + "s"; }
+    var aliveRows = [
+      ["Shot · " + usN, pl.us.alive.map(function(a) { return _tmPc(a.shot); }), C.greenB],
+      ["Pts/poss · " + usN, pl.us.alive.map(function(a) { return pp(a.ppp); }), C.greenB],
+      ["Shot · " + opN, pl.opp.alive.map(function(a) { return _tmPc(a.shot); }), C.blue],
+      ["Pts/poss · " + opN, pl.opp.alive.map(function(a) { return pp(a.ppp); }), C.blue],
+      ["Possessions · " + usN, pl.us.alive.map(function(a) { return String(a.n); }), C.slateD]
+    ];
+    function table(head, rows) {
+      return React.createElement("div", { style: _TM_CARD },
+        React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: FS.md, fontFamily: MONO } },
+          React.createElement("thead", null, React.createElement("tr", null,
+            React.createElement("th", { style: Object.assign({}, _TM_TH, { textAlign: "left" }) }, ""),
+            head.map(function(h, i) { return React.createElement("th", { key: i, style: _TM_TH }, h); }))),
+          React.createElement("tbody", null, rows.map(function(r, ri) {
+            return React.createElement("tr", { key: ri, style: { borderBottom: "1px solid " + C.border + ALPHA.mid } },
+              React.createElement("td", { style: _TM_LBL }, r[0]),
+              r[1].map(function(v, ci) { return React.createElement("td", { key: ci, style: Object.assign({}, _TM_TD, { color: r[2], fontWeight: 700 }) }, v); }));
+          }))));
+    }
+    return React.createElement("div", null,
+      React.createElement("div", { style: Object.assign({}, _TM_CARD, { marginBottom: 12 }) },
+        React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 700, color: C.white, lineHeight: 1.45 } },
+          "Still on the ball after ", pl.ref, "s, ", usN, " shoot ", _tmPc(uA.shot), " of the time"),
+        React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, fontFamily: MONO, marginTop: 6, lineHeight: 1.5 } },
+          "against ", _tmPc(u0.shot), " across all possessions · ", pp(uA.ppp), " pts per possession past ", pl.ref, "s",
+          React.createElement("br", null),
+          "median possession ", pl.us.med == null ? "—" : pl.us.med + "s", " ", usN, " · ", pl.opp.med == null ? "—" : pl.opp.med + "s", " ", opN)),
+      React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, margin: "14px 0 8px" } }, "STILL ALIVE AT"),
+      table(pl.ts.map(function(t) { return t + "s"; }), aliveRows),
+      React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, margin: "18px 0 8px" } }, "BY LENGTH · " + usN.toUpperCase()),
+      table(["n", "shot", "score", "pts/poss"], pl.us.bands.map(function(b) { return [bandLbl(b), [String(b.n), _tmPc(b.shot), _tmPc(b.score), pp(b.ppp)], C.slate]; })),
+      React.createElement("div", { style: _TM_NOTE },
+        "Read the alive table, not the bands: length is measured to the shot or loss, so longer possessions are more likely to have ended in a shot. ",
+        "Cut points scale with the sport (", pl.ref, "s reference for ", pl.sport, "). Stoppages count toward length; ",
+        pl.dropped.long, " possessions over 3 min and ", pl.dropped.neg, " with clock errors are left out."));
   }
   function Section({ title, children }) {
     return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 28 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1.5, color: C.slate, fontFamily: MONO, marginBottom: 12, fontWeight: 600 } }, title), children);
