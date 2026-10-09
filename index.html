@@ -2006,10 +2006,7 @@
     // Distance banding, identical to kickData so the table agrees with the map.
     function _koBand(e, side) {
       if (e.x == null) return null;
-      var flip = side === "us" ? String(e.period) === "2" : String(e.period) !== "2";
-      var x = e.x, y = e.y == null ? 0.5 : e.y;
-      if (flip) { x = 1 - x; y = 1 - y; }
-      var f = koFixOrient({ x: x, y: y });
+      var f = koNorm({ x: e.x, y: e.y }, koOwnGoal(koDir(events), e.match_id, e.period, side));
       var dist = (1 - f.x) * 144;
       return dist < 45 ? "short" : dist <= 65 ? "mid" : "long";
     }
@@ -2044,15 +2041,9 @@
       const grid = { short: blankRow(), mid: blankRow(), long: blankRow() };
       const pts = [];
       evs.filter((e) => e.event_type === "Kickout" && e.x != null && e.y != null).forEach(function(e) {
-        var flip = side === "us" ? String(e.period) === "2" : String(e.period) !== "2";
-        var x = e.x, y = e.y;
-        if (flip) {
-          x = 1 - x;
-          y = 1 - y;
-        }
         var won = KO_WON.has(e.outcome);
-        var _f = koFixOrient({ x: x, y: y });
-        x = _f.x; y = _f.y;
+        var _f = koNorm({ x: e.x, y: e.y }, koOwnGoal(koDir(events), e.match_id, e.period, side));
+        var x = _f.x, y = _f.y;
         pts.push({ x, y, won, player: e.player || null, num: _koNumMap[e.player] || (e.player && e.player.charAt(0) === "#" ? e.player.slice(1) : null) });
         var dist = (1 - x) * 144;
         var row = dist < 45 ? "short" : dist <= 65 ? "mid" : "long";
@@ -2316,10 +2307,18 @@
         if (et === "Free conceded" && tm === X) break;
         if (et === "Kickout" && tm === X && (oc === "Lost clean" || oc === "Break lost")) break;
         if (et === "Kickout" && tm === Y && (oc === "Won clean" || oc === "Break won")) break;
-        if ((et === "Shot from play" || et === "Scoreable free") && tm === Y) break;
-        if (et === "Shot from play" && tm === X) break;
+        if ((et === "Shot from play" || et === "Scoreable free") && tm === Y) {
+          if (_scDead(oc)) return "ownKO";
+          if (_scLive(oc)) return "toOther";
+          break;
+        }
+        if (et === "Shot from play" && tm === X) {
+          if (_scLive(oc)) continue;
+          if (_scDead(oc)) return "oppKO";
+          break;
+        }
       }
-      return sawFree ? "toOther" : "unclear";
+      return sawFree ? "toOther" : (j < 0 ? "throwIn" : "unclear");
     }
     var scoreSrc = { us: {}, opp: {} }, scoreTot = { us: 0, opp: 0 };
     Object.keys(byMatch).forEach(function(mid) {
@@ -2599,7 +2598,55 @@
   
 function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(function(s){ return s.player === pl; }) : (list || []); }
   function fKo(list, band){ if(!band || band === "all") return list || []; return (list || []).filter(function(p){ var dd = (1 - p.x) * 144; var b = dd < 45 ? "short" : dd <= 65 ? "mid" : "long"; return b === band; }); }
-  function koFixOrient(p){ var K0=0.854, PL=144, MX=70; function ok(v){ var k=(K0-v)*PL; return k>=-2 && k<=MX; } if(!ok(p.x) && ok(1-p.x)){ return { x: 1-p.x, y: 1-p.y }; } return p; }
+  // Shot outcomes that put the ball dead (restart follows) vs. keep it live.
+  function _scDead(oc) {
+    var s = (oc || "").toLowerCase();
+    return s === "point" || s === "goal" || s === "wide" || s === "2 pointer" || s === "2-pointer" || s === "2pointer";
+  }
+  function _scLive(oc) {
+    var s = (oc || "").toLowerCase();
+    return s === "blocked" || s === "saved" || s === "save" || s === "woodwork" || s === "dropped short" || s === "short";
+  }
+  // Attacking direction is derived from where each team actually shoots, per
+  // match-period. A team shoots towards the opposition goal, so a mean shot x
+  // above 0.5 means their OWN goal sits at low x. Restart coordinates are then
+  // normalised so the own goal of the taking team sits at x = 1 and distance
+  // is (1 - x) * 144. Replaces the old single-point orientation guess, which
+  // silently collapsed long restarts into the wrong distance band.
+  function koDirIndex(evs){
+    var acc = {};
+    (evs || []).forEach(function(e){
+      if (e == null || e.x == null) return;
+      var et = e.event_type;
+      if (et !== "Shot from play" && et !== "Scoreable free") return;
+      var k = (e.match_id || "_") + "|" + (e.period == null ? 1 : e.period) + "|" + e.team;
+      var a = acc[k] || (acc[k] = { s: 0, n: 0 });
+      a.s += e.x; a.n++;
+    });
+    var idx = {};
+    Object.keys(acc).forEach(function(k){
+      var a = acc[k];
+      if (a.n >= 3) idx[k] = (a.s / a.n) > 0.5 ? 0 : 1;
+    });
+    return idx;
+  }
+  var _koDirSrc = null, _koDirVal = null;
+  function koDir(evs){ if (_koDirSrc === evs) return _koDirVal; _koDirSrc = evs; _koDirVal = koDirIndex(evs); return _koDirVal; }
+  function koOwnGoal(idx, matchId, period, side){
+    idx = idx || {};
+    var mid = matchId || "_", p = (period == null ? 1 : period), other = side === "us" ? "opp" : "us";
+    var v = idx[mid + "|" + p + "|" + side];
+    if (v != null) return v;
+    var o = idx[mid + "|" + p + "|" + other];
+    if (o != null) return 1 - o;
+    var q = idx[mid + "|" + (String(p) === "2" ? 1 : 2) + "|" + side];
+    if (q != null) return 1 - q;
+    return side === "us" ? (String(p) === "2" ? 0 : 1) : (String(p) !== "2" ? 0 : 1);
+  }
+  function koNorm(p, ownGoal){
+    var y = (p.y == null ? 0.5 : p.y);
+    return ownGoal === 1 ? { x: p.x, y: y } : { x: 1 - p.x, y: 1 - y };
+  }
   function PitchMap({ shots }) {
     const W = 300, H = 400, cx = W / 2;
     const m = (d) => d / 72 * H;
@@ -2661,6 +2708,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       { k: "toHand", label: "Turnover \xB7 hand pass", color: C.purple },
       { k: "toContact", label: "Turnover \xB7 in contact", color: C.teal },
       { k: "toOther", label: "Turnover \xB7 other", color: C.slate },
+      { k: "throwIn", label: "Throw-in / start of half", color: "#7f8da3" },
       { k: "unclear", label: "Tagging unclear", color: C.slateD }
     ];
     function gp(o) {
@@ -3738,10 +3786,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       // Restart distance bands, same thresholds as the kickout map.
       function bandOf(r, tm) {
         if (r.x == null) return null;
-        var flip = tm === "us" ? String(r.period) === "2" : String(r.period) !== "2";
-        var x = r.x, y = r.y == null ? 0.5 : r.y;
-        if (flip) { x = 1 - x; y = 1 - y; }
-        var fo = koFixOrient({ x: x, y: y });
+        var fo = koNorm({ x: r.x, y: r.y }, koOwnGoal(koDir(tagged), r.match_id, r.period, tm));
         var dd = (1 - fo.x) * 144;
         return dd < 45 ? "short" : dd <= 65 ? "mid" : "long";
       }
@@ -3844,13 +3889,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return tagged.filter(function(r) {
         return r.event_type === "Kickout" && r.team === tm && inHalf(r) && r.x != null;
       }).map(function(r) {
-        var flip = tm === "us" ? String(r.period) === "2" : String(r.period) !== "2";
-        var x = r.x, y = r.y;
-        if (flip) {
-          x = 1 - x;
-          y = 1 - y;
-        }
-        var _f = koFixOrient({ x: x, y: y });
+        var _f = koNorm({ x: r.x, y: r.y }, koOwnGoal(koDir(tagged), r.match_id, r.period, tm));
         return { x: _f.x, y: _f.y, won: r.outcome === "Won clean" || r.outcome === "Break won",
                  player: r.player || null, num: liveNum(r.player, tm) };
       });
@@ -7054,7 +7093,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return '<div><p style="font-size:11px;font-weight:700;color:'+color+';margin-bottom:6px">'+label+'</p>'+svg+'<p class="m" style="margin-top:6px">'+scored+'/'+total+' scored ('+pct+'%)</p></div>';
     }
 
-    // Kickout map SVG — FULL PITCH with grass stripes, koFixOrient
+    // Kickout map SVG — FULL PITCH with grass stripes, derived-direction normalisation
     function koMapSvg(teamEvs, teamKey, label, color) {
       var W=220,H=360,cx=W/2,L=4,T=4,R=W-4,B=H-4,PL=B-T;
       var mD=function(d){return d/144*PL;};
@@ -7087,7 +7126,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var won=0,lost=0;
       teamEvs.forEach(function(e){
         if(e.event_type==="Kickout"&&e.x!=null&&e.y!=null){
-          var pt=koFixOrient({x:e.x,y:e.y});
+          var pt=koNorm({x:e.x,y:e.y},koOwnGoal(koDir(evs),e.match_id,e.period,teamKey));
           var px=L+(pt.y*(R-L));
           var py=T+(pt.x*PL);
           var w=KO_WON.has(e.outcome); if(w)won++;else lost++;
@@ -7583,10 +7622,18 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           if (et === "Free conceded" && tm === X) break;
           if (et === "Kickout" && tm === X && (oc === "Lost clean" || oc === "Break lost")) break;
           if (et === "Kickout" && tm === Y && (oc === "Won clean" || oc === "Break won")) break;
-          if ((et === "Shot from play" || et === "Scoreable free") && tm === Y) break;
-          if (et === "Shot from play" && tm === X) break;
+          if ((et === "Shot from play" || et === "Scoreable free") && tm === Y) {
+            if (_scDead(oc)) return "ownKO";
+            if (_scLive(oc)) return "toOther";
+            break;
+          }
+          if (et === "Shot from play" && tm === X) {
+            if (_scLive(oc)) continue;
+            if (_scDead(oc)) return "oppKO";
+            break;
+          }
         }
-        return sawFree ? "toOther" : "unclear";
+        return sawFree ? "toOther" : (j < 0 ? "throwIn" : "unclear");
       }
       var shotTypes = [["Goal","Goals",C.red],["Pt2Play","2pt play",C.purple],["Pt2Free","2pt free",C.indigo],["PtPlay","Point play",C.greenB],["PtFree","Point free",C.gold]];
       var stGrid = { us: {}, opp: {} };
@@ -7607,7 +7654,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         else if (sc === 1 && isFree) key = "PtFree";
         if (key) stGrid[e.team][key][bi] += 1;
       });
-      var sources = [["ownKO","Own " + restart_(),C.greenB],["oppKO","Opp " + restart_(),C.blue],["turnover","Turnover",C.gold],["unclear","Tagging unclear",C.slateD]];
+      var sources = [["ownKO","Own " + restart_(),C.greenB],["oppKO","Opp " + restart_(),C.blue],["turnover","Turnover",C.gold],["throwIn","Throw-in","#7f8da3"],["unclear","Tagging unclear",C.slateD]];
       var srcGrid = { us: {}, opp: {} };
       sources.forEach(function(s) { srcGrid.us[s[0]] = blocks.map(function(){return 0;}); srcGrid.opp[s[0]] = blocks.map(function(){return 0;}); });
       // group events by match, sort by seq/time so scoreSourceOf can trace backwards
