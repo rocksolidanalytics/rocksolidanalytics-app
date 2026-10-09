@@ -87,7 +87,10 @@
     teal: "#3FB6A8",
     greenL: "#7EE8A4",
     redL: "#E8A07E",
-    indigo: "#7D8FE0"
+    indigo: "#7D8FE0",
+    alertRed: "#8B1A1A",
+    alertGreen: "#0E6631",
+    alertAmber: "#7D6608"
   };
   const MONO = "ui-monospace, 'SF Mono', Menlo, monospace";
   // Design tokens. Taggers keep their hand-tuned font sizes and do not use FS.
@@ -8294,14 +8297,14 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }, [sel, tick]);
 
     if (sel && d) {
-      return React.createElement("div", { className: "rs-wide rsa-screen", style: { minHeight: "100dvh", background: C.bg, color: C.white } },
+      return React.createElement("div", { className: "rs-wide rsa-screen rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white } },
         React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderBottom: "1px solid " + C.border } },
-          React.createElement("button", { onClick: function() { setSel(null); setD(null); }, style: { background: "none", border: "none", color: C.greenB, fontSize: 18, cursor: "pointer", padding: "4px 8px" } }, "\u2039"),
+          React.createElement("button", { onClick: function() { setSel(null); setD(null); }, title: "Back", style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, React.createElement(Back, { s: 20 })),
           React.createElement("div", { style: { flex: 1 } },
-            React.createElement("div", { style: { fontSize: 14, fontWeight: 800 } }, "LIVE STATS \u00b7 ", sel.opponent || "Match"),
-            React.createElement("div", { style: { fontSize: 10, color: C.greenB, fontFamily: MONO } }, "Auto-refreshing every 12s \u00b7 ", d._events ? d._events.length : 0, " events")),
-          React.createElement("button", { onClick: function() { setTick(function(t) { return t + 1; }); }, style: { background: C.greenB + "22", border: "1px solid " + C.greenB, color: C.greenB, borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 800, cursor: "pointer" } }, "\u21BB Refresh")),
-        err && React.createElement("div", { style: { padding: "8px 14px", color: C.red, fontSize: 11 } }, err),
+            React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800 } }, "LIVE STATS \u00b7 ", sel.opponent || "Match"),
+            React.createElement("div", { style: { fontSize: FS.sm, color: C.greenB, fontFamily: MONO } }, "Auto-refreshing every 12s \u00b7 ", d._events ? d._events.length : 0, " events")),
+          React.createElement("button", { onClick: function() { setTick(function(t) { return t + 1; }); }, style: { minHeight: 44, margin: "-9px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { background: C.greenB + ALPHA.soft, border: "1px solid " + C.greenB, color: C.greenB, borderRadius: RAD.md, padding: "6px 12px", fontSize: FS.sm, fontWeight: 800 } }, "\u21BB Refresh"))),
+        err && React.createElement("div", { style: { padding: "8px 14px", color: C.red, fontSize: FS.sm } }, err),
         (function() {
           var evts = d._events || [];
           // Momentum alert
@@ -8314,9 +8317,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                 if (_sc[_i].team === "opp" || _sc[_i].team === "a") { _oppR++; if (_usR > 0) break; }
                 else { _usR++; if (_oppR > 0) break; }
               }
-              if (_oppR >= 3) _lspAlert = { bg: "#8b1a1a", icon: "\u26A0\uFE0F", msg: _oppR + " unanswered opp scores" };
-              else if (_usR >= 3) _lspAlert = { bg: "#0e6631", icon: "\uD83D\uDD25", msg: _usR + " unanswered scores" };
-              else if (_oppR >= 2) _lspAlert = { bg: "#7d6608", icon: "\u26A1", msg: "2 unanswered opp scores" };
+              if (_oppR >= 3) _lspAlert = { bg: C.alertRed, icon: "\u26A0\uFE0F", msg: _oppR + " unanswered opp scores" };
+              else if (_usR >= 3) _lspAlert = { bg: C.alertGreen, icon: "\uD83D\uDD25", msg: _usR + " unanswered scores" };
+              else if (_oppR >= 2) _lspAlert = { bg: C.alertAmber, icon: "\u26A1", msg: "2 unanswered opp scores" };
             }
             if (!_lspAlert) {
               var _kos = evts.filter(function(e) { return e.event_type === "Kickout" && (e.team === "us"); });
@@ -8324,7 +8327,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
               for (var _j = _kos.length - 1; _j >= 0; _j--) {
                 if (_kos[_j].outcome === "Lost clean" || _kos[_j].outcome === "Break lost") _kl++; else break;
               }
-              if (_kl >= 3) _lspAlert = { bg: "#8b1a1a", icon: "\u26A0\uFE0F", msg: _kl + " consecutive " + RST() + " losses" };
+              if (_kl >= 3) _lspAlert = { bg: C.alertRed, icon: "\u26A0\uFE0F", msg: _kl + " consecutive " + RST() + " losses" };
             }
           } catch(ex) {}
           // Win probability
@@ -8349,31 +8352,31 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           } catch(ex) {}
           return React.createElement("div", null,
             _lspAlert ? React.createElement("div", { style: { padding: "10px 14px", background: _lspAlert.bg, display: "flex", alignItems: "center", gap: 8 } },
-              React.createElement("span", { style: { fontSize: 18 } }, _lspAlert.icon),
-              React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: "#fff" } }, _lspAlert.msg)) : null,
-            _wpVal !== null ? React.createElement("div", { style: { padding: "8px 14px", background: "#0a1020", display: "flex", justifyContent: "center", alignItems: "center", gap: 6, borderBottom: "1px solid #2A2A30" } },
-              React.createElement("span", { style: { fontSize: 11, color: "#6B7280", fontFamily: MONO } }, "WIN PROBABILITY"),
-              React.createElement("span", { style: { fontSize: 16, fontWeight: 900, fontFamily: MONO, color: _wpVal >= 60 ? "#34c967" : _wpVal >= 40 ? "#f0c040" : "#e0584d" } }, _wpVal + "%")) : null);
+              React.createElement("span", { style: { fontSize: FS.xl } }, _lspAlert.icon),
+              React.createElement("span", { style: { fontSize: FS.md, fontWeight: 700, color: C.white } }, _lspAlert.msg)) : null,
+            _wpVal !== null ? React.createElement("div", { style: { padding: "8px 14px", background: C.field, display: "flex", justifyContent: "center", alignItems: "center", gap: 6, borderBottom: "1px solid " + C.borderB } },
+              React.createElement("span", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO } }, "WIN PROBABILITY"),
+              React.createElement("span", { style: { fontSize: FS.lg, fontWeight: 900, fontFamily: MONO, color: _wpVal >= 60 ? C.greenB : _wpVal >= 40 ? C.gold : C.red } }, _wpVal + "%")) : null);
         }()),
-        React.createElement(DashView, { d: d, club: club, scope: "match", match: sel, oppName: sel.opponent }));
+        React.createElement("div", { style: { padding: "12px 18px 18px" } }, React.createElement(DashView, { d: d, club: club, scope: "match", match: sel, oppName: sel.opponent })));
     }
 
-    return React.createElement("div", { className: "rs-wide rsa-screen", style: { minHeight: "100dvh", background: C.bg, color: C.white } },
+    return React.createElement("div", { className: "rs-wide rsa-screen rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white } },
       React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "14px" } },
-        React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.greenB, fontSize: 18, cursor: "pointer" } }, "\u2039"),
-        React.createElement("div", { style: { fontSize: 16, fontWeight: 800 } }, "Live Stats Pad")),
-      React.createElement("div", { style: { padding: "0 14px", fontSize: 12, color: C.slateD, marginBottom: 16 } }, "Pick a match to follow live. Stats auto-refresh every 12 seconds as the tagger records events."),
+        React.createElement("button", { onClick: back, title: "Back", style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, React.createElement(Back, { s: 20 })),
+        React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800 } }, "Live Stats Pad")),
+      React.createElement("div", { style: { padding: "0 14px", fontSize: FS.md, color: C.slateD, marginBottom: 16 } }, "Pick a match to follow live. Stats auto-refresh every 12 seconds as the tagger records events."),
       matches === null ? React.createElement(SkelRows, { n: 3, h: 72 }) :
-      matches.length === 0 ? React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 13, paddingTop: 30 } }, "No matches yet.") :
+      matches.length === 0 ? React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: FS.md, paddingTop: 30 } }, "No matches yet.") :
       React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8, padding: "0 14px" } },
         matches.map(function(m2) {
           var win = (m2.our_total || 0) > (m2.opp_total || 0);
           var draw = (m2.our_total || 0) === (m2.opp_total || 0);
-          return React.createElement("button", { key: m2.id, onClick: function() { setSel(m2); }, style: { textAlign: "left", padding: "14px 16px", background: C.bgCard, border: "none", borderRadius: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.25)", cursor: "pointer", color: C.white } },
+          return React.createElement("button", { key: m2.id, onClick: function() { setSel(m2); }, style: { textAlign: "left", padding: "14px 16px", background: C.bgCard, border: "none", borderRadius: RAD.xl, boxShadow: "0 2px 8px " + C.black + ALPHA.mid, cursor: "pointer", color: C.white } },
             React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
-              React.createElement("div", { style: { fontSize: 14, fontWeight: 800 } }, "v ", m2.opponent || "TBC"),
-              React.createElement("div", { style: { fontSize: 10, fontFamily: MONO, color: win ? C.greenB : draw ? C.gold : C.red, fontWeight: 800 } }, (m2.our_score || "0-00") + " - " + (m2.opp_score || "0-00"))),
-            React.createElement("div", { style: { fontSize: 10, color: C.slateD, marginTop: 4, fontFamily: MONO } }, m2.date || "", " \u00b7 ", m2.competition || ""));
+              React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800 } }, "v ", m2.opponent || "TBC"),
+              React.createElement("div", { style: { fontSize: FS.sm, fontFamily: MONO, color: win ? C.greenB : draw ? C.gold : C.red, fontWeight: 800 } }, (m2.our_score || "0-00") + " - " + (m2.opp_score || "0-00"))),
+            React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, marginTop: 4, fontFamily: MONO } }, m2.date || "", " \u00b7 ", m2.competition || ""));
         })));
   }
   function App() {
