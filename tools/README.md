@@ -14,7 +14,7 @@ SHOT=out.png ./validate.sh       # also screenshots the logged-out boot screen
 | 1 syntax | `extract.js` + `node --check` | the inline bundle does not parse |
 | 2 boot | `boot_harness.js` | `#root` stays empty, a page error fires, or the error boundary shows. Runs on the sign-in route and the password-reset route (`#type=recovery`) |
 | 3 shadowing | `dupscan.js` | any name is declared twice in one hoisting scope, or cross-scope reused function names rise above 22 |
-| 3b escapes | `escscan.js` | a string literal still holds a backslash escape at runtime (double-escaped, shows as text). Count may only fall (5 after the Conditions pass) |
+| 3b escapes | `escscan.js` | a string literal still holds a backslash escape at runtime (double-escaped, shows as text). Must stay at 0 (all fixed by the HelpCenter pass) |
 | 4 metrics | `cs_snapshot.js` | `computeStats`, `computeBenchmark` or `matchRatings` output differs from `baseline/computeStats.json` |
 
 Notes
