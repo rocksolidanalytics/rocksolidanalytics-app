@@ -25,7 +25,7 @@ const hits = [];
   ts.forEachChild(n, walk);
 })(sf);
 if (process.argv.includes('--list')) for (const h of hits) console.log(String(h.line).padStart(5), h.owner.padEnd(16), JSON.stringify(h.text).slice(0, 80));
-// Known leftovers (17 at d232561, 13 after VideoHub, 8 after DashView, 7 after ScoreSourcePanel); each is fixed in its screen pass. Lower this as they go.
-const BASELINE = 7;
+// Known leftovers (17 at d232561, 13 after VideoHub, 8 after DashView, 7 after ScoreSourcePanel, 5 after Conditions); each is fixed in its screen pass. Lower this as they go.
+const BASELINE = 5;
 console.log('ESCSCAN literal escapes=' + hits.length + ' (baseline ' + BASELINE + ', may only fall)');
 if (hits.length > BASELINE) process.exitCode = 1;
