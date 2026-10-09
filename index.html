@@ -4463,21 +4463,21 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } },
         nums.map(function(n) {
           return React.createElement("div", { key: n, style: { display: "flex", alignItems: "center", gap: 8 } },
-            React.createElement("div", { style: { width: 28, textAlign: "center", fontSize: 14, fontWeight: 800, color: n <= 15 ? C.greenB : C.gold, fontFamily: MONO } }, n),
+            React.createElement("div", { style: { width: 28, textAlign: "center", fontSize: FS.lg, fontWeight: 800, color: n <= 15 ? C.greenB : C.gold, fontFamily: MONO } }, n),
             React.createElement("input", { value: names[n] || "", onChange: function(e) { setNames(function(p) { var o = Object.assign({}, p); o[n] = e.target.value; return o; }); },
               placeholder: n <= 15 ? "Starter" : "Sub",
-              style: { flex: 1, padding: "10px 12px", borderRadius: 8, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: 14, fontFamily: "inherit", outline: "none" } }));
+              className: "rsa-field", style: { "--rsa-ring": C.greenB, flex: 1, minHeight: 44, padding: "10px 12px", borderRadius: RAD.md, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: FS.lg, fontFamily: "inherit", outline: "none" } }));
         }));
     }
 
-    return React.createElement("div", { className: "rs-wide rsa-screen", style: { minHeight: "100dvh", background: C.bg, color: C.white, padding: "14px" } },
-      React.createElement("div", { style: { fontSize: 16, fontWeight: 800, marginBottom: 4 } }, "Scout Teamsheets"),
-      React.createElement("div", { style: { fontSize: 11, color: C.slateD, marginBottom: 16 } }, "Enter player names for both teams. You can skip any you don't know."),
+    return React.createElement("div", { className: "rs-wide rsa-screen rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, padding: "14px" } },
+      React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, marginBottom: 4 } }, "Scout Teamsheets"),
+      React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, marginBottom: 16 } }, "Enter player names for both teams. You can skip any you don't know."),
       React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 16 } },
-        React.createElement("button", { onClick: function() { setActiveTab("a"); }, style: { flex: 1, padding: "10px", borderRadius: 8, border: "1px solid " + (activeTab === "a" ? C.greenB : C.border), background: activeTab === "a" ? C.greenB + "22" : "none", color: activeTab === "a" ? C.greenB : C.slate, fontWeight: 800, fontSize: 13, cursor: "pointer" } }, teamA || "Home"),
-        React.createElement("button", { onClick: function() { setActiveTab("b"); }, style: { flex: 1, padding: "10px", borderRadius: 8, border: "1px solid " + (activeTab === "b" ? C.blue : C.border), background: activeTab === "b" ? C.blue + "22" : "none", color: activeTab === "b" ? C.blue : C.slate, fontWeight: 800, fontSize: 13, cursor: "pointer" } }, teamB || "Away")),
+        React.createElement("button", { onClick: function() { setActiveTab("a"); }, style: { flex: 1, minHeight: 44, padding: "10px", borderRadius: RAD.md, border: "1px solid " + (activeTab === "a" ? C.greenB : C.border), background: activeTab === "a" ? C.greenB + ALPHA.soft : "none", color: activeTab === "a" ? C.greenB : C.slate, fontWeight: 800, fontSize: FS.md, cursor: "pointer" } }, teamA || "Home"),
+        React.createElement("button", { onClick: function() { setActiveTab("b"); }, style: { flex: 1, minHeight: 44, padding: "10px", borderRadius: RAD.md, border: "1px solid " + (activeTab === "b" ? C.blue : C.border), background: activeTab === "b" ? C.blue + ALPHA.soft : "none", color: activeTab === "b" ? C.blue : C.slate, fontWeight: 800, fontSize: FS.md, cursor: "pointer" } }, teamB || "Away")),
       activeTab === "a" ? grid(namesA, setNamesA) : grid(namesB, setNamesB),
-      React.createElement("button", { onClick: save, disabled: saving, style: { width: "100%", marginTop: 20, padding: "16px", borderRadius: 10, border: "none", background: C.greenB, color: "#000", fontSize: 15, fontWeight: 800, cursor: "pointer" } }, saving ? "Saving..." : "\u2713 Save & Continue"));
+      React.createElement("button", { onClick: save, disabled: saving, style: { width: "100%", marginTop: 20, padding: "16px", borderRadius: RAD.lg, border: "none", background: C.greenB, color: C.bg, fontSize: FS.lg, fontWeight: 800, cursor: "pointer" } }, saving ? "Saving..." : "\u2713 Save & Continue"));
   }
   function NewMatch({ club, session, back, onTag, onVideo }) {
     const [stage, setStage] = useState("form");
@@ -5303,7 +5303,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         }
       })();
     }, []);
-    return /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 520, margin: "0 auto", padding: "14px 14px 40px" } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: C.slate, cursor: "pointer", fontSize: 13, marginBottom: 4, fontFamily: MONO, padding: 0 } }, "\u2039 Video hub"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 2, color: C.gold, fontFamily: MONO, margin: "6px 0 14px" } }, "OPPOSITION ANALYSIS \xB7 SCOUTED MATCH"), err && /* @__PURE__ */ React.createElement("div", { style: { color: C.red, fontSize: 11, background: C.bgCard, border: "1px solid " + C.red + "44", borderRadius: 9, padding: "10px 12px" } }, err), !d && !err && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 60 } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.gold })), d && /* @__PURE__ */ React.createElement(DashView, { d: d.stats, club: d.cl, scope: "match", match: d.shim, oppName: bn }));
+    return /* @__PURE__ */ React.createElement("div", { className: "rsa-fb", style: { maxWidth: 520, margin: "0 auto", padding: "14px 14px 40px" } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", boxShadow: "none", color: C.slate, cursor: "pointer", fontSize: FS.md, margin: "-15px 0 -11px", fontFamily: MONO, padding: "15px 0" } }, "\u2039 Video hub"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 2, color: C.gold, fontFamily: MONO, margin: "6px 0 14px" } }, "OPPOSITION ANALYSIS \xB7 SCOUTED MATCH"), err && /* @__PURE__ */ React.createElement("div", { style: { color: C.red, fontSize: FS.sm, background: C.bgCard, border: "1px solid " + C.red + ALPHA.mid, borderRadius: RAD.md, padding: "10px 12px" } }, err), !d && !err && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 60 } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.gold })), d && /* @__PURE__ */ React.createElement(DashView, { d: d.stats, club: d.cl, scope: "match", match: d.shim, oppName: bn }));
   }
   function VideoHub({ club, session, onPick, onNew, back, role }) {
     var isPlayer = role === "player";
