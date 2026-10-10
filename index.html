@@ -2995,7 +2995,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     withRuck.splice(1, 0, { id: "ruck", l: "RUCK", pitch: true, outcomes: ["Ruck Won", "Ruck Lost"] });
     return withRuck.map(function(ev) {
       if (ev.id === "kickout") return Object.assign({}, ev, { l: "PUCKOUT" });
-      if (ev.id === "poss") return Object.assign({}, ev, { outcomes: ev.outcomes.map(function(o) { return o === "Kick Pass" ? "Strike" : o; }) });
+      if (ev.id === "poss") return Object.assign({}, ev, { outcomes: ev.outcomes.map(function(o) { return o === "Kick Pass" ? "Strike" : o; }).concat(["Sideline Cut"]) });
+      // A hook stops a strike and the ball goes loose rather than being won, so it is
+      // handled exactly like Block: a tackle outcome, never a possession gain.
+      if (ev.id === "tackle") return Object.assign({}, ev, { outcomes: ev.outcomes.reduce(function(a, o) { a.push(o); if (o === "Block") a.push("Hook"); return a; }, []) });
       return ev;
     });
   }
@@ -6771,7 +6774,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }));
     })() : (function(){ var _ft = tagged.filter(function(e) { return vtTeamF === "all" || e.team === vtTeamF; }); return _ft; })().length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 11.5, paddingTop: 8, lineHeight: 1.6 } }, throwIn == null ? "Scrub to the throw-in and tap \u2691 Mark throw-in to set the clock." : "Pause on a moment, then tap an event. Single tap = " + club.name.split(" ")[0] + ", double = opposition.") : tagged.map(function(r) {
       var _plCb = plMode ? React.createElement("input", { type: "checkbox", checked: !!plSel[r._id], onChange: function(ev) { ev.stopPropagation(); plToggle(r._id, r._vt, (r.event_type || "") + " " + (r.outcome || "") + " " + (r.player || "")); }, style: { width: 18, height: 18, accentColor: C.gold, cursor: "pointer", flexShrink: 0, marginRight: 4 } }) : null;
-      var good = (r.score || 0) > 0 || ["Won clean", "Break won", "Contact Made", "Block"].indexOf(r.outcome) >= 0;
+      var good = (r.score || 0) > 0 || ["Won clean", "Break won", "Contact Made", "Block", "Hook"].indexOf(r.outcome) >= 0;
       return /* @__PURE__ */ React.createElement(
         "div",
         {
