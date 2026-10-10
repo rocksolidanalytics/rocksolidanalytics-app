@@ -21,7 +21,7 @@
       if (k === 'eq') return function (c, v) { st.eq.push([c, v]); return b; };
       if (k === 'range') return function (a, z) { st.range = [a, z]; return b; };
       if (k === 'single' || k === 'maybeSingle') return function () { st.one = k; return b; };
-      if (k === 'insert' || k === 'upsert' || k === 'update') return function (p) { st.write = { kind: k, payload: Array.isArray(p) ? p : Object.assign({ id: 'fake-' + table }, p) }; return b; };
+      if (k === 'insert' || k === 'upsert' || k === 'update') return function (p) { st.write = { kind: k, payload: Array.isArray(p) ? p : Object.assign({ id: 'fake-' + table + '-' + (++window.__rsaFakeSeq || (window.__rsaFakeSeq = 1)) }, p) }; return b; };
       if (k === 'delete') return function () { st.write = { kind: k, payload: null }; return b; };
       return function () { return b; };
     } });
