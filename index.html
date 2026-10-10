@@ -3152,8 +3152,72 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }))
     )), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", fontSize: FS.sm, color: C.slateD, padding: "0 18px 18px" } }, "Drag the jerseys to set up a shape. Toggle a team off to focus on one."));
   }
+  // Pitch location picker shared by the live and video taggers. The feel is provisional,
+  // so every knob lives in PITCH_PICK.
+  //   mode "hold":    press, slide to adjust, lift to confirm. A quick tap behaves as before.
+  //   mode "confirm": a tap places the marker, drag it to adjust, then tap USE THIS SPOT.
+  //   zoom: lens magnification. lens: lens diameter in px. lift: px between finger and lens
+  //   centre (the lens flips below the finger near the top edge). lensDelayMs: a press shorter
+  //   than this never shows the lens, so quick taps look exactly as they did.
+  var PITCH_PICK = { mode: "hold", zoom: 2.5, lens: 116, lift: 84, lensDelayMs: 120 };
+  function PitchPick({ land, active, onTap }) {
+    const boxRef = useRef(null), timerRef = useRef(null);
+    const [pt, setPt] = useState(null);
+    useEffect(function() { return function() { clearTimeout(timerRef.current); }; }, []);
+    var Pitch = land ? PitchSVGLand : PitchSVG;
+    if (!active) return React.createElement(Pitch, { active: false });
+    var hold = PITCH_PICK.mode === "hold";
+    function at(e) {
+      var r = boxRef.current.getBoundingClientRect();
+      return { fx: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), fy: Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)), w: r.width, h: r.height };
+    }
+    // Same mapping as the plain pitch tap: portrait runs the length of the pitch down the screen.
+    function locOf(p) { return land ? { x: p.fx, y: p.fy } : { x: p.fy, y: p.fx }; }
+    function ppDown(e) {
+      e.preventDefault();
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {}
+      setPt(Object.assign(at(e), { down: true, lens: false }));
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(function() {
+        setPt(function(q) { return q && q.down ? Object.assign({}, q, { lens: true }) : q; });
+      }, PITCH_PICK.lensDelayMs);
+    }
+    function ppMove(e) {
+      if (!pt || !pt.down) return;
+      setPt(Object.assign(at(e), { down: true, lens: true }));
+    }
+    function ppUp(e) {
+      if (!pt || !pt.down) return;
+      clearTimeout(timerRef.current);
+      var p = Object.assign(at(e), { down: false, lens: false });
+      if (hold) { setPt(null); onTap(locOf(p)); } else setPt(p);
+    }
+    function ppCancel() {
+      clearTimeout(timerRef.current);
+      setPt(function(q) { return q && !hold ? Object.assign({}, q, { down: false, lens: false }) : null; });
+    }
+    var kids = [React.createElement(Pitch, { key: "p", active: true })];
+    if (pt) {
+      var cx = pt.fx * pt.w, cy = pt.fy * pt.h;
+      kids.push(React.createElement("div", { key: "m", style: { position: "absolute", left: cx - 9, top: cy - 9, width: 18, height: 18, borderRadius: "50%", border: "2px solid " + C.white, background: C.greenB + ALPHA.mid, boxShadow: "0 0 0 1px " + C.black + ALPHA.strong, pointerEvents: "none", boxSizing: "border-box" } }));
+      if (pt.lens) {
+        var L = PITCH_PICK.lens, z = PITCH_PICK.zoom;
+        var top = cy - PITCH_PICK.lift - L / 2;
+        if (top < -L / 4) top = cy + PITCH_PICK.lift - L / 2;
+        var left = Math.max(-L / 4, Math.min(pt.w - L * 3 / 4, cx - L / 2));
+        kids.push(React.createElement("div", { key: "l", style: { position: "absolute", left: left, top: top, width: L, height: L, borderRadius: "50%", overflow: "hidden", border: "2px solid " + C.white, boxShadow: "0 4px 14px " + C.black + ALPHA.scrim, background: PITCH.deep, pointerEvents: "none", zIndex: 5 } },
+          React.createElement("div", { style: { position: "absolute", left: L / 2 - cx * z, top: L / 2 - cy * z, width: pt.w * z, height: pt.h * z } }, React.createElement(Pitch, { active: false })),
+          React.createElement("div", { style: { position: "absolute", left: L / 2 - 7, top: L / 2 - 7, width: 14, height: 14, borderRadius: "50%", border: "2px solid " + C.white, boxShadow: "0 0 0 1px " + C.black + ALPHA.strong, boxSizing: "border-box" } })));
+      }
+    }
+    var box = React.createElement("div", { ref: boxRef, onPointerDown: ppDown, onPointerMove: ppMove, onPointerUp: ppUp, onPointerCancel: ppCancel,
+      style: { position: "relative", width: "100%", height: "100%", touchAction: "none", userSelect: "none", WebkitUserSelect: "none", cursor: "crosshair" } }, kids);
+    if (hold || !pt || pt.down) return box;
+    return React.createElement(React.Fragment, null, box,
+      React.createElement("button", { onClick: function() { var p = pt; setPt(null); onTap(locOf(p)); }, style: { width: "100%", minHeight: 44, marginTop: 6, borderRadius: RAD.md, border: "none", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 13, cursor: "pointer" } }, "✓ USE THIS SPOT"));
+  }
   function TagPitch({ active, onTap }) {
-    return /* @__PURE__ */ React.createElement(PitchSVG, { active, onTap: active ? onTap : void 0 });
+    return React.createElement(PitchPick, { land: false, active: active, onTap: onTap });
   }
   function PitchSVGLand({ children, onTap, active, innerRef }) {
     var W = 360, H = 224, L = 8, T = 8, R = 352, B = 216, MY = 112, PL = R - L, MIDX = (L + R) / 2, rArc = 95, pen = 26;
@@ -3201,7 +3265,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     );
   }
   function TagPitchLand({ active, onTap }) {
-    return /* @__PURE__ */ React.createElement(PitchSVGLand, { active, onTap: active ? onTap : void 0 });
+    return React.createElement(PitchPick, { land: true, active: active, onTap: onTap });
   }
   // Some events only need a pitch location for certain outcomes. A tackle does
   // not, but a foul does — the location is the whole point of a discipline map.
