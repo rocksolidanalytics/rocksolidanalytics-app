@@ -1620,6 +1620,40 @@
     const done = (matches || []).filter((m) => m.count > 0).length;
     return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.sm, letterSpacing: 1, color: C.slate } }, "LINE-UPS")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, matches === null ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 50 } }, /* @__PURE__ */ React.createElement(Spin, { s: 24, c: C.greenB })) : matches.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slate, fontSize: FS.md, paddingTop: 40 } }, "No matches yet \u2014 import some first.") : /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, color: C.slate, marginBottom: 14 } }, done, " of ", matches.length, " line-ups set. Tap a match to assign positions."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, matches.map((m) => /* @__PURE__ */ React.createElement("div", { key: m.id, style: { borderRadius: RAD.lg, background: C.bgCard, border: `1px solid ${m.count > 0 ? C.greenB + ALPHA.mid : C.border}`, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "14px 16px" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setEditing(m), style: { flex: 1, minWidth: 0, margin: "-6px 0", textAlign: "left", cursor: "pointer", background: "none", border: "none", boxShadow: "none", padding: "6px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 700, color: C.white } }, "v ", m.opponent), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, fontFamily: MONO, marginTop: 2 } }, m.date || "\u2014", m.status === "scheduled" ? "  \xB7  scheduled" : "")), m.count > 0 ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: FS.sm, color: C.greenB, fontFamily: MONO, display: "flex", alignItems: "center", gap: 5 } }, /* @__PURE__ */ React.createElement(Check, { s: 14, c: C.greenB }), m.count) : /* @__PURE__ */ React.createElement("span", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO } }, "not set"), /* @__PURE__ */ React.createElement("button", { onClick: function(e) { e.stopPropagation(); if (onEdit) onEdit(m); }, title: "Edit details", style: { display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 44, margin: "-6px -5px", borderRadius: RAD.md, background: "none", border: "none", cursor: "pointer", color: C.slate, fontSize: FS.lg, padding: 0, lineHeight: 1, flexShrink: 0 } }, "\u270E"), /* @__PURE__ */ React.createElement("button", { onClick: () => onVideo && onVideo(m), title: "Tag from video", style: { display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 44, margin: "-6px -5px", borderRadius: RAD.md, background: "none", border: "none", cursor: "pointer", fontSize: FS.lg, padding: 0, lineHeight: 1, flexShrink: 0 } }, "\u{1F3AC}"), /* @__PURE__ */ React.createElement("button", { onClick: () => setConfirmDel(confirmDel === m.id ? null : m.id), title: "Delete match", style: { display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 44, margin: "-6px -5px", borderRadius: RAD.md, background: "none", border: "none", cursor: "pointer", color: confirmDel === m.id ? C.red : C.slateD, fontSize: FS.lg, padding: 0, lineHeight: 1, flexShrink: 0 } }, "\u{1F5D1}")), confirmDel === m.id && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", background: C.red + ALPHA.faint, borderTop: "1px solid " + C.red + ALPHA.soft } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: FS.sm, color: C.red } }, "Delete this match & all its tags?"), /* @__PURE__ */ React.createElement("button", { onClick: () => deleteMatch(m), style: { minHeight: 44, padding: "7px 14px", borderRadius: RAD.md, border: "none", cursor: "pointer", background: C.red, color: C.white, fontWeight: 700, fontSize: FS.sm } }, "Delete"), /* @__PURE__ */ React.createElement("button", { onClick: () => setConfirmDel(null), style: { minHeight: 44, padding: "7px 12px", borderRadius: RAD.md, border: `1px solid ${C.border}`, cursor: "pointer", background: "none", color: C.slate, fontSize: FS.sm } }, "Cancel"))))), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, color: C.red, fontSize: FS.sm } }, err))));
   }
+  // Appearance rows to a tagger lineup. position_slot is the position (1-15 starters,
+  // 16-30 subs, 101+ scout team B); jersey is the number worn. Rows saved before the
+  // jersey column was used have jersey null, and their number is the slot.
+  function lineupFromApps(rows) {
+    var names = {}, bySlot = {}, used = {}, slots = {}, has = false;
+    (rows || []).forEach(function(a) {
+      var sl = Number(a.position_slot);
+      if (!sl) return;
+      slots[sl] = true;
+      if (sl > 100) { names[sl] = a.player_name; return; }
+      var j = a.jersey != null ? Number(a.jersey) : sl;
+      names[j] = a.player_name;
+      if (sl <= 15) { bySlot[sl] = j; used[j] = true; has = true; }
+    });
+    var starters = null;
+    if (has) {
+      starters = [];
+      var spare = 1;
+      for (var s1 = 1; s1 <= 15; s1++) {
+        if (bySlot[s1] != null) { starters.push(bySlot[s1]); continue; }
+        var n1 = s1;
+        if (used[n1]) { while (used[spare] || names[spare]) spare++; n1 = spare; }
+        used[n1] = true;
+        starters.push(n1);
+      }
+    }
+    return { names: names, starters: starters, slots: slots };
+  }
+  // First free substitute position for a mid-match appearance insert.
+  function freeSubSlot(slots) {
+    var sl = 16;
+    while (slots[sl]) sl++;
+    return sl;
+  }
   function Teamsheet({ club, session, match, players, addPlayer, allMatches, back, onSaved }) {
     const [assign, setAssign] = useState({});
     const [jerseyMap, setJerseyMap] = useState({});
@@ -1634,12 +1668,14 @@
     useEffect(() => {
       (async () => {
         try {
-          const a = await db.from("appearances").select("position_slot,player_id").eq("match_id", match.id);
-          const m = {};
+          const a = await db.from("appearances").select("position_slot,player_id,jersey").eq("match_id", match.id);
+          const m = {}, jm = {};
           (a.data || []).forEach((r) => {
             if (r.position_slot) m[r.position_slot] = r.player_id;
+            if (r.position_slot && r.jersey != null && Number(r.jersey) !== Number(r.position_slot)) jm[r.position_slot] = String(r.jersey);
           });
           setAssign(m);
+          setJerseyMap(jm);
           const all = await db.from("appearances").select("player_id,position_slot").eq("club_id", club.id).neq("match_id", match.id);
           const h = {};
           (all.data || []).forEach((r) => {
@@ -1714,44 +1750,75 @@
         return;
       }
       try {
-        const a = await db.from("appearances").select("position_slot,player_id").eq("match_id", prior.id);
-        const m = {};
+        const a = await db.from("appearances").select("position_slot,player_id,jersey").eq("match_id", prior.id);
+        if (a.error) throw new Error("read");
+        const m = {}, jm = {};
         (a.data || []).forEach((r) => {
           if (r.position_slot) m[r.position_slot] = r.player_id;
+          if (r.position_slot && r.jersey != null && Number(r.jersey) !== Number(r.position_slot)) jm[r.position_slot] = String(r.jersey);
         });
         setAssign(m);
+        setJerseyMap(jm);
       } catch (ex) {
-        setErr(ex.message || "Could not copy.");
+        setErr("Could not copy the last line-up. Check signal and try again.");
       }
     }
-    async function save() {
-      setBusy(true);
-      setErr("");
-      try {
-        const del = await db.from("appearances").delete().eq("match_id", match.id);
-        if (del.error) throw new Error(del.error.message);
-        const rows = Object.entries(assign).filter(([sl, pid]) => pid).map(([sl, pid]) => {
-          const pos = POSITIONS.find((p) => p.slot === Number(sl));
-          return {
-            club_id: club.id,
-            match_id: match.id,
-            player_id: pid,
-            player_name: nameOf(pid),
-            position_slot: jerseyMap[sl] ? Number(jerseyMap[sl]) : Number(sl),
-            position: pos ? pos.code : null,
-            is_start: Number(sl) <= 15,
-            created_by: session.user.id
-          };
-        });
-        if (rows.length) {
-          const ins = await db.from("appearances").insert(rows);
-          if (ins.error) throw new Error(ins.error.message);
-        }
-        onSaved();
-      } catch (ex) {
-        setErr(ex.message || "Could not save.");
-        setBusy(false);
+    // position_slot holds the position and jersey holds the number worn. Two players
+    // may not share either one, and the check runs before anything is written.
+    function lineupClash(rows) {
+      var bySlot = {}, byJersey = {}, byPlayer = {};
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i], lbl = slotInfo(r.position_slot).code || (r.position_slot > 15 ? "sub" : "No." + r.position_slot);
+        if (bySlot[r.position_slot]) return bySlot[r.position_slot].player_name + " and " + r.player_name + " are both in the same position. Move one of them before saving.";
+        if (byJersey[r.jersey]) return byJersey[r.jersey].player_name + " and " + r.player_name + " are both wearing #" + r.jersey + ". Change one of the numbers before saving.";
+        if (byPlayer[r.player_id]) return r.player_name + " is in the line-up twice (" + lbl + "). Remove one before saving.";
+        bySlot[r.position_slot] = r; byJersey[r.jersey] = r; byPlayer[r.player_id] = r;
       }
+      return null;
+    }
+    async function save() {
+      setErr("");
+      const rows = Object.entries(assign).filter(([sl, pid]) => pid).map(([sl, pid]) => {
+        const pos = POSITIONS.find((p) => p.slot === Number(sl));
+        return {
+          club_id: club.id,
+          match_id: match.id,
+          player_id: pid,
+          player_name: nameOf(pid),
+          position_slot: Number(sl),
+          jersey: jerseyMap[sl] ? Number(jerseyMap[sl]) : Number(sl),
+          position: pos ? pos.code : null,
+          is_start: Number(sl) <= 15,
+          created_by: session.user.id
+        };
+      });
+      const clash = lineupClash(rows);
+      if (clash) { setErr(clash); return; }
+      setBusy(true);
+      // Write first, clear afterwards. The upsert replaces each position in a single
+      // statement, so a failure leaves the saved line-up exactly as it was. Only once
+      // it succeeds are positions no longer in use removed.
+      try {
+        if (rows.length) {
+          const up = await db.from("appearances").upsert(rows, { onConflict: "match_id,position_slot" });
+          if (up.error) throw new Error("write");
+        }
+      } catch (ex) {
+        setErr("Could not save the line-up. Your previous line-up has not been changed. Check signal and try again.");
+        setBusy(false);
+        return;
+      }
+      try {
+        let q = db.from("appearances").delete().eq("match_id", match.id);
+        if (rows.length) q = q.not("position_slot", "in", "(" + rows.map(function(r) { return r.position_slot; }).join(",") + ")");
+        const del = await q;
+        if (del.error) throw new Error("clear");
+      } catch (ex) {
+        setErr("Line-up saved, but players you removed could not be cleared. Tap Save again.");
+        setBusy(false);
+        return;
+      }
+      onSaved();
     }
     async function doAdd() {
       const nm = newName.trim();
@@ -1762,7 +1829,7 @@
         const p = await addPlayer(nm);
         if (p) setSlot(picking, p.id);
       } catch (ex) {
-        setErr(ex.message || "Could not add player.");
+        setErr("Could not add that player. Check signal and try again.");
       }
       setAddBusy(false);
     }
@@ -3401,6 +3468,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [dismissedMsg, setDismissedMsg] = useState(null);
     const [tagged, setTagged] = useState([]);
     const [nameMap, setNameMap] = useState({});
+    // Starting fifteen as jersey numbers in teamsheet slot order, or null when no teamsheet.
+    const [lineupJ, setLineupJ] = useState(null);
+    const apSlotsRef = useRef({});
     const [subOpen, setSubOpen] = useState(false);
     const [squad, setSquad] = useState([]);
     useEffect(function() {
@@ -3438,12 +3508,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }, String(t2).indexOf("\u2713") === 0 ? 3500 : 1300);
     }
     useEffect(function() {
-      db.from("appearances").select("position_slot,player_name").eq("match_id", match.id).then(function(r) {
-        var mp = {};
-        (r.data || []).forEach(function(a) {
-          mp[a.position_slot] = a.player_name;
-        });
-        setNameMap(mp);
+      db.from("appearances").select("position_slot,player_name,jersey").eq("match_id", match.id).then(function(r) {
+        var lu = lineupFromApps(r.data);
+        apSlotsRef.current = lu.slots;
+        setNameMap(lu.names);
+        setLineupJ(lu.starters);
       });
     }, []);
     useEffect(function() {
@@ -3619,9 +3688,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         if (nameMap[k]) rev[nameMap[k]] = Number(k);
       });
       var active = {};
-      for (var n2 = 1; n2 <= 15; n2++) active[n2] = true;
       var slots = {};
-      for (var s3 = 1; s3 <= 15; s3++) slots[s3] = s3;
+      for (var s3 = 1; s3 <= 15; s3++) {
+        slots[s3] = lineupJ ? lineupJ[s3 - 1] : s3;
+        active[slots[s3]] = true;
+      }
       var cards = {};
       tagged.slice().reverse().forEach(function(r) {
         if (r.team !== "us") return;
@@ -3663,7 +3734,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         });
       }
       if (playerId) {
-        db.from("appearances").insert({ club_id: club.id, match_id: match.id, player_id: playerId, player_name: onName, position_slot: onN, position: null, is_start: false }).then(function() {
+        var _subSl = freeSubSlot(apSlotsRef.current);
+        apSlotsRef.current[_subSl] = true;
+        db.from("appearances").insert({ club_id: club.id, match_id: match.id, player_id: playerId, player_name: onName, position_slot: _subSl, jersey: onN, position: null, is_start: false }).then(function() {
         });
       }
       say("\u21C4 #" + offN + " off \xB7 " + (onName || "#" + onN) + " on");
@@ -4484,6 +4557,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       for (var n3 = 1; n3 <= 30; n3++) {
         if (!rs.active[n3] && !(rs.cards[n3] && rs.cards[n3].red)) bench.push(n3);
       }
+      Object.keys(nameMap).map(Number).filter(function(n5) { return n5 > 30 && n5 < 100 && !rs.active[n5]; }).sort(function(a5, b5) { return a5 - b5; }).forEach(function(n5) { bench.push(n5); });
       return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 60, background: "#05070aee", display: "flex", flexDirection: "column", padding: "14px 14px 18px", overflow: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: C.white } }, "Substitution"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, subOn ? "#" + subOn + " COMING ON \u2014 who is it?" : subOff ? "OFF #" + subOff + " \u2014 now pick who comes ON" : "Pick who goes OFF")), /* @__PURE__ */ React.createElement("button", { onClick: function() {
         setSubOpen(false);
         setSubOff(null);
@@ -4538,7 +4612,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         return /* @__PURE__ */ React.createElement("button", { key: oc, onClick: function() {
           setEdOut(oc);
         }, style: { minHeight: 44, padding: "12px 4px", background: on ? C.greenB + ALPHA.soft : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), borderRadius: RAD.md, color: on ? C.greenB : C.slate, cursor: "pointer", fontSize: 12.5, fontWeight: on ? 800 : 700 } }, oc);
-      }))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: C.slate, fontFamily: MONO, fontWeight: 700, margin: "14px 0 6px" } }, "PLAYER ", editRow.event_type === "Kickout" ? /* @__PURE__ */ React.createElement("span", { style: { color: C.gold } }, "\xB7 credit the winner (", credH ? club.name.split(" ")[0] : (match.opponent || "Opp").split(" ")[0], ")") : null), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6 } }, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(function(n) {
+      }))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: C.slate, fontFamily: MONO, fontWeight: 700, margin: "14px 0 6px" } }, "PLAYER ", editRow.event_type === "Kickout" ? /* @__PURE__ */ React.createElement("span", { style: { color: C.gold } }, "\xB7 credit the winner (", credH ? club.name.split(" ")[0] : (match.opponent || "Opp").split(" ")[0], ")") : null), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6 } }, (credH && lineupJ ? lineupJ : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]).map(function(n) {
         var nm = credH ? nameMap[n] : null;
         var on = edPl === n;
         return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
@@ -5607,6 +5681,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var _tevs = sportEvents(club.sport);
     const [tagged, setTagged] = useState([]);
     const [nameMap, setNameMap] = useState({});
+    // Starting fifteen as jersey numbers in teamsheet slot order, or null when no teamsheet.
+    const [lineupJ, setLineupJ] = useState(null);
+    const apSlotsRef = useRef({});
     const [flash, setFlash] = useState(null);
     const [, bump] = useState(0);
     const [videoSrc, setVideoSrc] = useState(null);
@@ -5688,12 +5765,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     useEffect(function() {
       db.from("matches").update({ video_tagged: true }).eq("id", match.id).then(function() {
       });
-      db.from("appearances").select("position_slot,player_name").eq("match_id", match.id).then(function(r) {
-        var mp = {};
-        (r.data || []).forEach(function(a) {
-          mp[a.position_slot] = a.player_name;
-        });
-        setNameMap(mp);
+      db.from("appearances").select("position_slot,player_name,jersey").eq("match_id", match.id).then(function(r) {
+        var lu = lineupFromApps(r.data);
+        apSlotsRef.current = lu.slots;
+        setNameMap(lu.names);
+        setLineupJ(lu.starters);
       });
       db.from("players").select("id,name").eq("club_id", club.id).then(function(r) { setVtSquad(r.data || []); });
       db.from("playlists").select("id,name,clips,token").eq("match_id", match.id).order("created_at", { ascending: true }).then(function(r) {
@@ -6240,7 +6316,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       db.from("events").insert(row).select("id").single().then(function(r2) { if (r2.data) row.id = r2.data.id; });
       setTagged(function(p) { return [row].concat(p); });
       if (onName) { setNameMap(function(m3) { var n4 = Object.assign({}, m3); n4[onN] = onName; return n4; }); }
-      if (playerId) { db.from("appearances").insert({ club_id: club.id, match_id: match.id, player_id: playerId, player_name: onName, position_slot: onN, position: null, is_start: false }).then(function() {}); }
+      if (playerId) { var _subSl = freeSubSlot(apSlotsRef.current); apSlotsRef.current[_subSl] = true; db.from("appearances").insert({ club_id: club.id, match_id: match.id, player_id: playerId, player_name: onName, position_slot: _subSl, jersey: onN, position: null, is_start: false }).then(function() {}); }
       say("\u21C4 #" + offN + " off \u00b7 " + (onName || "#" + onN) + " on");
       setVSubOpen(false); setVSubOff(null); setVSubOn(null);
     }
@@ -6487,7 +6563,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         credH2 = t.team === "h" ? _kw2 : !_kw2;
       }
       var wn2 = credH2 ? nmH : nmA;
-      return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9.5, color: tc2, fontFamily: MONO, fontWeight: 800, whiteSpace: "nowrap", padding: "0 4px" } }, "TAP ", wn2.split(" ")[0].slice(0, 3).toUpperCase(), " #"), (subsOpen ? [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30] : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]).map(function(n) {
+      return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9.5, color: tc2, fontFamily: MONO, fontWeight: 800, whiteSpace: "nowrap", padding: "0 4px" } }, "TAP ", wn2.split(" ")[0].slice(0, 3).toUpperCase(), " #"), (subsOpen ? [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30] : (!SC && credH2 && lineupJ ? lineupJ : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24])).map(function(n) {
         var nm2 = SC ? credH2 ? scoutA[n] : scoutB[n] : credH2 ? nameMap[n] : null;
         return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
           commit(n);
@@ -6518,7 +6594,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return /* @__PURE__ */ React.createElement("button", { key: oc, onClick: function() {
         chooseOutcome(oc);
       }, style: { padding: "14px 4px", background: C.bgCard, border: "1px solid " + tc + ALPHA.mid, borderRadius: RAD.md, color: tc, cursor: "pointer", fontSize: 12.5, fontWeight: 700, textAlign: "center" } }, oc);
-    }))), showPl && !big && !land && /* @__PURE__ */ React.createElement("div", { style: { overflow: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: ptc, textAlign: "center", margin: "6px 0 10px" } }, t.ev.l, ": ", t.outcome, " \u2014 TAP ", (credHome ? nmH : nmA).split(" ")[0], " PLAYER #"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6 } }, (subsOpen ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30] : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]).map(function(n) {
+    }))), showPl && !big && !land && /* @__PURE__ */ React.createElement("div", { style: { overflow: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: ptc, textAlign: "center", margin: "6px 0 10px" } }, t.ev.l, ": ", t.outcome, " \u2014 TAP ", (credHome ? nmH : nmA).split(" ")[0], " PLAYER #"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6 } }, (subsOpen ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30] : (!SC && credHome && lineupJ ? lineupJ : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])).map(function(n) {
       var nm = SC ? credHome ? scoutA[n] : scoutB[n] : credHome ? nameMap[n] : null;
       return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
         commit(n);
@@ -6615,7 +6691,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return /* @__PURE__ */ React.createElement("button", { key: oc, onClick: function() {
         chooseOutcome(oc);
       }, style: { padding: "14px 4px", background: on ? tc + ALPHA.soft : C.bgCard, border: "1px solid " + (on ? tc : tc + ALPHA.mid), borderRadius: RAD.md, color: tc, cursor: "pointer", fontSize: 12.5, fontWeight: on ? 800 : 700, textAlign: "center" } }, oc);
-    }))), /* @__PURE__ */ React.createElement("div", { style: { opacity: t.outcome ? 1 : 0.38, pointerEvents: t.outcome ? "auto" : "none" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: ptc, margin: "0 0 5px", fontWeight: 700 } }, t.outcome ? "TAP " + (credHome ? nmH : nmA).split(" ")[0] + " PLAYER #" : "\u2191 CHOOSE OUTCOME FIRST"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: land ? "repeat(5,1fr)" : "repeat(8,1fr)", gap: 6 } }, (subsOpen ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30] : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]).map(function(n) {
+    }))), /* @__PURE__ */ React.createElement("div", { style: { opacity: t.outcome ? 1 : 0.38, pointerEvents: t.outcome ? "auto" : "none" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: ptc, margin: "0 0 5px", fontWeight: 700 } }, t.outcome ? "TAP " + (credHome ? nmH : nmA).split(" ")[0] + " PLAYER #" : "\u2191 CHOOSE OUTCOME FIRST"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: land ? "repeat(5,1fr)" : "repeat(8,1fr)", gap: 6 } }, (subsOpen ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30] : (!SC && credHome && lineupJ ? lineupJ : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])).map(function(n) {
       var nm = SC ? credHome ? scoutA[n] : scoutB[n] : credHome ? nameMap[n] : null;
       return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
         commit(n);
@@ -8246,7 +8322,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             if (m.scouting) return true; return m.our_score != null && String(m.our_score).trim() !== "";
           });
           const events = await fetchAll("events", "match_id,team,event_type,outcome,player,score,x,y,period,seq,time_text");
-          const apps = await fetchAll("appearances", "match_id,player_name,position_slot");
+          const apps = await fetchAll("appearances", "match_id,player_name,position_slot,jersey");
           matches.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
           try {
             var xpR = await db.rpc("xp_baseline", { p_sport: club.sport || "football" });
@@ -8555,7 +8631,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             if (!r.data || r.data.length < size) break;
             from += size;
           }
-          var apps = await db.from("appearances").select("match_id,player_name,position_slot").eq("match_id", sel.id);
+          var apps = await db.from("appearances").select("match_id,player_name,position_slot,jersey").eq("match_id", sel.id);
           if (!stop) {
             var stats = Object.assign({}, computeStats([sel], allEvts, apps.data || [], club), { matches: [sel], _events: allEvts, _apps: apps.data || [] });
             setD(stats);
