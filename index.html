@@ -7153,8 +7153,29 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     });
         return result;
   }
+  // Scoreline from tagged events, counted the same way as the scorers list: a 3 is a
+  // goal, 1s and 2s add to points. matches.our_score is only written at full time.
+  function scoreFromEvents(evs, team) {
+    var g = 0, p = 0, n = 0;
+    (evs || []).forEach(function(e) {
+      if (e.team !== team) return;
+      var v = e.score || 0;
+      if (v <= 0) return;
+      n++;
+      if (v === 3) g++; else p += v;
+    });
+    return { g: g, p: p, n: n };
+  }
+  function fmtScoreGP(o) { return o.g + "-" + (o.p < 10 ? "0" : "") + o.p; }
   function DashView({ d: d0, club, scope, match, onBack, oppName, wide }) {
     var ON = oppName || "Opposition";
+    // Header scoreline for a single match: from all of its events, whichever half is selected.
+    // The stored text is used only when the match has no events at all.
+    var _evSc = (function() {
+      var ev = ((d0 && d0._events) || []).filter(function(e) { return !match || e.match_id == null || e.match_id === match.id; });
+      if (!ev.length) return null;
+      return { us: fmtScoreGP(scoreFromEvents(ev, "us")), opp: fmtScoreGP(scoreFromEvents(ev, "opp")) };
+    })();
     const [half, setHalf] = useState("all");
     const [openTypes, setOpenTypes] = useState(false);
     const [openOrigins, setOpenOrigins] = useState(false);
@@ -7502,11 +7523,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } },
           React.createElement("div", { style: { textAlign: "center", flex: 1 } },
             React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 2 } }, (club.name || "Us").toUpperCase().slice(0,14)),
-            React.createElement("div", { style: { fontSize: FS.h1, fontWeight: 900, color: C.white } }, match.our_score || "0-00")),
+            React.createElement("div", { style: { fontSize: FS.h1, fontWeight: 900, color: C.white } }, _evSc ? _evSc.us : (match.our_score || "0-00"))),
           React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, padding: "0 6px" } }, "v"),
           React.createElement("div", { style: { textAlign: "center", flex: 1 } },
             React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1, color: C.blue, fontFamily: MONO, fontWeight: 700, marginBottom: 2 } }, ON.toUpperCase().slice(0,14)),
-            React.createElement("div", { style: { fontSize: FS.h1, fontWeight: 900, color: C.white } }, match.opp_score || "0-00"))),
+            React.createElement("div", { style: { fontSize: FS.h1, fontWeight: 900, color: C.white } }, _evSc ? _evSc.opp : (match.opp_score || "0-00")))),
         React.createElement("div", { style: { display: "flex", gap: 12, marginTop: 10 } },
           React.createElement("div", { style: { flex: 1 } },
             (d.scorers || []).filter(function(s) { return s.total > 0; }).slice(0, 8).map(function(s, idx) {
@@ -8580,6 +8601,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [d, setD] = useState(null);
     const [tick, setTick] = useState(0);
     const [err, setErr] = useState("");
+    // Per-match scoreline from events, for the match list. Keyed by match id.
+    const [evScore, setEvScore] = useState({});
 
     useEffect(function() {
       // Pull today's and recent candidates rather than blindly taking the
@@ -8597,13 +8620,20 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         // Choose the match with genuine live activity: most events, and among
         // those the most recently created. Falls back to the newest match.
         var ids = ms.map(function(m2) { return m2.id; });
-        db.from("events").select("match_id,created_at").in("match_id", ids)
+        db.from("events").select("match_id,created_at,team,score").in("match_id", ids)
           .then(function(er) {
-            var cnt = {}, last = {};
+            var cnt = {}, last = {}, byM = {};
             (er.data || []).forEach(function(e) {
               cnt[e.match_id] = (cnt[e.match_id] || 0) + 1;
               if (!last[e.match_id] || e.created_at > last[e.match_id]) last[e.match_id] = e.created_at;
+              (byM[e.match_id] = byM[e.match_id] || []).push(e);
             });
+            var sc = {};
+            Object.keys(byM).forEach(function(mid) {
+              var u = scoreFromEvents(byM[mid], "us"), o = scoreFromEvents(byM[mid], "opp");
+              sc[mid] = { us: fmtScoreGP(u), opp: fmtScoreGP(o), ut: u.g * 3 + u.p, ot: o.g * 3 + o.p };
+            });
+            setEvScore(sc);
             var live = ms.filter(function(m2) { return (cnt[m2.id] || 0) > 0; });
             if (live.length) {
               live.sort(function(a, b) {
@@ -8718,12 +8748,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       matches.length === 0 ? React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: FS.md, paddingTop: 30 } }, "No matches yet.") :
       React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8, padding: "0 14px" } },
         matches.map(function(m2) {
-          var win = (m2.our_total || 0) > (m2.opp_total || 0);
-          var draw = (m2.our_total || 0) === (m2.opp_total || 0);
+          var es = evScore[m2.id];
+          var win = es ? es.ut > es.ot : (m2.our_total || 0) > (m2.opp_total || 0);
+          var draw = es ? es.ut === es.ot : (m2.our_total || 0) === (m2.opp_total || 0);
           return React.createElement("button", { key: m2.id, onClick: function() { setSel(m2); }, style: { textAlign: "left", padding: "14px 16px", background: C.bgCard, border: "none", borderRadius: RAD.xl, boxShadow: "0 2px 8px " + C.black + ALPHA.mid, cursor: "pointer", color: C.white } },
             React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
               React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800 } }, "v ", m2.opponent || "TBC"),
-              React.createElement("div", { style: { fontSize: FS.sm, fontFamily: MONO, color: win ? C.greenB : draw ? C.gold : C.red, fontWeight: 800 } }, (m2.our_score || "0-00") + " - " + (m2.opp_score || "0-00"))),
+              React.createElement("div", { style: { fontSize: FS.sm, fontFamily: MONO, color: win ? C.greenB : draw ? C.gold : C.red, fontWeight: 800 } }, (es ? es.us : (m2.our_score || "0-00")) + " - " + (es ? es.opp : (m2.opp_score || "0-00")))),
             React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, marginTop: 4, fontFamily: MONO } }, m2.date || "", " \u00b7 ", m2.competition || ""));
         })));
   }
