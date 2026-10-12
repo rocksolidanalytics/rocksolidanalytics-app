@@ -3461,6 +3461,39 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     } catch (e) {
     }
   }
+  // Every tag gets its database id on the phone at the moment it is tagged. An upload can
+  // then be retried any number of times, from the tagger or from the background sync,
+  // and never creates a second row: the insert skips an id that already exists.
+  function newEventId() {
+    try { if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID(); } catch (e) {}
+    var h = "0123456789abcdef", out = "";
+    for (var i = 0; i < 36; i++) out += (i === 8 || i === 13 || i === 18 || i === 23) ? "-" : i === 14 ? "4" : h[i === 19 ? (Math.random() * 4 | 8) : (Math.random() * 16 | 0)];
+    return out;
+  }
+  function uploadEvent(row) {
+    return db.from("events").upsert(cleanRow(row), { onConflict: "id", ignoreDuplicates: true });
+  }
+  // A database event in the same shape the live tagger creates, so restored tags render,
+  // count and edit exactly like tags made on this phone.
+  function tagFromDb(e) {
+    return { id: e.id, _id: e.id, club_id: e.club_id, match_id: e.match_id, team: e.team, event_type: e.event_type, outcome: e.outcome,
+      player: e.player, x: e.x, y: e.y, period: e.period == null ? "1" : String(e.period), time_text: e.time_text, time_secs: e.time_secs,
+      seq: e.seq, score: e.score || 0, video_ts: e.video_ts == null ? null : e.video_ts };
+  }
+  // Tags saved on this phone for a match. Rows saved before ids were assigned on the phone
+  // get one now, and the result is written straight back so every reader sees the same id.
+  function restoreTags(mid) {
+    var arr = lsLoad(mid), changed = false;
+    if (!Array.isArray(arr)) return [];
+    arr = arr.filter(function(x) { return x && typeof x === "object" && x.event_type; }).map(function(x) {
+      if (x.id) return x._id === x.id ? x : Object.assign({}, x, { _id: x.id });
+      changed = true;
+      if (x._pending || !x._id || String(x._id).indexOf("tmp") === 0) { var nid = newEventId(); return Object.assign({}, x, { id: nid, _id: nid, _pending: true }); }
+      return Object.assign({}, x, { id: x._id });
+    });
+    if (changed) lsSave(mid, arr);
+    return arr;
+  }
   function cleanRow(o) {
     var r = {};
     for (var k in o) {
@@ -3490,6 +3523,16 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         }
         var _cc = null;
         try { _cc = window.__rsaClubId || null; } catch (e) {}
+        // Give legacy rows an id before sending, and write it back first, so the tagger
+        // and this sync always upload the same row under the same id.
+        var stamped = false;
+        arr = arr.map(function(x) {
+          if (!x || !x._pending || x.id) return x;
+          stamped = true;
+          var nid = newEventId();
+          return Object.assign({}, x, { id: nid, _id: nid });
+        });
+        if (stamped) { try { window.localStorage.setItem(key, JSON.stringify(arr)); } catch (e) {} }
         var pend = arr.filter(function(x) {
           // Never push another club's queued events. RLS would reject them, but
           // that produces error noise and can stall the queue behind a row that
@@ -3500,20 +3543,20 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         if (!pend.length) return;
         return pend.reduce(function(q, entry) {
           return q.then(function() {
-            return db.from("events").insert(cleanRow(entry)).select("id").single().then(function(r) {
-              if (!r.error) {
-                entry._id = r.data.id;
-                entry._pending = false;
-              }
+            return uploadEvent(entry).then(function(r) {
+              if (r.error) return;
+              // Re-read and change only this row: the tagger may have added or edited tags
+              // since this sync started, and those must not be overwritten.
+              try {
+                var cur = JSON.parse(window.localStorage.getItem(key)) || [];
+                window.localStorage.setItem(key, JSON.stringify(cur.map(function(x) {
+                  return x && x.id === entry.id ? Object.assign({}, x, { _pending: false }) : x;
+                })));
+              } catch (e) {}
             }).catch(function() {
             });
           });
-        }, Promise.resolve()).then(function() {
-          try {
-            window.localStorage.setItem(key, JSON.stringify(arr));
-          } catch (e) {
-          }
-        });
+        }, Promise.resolve());
       });
     }, Promise.resolve());
   }
@@ -3537,7 +3580,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [dirPicked, setDirPicked] = useState(match.attack_up != null);
     const [period, setPeriod] = useState(_sess0 && _sess0.period ? _sess0.period : 1);
     const [dismissedMsg, setDismissedMsg] = useState(null);
-    const [tagged, setTagged] = useState([]);
+    // Restored synchronously, before any effect can run. An effect-based restore ran after
+    // the save effect had already written an empty list over the saved tags.
+    const [tagged, setTagged] = useState(function() { return restoreTags(match.id); });
     const [nameMap, setNameMap] = useState({});
     // Starting fifteen as jersey numbers in teamsheet slot order, or null when no teamsheet.
     const [lineupJ, setLineupJ] = useState(null);
@@ -3565,7 +3610,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [openSec, setOpenSec] = useState(null);
     const [, bump] = useState(0);
     const tx = useRef({ ev: null, team: "h", loc: null, outcome: null });
-    const lastTap = useRef(0), seqRef = useRef(1), iv = useRef(null), taggedRef = useRef([]), flushing = useRef(false);
+    const lastTap = useRef(0), seqRef = useRef(1), iv = useRef(null), taggedRef = useRef(tagged), flushing = useRef(false);
     function sync() {
       bump(function(x) {
         return x + 1;
@@ -3592,15 +3637,25 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         // always []. Reading the ref stops a slow DB fetch from clobbering
         // events restored from localStorage — which would silently drop any
         // event tagged while offline.
-        if (r.data && r.data.length && (taggedRef.current || []).length === 0) {
-          var EVM = { "Kickout": "kickout", "Shot from play": "shot", "Scoreable free": "free", "Possession lost": "poss", "Tackle": "tackle", "Ruck": "ruck", "Bookings": "card" };
-          var loaded = r.data.map(function(e) {
-            return { id: e.id, team: e.team === "us" ? "h" : "a", ev: { id: EVM[e.event_type] || "shot" }, outcome: e.outcome, num: null, player: e.player, x: e.x, y: e.y, score: e.score || 0, period: e.period || 1, seq: e.seq, time_text: e.time_text, time_secs: e.time_secs, _db: true };
-          });
-          setTagged(loaded);
-          var maxPeriod = 1;
-          loaded.forEach(function(ev) { if (ev.period > maxPeriod) maxPeriod = ev.period; });
-          if (maxPeriod >= 2) setPeriod(2);
+        // Merge, never replace: tags saved on this phone (including ones still waiting to
+        // upload) are kept, and anything in the database that this phone does not have is
+        // added, so a reload or a second device never hides a tag.
+        if (r.data && r.data.length) {
+          var have = {};
+          (taggedRef.current || []).forEach(function(x) { have[x.id || x._id] = true; });
+          var add = r.data.filter(function(e) { return !have[e.id]; }).map(tagFromDb);
+          if (add.length) {
+            var merged = add.concat(taggedRef.current || []).sort(function(a2, b2) {
+              return (b2.seq || 0) - (a2.seq || 0) || String(b2.time_text || "").localeCompare(String(a2.time_text || ""));
+            });
+            taggedRef.current = merged;
+            lsSave(match.id, merged);
+            setTagged(merged);
+            var mxs = 0;
+            merged.forEach(function(x) { if ((x.seq || 0) > mxs) mxs = x.seq; });
+            if (mxs + 1 > seqRef.current) seqRef.current = mxs + 1;
+          }
+          if (r.data.some(function(e) { return Number(e.period) >= 2; })) setPeriod(function(p) { return Number(p) >= 2 ? p : 2; });
         }
       });
     }, []);
@@ -3652,6 +3707,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         window.removeEventListener("pagehide", onHide);
       };
     });
+    // Written at the moment of every change, not only after the next render.
+    function persistTags() {
+      lsSave(match.id, taggedRef.current || []);
+    }
     function flush() {
       if (flushing.current) return Promise.resolve();
       if (typeof navigator !== "undefined" && navigator.onLine === false) return Promise.resolve();
@@ -3662,20 +3721,22 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return pend.reduce(function(p, entry) {
         return p.then(function() {
           var tmp = entry._id;
-          return db.from("events").insert(cleanRow(entry)).select("id").single().then(function(r) {
+          return uploadEvent(entry).then(function(r) {
             if (!r.error) {
+              var nid = entry.id;
               var cur = null;
               taggedRef.current.forEach(function(x) { if (x._id === tmp) cur = x; });
-              if (!cur) { dbDeleteTag(r.data.id); return; }
+              if (!cur) { dbDeleteTag(nid); return; }
               var diff = {};
               ["outcome", "player", "score", "x", "y"].forEach(function(k) { if (cur[k] !== entry[k]) diff[k] = cur[k]; });
-              if (Object.keys(diff).length) dbUpdateTag(r.data.id, diff);
+              if (Object.keys(diff).length) dbUpdateTag(nid, diff);
               taggedRef.current = taggedRef.current.map(function(x) {
-                return x._id === tmp ? Object.assign({}, x, { _id: r.data.id, _pending: false }) : x;
+                return x._id === tmp ? Object.assign({}, x, { _pending: false }) : x;
               });
+              persistTags();
               setTagged(function(prev) {
                 return prev.map(function(x) {
-                  return x._id === tmp ? Object.assign({}, x, { _id: r.data.id, _pending: false }) : x;
+                  return x._id === tmp ? Object.assign({}, x, { _pending: false }) : x;
                 });
               });
             }
@@ -3685,7 +3746,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }, Promise.resolve()).then(function() {
         var q = delQLoad();
         if (q.length) { delQSave([]); q.forEach(dbDeleteTag); }
-        taggedRef.current.filter(function(x) { return x._dirty && String(x._id).indexOf("tmp") !== 0; }).forEach(function(x) {
+        taggedRef.current.filter(function(x) { return x._dirty && !x._pending; }).forEach(function(x) {
           markDirty(x._id, false);
           dbUpdateTag(x._id, { outcome: x.outcome, player: x.player, score: x.score, x: x.x, y: x.y });
         });
@@ -3695,6 +3756,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       });
     }
     function persistSession() {
+      persistTags();
       try {
         sessSave(match.id, {
           clockBase: clockBase.current,
@@ -3722,16 +3784,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }, [running, period, halfEnded, clock]);
     useEffect(function() {
       if (typeof window !== "undefined") window.__rsaTagging = (window.__rsaTagging || 0) + 1;
-      var saved = lsLoad(match.id);
-      if (saved && saved.length) {
-        taggedRef.current = saved;
-        setTagged(saved);
-        var mx = 0;
-        saved.forEach(function(e) {
-          if ((e.seq || 0) > mx) mx = e.seq;
-        });
-        seqRef.current = mx + 1;
-      }
+      var mx = 0;
+      (taggedRef.current || []).forEach(function(e) {
+        if ((e.seq || 0) > mx) mx = e.seq;
+      });
+      if (mx + 1 > seqRef.current) seqRef.current = mx + 1;
       var goOn = function() {
         setOnline(true);
         flush();
@@ -3844,8 +3901,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         score: 0,
         video_ts: null
       };
-      var tmp2 = "tmp" + seq2, local2 = Object.assign({}, row2, { _id: tmp2, _pending: true });
+      var tmp2 = newEventId();
+      row2.id = tmp2;
+      var local2 = Object.assign({}, row2, { _id: tmp2, _pending: true });
       taggedRef.current = [local2].concat(taggedRef.current);
+      persistTags();
       setTagged(function(prev) {
         return [local2].concat(prev);
       });
@@ -3902,6 +3962,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function markDirty(id, on) {
       function setDirty(x) { return x._id === id ? Object.assign({}, x, { _dirty: on }) : x; }
       taggedRef.current = taggedRef.current.map(setDirty);
+      persistTags();
       setTagged(function(p) { return p.map(setDirty); });
     }
     function dbUpdateTag(id, upd) {
@@ -3912,7 +3973,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setTagged(function(prev) { return prev.filter(function(x) { return x._id !== r._id; }); });
       // A tag still waiting to upload is simply dropped; flush() deletes it from the
       // database if its insert was already in flight.
-      if (r._id && String(r._id).indexOf("tmp") !== 0) dbDeleteTag(r._id);
+      persistTags();
+      if (r._id && !r._pending) dbDeleteTag(r._id);
     }
     function applyEdit() {
       var r = editRow;
@@ -3937,10 +3999,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         return x._id === r._id ? Object.assign({}, x, upd) : x;
       }
       taggedRef.current = taggedRef.current.map(loc2);
+      persistTags();
       setTagged(function(prev) {
         return prev.map(loc2);
       });
-      if (String(r._id).indexOf("tmp") !== 0) dbUpdateTag(r._id, upd);
+      if (!r._pending) dbUpdateTag(r._id, upd);
       say("\u270E updated");
       setEditRow(null);
       setEdOut(null);
@@ -3981,8 +4044,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         score: evScore(t2.ev, t2.outcome),
         video_ts: t2.vt != null ? t2.vt : null
       };
-      var tmp = "tmp" + seq, local = Object.assign({}, row, { _id: tmp, _pending: true });
+      var tmp = newEventId();
+      row.id = tmp;
+      var local = Object.assign({}, row, { _id: tmp, _pending: true });
       taggedRef.current = [local].concat(taggedRef.current);
+      persistTags();
       setTagged(function(prev) {
         return [local].concat(prev);
       });
@@ -5803,9 +5869,21 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }, style: { textAlign: "left", borderRadius: RAD.lg, background: C.bgCard, border: "1px solid " + C.border, padding: "13px 15px", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 700, color: C.white } }, matchVsLabel(m), m.video_tagged ? /* @__PURE__ */ React.createElement("span", { title: "Tagged from video", style: { marginLeft: 7, fontSize: FS.sm } }, "\u{1F4F9}") : null), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, fontFamily: MONO, marginTop: 2 } }, m.date || "\u2014", m.lineup > 0 ? "  \xB7  squad set" : "", scored ? "  \xB7  " + m.our_score : ""), lockerHas(m.id) && /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, color: C.greenB, fontFamily: MONO, marginTop: 3, fontWeight: 700 } }, "\u25CF ON DEVICE")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: FS.xl, color: C.greenB } }, "\u25B6"));
     })), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, color: C.red, fontSize: FS.sm } }, err)));
   }
+  // Video tagger device copy: only tags not yet confirmed by the database are kept here,
+  // because everything else is reloaded from the database when the match is reopened.
+  function vtKey(mid) { return "rsa_vtag_" + mid; }
+  function vtLoad(mid) {
+    try { var a = JSON.parse(window.localStorage.getItem(vtKey(mid)) || "[]"); return Array.isArray(a) ? a.filter(function(x) { return x && x.id && x._pending; }) : []; } catch (e) { return []; }
+  }
+  function vtSave(mid, rows) {
+    try {
+      var p = (rows || []).filter(function(x) { return x._pending; });
+      if (p.length) window.localStorage.setItem(vtKey(mid), JSON.stringify(p)); else window.localStorage.removeItem(vtKey(mid));
+    } catch (e) {}
+  }
   function VideoTagger({ club, session, match, back }) {
     var _tevs = sportEvents(club.sport);
-    const [tagged, setTagged] = useState([]);
+    const [tagged, setTagged] = useState(function() { return vtLoad(match.id); });
     const [nameMap, setNameMap] = useState({});
     // Starting fifteen as jersey numbers in teamsheet slot order, or null when no teamsheet.
     const [lineupJ, setLineupJ] = useState(null);
@@ -5926,7 +6004,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           return Object.assign({}, e, { _id: e.id, _vt: vt, _err: false, _saved: e.video_ts != null, period: e.period == null ? "1" : String(e.period) });
         });
         mapped.reverse();
-        setTagged(mapped);
+        var inDb = {};
+        mapped.forEach(function(x) { inDb[x.id] = true; });
+        setTagged(function(prev) {
+          var keep = (prev || []).filter(function(x) { return x._pending && !inDb[x._id]; });
+          keep.forEach(function(x) { if ((x.seq || 0) >= seqRef.current) seqRef.current = x.seq + 1; });
+          return keep.concat(mapped).sort(function(a2, b2) { return (b2.seq || 0) - (a2.seq || 0); });
+        });
       });
     }, []);
     useEffect(function() {
@@ -6106,17 +6190,60 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         return n;
       });
     }
-    const taggedRef = useRef([]);
+    const taggedRef = useRef(tagged);
     const wasPlayingRef = useRef(false);
+    const vtBusyRef = useRef({});
     useEffect(function() {
       taggedRef.current = tagged;
+      vtSave(match.id, tagged);
     }, [tagged]);
+    // Upload one tag under its own id. Safe to repeat; a failure leaves it pending for the
+    // retry loop below. A tag edited or removed while its upload was in flight is
+    // corrected as soon as the upload lands.
+    function vtUpload(entry) {
+      if (vtBusyRef.current[entry.id]) return;
+      vtBusyRef.current[entry.id] = true;
+      uploadEvent(entry).then(function(r) {
+        delete vtBusyRef.current[entry.id];
+        if (r.error) {
+          setTagged(function(prev) { return prev.map(function(x) { return x._id === entry.id ? Object.assign({}, x, { _err: true }) : x; }); });
+          return;
+        }
+        var cur = null;
+        (taggedRef.current || []).forEach(function(x) { if (x._id === entry.id) cur = x; });
+        if (!cur) { db.from("events").delete().eq("id", entry.id).then(function() {}, function() {}); return; }
+        var diff = {};
+        ["team", "outcome", "player", "score", "x", "y", "video_ts"].forEach(function(k) { if (cur[k] !== entry[k]) diff[k] = cur[k]; });
+        if (Object.keys(diff).length) db.from("events").update(diff).eq("id", entry.id).then(function() {}, function() {});
+        setTagged(function(prev) { return prev.map(function(x) { return x._id === entry.id ? Object.assign({}, x, { _pending: false, _err: false }) : x; }); });
+      }, function() {
+        delete vtBusyRef.current[entry.id];
+        setTagged(function(prev) { return prev.map(function(x) { return x._id === entry.id ? Object.assign({}, x, { _err: true }) : x; }); });
+      });
+    }
+    useEffect(function() {
+      function retry() {
+        if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+        (taggedRef.current || []).filter(function(x) { return x._pending; }).forEach(vtUpload);
+      }
+      function onHide() { vtSave(match.id, taggedRef.current); }
+      var t0 = setTimeout(retry, 1500), iv = setInterval(retry, 8e3);
+      window.addEventListener("online", retry);
+      window.addEventListener("pagehide", onHide);
+      document.addEventListener("visibilitychange", onHide);
+      return function() {
+        clearTimeout(t0); clearInterval(iv);
+        window.removeEventListener("online", retry);
+        window.removeEventListener("pagehide", onHide);
+        document.removeEventListener("visibilitychange", onHide);
+      };
+    }, []);
     function stampVideoTimes(tIn, hStart) {
       if (tIn == null) return;
       var rows = taggedRef.current || [];
       var changed = {};
       rows.forEach(function(r) {
-        if (r._saved || String(r._id).indexOf("tmp") === 0) return;
+        if (r._saved || r._pending) return;
         var pp = String(r.time_text || "").split(":").map(Number);
         var gs = pp.length === 3 ? pp[0] * 3600 + pp[1] * 60 + pp[2] : pp.length === 2 ? pp[0] * 60 + pp[1] : 0;
         var per2 = r.period == null ? 1 : Number(r.period);
@@ -6177,12 +6304,15 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       if (!er) return;
       var outcome = evOutcomeStr(er.def, er.label), score2 = evScore(er.def, er.label);
       var fields = { team: er.team, outcome, player: er.player, score: score2 }; if (er._locEd) { fields.x = er.x; fields.y = er.y; }
+      var erPending = (taggedRef.current || []).some(function(x) { return x._id === er.id && x._pending; });
+      taggedRef.current = (taggedRef.current || []).map(function(x) { return x._id === er.id ? Object.assign({}, x, fields) : x; });
+      vtSave(match.id, taggedRef.current);
       setTagged(function(prev) {
         return prev.map(function(x) {
           return x._id === er.id ? Object.assign({}, x, fields) : x;
         });
       });
-      if (String(er.id).indexOf("tmp") !== 0) {
+      if (!erPending) {
         db.from("events").update(fields).eq("id", er.id).then(function() {
         });
       }
@@ -6192,12 +6322,15 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function delEdit() {
       var er = editRow;
       if (!er) return;
+      var erPend = (taggedRef.current || []).some(function(x) { return x._id === er.id && x._pending; });
+      taggedRef.current = (taggedRef.current || []).filter(function(x) { return x._id !== er.id; });
+      vtSave(match.id, taggedRef.current);
       setTagged(function(prev) {
         return prev.filter(function(x) {
           return x._id !== er.id;
         });
       });
-      if (String(er.id).indexOf("tmp") !== 0) {
+      if (!erPend) {
         db.from("events").delete().eq("id", er.id).then(function() {
         });
       }
@@ -6438,9 +6571,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var gt = vidToGame(curT);
       var per = gt ? gt.period : 1, gsec = gt ? Math.round(gt.secs) : 0;
       var seq = seqRef.current++;
-      var row = { club_id: club.id, match_id: match.id, team: "us", event_type: "Substitution", outcome: "Off #" + offN + " \u00b7 On #" + onN, player: onName || "#" + onN, period: per, time_secs: gsec, time_text: fmtFull(gsec), seq: seq, video_ts: curT };
-      db.from("events").insert(row).select("id").single().then(function(r2) { if (r2.data) row.id = r2.data.id; });
-      setTagged(function(p) { return [row].concat(p); });
+      var subId = newEventId();
+      var row = { id: subId, club_id: club.id, match_id: match.id, team: "us", event_type: "Substitution", outcome: "Off #" + offN + " \u00b7 On #" + onN, player: onName || "#" + onN, period: String(per), time_secs: gsec, time_text: fmtFull(gsec), seq: seq, video_ts: curT };
+      var subLocal = Object.assign({}, row, { _id: subId, _pending: true, _err: false, _vt: curT, _saved: true });
+      taggedRef.current = [subLocal].concat(taggedRef.current || []);
+      vtSave(match.id, taggedRef.current);
+      setTagged(function(p) { return [subLocal].concat(p); });
+      vtUpload(subLocal);
       if (onName) { setNameMap(function(m3) { var n4 = Object.assign({}, m3); n4[onN] = onName; return n4; }); }
       if (playerId) { var _subSl = freeSubSlot(apSlotsRef.current); apSlotsRef.current[_subSl] = true; db.from("appearances").insert({ club_id: club.id, match_id: match.id, player_id: playerId, player_name: onName, position_slot: _subSl, jersey: onN, position: null, is_start: false }).then(function() {}); }
       say("\u21C4 #" + offN + " off \u00b7 " + (onName || "#" + onN) + " on");
@@ -6473,26 +6610,16 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         score: evScore(t2.ev, t2.outcome),
         video_ts: t2.vt != null ? t2.vt : null
       };
-      var tmp = "tmp" + seq, local = Object.assign({}, row, { _id: tmp, _err: false, _vt: t2.vt, _saved: true });
+      var tmp = newEventId();
+      row.id = tmp;
+      var local = Object.assign({}, row, { _id: tmp, _pending: true, _err: false, _vt: t2.vt, _saved: true });
+      taggedRef.current = [local].concat(taggedRef.current || []);
+      vtSave(match.id, taggedRef.current);
       setTagged(function(prev) {
         return [local].concat(prev);
       });
       say("\u2713 " + evLabel(EV_TYPE[t2.ev.id]) + " \xB7 " + t2.outcome + (pname ? " \xB7 " + pname : "") + (t2.loc ? "" : " \xB7 no loc"));
-      db.from("events").insert(row).select("id").single().then(function(r) {
-        if (r.error) {
-          setTagged(function(prev) {
-            return prev.map(function(x) {
-              return x._id === tmp ? Object.assign({}, x, { _err: true }) : x;
-            });
-          });
-        } else {
-          setTagged(function(prev) {
-            return prev.map(function(x) {
-              return x._id === tmp ? Object.assign({}, x, { _id: r.data.id }) : x;
-            });
-          });
-        }
-      });
+      vtUpload(local);
       tx.current = { ev: null, team: t2.team, loc: null, outcome: null, vt: 0, gt: null, skip: false };
       sync();
       var _vv = vRef.current;
@@ -6502,12 +6629,14 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       wasPlayingRef.current = false;
     }
     function undo() {
-      var last = tagged[0];
+      var last = (taggedRef.current || [])[0];
       if (!last) return;
+      taggedRef.current = taggedRef.current.slice(1);
+      vtSave(match.id, taggedRef.current);
       setTagged(function(p) {
         return p.slice(1);
       });
-      if (last._id && String(last._id).indexOf("tmp") !== 0) {
+      if (last._id && !last._pending) {
         db.from("events").delete().eq("id", last._id).then(function() {
         });
       }
