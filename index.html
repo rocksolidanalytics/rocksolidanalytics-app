@@ -3184,8 +3184,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var from = last ? last.hc : 0;
     return { secs: Math.max(0, Math.max(p1Last, from) - from) + Math.max(0, halfClock), scored: !!last };
   }
+  // Whole seconds only: the video tagger clock is fractional.
   function SinceScore({ r }) {
-    return React.createElement("div", { style: { fontSize: 8, fontWeight: 600, fontFamily: MONO, letterSpacing: 0.5, color: C.slateD, marginTop: 1 } }, Math.floor(r.secs / 60) + ":" + pad2(r.secs % 60), r.scored ? " SINCE SCORE" : " NO SCORE");
+    var t = Math.max(0, Math.floor(r.secs));
+    return React.createElement("div", { style: { fontSize: 8, fontWeight: 600, fontFamily: MONO, letterSpacing: 0.5, color: C.slateD, marginTop: 1, whiteSpace: "nowrap" } }, Math.floor(t / 60) + ":" + pad2(t % 60), r.scored ? " SINCE SCORE" : " NO SCORE");
   }
   function fmtFull(sec) {
     return pad2(Math.floor(sec / 3600)) + ":" + pad2(Math.floor(sec % 3600 / 60)) + ":" + pad2(sec % 60);
