@@ -5873,11 +5873,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   // because everything else is reloaded from the database when the match is reopened.
   function vtKey(mid) { return "rsa_vtag_" + mid; }
   function vtLoad(mid) {
-    try { var a = JSON.parse(window.localStorage.getItem(vtKey(mid)) || "[]"); return Array.isArray(a) ? a.filter(function(x) { return x && x.id && x._pending; }) : []; } catch (e) { return []; }
+    try { var a = JSON.parse(window.localStorage.getItem(vtKey(mid)) || "[]"); return Array.isArray(a) ? a.filter(function(x) { return x && x.id && (x._pending || x._dirty); }) : []; } catch (e) { return []; }
   }
   function vtSave(mid, rows) {
     try {
-      var p = (rows || []).filter(function(x) { return x._pending; });
+      var p = (rows || []).filter(function(x) { return x._pending || x._dirty; });
       if (p.length) window.localStorage.setItem(vtKey(mid), JSON.stringify(p)); else window.localStorage.removeItem(vtKey(mid));
     } catch (e) {}
   }
@@ -6007,6 +6007,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         var inDb = {};
         mapped.forEach(function(x) { inDb[x.id] = true; });
         setTagged(function(prev) {
+          var dirty = {};
+          (prev || []).forEach(function(x) { if (x._dirty && inDb[x._id]) dirty[x._id] = x; });
+          mapped = mapped.map(function(x) { return dirty[x.id] ? Object.assign({}, x, dirty[x.id]) : x; });
           var keep = (prev || []).filter(function(x) { return x._pending && !inDb[x._id]; });
           keep.forEach(function(x) { if ((x.seq || 0) >= seqRef.current) seqRef.current = x.seq + 1; });
           return keep.concat(mapped).sort(function(a2, b2) { return (b2.seq || 0) - (a2.seq || 0); });
@@ -6200,6 +6203,28 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     // Upload one tag under its own id. Safe to repeat; a failure leaves it pending for the
     // retry loop below. A tag edited or removed while its upload was in flight is
     // corrected as soon as the upload lands.
+    // Edits and deletes write through to the database; a failed write is kept, on the row
+    // as _dirty or in a per-match delete queue, and retried by the loop below. Mirrors
+    // dbUpdateTag / dbDeleteTag / markDirty in the live tagger.
+    function vtDelQLoad() {
+      try { return JSON.parse(window.localStorage.getItem(vtKey(match.id) + "_del") || "[]"); } catch (e) { return []; }
+    }
+    function vtDelQSave(q) {
+      try { window.localStorage.setItem(vtKey(match.id) + "_del", JSON.stringify(q)); } catch (e) {}
+    }
+    function vtDbDelete(id) {
+      function vtKeep() { var q = vtDelQLoad(); if (q.indexOf(id) < 0) q.push(id); vtDelQSave(q); }
+      db.from("events").delete().eq("id", id).then(function(r) { if (r && r.error) vtKeep(); }, vtKeep);
+    }
+    function vtMarkDirty(id, on) {
+      function vtSetDirty(x) { return x._id === id ? Object.assign({}, x, { _dirty: on }) : x; }
+      taggedRef.current = (taggedRef.current || []).map(vtSetDirty);
+      vtSave(match.id, taggedRef.current);
+      setTagged(function(p) { return p.map(vtSetDirty); });
+    }
+    function vtDbUpdate(id, upd) {
+      db.from("events").update(upd).eq("id", id).then(function(r) { if (r && r.error) vtMarkDirty(id, true); }, function() { vtMarkDirty(id, true); });
+    }
     function vtUpload(entry) {
       if (vtBusyRef.current[entry.id]) return;
       vtBusyRef.current[entry.id] = true;
@@ -6211,10 +6236,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         }
         var cur = null;
         (taggedRef.current || []).forEach(function(x) { if (x._id === entry.id) cur = x; });
-        if (!cur) { db.from("events").delete().eq("id", entry.id).then(function() {}, function() {}); return; }
+        if (!cur) { vtDbDelete(entry.id); return; }
         var diff = {};
         ["team", "outcome", "player", "score", "x", "y", "video_ts"].forEach(function(k) { if (cur[k] !== entry[k]) diff[k] = cur[k]; });
-        if (Object.keys(diff).length) db.from("events").update(diff).eq("id", entry.id).then(function() {}, function() {});
+        if (Object.keys(diff).length) vtDbUpdate(entry.id, diff);
         setTagged(function(prev) { return prev.map(function(x) { return x._id === entry.id ? Object.assign({}, x, { _pending: false, _err: false }) : x; }); });
       }, function() {
         delete vtBusyRef.current[entry.id];
@@ -6225,6 +6250,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       function retry() {
         if (typeof navigator !== "undefined" && navigator.onLine === false) return;
         (taggedRef.current || []).filter(function(x) { return x._pending; }).forEach(vtUpload);
+        var q = vtDelQLoad();
+        if (q.length) { vtDelQSave([]); q.forEach(vtDbDelete); }
+        (taggedRef.current || []).filter(function(x) { return x._dirty && !x._pending; }).forEach(function(x) {
+          vtMarkDirty(x._id, false);
+          vtDbUpdate(x._id, { team: x.team, outcome: x.outcome, player: x.player, score: x.score, x: x.x, y: x.y });
+        });
       }
       function onHide() { vtSave(match.id, taggedRef.current); }
       var t0 = setTimeout(retry, 1500), iv = setInterval(retry, 8e3);
@@ -6312,10 +6343,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           return x._id === er.id ? Object.assign({}, x, fields) : x;
         });
       });
-      if (!erPending) {
-        db.from("events").update(fields).eq("id", er.id).then(function() {
-        });
-      }
+      if (!erPending) vtDbUpdate(er.id, fields);
       setEditRow(null);
       say("\u2713 Updated");
     }
@@ -6330,10 +6358,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           return x._id !== er.id;
         });
       });
-      if (!erPend) {
-        db.from("events").delete().eq("id", er.id).then(function() {
-        });
-      }
+      if (!erPend) vtDbDelete(er.id);
       setEditRow(null);
       say("\u2713 Deleted");
     }
@@ -6636,10 +6661,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setTagged(function(p) {
         return p.slice(1);
       });
-      if (last._id && !last._pending) {
-        db.from("events").delete().eq("id", last._id).then(function() {
-        });
-      }
+      if (last._id && !last._pending) vtDbDelete(last._id);
       say("\u21A9 removed");
     }
     function jump(vt) {
