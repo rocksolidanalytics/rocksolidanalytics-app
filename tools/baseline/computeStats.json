@@ -299,6 +299,59 @@
    "uPoss": 30,
    "wl": null
   },
+  "droughts": {
+   "matches": [
+    {
+     "date": "2026-03-12",
+     "match_id": "m1",
+     "opp": {
+      "half": 1,
+      "len": 705,
+      "start": 322
+     },
+     "opponent": "Kilmacud",
+     "us": {
+      "half": 2,
+      "len": 721,
+      "start": 3119
+     }
+    }
+   ],
+   "oppAvg": 705,
+   "oppWorst": {
+    "date": "2026-03-12",
+    "half": 1,
+    "len": 705,
+    "match_id": "m1",
+    "opponent": "Kilmacud",
+    "start": 322
+   },
+   "usAvg": 721,
+   "usWorst": {
+    "date": "2026-03-12",
+    "half": 2,
+    "len": 721,
+    "match_id": "m1",
+    "opponent": "Kilmacud",
+    "start": 3119
+   }
+  },
+  "gameState": {
+   "behind": 742,
+   "lead": 2533,
+   "level": 909,
+   "matches": [
+    {
+     "behind": 742,
+     "date": "2026-03-12",
+     "lead": 2533,
+     "level": 909,
+     "margin": 0,
+     "match_id": "m1",
+     "opponent": "Kilmacud"
+    }
+   ]
+  },
   "ko": {
    "brkPct": 67,
    "brkT": 3,
@@ -2230,6 +2283,59 @@
    "uPoss": 31,
    "wl": null
   },
+  "droughts": {
+   "matches": [
+    {
+     "date": "2026-04-13",
+     "match_id": "m22",
+     "opp": {
+      "half": 2,
+      "len": 1596,
+      "start": 2105
+     },
+     "opponent": "Ballyboden",
+     "us": {
+      "half": 1,
+      "len": 1500,
+      "start": 423
+     }
+    }
+   ],
+   "oppAvg": 1596,
+   "oppWorst": {
+    "date": "2026-04-13",
+    "half": 2,
+    "len": 1596,
+    "match_id": "m22",
+    "opponent": "Ballyboden",
+    "start": 2105
+   },
+   "usAvg": 1500,
+   "usWorst": {
+    "date": "2026-04-13",
+    "half": 1,
+    "len": 1500,
+    "match_id": "m22",
+    "opponent": "Ballyboden",
+    "start": 423
+   }
+  },
+  "gameState": {
+   "behind": 0,
+   "lead": 3125,
+   "level": 1027,
+   "matches": [
+    {
+     "behind": 0,
+     "date": "2026-04-13",
+     "lead": 3125,
+     "level": 1027,
+     "margin": 8,
+     "match_id": "m22",
+     "opponent": "Ballyboden"
+    }
+   ]
+  },
   "ko": {
    "brkPct": 0,
    "brkT": 3,
@@ -3860,6 +3966,59 @@
    "turnoversWon": 8,
    "uPoss": 40,
    "wl": null
+  },
+  "droughts": {
+   "matches": [
+    {
+     "date": "2026-05-14",
+     "match_id": "m333",
+     "opp": {
+      "half": 2,
+      "len": 1257,
+      "start": 2933
+     },
+     "opponent": "Na Fianna",
+     "us": {
+      "half": 1,
+      "len": 760,
+      "start": 1138
+     }
+    }
+   ],
+   "oppAvg": 1257,
+   "oppWorst": {
+    "date": "2026-05-14",
+    "half": 2,
+    "len": 1257,
+    "match_id": "m333",
+    "opponent": "Na Fianna",
+    "start": 2933
+   },
+   "usAvg": 760,
+   "usWorst": {
+    "date": "2026-05-14",
+    "half": 1,
+    "len": 760,
+    "match_id": "m333",
+    "opponent": "Na Fianna",
+    "start": 1138
+   }
+  },
+  "gameState": {
+   "behind": 1599,
+   "lead": 2440,
+   "level": 119,
+   "matches": [
+    {
+     "behind": 1599,
+     "date": "2026-05-14",
+     "lead": 2440,
+     "level": 119,
+     "margin": 15,
+     "match_id": "m333",
+     "opponent": "Na Fianna"
+    }
+   ]
   },
   "ko": {
    "brkPct": 0,
@@ -5596,6 +5755,59 @@
    "uPoss": 0,
    "wl": null
   },
+  "droughts": {
+   "matches": [
+    {
+     "date": "2026-06-15",
+     "match_id": "m4444",
+     "opp": {
+      "half": 1,
+      "len": 1065,
+      "start": 0
+     },
+     "opponent": "AHB",
+     "us": {
+      "half": 1,
+      "len": 1065,
+      "start": 0
+     }
+    }
+   ],
+   "oppAvg": 1065,
+   "oppWorst": {
+    "date": "2026-06-15",
+    "half": 1,
+    "len": 1065,
+    "match_id": "m4444",
+    "opponent": "AHB",
+    "start": 0
+   },
+   "usAvg": 1065,
+   "usWorst": {
+    "date": "2026-06-15",
+    "half": 1,
+    "len": 1065,
+    "match_id": "m4444",
+    "opponent": "AHB",
+    "start": 0
+   }
+  },
+  "gameState": {
+   "behind": 0,
+   "lead": 0,
+   "level": 2115,
+   "matches": [
+    {
+     "behind": 0,
+     "date": "2026-06-15",
+     "lead": 0,
+     "level": 2115,
+     "margin": 0,
+     "match_id": "m4444",
+     "opponent": "AHB"
+    }
+   ]
+  },
   "ko": {
    "brkPct": 0,
    "brkT": 0,
@@ -6502,6 +6714,131 @@
      3.5
     ]
    }
+  },
+  "droughts": {
+   "matches": [
+    {
+     "date": "2026-03-12",
+     "match_id": "m1",
+     "opp": {
+      "half": 1,
+      "len": 705,
+      "start": 322
+     },
+     "opponent": "Kilmacud",
+     "us": {
+      "half": 2,
+      "len": 721,
+      "start": 3119
+     }
+    },
+    {
+     "date": "2026-04-13",
+     "match_id": "m22",
+     "opp": {
+      "half": 2,
+      "len": 1596,
+      "start": 2105
+     },
+     "opponent": "Ballyboden",
+     "us": {
+      "half": 1,
+      "len": 1500,
+      "start": 423
+     }
+    },
+    {
+     "date": "2026-05-14",
+     "match_id": "m333",
+     "opp": {
+      "half": 2,
+      "len": 1257,
+      "start": 2933
+     },
+     "opponent": "Na Fianna",
+     "us": {
+      "half": 1,
+      "len": 760,
+      "start": 1138
+     }
+    },
+    {
+     "date": "2026-06-15",
+     "match_id": "m4444",
+     "opp": {
+      "half": 1,
+      "len": 1065,
+      "start": 0
+     },
+     "opponent": "AHB",
+     "us": {
+      "half": 1,
+      "len": 1065,
+      "start": 0
+     }
+    }
+   ],
+   "oppAvg": 1155.75,
+   "oppWorst": {
+    "date": "2026-04-13",
+    "half": 2,
+    "len": 1596,
+    "match_id": "m22",
+    "opponent": "Ballyboden",
+    "start": 2105
+   },
+   "usAvg": 1011.5,
+   "usWorst": {
+    "date": "2026-04-13",
+    "half": 1,
+    "len": 1500,
+    "match_id": "m22",
+    "opponent": "Ballyboden",
+    "start": 423
+   }
+  },
+  "gameState": {
+   "behind": 2341,
+   "lead": 8098,
+   "level": 4170,
+   "matches": [
+    {
+     "behind": 742,
+     "date": "2026-03-12",
+     "lead": 2533,
+     "level": 909,
+     "margin": 0,
+     "match_id": "m1",
+     "opponent": "Kilmacud"
+    },
+    {
+     "behind": 0,
+     "date": "2026-04-13",
+     "lead": 3125,
+     "level": 1027,
+     "margin": 8,
+     "match_id": "m22",
+     "opponent": "Ballyboden"
+    },
+    {
+     "behind": 1599,
+     "date": "2026-05-14",
+     "lead": 2440,
+     "level": 119,
+     "margin": 15,
+     "match_id": "m333",
+     "opponent": "Na Fianna"
+    },
+    {
+     "behind": 0,
+     "date": "2026-06-15",
+     "lead": 0,
+     "level": 2115,
+     "margin": 0,
+     "match_id": "m4444",
+     "opponent": "AHB"
+    }
+   ]
   },
   "ko": {
    "brkPct": 22,
@@ -9746,6 +10083,131 @@
     ]
    }
   },
+  "droughts": {
+   "matches": [
+    {
+     "date": "2026-03-12",
+     "match_id": "m1",
+     "opp": {
+      "half": 1,
+      "len": 705,
+      "start": 322
+     },
+     "opponent": "Kilmacud",
+     "us": {
+      "half": 2,
+      "len": 721,
+      "start": 3119
+     }
+    },
+    {
+     "date": "2026-04-13",
+     "match_id": "m22",
+     "opp": {
+      "half": 2,
+      "len": 1596,
+      "start": 2105
+     },
+     "opponent": "Ballyboden",
+     "us": {
+      "half": 1,
+      "len": 1500,
+      "start": 423
+     }
+    },
+    {
+     "date": "2026-05-14",
+     "match_id": "m333",
+     "opp": {
+      "half": 2,
+      "len": 1257,
+      "start": 2933
+     },
+     "opponent": "Na Fianna",
+     "us": {
+      "half": 1,
+      "len": 760,
+      "start": 1138
+     }
+    },
+    {
+     "date": "2026-06-15",
+     "match_id": "m4444",
+     "opp": {
+      "half": 1,
+      "len": 1065,
+      "start": 0
+     },
+     "opponent": "AHB",
+     "us": {
+      "half": 1,
+      "len": 1065,
+      "start": 0
+     }
+    }
+   ],
+   "oppAvg": 1155.75,
+   "oppWorst": {
+    "date": "2026-04-13",
+    "half": 2,
+    "len": 1596,
+    "match_id": "m22",
+    "opponent": "Ballyboden",
+    "start": 2105
+   },
+   "usAvg": 1011.5,
+   "usWorst": {
+    "date": "2026-04-13",
+    "half": 1,
+    "len": 1500,
+    "match_id": "m22",
+    "opponent": "Ballyboden",
+    "start": 423
+   }
+  },
+  "gameState": {
+   "behind": 2341,
+   "lead": 8098,
+   "level": 4170,
+   "matches": [
+    {
+     "behind": 742,
+     "date": "2026-03-12",
+     "lead": 2533,
+     "level": 909,
+     "margin": 0,
+     "match_id": "m1",
+     "opponent": "Kilmacud"
+    },
+    {
+     "behind": 0,
+     "date": "2026-04-13",
+     "lead": 3125,
+     "level": 1027,
+     "margin": 8,
+     "match_id": "m22",
+     "opponent": "Ballyboden"
+    },
+    {
+     "behind": 1599,
+     "date": "2026-05-14",
+     "lead": 2440,
+     "level": 119,
+     "margin": 15,
+     "match_id": "m333",
+     "opponent": "Na Fianna"
+    },
+    {
+     "behind": 0,
+     "date": "2026-06-15",
+     "lead": 0,
+     "level": 2115,
+     "margin": 0,
+     "match_id": "m4444",
+     "opponent": "AHB"
+    }
+   ]
+  },
   "ko": {
    "brkPct": 22,
    "brkT": 9,
@@ -12989,6 +13451,131 @@
     ]
    }
   },
+  "droughts": {
+   "matches": [
+    {
+     "date": "2026-03-12",
+     "match_id": "m1",
+     "opp": {
+      "half": 1,
+      "len": 705,
+      "start": 322
+     },
+     "opponent": "Kilmacud",
+     "us": {
+      "half": 2,
+      "len": 721,
+      "start": 3119
+     }
+    },
+    {
+     "date": "2026-04-13",
+     "match_id": "m22",
+     "opp": {
+      "half": 2,
+      "len": 1596,
+      "start": 2105
+     },
+     "opponent": "Ballyboden",
+     "us": {
+      "half": 1,
+      "len": 1500,
+      "start": 423
+     }
+    },
+    {
+     "date": "2026-05-14",
+     "match_id": "m333",
+     "opp": {
+      "half": 2,
+      "len": 1257,
+      "start": 2933
+     },
+     "opponent": "Na Fianna",
+     "us": {
+      "half": 1,
+      "len": 760,
+      "start": 1138
+     }
+    },
+    {
+     "date": "2026-06-15",
+     "match_id": "m4444",
+     "opp": {
+      "half": 1,
+      "len": 1065,
+      "start": 0
+     },
+     "opponent": "AHB",
+     "us": {
+      "half": 1,
+      "len": 1065,
+      "start": 0
+     }
+    }
+   ],
+   "oppAvg": 1155.75,
+   "oppWorst": {
+    "date": "2026-04-13",
+    "half": 2,
+    "len": 1596,
+    "match_id": "m22",
+    "opponent": "Ballyboden",
+    "start": 2105
+   },
+   "usAvg": 1011.5,
+   "usWorst": {
+    "date": "2026-04-13",
+    "half": 1,
+    "len": 1500,
+    "match_id": "m22",
+    "opponent": "Ballyboden",
+    "start": 423
+   }
+  },
+  "gameState": {
+   "behind": 2341,
+   "lead": 8098,
+   "level": 4170,
+   "matches": [
+    {
+     "behind": 742,
+     "date": "2026-03-12",
+     "lead": 2533,
+     "level": 909,
+     "margin": 0,
+     "match_id": "m1",
+     "opponent": "Kilmacud"
+    },
+    {
+     "behind": 0,
+     "date": "2026-04-13",
+     "lead": 3125,
+     "level": 1027,
+     "margin": 8,
+     "match_id": "m22",
+     "opponent": "Ballyboden"
+    },
+    {
+     "behind": 1599,
+     "date": "2026-05-14",
+     "lead": 2440,
+     "level": 119,
+     "margin": 15,
+     "match_id": "m333",
+     "opponent": "Na Fianna"
+    },
+    {
+     "behind": 0,
+     "date": "2026-06-15",
+     "lead": 0,
+     "level": 2115,
+     "margin": 0,
+     "match_id": "m4444",
+     "opponent": "AHB"
+    }
+   ]
+  },
   "ko": {
    "brkPct": 22,
    "brkT": 9,
@@ -16159,6 +16746,19 @@
    "uPoss": 0,
    "wl": null
   },
+  "droughts": {
+   "matches": [],
+   "oppAvg": null,
+   "oppWorst": null,
+   "usAvg": null,
+   "usWorst": null
+  },
+  "gameState": {
+   "behind": 0,
+   "lead": 0,
+   "level": 0,
+   "matches": []
+  },
   "ko": {
    "brkPct": 0,
    "brkT": 0,
@@ -16985,6 +17585,59 @@
    "turnoversWon": 7,
    "uPoss": 22,
    "wl": null
+  },
+  "droughts": {
+   "matches": [
+    {
+     "date": "2026-03-12",
+     "match_id": "h1",
+     "opp": {
+      "half": 2,
+      "len": 1172,
+      "start": 2987
+     },
+     "opponent": "Cuala",
+     "us": {
+      "half": 1,
+      "len": 1644,
+      "start": 0
+     }
+    }
+   ],
+   "oppAvg": 1172,
+   "oppWorst": {
+    "date": "2026-03-12",
+    "half": 2,
+    "len": 1172,
+    "match_id": "h1",
+    "opponent": "Cuala",
+    "start": 2987
+   },
+   "usAvg": 1644,
+   "usWorst": {
+    "date": "2026-03-12",
+    "half": 1,
+    "len": 1644,
+    "match_id": "h1",
+    "opponent": "Cuala",
+    "start": 0
+   }
+  },
+  "gameState": {
+   "behind": 3377,
+   "lead": 0,
+   "level": 739,
+   "matches": [
+    {
+     "behind": 3377,
+     "date": "2026-03-12",
+     "lead": 0,
+     "level": 739,
+     "margin": -3,
+     "match_id": "h1",
+     "opponent": "Cuala"
+    }
+   ]
   },
   "ko": {
    "brkPct": 57,
@@ -18761,6 +19414,59 @@
    "turnoversWon": 6,
    "uPoss": 35,
    "wl": null
+  },
+  "droughts": {
+   "matches": [
+    {
+     "date": "2026-04-13",
+     "match_id": "h22",
+     "opp": {
+      "half": 2,
+      "len": 1181,
+      "start": 3002
+     },
+     "opponent": "Na Piarsaigh",
+     "us": {
+      "half": 2,
+      "len": 1589,
+      "start": 2111
+     }
+    }
+   ],
+   "oppAvg": 1181,
+   "oppWorst": {
+    "date": "2026-04-13",
+    "half": 2,
+    "len": 1181,
+    "match_id": "h22",
+    "opponent": "Na Piarsaigh",
+    "start": 3002
+   },
+   "usAvg": 1589,
+   "usWorst": {
+    "date": "2026-04-13",
+    "half": 2,
+    "len": 1589,
+    "match_id": "h22",
+    "opponent": "Na Piarsaigh",
+    "start": 2111
+   }
+  },
+  "gameState": {
+   "behind": 3175,
+   "lead": 0,
+   "level": 980,
+   "matches": [
+    {
+     "behind": 3175,
+     "date": "2026-04-13",
+     "lead": 0,
+     "level": 980,
+     "margin": -8,
+     "match_id": "h22",
+     "opponent": "Na Piarsaigh"
+    }
+   ]
   },
   "ko": {
    "brkPct": 33,
@@ -20562,6 +21268,83 @@
    "turnoversWon": 13,
    "uPoss": 57,
    "wl": null
+  },
+  "droughts": {
+   "matches": [
+    {
+     "date": "2026-03-12",
+     "match_id": "h1",
+     "opp": {
+      "half": 2,
+      "len": 1172,
+      "start": 2987
+     },
+     "opponent": "Cuala",
+     "us": {
+      "half": 1,
+      "len": 1644,
+      "start": 0
+     }
+    },
+    {
+     "date": "2026-04-13",
+     "match_id": "h22",
+     "opp": {
+      "half": 2,
+      "len": 1181,
+      "start": 3002
+     },
+     "opponent": "Na Piarsaigh",
+     "us": {
+      "half": 2,
+      "len": 1589,
+      "start": 2111
+     }
+    }
+   ],
+   "oppAvg": 1176.5,
+   "oppWorst": {
+    "date": "2026-04-13",
+    "half": 2,
+    "len": 1181,
+    "match_id": "h22",
+    "opponent": "Na Piarsaigh",
+    "start": 3002
+   },
+   "usAvg": 1616.5,
+   "usWorst": {
+    "date": "2026-03-12",
+    "half": 1,
+    "len": 1644,
+    "match_id": "h1",
+    "opponent": "Cuala",
+    "start": 0
+   }
+  },
+  "gameState": {
+   "behind": 6552,
+   "lead": 0,
+   "level": 1719,
+   "matches": [
+    {
+     "behind": 3377,
+     "date": "2026-03-12",
+     "lead": 0,
+     "level": 739,
+     "margin": -3,
+     "match_id": "h1",
+     "opponent": "Cuala"
+    },
+    {
+     "behind": 3175,
+     "date": "2026-04-13",
+     "lead": 0,
+     "level": 980,
+     "margin": -8,
+     "match_id": "h22",
+     "opponent": "Na Piarsaigh"
+    }
+   ]
   },
   "ko": {
    "brkPct": 50,

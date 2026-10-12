@@ -2413,6 +2413,71 @@
       }
       return { sport: sp, ref: ref, ts: ts, us: side("us"), opp: side("opp"), dropped: { neg: possPairs.neg, long: possPairs.long } };
     })();
+    // --- Group 2.1 scoring droughts and 2.4 time leading, level and behind.
+    // Each half is its own window and half-time is never counted: the first half runs from
+    // the throw-in to its last event, the second from its first event to its last. About 4%
+    // of first-half events carry a second-half clock (tagging errors), so the first half is
+    // cut where the second begins and a late-stamped score counts at that cut.
+    var matchTimeline = (function() {
+      var byM = {}, mById = {}, out = [];
+      events.forEach(function(e) { if (e.match_id != null) (byM[e.match_id] = byM[e.match_id] || []).push(e); });
+      (matches || []).forEach(function(m) { mById[m.id] = m; });
+      Object.keys(byM).forEach(function(mid) {
+        var p1 = [], p2 = [];
+        byM[mid].forEach(function(e) { (String(e.period) === "2" ? p2 : p1).push(e); });
+        var wins = [];
+        var s2 = p2.length ? Math.min.apply(null, p2.map(evSecs)) : null;
+        if (p1.length) {
+          var e1 = Math.max.apply(null, p1.map(evSecs));
+          if (s2 != null && e1 > s2) e1 = s2;
+          wins.push({ half: 1, start: 0, end: e1, evs: p1 });
+        }
+        if (p2.length) wins.push({ half: 2, start: s2, end: Math.max.apply(null, p2.map(evSecs)), evs: p2 });
+        var halves = wins.filter(function(w) { return w.end > w.start; }).map(function(w) {
+          var sc = w.evs.filter(function(e) { return (e.score || 0) > 0 && (e.team === "us" || e.team === "opp"); }).map(function(e) {
+            return { t: Math.max(w.start, Math.min(w.end, evSecs(e))), team: e.team, v: e.score, seq: e.seq || 0 };
+          }).sort(function(a, b) { return a.t - b.t || a.seq - b.seq; });
+          return { half: w.half, start: w.start, end: w.end, scores: sc };
+        });
+        if (!halves.length) return;
+        // 2.1: the longest spell a side went without scoring, inside one half.
+        function drLongest(team) {
+          var best = null;
+          halves.forEach(function(H) {
+            var t0 = H.start;
+            H.scores.filter(function(x) { return x.team === team; }).map(function(x) { return x.t; }).concat([H.end]).forEach(function(t) {
+              if (!best || t - t0 > best.len) best = { len: t - t0, start: t0, half: H.half };
+              t0 = t;
+            });
+          });
+          return best;
+        }
+        // 2.4: seconds in each state of the running scoreline, which carries across the halves.
+        var diff = 0, st = { lead: 0, level: 0, behind: 0 };
+        function gsAdd(d) { if (d > 0) st[diff > 0 ? "lead" : diff < 0 ? "behind" : "level"] += d; }
+        halves.forEach(function(H) {
+          var t0 = H.start;
+          H.scores.forEach(function(x) { gsAdd(x.t - t0); t0 = x.t; diff += x.team === "us" ? x.v : -x.v; });
+          gsAdd(H.end - t0);
+        });
+        var m = mById[mid] || {};
+        out.push({ match_id: mid, date: m.date || null, opponent: m.opponent || null, us: drLongest("us"), opp: drLongest("opp"), state: st, margin: diff });
+      });
+      out.sort(function(a, b) { return String(a.date || "").localeCompare(String(b.date || "")); });
+      return out;
+    })();
+    var droughts = (function() {
+      function avg(k) { var v = matchTimeline.map(function(r) { return r[k] ? r[k].len : null; }).filter(function(x) { return x != null; }); return v.length ? v.reduce(function(a, b) { return a + b; }, 0) / v.length : null; }
+      function worst(k) { var w = null; matchTimeline.forEach(function(r) { if (r[k] && (!w || r[k].len > w.len)) w = Object.assign({ match_id: r.match_id, date: r.date, opponent: r.opponent }, r[k]); }); return w; }
+      return { matches: matchTimeline.map(function(r) { return { match_id: r.match_id, date: r.date, opponent: r.opponent, us: r.us, opp: r.opp }; }),
+        usAvg: avg("us"), oppAvg: avg("opp"), usWorst: worst("us"), oppWorst: worst("opp") };
+    })();
+    var gameState = (function() {
+      var tot = { lead: 0, level: 0, behind: 0 };
+      matchTimeline.forEach(function(r) { tot.lead += r.state.lead; tot.level += r.state.level; tot.behind += r.state.behind; });
+      return { lead: tot.lead, level: tot.level, behind: tot.behind,
+        matches: matchTimeline.map(function(r) { return { match_id: r.match_id, date: r.date, opponent: r.opponent, lead: r.state.lead, level: r.state.level, behind: r.state.behind, margin: r.margin }; }) };
+    })();
     const compare = [
       { label: "Score (pts)", us: sf, opp: sa },
       { label: "Shots", us: usAll, opp: opAll },
@@ -2722,6 +2787,8 @@
       possPairs: possPairs.list,
       timeBlocks,
       possLen,
+      droughts,
+      gameState,
       players,
       koSpeed,
       koSpeedGrid,
@@ -8327,6 +8394,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           ), chart)),
         React.createElement(Section, { title: nM > 1 ? "BLOCK PROFILE \u00b7 " + nM + " GAMES" : "BLOCK PROFILE" }, React.createElement(BlockProfile, { tb: d && d.timeBlocks, club: club, oppName: ON, nM: nM })),
         React.createElement(Section, { title: "POSSESSION LENGTH" }, React.createElement(PossLength, { pl: d && d.possLen, club: club, oppName: ON })),
+        React.createElement(Section, { title: nM > 1 ? "SCORING DROUGHTS \u00b7 " + nM + " GAMES" : "SCORING DROUGHTS" }, React.createElement(DroughtView, { dr: d && d.droughts, club: club, oppName: ON, nM: nM })),
+        React.createElement(Section, { title: nM > 1 ? "TIME LEADING \u00b7 LEVEL \u00b7 BEHIND \u00b7 " + nM + " GAMES" : "TIME LEADING \u00b7 LEVEL \u00b7 BEHIND" }, React.createElement(GameStateView, { gs: d && d.gameState, club: club, nM: nM })),
         React.createElement(Section, { title: nM > 1 ? "AVG PERIOD BREAKDOWN \u00b7 " + nM + " GAMES" : "PERIOD BREAKDOWN" }, tbl),
         React.createElement("div", { style: { marginBottom: 28 } },
           React.createElement("button", { onClick: function() { setOpenTypes(!openTypes); }, style: { width: "100%", minHeight: 44, background: "none", border: "none", boxShadow: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: -14, marginBottom: openTypes ? -2 : -14 } },
@@ -8806,6 +8875,79 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         "Read the alive table, not the bands: length is measured to the shot or loss, so longer possessions are more likely to have ended in a shot. ",
         "Cut points scale with the sport (", pl.ref, "s reference for ", pl.sport, "). Stoppages count toward length; ",
         pl.dropped.long, " possessions over 3 min and ", pl.dropped.neg, " with clock errors are left out."));
+  }
+  function _tmMin(sec) { var s = Math.round(sec || 0); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
+  function _tmMatchLbl(r) { return (r.date ? String(r.date).slice(5).replace("-", "/") + " " : "") + (r.opponent || "Match"); }
+  // Group 2.1 of docs/RSA-SPEC-time-metrics.md: the longest spell each side went without a score.
+  function DroughtView({ dr, club, oppName, nM }) {
+    if (!dr || !dr.matches.length) return null;
+    var usN = (club && club.name) || "Us", opN = oppName || "Opposition";
+    function spell(x) { return x ? _tmMin(x.len) + " \u00b7 " + Math.floor(x.start / 60) + "\u2032" : "\u2014"; }
+    if (nM <= 1) {
+      var r = dr.matches[0];
+      return React.createElement("div", null,
+        React.createElement("div", { style: Object.assign({}, _TM_CARD, { display: "flex", gap: 10 }) },
+          [[usN, r.us, C.greenB], [opN, r.opp, C.blue]].map(function(s, i) {
+            return React.createElement("div", { key: i, style: { flex: 1, textAlign: "center" } },
+              React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1, color: s[2], fontFamily: MONO, fontWeight: 700 } }, s[0].toUpperCase().slice(0, 16)),
+              React.createElement("div", { style: { fontSize: FS.h2, fontWeight: 800, fontFamily: MONO, color: C.white, marginTop: 4 } }, s[1] ? _tmMin(s[1].len) : "\u2014"),
+              React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, s[1] ? "from " + Math.floor(s[1].start / 60) + "\u2032 \u00b7 " + (s[1].half === 2 ? "2nd" : "1st") + " half" : ""));
+          })),
+        React.createElement("div", { style: _TM_NOTE }, "Longest spell without a score. Each half is measured on its own; half-time never counts."));
+    }
+    var rows = dr.matches.map(function(m) { return [_tmMatchLbl(m), spell(m.us), spell(m.opp)]; });
+    return React.createElement("div", null,
+      React.createElement("div", { style: Object.assign({}, _TM_CARD, { display: "flex", gap: 10, marginBottom: 12 }) },
+        [[usN, dr.usAvg, dr.usWorst, C.greenB], [opN, dr.oppAvg, dr.oppWorst, C.blue]].map(function(s, i) {
+          return React.createElement("div", { key: i, style: { flex: 1, textAlign: "center" } },
+            React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1, color: s[3], fontFamily: MONO, fontWeight: 700 } }, s[0].toUpperCase().slice(0, 16)),
+            React.createElement("div", { style: { fontSize: FS.h2, fontWeight: 800, fontFamily: MONO, color: C.white, marginTop: 4 } }, s[1] != null ? _tmMin(s[1]) : "\u2014"),
+            React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, "avg longest per game"),
+            s[2] ? React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, fontFamily: MONO, marginTop: 6 } }, "worst " + _tmMin(s[2].len) + " v " + (s[2].opponent || "?")) : null);
+        })),
+      React.createElement("div", { style: _TM_CARD },
+        React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: FS.md, fontFamily: MONO } },
+          React.createElement("thead", null, React.createElement("tr", null,
+            React.createElement("th", { style: Object.assign({}, _TM_TH, { textAlign: "left", padding: "10px 4px" }) }, "GAME"),
+            React.createElement("th", { style: Object.assign({}, _TM_TH, { color: C.greenB, padding: "10px 4px" }) }, usN.split(" ")[0].toUpperCase()),
+            React.createElement("th", { style: Object.assign({}, _TM_TH, { color: C.blue, padding: "10px 4px" }) }, "OPP"))),
+          React.createElement("tbody", null, rows.map(function(r, i) {
+            return React.createElement("tr", { key: i, style: { borderBottom: "1px solid " + C.border + ALPHA.mid } },
+              React.createElement("td", { style: Object.assign({}, _TM_LBL, { padding: "10px 4px", whiteSpace: "normal", lineHeight: 1.3 }) }, r[0]),
+              React.createElement("td", { style: Object.assign({}, _TM_TD, { color: C.greenB, padding: "10px 4px" }) }, r[1]),
+              React.createElement("td", { style: Object.assign({}, _TM_TD, { color: C.blue, padding: "10px 4px" }) }, r[2]));
+          })))),
+      React.createElement("div", { style: _TM_NOTE }, "Each game: longest spell without a score \u00b7 the minute it started. Each half is measured on its own; half-time never counts."));
+  }
+  // Group 2.4: how long the running scoreline had each side in front.
+  function GameStateView({ gs, club, nM }) {
+    if (!gs || !gs.matches.length) return null;
+    var tot = gs.lead + gs.level + gs.behind;
+    if (tot <= 0) return null;
+    function bar(lead, level, behind) {
+      var t = lead + level + behind || 1;
+      return React.createElement("div", { style: { display: "flex", height: 14, borderRadius: RAD.sm, overflow: "hidden", background: C.field } },
+        [[lead, C.greenB], [level, C.slateD], [behind, C.red]].map(function(p, i) { return React.createElement("div", { key: i, style: { width: (100 * p[0] / t) + "%", background: p[1] } }); }));
+    }
+    function gsPc(v) { return Math.round(100 * v / tot) + "%"; }
+    var usN = (club && club.name) || "Us";
+    return React.createElement("div", null,
+      React.createElement("div", { style: Object.assign({}, _TM_CARD, { marginBottom: nM > 1 ? 12 : 0 }) },
+        bar(gs.lead, gs.level, gs.behind),
+        React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginTop: 10, fontFamily: MONO } },
+          [["LEADING", gs.lead, C.greenB], ["LEVEL", gs.level, C.slate], ["BEHIND", gs.behind, C.red]].map(function(s, i) {
+            return React.createElement("div", { key: i, style: { textAlign: i === 0 ? "left" : i === 2 ? "right" : "center" } },
+              React.createElement("div", { style: { fontSize: FS.xl, fontWeight: 800, color: s[2] } }, gsPc(s[1])),
+              React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1, color: C.slateD } }, s[0] + " \u00b7 " + Math.round(s[1] / 60) + " MIN"));
+          }))),
+      nM > 1 ? React.createElement("div", { style: _TM_CARD }, gs.matches.map(function(m, i) {
+        return React.createElement("div", { key: i, style: { marginBottom: i < gs.matches.length - 1 ? 10 : 0 } },
+          React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: FS.sm, fontFamily: MONO, color: C.slate, marginBottom: 4 } },
+            React.createElement("span", null, _tmMatchLbl(m)),
+            React.createElement("span", { style: { color: m.margin > 0 ? C.greenB : m.margin < 0 ? C.red : C.slate, fontWeight: 700 } }, (m.margin > 0 ? "+" : m.margin < 0 ? "\u2212" : "") + Math.abs(m.margin))),
+          bar(m.lead, m.level, m.behind));
+      })) : null,
+      React.createElement("div", { style: _TM_NOTE }, "Time ", usN, " spent ahead, level and behind on the running scoreline, from tagged scores. Half-time is not counted."));
   }
   function Section({ title, children }) {
     return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 28 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1.5, color: C.slate, fontFamily: MONO, marginBottom: 12, fontWeight: 600 } }, title), children);
