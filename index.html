@@ -1624,12 +1624,12 @@
   // 16-30 subs, 101+ scout team B); jersey is the number worn. Rows saved before the
   // jersey column was used have jersey null, and their number is the slot.
   function lineupFromApps(rows) {
-    var names = {}, bySlot = {}, used = {}, slots = {}, has = false;
+    var names = {}, away = {}, bySlot = {}, used = {}, slots = {}, has = false;
     (rows || []).forEach(function(a) {
       var sl = Number(a.position_slot);
       if (!sl) return;
       slots[sl] = true;
-      if (sl > 100) { names[sl] = a.player_name; return; }
+      if (sl > 100) { away[sl - 100] = a.player_name; return; }
       var j = a.jersey != null ? Number(a.jersey) : sl;
       names[j] = a.player_name;
       if (sl <= 15) { bySlot[sl] = j; used[j] = true; has = true; }
@@ -1646,7 +1646,19 @@
         starters.push(n1);
       }
     }
-    return { names: names, starters: starters, slots: slots };
+    return { names: names, away: away, starters: starters, slots: slots };
+  }
+  // Names for a scouting match. Both taggers use the home side as their own team and the
+  // away side as the opposition. Names come from the scout squads saved on the match
+  // (VideoHub setup) and from the scout teamsheet (appearances, away side at slot 101+);
+  // the teamsheet wins where both name the same number.
+  function scoutNameMaps(match, lu) {
+    var sc = (match && match.scout) || {}, home = {}, away = {};
+    (sc.a && sc.a.squad || []).forEach(function(p) { if (p && p.n != null && p.name) home[p.n] = p.name; });
+    (sc.b && sc.b.squad || []).forEach(function(p) { if (p && p.n != null && p.name) away[p.n] = p.name; });
+    Object.keys(lu.names || {}).forEach(function(k) { if (lu.names[k]) home[k] = lu.names[k]; });
+    Object.keys(lu.away || {}).forEach(function(k) { if (lu.away[k]) away[k] = lu.away[k]; });
+    return { home: home, away: away };
   }
   // First free substitute position for a mid-match appearance insert.
   function freeSubSlot(slots) {
@@ -3627,7 +3639,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       db.from("appearances").select("position_slot,player_name,jersey").eq("match_id", match.id).then(function(r) {
         var lu = lineupFromApps(r.data);
         apSlotsRef.current = lu.slots;
-        setNameMap(lu.names);
+        var sm = match.scouting ? scoutNameMaps(match, lu) : null;
+        setNameMap(sm ? sm.home : lu.names);
+        setOppNameMap(sm ? sm.away : {});
         setLineupJ(lu.starters);
       });
     }, []);
@@ -3991,7 +4005,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             var won = newOc === "Won clean" || newOc === "Break won";
             credH = r.team === "us" ? won : !won;
           }
-          pname = credH ? nameMap[edPl] || "#" + edPl : "#" + edPl;
+          pname = credH ? nameMap[edPl] || "#" + edPl : oppNameMap[edPl] || "#" + edPl;
         }
       }
       var upd = { outcome: newOc, player: pname, score: newSc }; if (edLoc) { upd.x = edLoc.x; upd.y = edLoc.y; }
@@ -4783,7 +4797,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         extra.sort(function(a6, b6) { return a6 - b6; });
         return edMore ? base.concat(extra) : base;
       })().map(function(n) {
-        var nm = credH ? nameMap[n] : null;
+        var nm = credH ? nameMap[n] : oppNameMap[n] || null;
         var on = edPl === n;
         return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
           setEdPl(n);
@@ -4823,7 +4837,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         var cols = row.length === 1 ? [3] : row.length === 2 ? [2, 4] : [1, 3, 5];
         row.forEach(function(slot, ix) {
           var n = slots ? slots[slot] : slot;
-          var nm = window.__ltCredH ? nameMap[n] : null;
+          var nm = window.__ltCredH ? nameMap[n] : oppNameMap[n] || null;
           var cd = rs ? rs.cards[n] : null;
           var binLeft = cd && cd.blackAt != null ? Math.max(0, 600 - (dispSec - cd.blackAt)) : 0;
           var off = cd && (cd.red || binLeft > 0);
@@ -5885,6 +5899,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var _tevs = sportEvents(club.sport);
     const [tagged, setTagged] = useState(function() { return vtLoad(match.id); });
     const [nameMap, setNameMap] = useState({});
+    const [oppNameMap, setOppNameMap] = useState({});
     // Starting fifteen as jersey numbers in teamsheet slot order, or null when no teamsheet.
     const [lineupJ, setLineupJ] = useState(null);
     const apSlotsRef = useRef({});
@@ -5972,7 +5987,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       db.from("appearances").select("position_slot,player_name,jersey").eq("match_id", match.id).then(function(r) {
         var lu = lineupFromApps(r.data);
         apSlotsRef.current = lu.slots;
-        setNameMap(lu.names);
+        var sm = match.scouting ? scoutNameMaps(match, lu) : null;
+        setNameMap(sm ? sm.home : lu.names);
+        setOppNameMap(sm ? sm.away : {});
         setLineupJ(lu.starters);
       });
       db.from("players").select("id,name").eq("club_id", club.id).then(function(r) { setVtSquad(r.data || []); });
@@ -6617,7 +6634,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         var _koW = t2.outcome === "Won Clean" || t2.outcome === "Break Won";
         credH = t2.team === "h" ? _koW : !_koW;
       }
-      var pname = num == null ? null : credH ? nameMap[num] || "#" + num : "#" + num;
+      var pname = num == null ? null : credH ? nameMap[num] || "#" + num : oppNameMap[num] || "#" + num;
       var gt = t2.gt, per = gt ? gt.period : 1, gsec = gt ? Math.round(gt.secs) : 0;
       var seq = seqRef.current++;
       var row = {
@@ -6841,7 +6858,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }
       var wn2 = credH2 ? nmH : nmA;
       return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9.5, color: tc2, fontFamily: MONO, fontWeight: 800, whiteSpace: "nowrap", padding: "0 4px" } }, "TAP ", wn2.split(" ")[0].slice(0, 3).toUpperCase(), " #"), (subsOpen ? [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30] : (!SC && credH2 && lineupJ ? lineupJ : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24])).map(function(n) {
-        var nm2 = SC ? credH2 ? scoutA[n] : scoutB[n] : credH2 ? nameMap[n] : null;
+        var nm2 = credH2 ? nameMap[n] : oppNameMap[n] || null;
         return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
           commit(n);
         }, style: { flexShrink: 0, minWidth: 46, padding: "6px 3px", borderRadius: RAD.md, cursor: "pointer", background: tc2 + ALPHA.faint, border: "1px solid " + tc2 + ALPHA.mid, color: tc2, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13.5, fontWeight: 800 } }, n), nm2 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7, opacity: 0.85, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 60 } }, nm2.split(" ").slice(-1)[0]));
@@ -6872,7 +6889,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         chooseOutcome(oc);
       }, style: { padding: "14px 4px", background: C.bgCard, border: "1px solid " + tc + ALPHA.mid, borderRadius: RAD.md, color: tc, cursor: "pointer", fontSize: 12.5, fontWeight: 700, textAlign: "center" } }, oc);
     }))), showPl && !big && !land && /* @__PURE__ */ React.createElement("div", { style: { overflow: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: ptc, textAlign: "center", margin: "6px 0 10px" } }, t.ev.l, ": ", t.outcome, " \u2014 TAP ", (credHome ? nmH : nmA).split(" ")[0], " PLAYER #"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6 } }, (subsOpen ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30] : (!SC && credHome && lineupJ ? lineupJ : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])).map(function(n) {
-      var nm = SC ? credHome ? scoutA[n] : scoutB[n] : credHome ? nameMap[n] : null;
+      var nm = credHome ? nameMap[n] : oppNameMap[n] || null;
       return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
         commit(n);
       }, style: { padding: "12px 2px", background: ptc + ALPHA.faint, border: "1px solid " + ptc + ALPHA.mid, borderRadius: RAD.md, color: ptc, cursor: "pointer", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, n), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nm.split(" ").slice(-1)[0]));
@@ -6969,7 +6986,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         chooseOutcome(oc);
       }, style: { padding: "14px 4px", background: on ? tc + ALPHA.soft : C.bgCard, border: "1px solid " + (on ? tc : tc + ALPHA.mid), borderRadius: RAD.md, color: tc, cursor: "pointer", fontSize: 12.5, fontWeight: on ? 800 : 700, textAlign: "center" } }, oc);
     }))), /* @__PURE__ */ React.createElement("div", { style: { opacity: t.outcome ? 1 : 0.38, pointerEvents: t.outcome ? "auto" : "none" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: ptc, margin: "0 0 5px", fontWeight: 700 } }, t.outcome ? "TAP " + (credHome ? nmH : nmA).split(" ")[0] + " PLAYER #" : "\u2191 CHOOSE OUTCOME FIRST"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: land ? "repeat(5,1fr)" : "repeat(8,1fr)", gap: 6 } }, (subsOpen ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30] : (!SC && credHome && lineupJ ? lineupJ : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])).map(function(n) {
-      var nm = SC ? credHome ? scoutA[n] : scoutB[n] : credHome ? nameMap[n] : null;
+      var nm = credHome ? nameMap[n] : oppNameMap[n] || null;
       return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
         commit(n);
       }, style: { padding: "12px 2px", background: ptc + ALPHA.faint, border: "1px solid " + ptc + ALPHA.mid, borderRadius: RAD.md, color: ptc, cursor: "pointer", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, n), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 7.5, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nm.split(" ").slice(-1)[0]));
@@ -7076,7 +7093,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         setEK({ label: L });
       }, style: { padding: "7px 10px", borderRadius: RAD.md, border: "1px solid " + (on ? C.blue : C.border), background: on ? C.blue + ALPHA.soft : C.field, color: on ? C.blue : C.slate, fontSize: 12, fontWeight: 600, cursor: "pointer" } }, L);
     })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: C.slateD, marginBottom: 5 } }, "PLAYER"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6 } }, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(function(n) {
-      var lab = editRow.team === "us" ? nameMap[n] || "#" + n : "#" + n;
+      var lab = editRow.team === "us" ? nameMap[n] || "#" + n : oppNameMap[n] || "#" + n;
       var on = editRow.player === lab;
       var cc = editRow.team === "us" ? C.greenB : C.gold;
       return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
