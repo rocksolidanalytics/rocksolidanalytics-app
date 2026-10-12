@@ -104,7 +104,7 @@
   const FS = { xs: 9, sm: 11, md: 13, lg: 15, xl: 18, h2: 22, h1: 30, hero: 46 };
   const RAD = { sm: 4, md: 8, lg: 12, xl: 16, pill: 999 };
   const ALPHA = { faint: "14", soft: "22", mid: "44", strong: "66", scrim: "99" };
-  const PITCH = { deep: "#08160C", base: "#0C4A22", baseDark: "#0A3F1D", glow: "#0E5528", glowEdge: "#083014", stripe: "#0F6A32", line: "rgba(255,255,255,0.62)", lineMap: "rgba(255,255,255,0.5)", lineSoft: "rgba(255,255,255,0.28)", lineFaint: "rgba(255,255,255,0.16)", chalk: "#EAF6EE", missFill: "rgba(8,18,12,0.5)", heat: "#0A1F14", heatBand: "#0C2418", heatGrid: "rgba(255,255,255,0.13)", heatLine: "rgba(255,255,255,0.7)", bandA: "#0D5E2B", bandB: "#0B5325", grassEnd: "#0A4A21", lineMid: "rgba(255,255,255,0.34)", zone: "rgba(255,255,255,0.10)" };
+  const PITCH = { deep: "#08160C", base: "#0C4A22", baseDark: "#0A3F1D", glow: "#0E5528", glowEdge: "#083014", stripe: "#0F6A32", line: "rgba(255,255,255,0.62)", lineMap: "rgba(255,255,255,0.5)", lineSoft: "rgba(255,255,255,0.28)", lineFaint: "rgba(255,255,255,0.16)", chalk: "#EAF6EE", missFill: "rgba(8,18,12,0.5)", bandA: "#0D5E2B", bandB: "#0B5325", grassEnd: "#0A4A21", lineMid: "rgba(255,255,255,0.34)", zone: "rgba(255,255,255,0.10)" };
   const LED = { amber: "#FFB024", bg: "#05070A", panel: "#0E1626", red: "#FF3B3B", footer: "#070B12", rule: "#15202F", liveText: "#FF6B6B", text: "#DBE4EF", textDim: "#C7D2E0", glass: "rgba(7,12,24,0.84)" };
   const FORMATION = [[1], [2, 3, 4], [5, 6, 7], [8, 9], [10, 11, 12], [13, 14, 15]];
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -2926,31 +2926,7 @@
       return '<path d="' + m.d + '" fill="none" stroke="' + st[m.w][0] + '" stroke-width="' + st[m.w][1] + '"/>';
     }).join("");
   }
-  function shotHeatHtml(shots){
-    var W=300,L=8,R=292,T=8,MX=150,PW=R-L,PH=Math.round(PW*72/GAA_W),B=T+PH,H=B+8,pm=PW/88;
-    function yf(f){ return T+((1-f)/0.5)*PH; }
-    function ym(m){ return T+(m/72)*PH; }
-    var S=[]; (shots||[]).forEach(function(sh){ var x=sh.x,y=sh.y; if(x<0.5){x=1-x;y=1-y;} S.push({px:L+y*PW, py:yf(x), s:sh.score}); });
-    var GX=5,GY=6,cw=PW/GX,ch=PH/GY,cnt=[],mx=0;
-    for(var gy=0;gy<GY;gy++){ cnt[gy]=[]; for(var gx=0;gx<GX;gx++) cnt[gy][gx]=0; }
-    S.forEach(function(p){ var gx=Math.min(GX-1,Math.max(0,Math.floor((p.px-L)/cw))), gy=Math.min(GY-1,Math.max(0,Math.floor((p.py-T)/ch))); cnt[gy][gx]++; if(cnt[gy][gx]>mx)mx=cnt[gy][gx]; });
-    var s='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;border-radius:'+RAD.lg+'px;background:'+PITCH.heat+'">';
-    for(var i=0;i<6;i++){ s+='<rect x="'+L+'" y="'+(T+i*PH/6).toFixed(1)+'" width="'+PW+'" height="'+(PH/6).toFixed(1)+'" fill="'+(i%2?PITCH.heatBand:PITCH.heat)+'"/>'; }
-    for(var gy2=0;gy2<GY;gy2++){ for(var gx2=0;gx2<GX;gx2++){ var c=cnt[gy2][gx2]; if(!c)continue; var t=mx?c/mx:0, hue=Math.round(45-45*t), op=(0.22+0.5*t).toFixed(2); s+='<rect x="'+(L+gx2*cw).toFixed(1)+'" y="'+(T+gy2*ch).toFixed(1)+'" width="'+cw.toFixed(1)+'" height="'+ch.toFixed(1)+'" fill="hsl('+hue+',95%,55%)" opacity="'+op+'"/>'; } }
-    s+='<g stroke="'+PITCH.heatGrid+'" stroke-width="0.8">';
-    for(var gx3=1;gx3<GX;gx3++) s+='<line x1="'+(L+gx3*cw).toFixed(1)+'" y1="'+T+'" x2="'+(L+gx3*cw).toFixed(1)+'" y2="'+B+'"/>';
-    for(var gy3=1;gy3<GY;gy3++) s+='<line x1="'+L+'" y1="'+(T+gy3*ch).toFixed(1)+'" x2="'+R+'" y2="'+(T+gy3*ch).toFixed(1)+'"/>';
-    s+='</g>';
-    var LN=PITCH.heatLine;
-    s+='<rect x="'+L+'" y="'+T+'" width="'+PW+'" height="'+PH+'" rx="2" fill="none" stroke="'+LN+'" stroke-width="1.4"/>';
-    s+=gaaEndSvg(function(a,d){ return [MX+a*pm, ym(d)]; }, { main:[LN,1.4], soft:[LN,1.1], faint:[LN,0.8], dot:LN });
-    s+='<line x1="'+(MX-9)+'" y1="'+T+'" x2="'+(MX+9)+'" y2="'+T+'" stroke="'+C.white+'" stroke-width="3.5" stroke-linecap="round"/>';
-    var _sc=rsaScatter(S.map(function(q){return [q.px,q.py];})); S.forEach(function(p,i){ var col=p.s===3?C.gold:p.s===2?C.purple:p.s===1?C.greenB:C.red; var _cx=_sc[i][0], _cy=_sc[i][1]; s+='<circle cx="'+_cx.toFixed(1)+'" cy="'+_cy.toFixed(1)+'" r="3.2" fill="'+col+'" fill-opacity="0.92" stroke="'+PITCH.deep+'" stroke-width="0.8"/>'; });
-    s+='</svg>';
-    return s;
-  }
   function XpPanel({ shots, usShots, oppShots, noHeading }){ return React.createElement("div", {}, noHeading ? null : React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "EXPECTED SCORES · vs season baseline"), React.createElement("div", { dangerouslySetInnerHTML: { __html: xpPanelHtml(shots, usShots, oppShots) } })); }
-  function ShotHeat({ shots, noHeading }){ return React.createElement("div", {}, noHeading ? null : React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "SHOT DENSITY · THIS MATCH"), React.createElement("div", { dangerouslySetInnerHTML: { __html: shotHeatHtml(shots) } })); }
   
 function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(function(s){ return s.player === pl; }) : (list || []); }
   function fKo(list, band){ if(!band || band === "all") return list || []; return (list || []).filter(function(p){ var dd = (1 - p.x) * 144; var b = dd < 45 ? "short" : dd <= 65 ? "mid" : "long"; return b === band; }); }
