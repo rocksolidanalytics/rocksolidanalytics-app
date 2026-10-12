@@ -85,6 +85,9 @@
     purple: "#B06CFF",
     orange: "#EB6834",
     teal: "#3FB6A8",
+    pink: "#F7A8C8",
+    rust: "#D9541A",
+    violet: "#7B3FD0",
     greenL: "#7EE8A4",
     redL: "#E8A07E",
     indigo: "#7D8FE0",
@@ -2052,6 +2055,68 @@
       return /* @__PURE__ */ React.createElement("div", { key: r.name, style: { display: "flex", alignItems: "center", gap: 9 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 92, fontSize: FS.sm, fontWeight: isUs ? 800 : 600, color: isUs ? C.greenB : C.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, r.name), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, height: 15, background: C.field, borderRadius: RAD.sm, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: w + "%", background: isUs ? C.greenB : C.slateD, borderRadius: RAD.sm } })), /* @__PURE__ */ React.createElement("span", { style: { width: 40, textAlign: "right", fontSize: FS.sm, fontWeight: 700, color: isUs ? C.greenB : C.slate } }, disp));
     })));
   }
+  // Read-time outcome normaliser: lowercase and map the live variant groups.
+  // Top level so keyCallouts and computeStats share one copy.
+  var _OC_CANON = { "2 pointer": "2 Pointer", "2-pointer": "2 Pointer", "saved": "Saved", "save": "Saved",
+    "dropped short": "Dropped Short", "short": "Dropped Short", "hand pass": "Hand Pass", "kick pass": "Kick Pass",
+    "in contact": "In Contact", "ruck won": "Won", "won": "Won", "ruck lost": "Lost", "lost": "Lost",
+    "shot dropped short": "Shot Dropped Short", "shot short": "Shot Dropped Short" };
+  function canonOutcome(s) {
+    var k = String(s == null ? "" : s).trim();
+    return _OC_CANON[k.toLowerCase()] || k;
+  }
+  // Key Callouts: the one definition of every card, called by the live tagger
+  // (on its tagged state) and by computeStats (on the selected match events).
+  // A card whose event type never appears for either team is untagged, which
+  // the panel shows as a dash, never as zero.
+  function keyCallouts(evs) {
+    var list = (evs || []).filter(function(e) { return e && (e.team === "us" || e.team === "opp"); })
+      .slice().sort(function(a, b) { return (a.seq || 0) - (b.seq || 0); });
+    function oc(e) { return canonOutcome(e.outcome).toLowerCase(); }
+    function cnt(team, f) { var n = 0; list.forEach(function(e) { if (e.team === team && f(e)) n++; }); return n; }
+    function any(f) { return list.some(f); }
+    function two(f) { return { us: cnt("us", f), opp: cnt("opp", f) }; }
+    var isShot = function(e) { return e.event_type === "Shot from play"; };
+    var isFree = function(e) { return e.event_type === "Scoreable free"; };
+    var isKo = function(e) { return e.event_type === "Kickout"; };
+    var isTk = function(e) { return e.event_type === "Tackle" && (oc(e) === "contact made" || oc(e) === "block"); };
+    var isFoul = function(e) { return e.event_type === "Tackle" && oc(e) === "foul"; };
+    var isLost = function(e) { return e.event_type === "Possession lost"; };
+    var scored = function(f) { return function(e) { return f(e) && (e.score || 0) > 0; }; };
+    var shots = two(isShot), shotsSc = two(scored(isShot));
+    var frees = two(isFree), freesSc = two(scored(isFree));
+    var kos = two(isKo), kosWon = two(function(e) { return isKo(e) && (oc(e) === "won clean" || oc(e) === "break won"); });
+    var cards = [
+      { key: "shots", kind: "n", tagged: any(isShot), us: shots.us, opp: shots.opp,
+        sub: [shotsSc.us + " SCORED", shotsSc.opp + " SCORED"] },
+      { key: "eff", kind: "pct", tagged: any(isShot), us: [shotsSc.us, shots.us], opp: [shotsSc.opp, shots.opp], sub: ["FROM PLAY"] },
+      { key: "frees", kind: "n", tagged: any(isFree), us: freesSc.us, opp: freesSc.opp,
+        sub: ["FROM " + frees.us, "FROM " + frees.opp] },
+      { key: "restarts", kind: "pct", tagged: any(isKo), us: [kosWon.us, kos.us], opp: [kosWon.opp, kos.opp],
+        sub: [kosWon.us + " OF " + kos.us, kosWon.opp + " OF " + kos.opp] },
+      { key: "tackles", kind: "n", tagged: any(isTk), us: cnt("us", isTk), opp: cnt("opp", isTk), sub: ["CONTACT + BLOCK"] },
+      { key: "fouls", kind: "n", tagged: any(isFoul), us: cnt("us", isFoul), opp: cnt("opp", isFoul), sub: ["IN TACKLE"] }
+    ];
+    var segMap = {}, segs = [];
+    list.forEach(function(e) {
+      if (e.team !== "us" || !isLost(e)) return;
+      var lb = canonOutcome(e.outcome) || "Other";
+      if (!segMap[lb]) { segMap[lb] = { label: lb, n: 0 }; segs.push(segMap[lb]); }
+      segMap[lb].n++;
+    });
+    segs.sort(function(a, b) { return b.n - a.n; });
+    var donut = { tagged: any(isLost), us: cnt("us", isLost), opp: cnt("opp", isLost), segs: segs };
+    var scMap = {}, scorers = [];
+    list.forEach(function(e) {
+      var v = e.score || 0;
+      if (e.team !== "us" || v <= 0) return;
+      var nm = String(e.player || "").trim() || "Unknown";
+      if (!scMap[nm]) { scMap[nm] = { name: nm, g: 0, p: 0 }; scorers.push(scMap[nm]); }
+      if (v === 3) scMap[nm].g++; else scMap[nm].p += v;
+    });
+    scorers.sort(function(a, b) { return (b.g * 3 + b.p) - (a.g * 3 + a.p); });
+    return { score: { us: scoreFromEvents(list, "us"), opp: scoreFromEvents(list, "opp") }, cards: cards, donut: donut, scorers: scorers };
+  }
   function computeStats(matches, events, apps, club, halfSel) {
     let w = 0, d = 0, l = 0, sf = 0, sa = 0;
     var _hf = halfSel && halfSel !== "all";
@@ -2306,15 +2371,7 @@
       if (p.length === 2) return p[0] * 60 + p[1];
       return 0;
     }
-    // 1.2 Read-time outcome normaliser: lowercase and map the live variant groups.
-    var _OC_CANON = { "2 pointer": "2 Pointer", "2-pointer": "2 Pointer", "saved": "Saved", "save": "Saved",
-      "dropped short": "Dropped Short", "short": "Dropped Short", "hand pass": "Hand Pass", "kick pass": "Kick Pass",
-      "in contact": "In Contact", "ruck won": "Won", "won": "Won", "ruck lost": "Lost", "lost": "Lost",
-      "shot dropped short": "Shot Dropped Short", "shot short": "Shot Dropped Short" };
-    function canonOutcome(s) {
-      var k = String(s == null ? "" : s).trim();
-      return _OC_CANON[k.toLowerCase()] || k;
-    }
+    // 1.2 Outcome normaliser canonOutcome lives at top level, shared with keyCallouts.
     // 1.3 Possession model. Gain: which team takes the ball on this event, or null.
     function _otherTeam(t) { return t === "us" ? "opp" : "us"; }
     function possGainOf(e) {
@@ -2789,6 +2846,7 @@
       possLen,
       droughts,
       gameState,
+      callouts: keyCallouts(events),
       players,
       koSpeed,
       koSpeedGrid,
@@ -3682,6 +3740,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [teamOpen, setTeamOpen] = useState(false);
     const [teamSide, setTeamSide] = useState("us");
     const [stHalf, setStHalf] = useState("all");
+    const [kcMode, setKcMode] = useState("key");
     const [halfEnded, setHalfEnded] = useState(_sess0 ? !!_sess0.halfEnded : false);
     const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine !== false : true);
     const [customEvents, setCustomEvents] = useState([]);
@@ -4595,7 +4654,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }
     if (statsOpen) return /* @__PURE__ */ React.createElement("div", { className: "rsa-screen rsa-fb", style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", fontFamily: MONO } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderBottom: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontSize: 11, letterSpacing: 1, color: C.greenB } }, "LIVE STATS \xB7 ", running ? fmtFull(dispSec).slice(3) : "--:--", " \xB7 ", period === 1 ? "1ST" : "2ND"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setStatsOpen(false);
-    }, style: { minWidth: 44, minHeight: 44, margin: "-8px -3px", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement("span", { style: { border: "1px solid " + C.border, borderRadius: RAD.md, color: C.white, padding: "6px 13px", fontSize: 13 } }, "\u2715"))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflow: "auto", padding: "12px 14px 16px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slateD, letterSpacing: 1, marginRight: 2 } }, "HALF"), [["all","FULL"],["1","1ST"],["2","2ND"]].map(function(hf){ var on = stHalf === hf[0]; return /* @__PURE__ */ React.createElement("button", { key: hf[0], onClick: function(){ setStHalf(hf[0]); }, style: { flex: 1, minHeight: 44, padding: "7px 0", borderRadius: RAD.md, border: "1px solid " + (on ? C.greenB : C.border), background: on ? C.greenB + ALPHA.soft : "none", color: on ? C.greenB : C.slate, fontWeight: 800, fontSize: 11.5, cursor: "pointer" } }, hf[1]); })), /* @__PURE__ */ React.createElement(CompareBars, { rows: liveCompare(), club }), /* @__PURE__ */ (function() {
+    }, style: { minWidth: 44, minHeight: 44, margin: "-8px -3px", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement("span", { style: { border: "1px solid " + C.border, borderRadius: RAD.md, color: C.white, padding: "6px 13px", fontSize: 13 } }, "\u2715"))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflow: "auto", padding: "12px 14px 16px" } }, /* @__PURE__ */ React.createElement(KcToggle, { mode: kcMode, setMode: setKcMode }), kcMode === "key" ? React.createElement(KeyCalloutsPanel, { kc: keyCallouts(tagged), usName: _scNames ? _scNames[0].trim() : club.name, oppName: _scNames ? _scNames[1].trim() : (match.opponent || "Opposition"), clock: (running ? fmtFull(dispSec).slice(3) : "--:--") + " \xB7 " + (period === 1 ? "1ST" : "2ND") }) : React.createElement(React.Fragment, null, React.createElement("div", { style: { display: "flex", gap: 5, alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slateD, letterSpacing: 1, marginRight: 2 } }, "HALF"), [["all","FULL"],["1","1ST"],["2","2ND"]].map(function(hf){ var on = stHalf === hf[0]; return /* @__PURE__ */ React.createElement("button", { key: hf[0], onClick: function(){ setStHalf(hf[0]); }, style: { flex: 1, minHeight: 44, padding: "7px 0", borderRadius: RAD.md, border: "1px solid " + (on ? C.greenB : C.border), background: on ? C.greenB + ALPHA.soft : "none", color: on ? C.greenB : C.slate, fontWeight: 800, fontSize: 11.5, cursor: "pointer" } }, hf[1]); })), /* @__PURE__ */ React.createElement(CompareBars, { rows: liveCompare(), club }), /* @__PURE__ */ (function() {
       // Per-10-minute breakdown, same bands as the dashboard Periods tab.
       // At half-time this is the fastest read on which block you lost.
       var _blocks = [["0-10",0,600],["10-20",600,1200],["20-30",1200,1800],
@@ -4687,7 +4746,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           return k + " \xD7" + r.oc[k];
         }).join(" \xB7 ")), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700, minWidth: 16, textAlign: "right" } }, r.n));
       })));
-    }), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", fontSize: 10.5, color: C.slateD, marginTop: 14 } }, tagged.length, " events tagged so far")), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+    }), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", fontSize: 10.5, color: C.slateD, marginTop: 14 } }, tagged.length, " events tagged so far"))), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setStatsOpen(false);
     }, style: { margin: 10, padding: 16, borderRadius: RAD.lg, border: "none", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 15, cursor: "pointer" } }, "\u2190 Back to tagging"));
     var mAlert = null;
@@ -7859,6 +7918,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [shotPl, setShotPl] = useState("all");
     const [koBand, setKoBand] = useState("all");
     const [dtab, setDtab] = useState("overview");
+    const [ovMode, setOvMode] = useState("key");
     const [psort, setPsort] = useState("score");
     if (reportHtml) return React.createElement("div", { className: "rsa-fb", style: { minHeight: "100dvh", background: C.bg } },
       React.createElement("div", { style: { position: "sticky", top: 0, zIndex: 10, background: C.bg, borderBottom: "1px solid " + C.border, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 } },
@@ -7893,7 +7953,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     dtab === "overview" && !isMatch && (d.notes && d.notes.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { padding: 16, borderRadius: RAD.xl, background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB + ALPHA.soft, marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 12 } }, isMatch ? "MATCH READ" : "SEASON READ"), d.notes.map(function(n, i) {
       return /* @__PURE__ */ React.createElement("div", { key: i, style: { fontSize: FS.md, lineHeight: 1.6, color: C.white, marginBottom: i < d.notes.length - 1 ? 10 : 0 } }, n);
     }))),
-    dtab === "overview" && React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } },
+    dtab === "overview" && isMatch && React.createElement(KcToggle, { mode: ovMode, setMode: setOvMode }),
+    dtab === "overview" && isMatch && ovMode === "key" && d.callouts && React.createElement(KeyCalloutsPanel, { kc: d.callouts, usName: club.name, oppName: oppName || (match && match.opponent) || "THEM", clock: half === "1" ? "1ST" : half === "2" ? "2ND" : "FT" }),
+    dtab === "overview" && !(isMatch && ovMode === "key") && React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } },
       isMatch && match && React.createElement("div", { style: { padding: "16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid } },
         React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } },
           React.createElement("div", { style: { textAlign: "center", flex: 1 } },
@@ -8948,6 +9010,86 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           bar(m.lead, m.level, m.behind));
       })) : null,
       React.createElement("div", { style: _TM_NOTE }, "Time ", usN, " spent ahead, level and behind on the running scoreline, from tagged scores. Half-time is not counted."));
+  }
+  // Key Callouts panel. Green is us and blue is them; colour only says whose a number is.
+  var _KC_LABEL = { shots: "SHOTS FROM PLAY", eff: "SHOT EFFICIENCY", frees: "FREES SCORED", tackles: "TACKLES", fouls: "FOULS CONCEDED" };
+  // Donut colour follows the outcome, never its rank. Lightness steps 0.89 / 0.82 / 0.71 / 0.61 / 0.52.
+  var _KC_SEG = { "Strike": C.goldL, "Kick Pass": C.goldL, "Hand Pass": C.pink, "In Contact": C.teal, "Handling": C.rust, "Foul": C.violet, "Solo": C.redL };
+  function _kcSegCol(lb) { return _KC_SEG[lb] || C.slateD; }
+  var _KC_BOX = { background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.lg, padding: "12px 14px" };
+  var _KC_LBL = { fontSize: FS.xs, letterSpacing: 1.5, color: C.slate, fontFamily: MONO, fontWeight: 700, textTransform: "uppercase" };
+  var _KC_SUB = { fontSize: FS.xs, letterSpacing: 0.8, color: C.slateD, fontFamily: MONO, marginTop: 6 };
+  function _kcFig(c, side) {
+    if (!c.tagged) return "—";
+    var v = c[side];
+    if (c.kind !== "pct") return String(v);
+    return v[1] > 0 ? Math.round(100 * v[0] / v[1]) + "%" : "—";
+  }
+  function KcToggle({ mode, setMode }) {
+    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 2, padding: 3, borderRadius: RAD.lg, background: C.field, border: "1px solid " + C.border, marginBottom: 12 } },
+      [["key", "KEY CALLOUTS"], ["detail", "DETAILED"]].map(function(o) {
+        var on = mode === o[0];
+        return /* @__PURE__ */ React.createElement("button", { key: o[0], onClick: function() { setMode(o[0]); }, style: { flex: 1, minHeight: 44, margin: "-6px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } },
+          React.createElement("span", { style: { flex: 1, padding: "7px 0", borderRadius: RAD.md, fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, letterSpacing: 0.8, textAlign: "center", background: on ? C.greenB : "transparent", color: on ? C.bg : C.slateD } }, o[1]));
+      }));
+  }
+  function KcDonut({ d }) {
+    var R = 52, SW = 18, CIRC = 2 * Math.PI * R, GAP = d.segs.length > 1 ? 2 : 0, acc = 0;
+    var arcs = d.segs.map(function(s) {
+      var len = d.us > 0 ? CIRC * s.n / d.us : 0, a = { s: s, off: acc, len: Math.max(0, len - GAP) };
+      acc += len; return a;
+    });
+    return /* @__PURE__ */ React.createElement("div", { style: _KC_BOX },
+      React.createElement("div", { style: { display: "flex", alignItems: "baseline" } },
+        React.createElement("div", { style: Object.assign({}, _KC_LBL, { flex: 1 }) }, "POSSESSION LOST"),
+        d.tagged && React.createElement("div", { style: { fontFamily: MONO, fontSize: FS.md, fontWeight: 800, color: C.blue } }, d.opp, React.createElement("span", { style: { fontSize: FS.xs, color: C.slateD, fontWeight: 700, marginLeft: 4 } }, "THEM"))),
+      !d.tagged ? React.createElement("div", null, React.createElement("div", { style: { fontFamily: MONO, fontSize: FS.h1, fontWeight: 800, color: C.slateD, marginTop: 6 } }, "—"), React.createElement("div", { style: _KC_SUB }, "NOT TAGGED")) :
+      React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: 8 } },
+        React.createElement("svg", { width: 140, height: 140, viewBox: "0 0 140 140", role: "img", "aria-label": "Possession lost " + d.us },
+          React.createElement("circle", { cx: 70, cy: 70, r: R, fill: "none", stroke: C.border, strokeWidth: SW }),
+          arcs.map(function(a) {
+            return React.createElement("circle", { key: a.s.label, cx: 70, cy: 70, r: R, fill: "none", stroke: _kcSegCol(a.s.label), strokeWidth: SW, strokeDasharray: a.len + " " + (CIRC - a.len), strokeDashoffset: -a.off, transform: "rotate(-90 70 70)" });
+          }),
+          React.createElement("text", { x: 70, y: 72, textAnchor: "middle", dominantBaseline: "middle", fill: C.greenB, fontFamily: MONO, fontSize: 30, fontWeight: 800 }, d.us)),
+        React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 14px", width: "100%", marginTop: 12 } },
+          d.segs.map(function(s) {
+            return React.createElement("div", { key: s.label, style: { display: "flex", alignItems: "center", gap: 7, minWidth: 0 } },
+              React.createElement("span", { style: { width: 10, height: 10, borderRadius: 3, background: _kcSegCol(s.label), flexShrink: 0 } }),
+              React.createElement("span", { style: { flex: 1, minWidth: 0, fontSize: FS.sm, color: C.slate, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, s.label),
+              React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.sm, fontWeight: 800, color: C.white } }, s.n));
+          }))));
+  }
+  function KeyCalloutsPanel({ kc, usName, oppName, clock }) {
+    var gp = function(o) { return fmtScoreGP(o); };
+    var label = function(c) { return c.key === "restarts" ? RESTART().toUpperCase() + "S WON" : _KC_LABEL[c.key] || c.key; };
+    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
+      React.createElement("div", { style: Object.assign({}, _KC_BOX, { display: "flex", alignItems: "center", gap: 8 }) },
+        React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+          React.createElement("div", { style: Object.assign({}, _KC_LBL, { color: C.greenB, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }) }, usName || "US"),
+          React.createElement("div", { style: { fontFamily: MONO, fontSize: FS.h1, fontWeight: 800, color: C.greenB, marginTop: 2 } }, gp(kc.score.us))),
+        React.createElement("div", { style: { fontFamily: MONO, fontSize: FS.sm, color: C.slateD, textAlign: "center", letterSpacing: 1, flexShrink: 0 } }, clock || ""),
+        React.createElement("div", { style: { flex: 1, minWidth: 0, textAlign: "right" } },
+          React.createElement("div", { style: Object.assign({}, _KC_LBL, { color: C.blue, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }) }, oppName || "THEM"),
+          React.createElement("div", { style: { fontFamily: MONO, fontSize: FS.h1, fontWeight: 800, color: C.blue, marginTop: 2 } }, gp(kc.score.opp)))),
+      React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } },
+        kc.cards.map(function(c) {
+          var fu = _kcFig(c, "us"), fo = _kcFig(c, "opp");
+          return React.createElement("div", { key: c.key, style: _KC_BOX },
+            React.createElement("div", { style: _KC_LBL }, label(c)),
+            React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 10, marginTop: 6, fontFamily: MONO, fontWeight: 800 } },
+              React.createElement("span", { style: { fontSize: FS.h1, color: fu === "—" ? C.slateD : C.greenB } }, fu),
+              React.createElement("span", { style: { fontSize: FS.xl, color: fo === "—" ? C.slateD : C.blue } }, fo)),
+            React.createElement("div", { style: _KC_SUB }, c.tagged ? c.sub.join(" \xB7 ") : "NOT TAGGED"));
+        })),
+      React.createElement(KcDonut, { d: kc.donut }),
+      React.createElement("div", { style: _KC_BOX },
+        React.createElement("div", { style: _KC_LBL }, "SCORERS"),
+        kc.scorers.length === 0 ? React.createElement("div", { style: _KC_SUB }, "NO SCORES YET") :
+        React.createElement("div", { style: { marginTop: 6 } }, kc.scorers.map(function(s, i) {
+          return React.createElement("div", { key: s.name, style: { display: "flex", alignItems: "baseline", padding: "7px 0", borderTop: i ? "1px solid " + C.border : "none" } },
+            React.createElement("span", { style: { flex: 1, minWidth: 0, fontSize: FS.md, color: C.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, s.name),
+            React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.md, fontWeight: 800, color: C.greenB } }, gp(s)));
+        }))));
   }
   function Section({ title, children }) {
     return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 28 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1.5, color: C.slate, fontFamily: MONO, marginBottom: 12, fontWeight: 600 } }, title), children);

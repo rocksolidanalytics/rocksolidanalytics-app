@@ -50,6 +50,176 @@
     "tpConv": 0.4
    }
   ],
+  "callouts": {
+   "cards": [
+    {
+     "key": "shots",
+     "kind": "n",
+     "opp": 10,
+     "sub": [
+      "3 SCORED",
+      "5 SCORED"
+     ],
+     "tagged": true,
+     "us": 8
+    },
+    {
+     "key": "eff",
+     "kind": "pct",
+     "opp": [
+      5,
+      10
+     ],
+     "sub": [
+      "FROM PLAY"
+     ],
+     "tagged": true,
+     "us": [
+      3,
+      8
+     ]
+    },
+    {
+     "key": "frees",
+     "kind": "n",
+     "opp": 7,
+     "sub": [
+      "FROM 11",
+      "FROM 16"
+     ],
+     "tagged": true,
+     "us": 9
+    },
+    {
+     "key": "restarts",
+     "kind": "pct",
+     "opp": [
+      5,
+      13
+     ],
+     "sub": [
+      "3 OF 11",
+      "5 OF 13"
+     ],
+     "tagged": true,
+     "us": [
+      3,
+      11
+     ]
+    },
+    {
+     "key": "tackles",
+     "kind": "n",
+     "opp": 4,
+     "sub": [
+      "CONTACT + BLOCK"
+     ],
+     "tagged": true,
+     "us": 6
+    },
+    {
+     "key": "fouls",
+     "kind": "n",
+     "opp": 2,
+     "sub": [
+      "IN TACKLE"
+     ],
+     "tagged": true,
+     "us": 3
+    }
+   ],
+   "donut": {
+    "opp": 7,
+    "segs": [
+     {
+      "label": "Handling",
+      "n": 3
+     },
+     {
+      "label": "Kick Pass",
+      "n": 2
+     },
+     {
+      "label": "Intercepted",
+      "n": 2
+     },
+     {
+      "label": "Hand Pass",
+      "n": 2
+     },
+     {
+      "label": "In Contact",
+      "n": 2
+     }
+    ],
+    "tagged": true,
+    "us": 11
+   },
+   "score": {
+    "opp": {
+     "g": 6,
+     "n": 12,
+     "p": 7
+    },
+    "us": {
+     "g": 4,
+     "n": 12,
+     "p": 13
+    }
+   },
+   "scorers": [
+    {
+     "g": 0,
+     "name": "Oisin Brennan",
+     "p": 4
+    },
+    {
+     "g": 1,
+     "name": "Cian Kavanagh",
+     "p": 0
+    },
+    {
+     "g": 0,
+     "name": "Sean Murphy",
+     "p": 3
+    },
+    {
+     "g": 1,
+     "name": "Ruairi Kehoe",
+     "p": 0
+    },
+    {
+     "g": 1,
+     "name": "Fionn Doran",
+     "p": 0
+    },
+    {
+     "g": 1,
+     "name": "Ciaran Byrne",
+     "p": 0
+    },
+    {
+     "g": 0,
+     "name": "Shane Lynch",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Unknown",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Conor Quinn",
+     "p": 1
+    },
+    {
+     "g": 0,
+     "name": "Aidan Farrell",
+     "p": 1
+    }
+   ]
+  },
   "chains": {
    "ko": {
     "opp": {
@@ -2034,6 +2204,166 @@
     "tpConv": 0
    }
   ],
+  "callouts": {
+   "cards": [
+    {
+     "key": "shots",
+     "kind": "n",
+     "opp": 6,
+     "sub": [
+      "2 SCORED",
+      "2 SCORED"
+     ],
+     "tagged": true,
+     "us": 8
+    },
+    {
+     "key": "eff",
+     "kind": "pct",
+     "opp": [
+      2,
+      6
+     ],
+     "sub": [
+      "FROM PLAY"
+     ],
+     "tagged": true,
+     "us": [
+      2,
+      8
+     ]
+    },
+    {
+     "key": "frees",
+     "kind": "n",
+     "opp": 4,
+     "sub": [
+      "FROM 16",
+      "FROM 9"
+     ],
+     "tagged": true,
+     "us": 8
+    },
+    {
+     "key": "restarts",
+     "kind": "pct",
+     "opp": [
+      3,
+      7
+     ],
+     "sub": [
+      "0 OF 9",
+      "3 OF 7"
+     ],
+     "tagged": true,
+     "us": [
+      0,
+      9
+     ]
+    },
+    {
+     "key": "tackles",
+     "kind": "n",
+     "opp": 6,
+     "sub": [
+      "CONTACT + BLOCK"
+     ],
+     "tagged": true,
+     "us": 3
+    },
+    {
+     "key": "fouls",
+     "kind": "n",
+     "opp": 4,
+     "sub": [
+      "IN TACKLE"
+     ],
+     "tagged": true,
+     "us": 3
+    }
+   ],
+   "donut": {
+    "opp": 4,
+    "segs": [
+     {
+      "label": "In Contact",
+      "n": 2
+     },
+     {
+      "label": "3-Man Breach",
+      "n": 2
+     },
+     {
+      "label": "Foul",
+      "n": 1
+     },
+     {
+      "label": "Handling",
+      "n": 1
+     },
+     {
+      "label": "Kick Pass",
+      "n": 1
+     }
+    ],
+    "tagged": true,
+    "us": 7
+   },
+   "score": {
+    "opp": {
+     "g": 3,
+     "n": 6,
+     "p": 4
+    },
+    "us": {
+     "g": 3,
+     "n": 10,
+     "p": 12
+    }
+   },
+   "scorers": [
+    {
+     "g": 0,
+     "name": "Ruairi Kehoe",
+     "p": 4
+    },
+    {
+     "g": 1,
+     "name": "Ronan Healy",
+     "p": 0
+    },
+    {
+     "g": 1,
+     "name": "Ciaran Byrne",
+     "p": 0
+    },
+    {
+     "g": 0,
+     "name": "Padraig Doyle",
+     "p": 3
+    },
+    {
+     "g": 1,
+     "name": "Unknown",
+     "p": 0
+    },
+    {
+     "g": 0,
+     "name": "Conor Quinn",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Cian Kavanagh",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Eoin Walsh",
+     "p": 1
+    }
+   ]
+  },
   "chains": {
    "ko": {
     "opp": {
@@ -3718,6 +4048,170 @@
     "tpConv": 0.1
    }
   ],
+  "callouts": {
+   "cards": [
+    {
+     "key": "shots",
+     "kind": "n",
+     "opp": 7,
+     "sub": [
+      "9 SCORED",
+      "4 SCORED"
+     ],
+     "tagged": true,
+     "us": 23
+    },
+    {
+     "key": "eff",
+     "kind": "pct",
+     "opp": [
+      4,
+      7
+     ],
+     "sub": [
+      "FROM PLAY"
+     ],
+     "tagged": true,
+     "us": [
+      9,
+      23
+     ]
+    },
+    {
+     "key": "frees",
+     "kind": "n",
+     "opp": 4,
+     "sub": [
+      "FROM 7",
+      "FROM 7"
+     ],
+     "tagged": true,
+     "us": 3
+    },
+    {
+     "key": "restarts",
+     "kind": "pct",
+     "opp": [
+      3,
+      13
+     ],
+     "sub": [
+      "1 OF 12",
+      "3 OF 13"
+     ],
+     "tagged": true,
+     "us": [
+      1,
+      12
+     ]
+    },
+    {
+     "key": "tackles",
+     "kind": "n",
+     "opp": 7,
+     "sub": [
+      "CONTACT + BLOCK"
+     ],
+     "tagged": true,
+     "us": 8
+    },
+    {
+     "key": "fouls",
+     "kind": "n",
+     "opp": 3,
+     "sub": [
+      "IN TACKLE"
+     ],
+     "tagged": true,
+     "us": 3
+    }
+   ],
+   "donut": {
+    "opp": 8,
+    "segs": [
+     {
+      "label": "Handling",
+      "n": 3
+     },
+     {
+      "label": "Foul",
+      "n": 2
+     },
+     {
+      "label": "Shot Dropped Short",
+      "n": 2
+     },
+     {
+      "label": "Intercepted",
+      "n": 1
+     },
+     {
+      "label": "Kick Pass",
+      "n": 1
+     },
+     {
+      "label": "In Contact",
+      "n": 1
+     }
+    ],
+    "tagged": true,
+    "us": 10
+   },
+   "score": {
+    "opp": {
+     "g": 2,
+     "n": 8,
+     "p": 8
+    },
+    "us": {
+     "g": 5,
+     "n": 12,
+     "p": 14
+    }
+   },
+   "scorers": [
+    {
+     "g": 2,
+     "name": "Unknown",
+     "p": 2
+    },
+    {
+     "g": 2,
+     "name": "Darragh Kelly",
+     "p": 0
+    },
+    {
+     "g": 0,
+     "name": "Sean Murphy",
+     "p": 4
+    },
+    {
+     "g": 1,
+     "name": "Tomas Nolan",
+     "p": 0
+    },
+    {
+     "g": 0,
+     "name": "Ruairi Kehoe",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Ciaran Byrne",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Aidan Farrell",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Padraig Doyle",
+     "p": 2
+    }
+   ]
+  },
   "chains": {
    "ko": {
     "opp": {
@@ -5506,6 +6000,104 @@
     "tpConv": null
    }
   ],
+  "callouts": {
+   "cards": [
+    {
+     "key": "shots",
+     "kind": "n",
+     "opp": 0,
+     "sub": [
+      "0 SCORED",
+      "0 SCORED"
+     ],
+     "tagged": false,
+     "us": 0
+    },
+    {
+     "key": "eff",
+     "kind": "pct",
+     "opp": [
+      0,
+      0
+     ],
+     "sub": [
+      "FROM PLAY"
+     ],
+     "tagged": false,
+     "us": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "frees",
+     "kind": "n",
+     "opp": 0,
+     "sub": [
+      "FROM 0",
+      "FROM 1"
+     ],
+     "tagged": true,
+     "us": 0
+    },
+    {
+     "key": "restarts",
+     "kind": "pct",
+     "opp": [
+      0,
+      0
+     ],
+     "sub": [
+      "0 OF 0",
+      "0 OF 0"
+     ],
+     "tagged": false,
+     "us": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "tackles",
+     "kind": "n",
+     "opp": 0,
+     "sub": [
+      "CONTACT + BLOCK"
+     ],
+     "tagged": true,
+     "us": 2
+    },
+    {
+     "key": "fouls",
+     "kind": "n",
+     "opp": 0,
+     "sub": [
+      "IN TACKLE"
+     ],
+     "tagged": false,
+     "us": 0
+    }
+   ],
+   "donut": {
+    "opp": 0,
+    "segs": [],
+    "tagged": false,
+    "us": 0
+   },
+   "score": {
+    "opp": {
+     "g": 0,
+     "n": 0,
+     "p": 0
+    },
+    "us": {
+     "g": 0,
+     "n": 0,
+     "p": 0
+    }
+   },
+   "scorers": []
+  },
   "chains": {
    "ko": {
     "opp": {
@@ -6439,6 +7031,213 @@
     "tpConv": null
    }
   ],
+  "callouts": {
+   "cards": [
+    {
+     "key": "shots",
+     "kind": "n",
+     "opp": 23,
+     "sub": [
+      "14 SCORED",
+      "11 SCORED"
+     ],
+     "tagged": true,
+     "us": 39
+    },
+    {
+     "key": "eff",
+     "kind": "pct",
+     "opp": [
+      11,
+      23
+     ],
+     "sub": [
+      "FROM PLAY"
+     ],
+     "tagged": true,
+     "us": [
+      14,
+      39
+     ]
+    },
+    {
+     "key": "frees",
+     "kind": "n",
+     "opp": 15,
+     "sub": [
+      "FROM 34",
+      "FROM 33"
+     ],
+     "tagged": true,
+     "us": 20
+    },
+    {
+     "key": "restarts",
+     "kind": "pct",
+     "opp": [
+      11,
+      33
+     ],
+     "sub": [
+      "4 OF 32",
+      "11 OF 33"
+     ],
+     "tagged": true,
+     "us": [
+      4,
+      32
+     ]
+    },
+    {
+     "key": "tackles",
+     "kind": "n",
+     "opp": 17,
+     "sub": [
+      "CONTACT + BLOCK"
+     ],
+     "tagged": true,
+     "us": 19
+    },
+    {
+     "key": "fouls",
+     "kind": "n",
+     "opp": 9,
+     "sub": [
+      "IN TACKLE"
+     ],
+     "tagged": true,
+     "us": 9
+    }
+   ],
+   "donut": {
+    "opp": 19,
+    "segs": [
+     {
+      "label": "Handling",
+      "n": 7
+     },
+     {
+      "label": "In Contact",
+      "n": 5
+     },
+     {
+      "label": "Kick Pass",
+      "n": 4
+     },
+     {
+      "label": "Foul",
+      "n": 3
+     },
+     {
+      "label": "Intercepted",
+      "n": 3
+     },
+     {
+      "label": "3-Man Breach",
+      "n": 2
+     },
+     {
+      "label": "Hand Pass",
+      "n": 2
+     },
+     {
+      "label": "Shot Dropped Short",
+      "n": 2
+     }
+    ],
+    "tagged": true,
+    "us": 28
+   },
+   "score": {
+    "opp": {
+     "g": 11,
+     "n": 26,
+     "p": 19
+    },
+    "us": {
+     "g": 12,
+     "n": 34,
+     "p": 39
+    }
+   },
+   "scorers": [
+    {
+     "g": 3,
+     "name": "Unknown",
+     "p": 4
+    },
+    {
+     "g": 1,
+     "name": "Ruairi Kehoe",
+     "p": 6
+    },
+    {
+     "g": 2,
+     "name": "Ciaran Byrne",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Sean Murphy",
+     "p": 7
+    },
+    {
+     "g": 2,
+     "name": "Darragh Kelly",
+     "p": 0
+    },
+    {
+     "g": 1,
+     "name": "Cian Kavanagh",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Padraig Doyle",
+     "p": 5
+    },
+    {
+     "g": 0,
+     "name": "Oisin Brennan",
+     "p": 4
+    },
+    {
+     "g": 1,
+     "name": "Ronan Healy",
+     "p": 0
+    },
+    {
+     "g": 0,
+     "name": "Conor Quinn",
+     "p": 3
+    },
+    {
+     "g": 0,
+     "name": "Aidan Farrell",
+     "p": 3
+    },
+    {
+     "g": 1,
+     "name": "Tomas Nolan",
+     "p": 0
+    },
+    {
+     "g": 1,
+     "name": "Fionn Doran",
+     "p": 0
+    },
+    {
+     "g": 0,
+     "name": "Shane Lynch",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Eoin Walsh",
+     "p": 1
+    }
+   ]
+  },
   "chains": {
    "ko": {
     "opp": {
@@ -9807,6 +10606,213 @@
     "tpConv": null
    }
   ],
+  "callouts": {
+   "cards": [
+    {
+     "key": "shots",
+     "kind": "n",
+     "opp": 23,
+     "sub": [
+      "14 SCORED",
+      "11 SCORED"
+     ],
+     "tagged": true,
+     "us": 39
+    },
+    {
+     "key": "eff",
+     "kind": "pct",
+     "opp": [
+      11,
+      23
+     ],
+     "sub": [
+      "FROM PLAY"
+     ],
+     "tagged": true,
+     "us": [
+      14,
+      39
+     ]
+    },
+    {
+     "key": "frees",
+     "kind": "n",
+     "opp": 15,
+     "sub": [
+      "FROM 34",
+      "FROM 33"
+     ],
+     "tagged": true,
+     "us": 20
+    },
+    {
+     "key": "restarts",
+     "kind": "pct",
+     "opp": [
+      11,
+      33
+     ],
+     "sub": [
+      "4 OF 32",
+      "11 OF 33"
+     ],
+     "tagged": true,
+     "us": [
+      4,
+      32
+     ]
+    },
+    {
+     "key": "tackles",
+     "kind": "n",
+     "opp": 17,
+     "sub": [
+      "CONTACT + BLOCK"
+     ],
+     "tagged": true,
+     "us": 19
+    },
+    {
+     "key": "fouls",
+     "kind": "n",
+     "opp": 9,
+     "sub": [
+      "IN TACKLE"
+     ],
+     "tagged": true,
+     "us": 9
+    }
+   ],
+   "donut": {
+    "opp": 19,
+    "segs": [
+     {
+      "label": "Handling",
+      "n": 7
+     },
+     {
+      "label": "In Contact",
+      "n": 5
+     },
+     {
+      "label": "Kick Pass",
+      "n": 4
+     },
+     {
+      "label": "Foul",
+      "n": 3
+     },
+     {
+      "label": "Intercepted",
+      "n": 3
+     },
+     {
+      "label": "3-Man Breach",
+      "n": 2
+     },
+     {
+      "label": "Hand Pass",
+      "n": 2
+     },
+     {
+      "label": "Shot Dropped Short",
+      "n": 2
+     }
+    ],
+    "tagged": true,
+    "us": 28
+   },
+   "score": {
+    "opp": {
+     "g": 11,
+     "n": 26,
+     "p": 19
+    },
+    "us": {
+     "g": 12,
+     "n": 34,
+     "p": 39
+    }
+   },
+   "scorers": [
+    {
+     "g": 3,
+     "name": "Unknown",
+     "p": 4
+    },
+    {
+     "g": 1,
+     "name": "Ruairi Kehoe",
+     "p": 6
+    },
+    {
+     "g": 2,
+     "name": "Ciaran Byrne",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Sean Murphy",
+     "p": 7
+    },
+    {
+     "g": 2,
+     "name": "Darragh Kelly",
+     "p": 0
+    },
+    {
+     "g": 1,
+     "name": "Cian Kavanagh",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Padraig Doyle",
+     "p": 5
+    },
+    {
+     "g": 0,
+     "name": "Oisin Brennan",
+     "p": 4
+    },
+    {
+     "g": 1,
+     "name": "Ronan Healy",
+     "p": 0
+    },
+    {
+     "g": 0,
+     "name": "Conor Quinn",
+     "p": 3
+    },
+    {
+     "g": 0,
+     "name": "Aidan Farrell",
+     "p": 3
+    },
+    {
+     "g": 1,
+     "name": "Tomas Nolan",
+     "p": 0
+    },
+    {
+     "g": 1,
+     "name": "Fionn Doran",
+     "p": 0
+    },
+    {
+     "g": 0,
+     "name": "Shane Lynch",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Eoin Walsh",
+     "p": 1
+    }
+   ]
+  },
   "chains": {
    "ko": {
     "opp": {
@@ -13175,6 +14181,213 @@
     "tpConv": null
    }
   ],
+  "callouts": {
+   "cards": [
+    {
+     "key": "shots",
+     "kind": "n",
+     "opp": 23,
+     "sub": [
+      "14 SCORED",
+      "11 SCORED"
+     ],
+     "tagged": true,
+     "us": 39
+    },
+    {
+     "key": "eff",
+     "kind": "pct",
+     "opp": [
+      11,
+      23
+     ],
+     "sub": [
+      "FROM PLAY"
+     ],
+     "tagged": true,
+     "us": [
+      14,
+      39
+     ]
+    },
+    {
+     "key": "frees",
+     "kind": "n",
+     "opp": 15,
+     "sub": [
+      "FROM 34",
+      "FROM 33"
+     ],
+     "tagged": true,
+     "us": 20
+    },
+    {
+     "key": "restarts",
+     "kind": "pct",
+     "opp": [
+      11,
+      33
+     ],
+     "sub": [
+      "4 OF 32",
+      "11 OF 33"
+     ],
+     "tagged": true,
+     "us": [
+      4,
+      32
+     ]
+    },
+    {
+     "key": "tackles",
+     "kind": "n",
+     "opp": 17,
+     "sub": [
+      "CONTACT + BLOCK"
+     ],
+     "tagged": true,
+     "us": 19
+    },
+    {
+     "key": "fouls",
+     "kind": "n",
+     "opp": 9,
+     "sub": [
+      "IN TACKLE"
+     ],
+     "tagged": true,
+     "us": 9
+    }
+   ],
+   "donut": {
+    "opp": 19,
+    "segs": [
+     {
+      "label": "Handling",
+      "n": 7
+     },
+     {
+      "label": "In Contact",
+      "n": 5
+     },
+     {
+      "label": "Kick Pass",
+      "n": 4
+     },
+     {
+      "label": "Foul",
+      "n": 3
+     },
+     {
+      "label": "Intercepted",
+      "n": 3
+     },
+     {
+      "label": "3-Man Breach",
+      "n": 2
+     },
+     {
+      "label": "Hand Pass",
+      "n": 2
+     },
+     {
+      "label": "Shot Dropped Short",
+      "n": 2
+     }
+    ],
+    "tagged": true,
+    "us": 28
+   },
+   "score": {
+    "opp": {
+     "g": 11,
+     "n": 26,
+     "p": 19
+    },
+    "us": {
+     "g": 12,
+     "n": 34,
+     "p": 39
+    }
+   },
+   "scorers": [
+    {
+     "g": 3,
+     "name": "Unknown",
+     "p": 4
+    },
+    {
+     "g": 1,
+     "name": "Ruairi Kehoe",
+     "p": 6
+    },
+    {
+     "g": 2,
+     "name": "Ciaran Byrne",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Sean Murphy",
+     "p": 7
+    },
+    {
+     "g": 2,
+     "name": "Darragh Kelly",
+     "p": 0
+    },
+    {
+     "g": 1,
+     "name": "Cian Kavanagh",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Padraig Doyle",
+     "p": 5
+    },
+    {
+     "g": 0,
+     "name": "Oisin Brennan",
+     "p": 4
+    },
+    {
+     "g": 1,
+     "name": "Ronan Healy",
+     "p": 0
+    },
+    {
+     "g": 0,
+     "name": "Conor Quinn",
+     "p": 3
+    },
+    {
+     "g": 0,
+     "name": "Aidan Farrell",
+     "p": 3
+    },
+    {
+     "g": 1,
+     "name": "Tomas Nolan",
+     "p": 0
+    },
+    {
+     "g": 1,
+     "name": "Fionn Doran",
+     "p": 0
+    },
+    {
+     "g": 0,
+     "name": "Shane Lynch",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Eoin Walsh",
+     "p": 1
+    }
+   ]
+  },
   "chains": {
    "ko": {
     "opp": {
@@ -16497,6 +17710,104 @@
    }
   },
   "benchmark": [],
+  "callouts": {
+   "cards": [
+    {
+     "key": "shots",
+     "kind": "n",
+     "opp": 0,
+     "sub": [
+      "0 SCORED",
+      "0 SCORED"
+     ],
+     "tagged": false,
+     "us": 0
+    },
+    {
+     "key": "eff",
+     "kind": "pct",
+     "opp": [
+      0,
+      0
+     ],
+     "sub": [
+      "FROM PLAY"
+     ],
+     "tagged": false,
+     "us": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "frees",
+     "kind": "n",
+     "opp": 0,
+     "sub": [
+      "FROM 0",
+      "FROM 0"
+     ],
+     "tagged": false,
+     "us": 0
+    },
+    {
+     "key": "restarts",
+     "kind": "pct",
+     "opp": [
+      0,
+      0
+     ],
+     "sub": [
+      "0 OF 0",
+      "0 OF 0"
+     ],
+     "tagged": false,
+     "us": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "tackles",
+     "kind": "n",
+     "opp": 0,
+     "sub": [
+      "CONTACT + BLOCK"
+     ],
+     "tagged": false,
+     "us": 0
+    },
+    {
+     "key": "fouls",
+     "kind": "n",
+     "opp": 0,
+     "sub": [
+      "IN TACKLE"
+     ],
+     "tagged": false,
+     "us": 0
+    }
+   ],
+   "donut": {
+    "opp": 0,
+    "segs": [],
+    "tagged": false,
+    "us": 0
+   },
+   "score": {
+    "opp": {
+     "g": 0,
+     "n": 0,
+     "p": 0
+    },
+    "us": {
+     "g": 0,
+     "n": 0,
+     "p": 0
+    }
+   },
+   "scorers": []
+  },
   "chains": {
    "ko": {
     "opp": {
@@ -17337,6 +18648,161 @@
     "tpConv": 0.25
    }
   ],
+  "callouts": {
+   "cards": [
+    {
+     "key": "shots",
+     "kind": "n",
+     "opp": 9,
+     "sub": [
+      "3 SCORED",
+      "5 SCORED"
+     ],
+     "tagged": true,
+     "us": 5
+    },
+    {
+     "key": "eff",
+     "kind": "pct",
+     "opp": [
+      5,
+      9
+     ],
+     "sub": [
+      "FROM PLAY"
+     ],
+     "tagged": true,
+     "us": [
+      3,
+      5
+     ]
+    },
+    {
+     "key": "frees",
+     "kind": "n",
+     "opp": 4,
+     "sub": [
+      "FROM 11",
+      "FROM 10"
+     ],
+     "tagged": true,
+     "us": 4
+    },
+    {
+     "key": "restarts",
+     "kind": "pct",
+     "opp": [
+      3,
+      8
+     ],
+     "sub": [
+      "5 OF 10",
+      "3 OF 8"
+     ],
+     "tagged": true,
+     "us": [
+      5,
+      10
+     ]
+    },
+    {
+     "key": "tackles",
+     "kind": "n",
+     "opp": 8,
+     "sub": [
+      "CONTACT + BLOCK"
+     ],
+     "tagged": true,
+     "us": 6
+    },
+    {
+     "key": "fouls",
+     "kind": "n",
+     "opp": 1,
+     "sub": [
+      "IN TACKLE"
+     ],
+     "tagged": true,
+     "us": 3
+    }
+   ],
+   "donut": {
+    "opp": 7,
+    "segs": [
+     {
+      "label": "Intercepted",
+      "n": 2
+     },
+     {
+      "label": "Hand Pass",
+      "n": 1
+     },
+     {
+      "label": "In Contact",
+      "n": 1
+     },
+     {
+      "label": "Handling",
+      "n": 1
+     },
+     {
+      "label": "3-Man Breach",
+      "n": 1
+     }
+    ],
+    "tagged": true,
+    "us": 6
+   },
+   "score": {
+    "opp": {
+     "g": 2,
+     "n": 9,
+     "p": 11
+    },
+    "us": {
+     "g": 2,
+     "n": 7,
+     "p": 8
+    }
+   },
+   "scorers": [
+    {
+     "g": 1,
+     "name": "Ciaran Byrne",
+     "p": 0
+    },
+    {
+     "g": 1,
+     "name": "Aidan Farrell",
+     "p": 0
+    },
+    {
+     "g": 0,
+     "name": "Oisin Brennan",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Fionn Doran",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Sean Murphy",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Padraig Doyle",
+     "p": 1
+    },
+    {
+     "g": 0,
+     "name": "Shane Lynch",
+     "p": 1
+    }
+   ]
+  },
   "chains": {
    "ko": {
     "opp": {
@@ -19166,6 +20632,152 @@
     "tpConv": 0.14285714285714285
    }
   ],
+  "callouts": {
+   "cards": [
+    {
+     "key": "shots",
+     "kind": "n",
+     "opp": 9,
+     "sub": [
+      "3 SCORED",
+      "6 SCORED"
+     ],
+     "tagged": true,
+     "us": 15
+    },
+    {
+     "key": "eff",
+     "kind": "pct",
+     "opp": [
+      6,
+      9
+     ],
+     "sub": [
+      "FROM PLAY"
+     ],
+     "tagged": true,
+     "us": [
+      3,
+      15
+     ]
+    },
+    {
+     "key": "frees",
+     "kind": "n",
+     "opp": 5,
+     "sub": [
+      "FROM 9",
+      "FROM 10"
+     ],
+     "tagged": true,
+     "us": 3
+    },
+    {
+     "key": "restarts",
+     "kind": "pct",
+     "opp": [
+      2,
+      5
+     ],
+     "sub": [
+      "4 OF 9",
+      "2 OF 5"
+     ],
+     "tagged": true,
+     "us": [
+      4,
+      9
+     ]
+    },
+    {
+     "key": "tackles",
+     "kind": "n",
+     "opp": 3,
+     "sub": [
+      "CONTACT + BLOCK"
+     ],
+     "tagged": true,
+     "us": 6
+    },
+    {
+     "key": "fouls",
+     "kind": "n",
+     "opp": 0,
+     "sub": [
+      "IN TACKLE"
+     ],
+     "tagged": true,
+     "us": 1
+    }
+   ],
+   "donut": {
+    "opp": 6,
+    "segs": [
+     {
+      "label": "Handling",
+      "n": 5
+     },
+     {
+      "label": "In Contact",
+      "n": 3
+     },
+     {
+      "label": "Hand Pass",
+      "n": 2
+     },
+     {
+      "label": "Foul",
+      "n": 1
+     }
+    ],
+    "tagged": true,
+    "us": 11
+   },
+   "score": {
+    "opp": {
+     "g": 3,
+     "n": 11,
+     "p": 11
+    },
+    "us": {
+     "g": 2,
+     "n": 6,
+     "p": 6
+    }
+   },
+   "scorers": [
+    {
+     "g": 1,
+     "name": "Shane Lynch",
+     "p": 0
+    },
+    {
+     "g": 1,
+     "name": "Sean Murphy",
+     "p": 0
+    },
+    {
+     "g": 0,
+     "name": "Eoin Walsh",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Ciaran Byrne",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Tomas Nolan",
+     "p": 1
+    },
+    {
+     "g": 0,
+     "name": "Cian Kavanagh",
+     "p": 1
+    }
+   ]
+  },
   "chains": {
    "ko": {
     "opp": {
@@ -21020,6 +22632,180 @@
     "tpConv": 0.14285714285714285
    }
   ],
+  "callouts": {
+   "cards": [
+    {
+     "key": "shots",
+     "kind": "n",
+     "opp": 18,
+     "sub": [
+      "6 SCORED",
+      "11 SCORED"
+     ],
+     "tagged": true,
+     "us": 20
+    },
+    {
+     "key": "eff",
+     "kind": "pct",
+     "opp": [
+      11,
+      18
+     ],
+     "sub": [
+      "FROM PLAY"
+     ],
+     "tagged": true,
+     "us": [
+      6,
+      20
+     ]
+    },
+    {
+     "key": "frees",
+     "kind": "n",
+     "opp": 9,
+     "sub": [
+      "FROM 20",
+      "FROM 20"
+     ],
+     "tagged": true,
+     "us": 7
+    },
+    {
+     "key": "restarts",
+     "kind": "pct",
+     "opp": [
+      5,
+      13
+     ],
+     "sub": [
+      "9 OF 19",
+      "5 OF 13"
+     ],
+     "tagged": true,
+     "us": [
+      9,
+      19
+     ]
+    },
+    {
+     "key": "tackles",
+     "kind": "n",
+     "opp": 11,
+     "sub": [
+      "CONTACT + BLOCK"
+     ],
+     "tagged": true,
+     "us": 12
+    },
+    {
+     "key": "fouls",
+     "kind": "n",
+     "opp": 1,
+     "sub": [
+      "IN TACKLE"
+     ],
+     "tagged": true,
+     "us": 4
+    }
+   ],
+   "donut": {
+    "opp": 13,
+    "segs": [
+     {
+      "label": "Handling",
+      "n": 6
+     },
+     {
+      "label": "In Contact",
+      "n": 4
+     },
+     {
+      "label": "Hand Pass",
+      "n": 3
+     },
+     {
+      "label": "Intercepted",
+      "n": 2
+     },
+     {
+      "label": "Foul",
+      "n": 1
+     },
+     {
+      "label": "3-Man Breach",
+      "n": 1
+     }
+    ],
+    "tagged": true,
+    "us": 17
+   },
+   "score": {
+    "opp": {
+     "g": 5,
+     "n": 20,
+     "p": 22
+    },
+    "us": {
+     "g": 4,
+     "n": 13,
+     "p": 14
+    }
+   },
+   "scorers": [
+    {
+     "g": 1,
+     "name": "Ciaran Byrne",
+     "p": 2
+    },
+    {
+     "g": 1,
+     "name": "Sean Murphy",
+     "p": 2
+    },
+    {
+     "g": 1,
+     "name": "Shane Lynch",
+     "p": 1
+    },
+    {
+     "g": 1,
+     "name": "Aidan Farrell",
+     "p": 0
+    },
+    {
+     "g": 0,
+     "name": "Eoin Walsh",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Oisin Brennan",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Fionn Doran",
+     "p": 2
+    },
+    {
+     "g": 0,
+     "name": "Tomas Nolan",
+     "p": 1
+    },
+    {
+     "g": 0,
+     "name": "Padraig Doyle",
+     "p": 1
+    },
+    {
+     "g": 0,
+     "name": "Cian Kavanagh",
+     "p": 1
+    }
+   ]
+  },
   "chains": {
    "ko": {
     "opp": {
