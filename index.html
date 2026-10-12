@@ -2905,7 +2905,7 @@
       { k: "l13", w: "soft", d: across(13) },
       { k: "l20", w: "main", d: across(20) },
       { k: "l45", w: "soft", d: across(45) },
-      { k: "l65", w: "faint", d: across(65) },
+      { k: "l65", w: "main", d: across(65) },
       { k: "big", w: "soft", d: poly([[-9.5, 0], [-9.5, 13], [9.5, 13], [9.5, 0]]) },
       { k: "small", w: "main", d: poly([[-7, 0], [-7, 4.5], [7, 4.5], [7, 0]]) },
       { k: "semi", w: "soft", d: arc(20, 13, 90) },
@@ -3229,7 +3229,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       stripes,
       /* @__PURE__ */ React.createElement("rect", { x: "0", y: "0", width: W, height: H, fill: "url(#rsvig)" }),
       /* @__PURE__ */ React.createElement("rect", { x: L, y: T, width: R - L, height: B - T, fill: "none", stroke: LN, strokeWidth: "2", rx: "2.5" }),
-      /* @__PURE__ */ React.createElement("line", { x1: L, y1: MID, x2: R, y2: MID, stroke: LN, strokeWidth: "1.5" }),
+      /* @__PURE__ */ React.createElement("line", { x1: L, y1: MID, x2: R, y2: MID, stroke: LN, strokeWidth: "1.5", strokeDasharray: "7,5" }),
       /* @__PURE__ */ React.createElement("circle", { cx: MX, cy: MID, r: "2", fill: LN }),
       endMarks(true),
       endMarks(false),
@@ -3419,7 +3419,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       stripes,
       /* @__PURE__ */ React.createElement("rect", { x: "0", y: "0", width: W, height: H, fill: "url(#rsvigL)" }),
       /* @__PURE__ */ React.createElement("rect", { x: L, y: T, width: R - L, height: B - T, fill: "none", stroke: LN, strokeWidth: "2", rx: "2.5" }),
-      /* @__PURE__ */ React.createElement("line", { x1: MIDX, y1: T, x2: MIDX, y2: B, stroke: LN, strokeWidth: "1.5" }),
+      /* @__PURE__ */ React.createElement("line", { x1: MIDX, y1: T, x2: MIDX, y2: B, stroke: LN, strokeWidth: "1.5", strokeDasharray: "7,5" }),
       /* @__PURE__ */ React.createElement("circle", { cx: MIDX, cy: MY, r: "2", fill: LN }),
       endMarks(true),
       endMarks(false),
@@ -7767,7 +7767,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }
       var MID=(T+B)/2;
       // Midfield
-      svg+='<line x1="'+L+'" y1="'+MID+'" x2="'+R+'" y2="'+MID+'" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>';
+      svg+='<line x1="'+L+'" y1="'+MID+'" x2="'+R+'" y2="'+MID+'" stroke="rgba(255,255,255,0.45)" stroke-width="1.1" stroke-dasharray="6 4"/>';
       // GAA end markings, both ends
       var kst={main:['rgba(255,255,255,0.45)',1.1],soft:['rgba(255,255,255,0.3)',0.9],faint:['rgba(255,255,255,0.2)',0.8],dot:'rgba(255,255,255,0.45)'};
       svg+=gaaEndSvg(function(a,d){return [cx+a*(R-L)/GAA_W, B-mD(d)];},kst);
