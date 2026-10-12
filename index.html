@@ -8454,8 +8454,6 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             React.createElement("span", { style: { fontSize: FS.sm, color: C.greenB, fontWeight: 700 } }, "\u2014 " + (club.name || "Us")),
             React.createElement("span", { style: { fontSize: FS.sm, color: C.blue, fontWeight: 700 } }, "- - " + (ON || "Opposition"))
           ), chart)),
-        React.createElement(Section, { title: nM > 1 ? "BLOCK PROFILE \u00b7 " + nM + " GAMES" : "BLOCK PROFILE" }, React.createElement(BlockProfile, { tb: d && d.timeBlocks, club: club, oppName: ON, nM: nM })),
-        React.createElement(Section, { title: "POSSESSION LENGTH" }, React.createElement(PossLength, { pl: d && d.possLen, club: club, oppName: ON })),
         React.createElement(Section, { title: nM > 1 ? "SCORING DROUGHTS \u00b7 " + nM + " GAMES" : "SCORING DROUGHTS" }, React.createElement(DroughtView, { dr: d && d.droughts, club: club, oppName: ON, nM: nM })),
         React.createElement(Section, { title: nM > 1 ? "TIME LEADING \u00b7 LEVEL \u00b7 BEHIND \u00b7 " + nM + " GAMES" : "TIME LEADING \u00b7 LEVEL \u00b7 BEHIND" }, React.createElement(GameStateView, { gs: d && d.gameState, club: club, nM: nM })),
         React.createElement(Section, { title: nM > 1 ? "AVG PERIOD BREAKDOWN \u00b7 " + nM + " GAMES" : "PERIOD BREAKDOWN" }, tbl),
@@ -8839,105 +8837,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setSelMatch(null);
     } }) : /* @__PURE__ */ React.createElement(MatchList, { matches: d.matches, onPick: setSelMatch }))));
   }
-  // Group 1 of docs/RSA-SPEC-time-metrics.md. Read-only views over computeStats output,
+  // Time-metric views from docs/RSA-SPEC-time-metrics.md. Read-only views over computeStats output,
   // drawn with the same card and table styling as the period breakdown.
   var _TM_CARD = { overflowX: "auto", background: C.bgCard, borderRadius: RAD.xl, boxShadow: "0 2px 8px " + C.black + ALPHA.mid, padding: "16px 14px" };
   var _TM_TH = { textAlign: "center", padding: "10px 12px", borderBottom: "2px solid " + C.border, color: C.slate, fontSize: FS.sm, fontWeight: 700, whiteSpace: "nowrap" };
   var _TM_TD = { textAlign: "center", padding: "10px 12px", whiteSpace: "nowrap" };
   var _TM_LBL = { padding: "10px 8px", color: C.slate, fontSize: FS.md, fontWeight: 600, whiteSpace: "nowrap", textAlign: "left" };
   var _TM_NOTE = { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, marginTop: 10, lineHeight: 1.5 };
-  function _tmSigned(v) { return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v); }
-  function BlockProfile({ tb, club, oppName, nM }) {
-    if (!tb) return null;
-    var labels = ["0-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60+"];
-    var diff = tb.us.map(function(u, i) { return u.pts - tb.opp[i].pts; });
-    // Best and worst are picked from the comparable blocks only (0-59).
-    var best = -1, worst = -1;
-    diff.slice(0, 6).forEach(function(v, i) { if (best < 0 || v > diff[best]) best = i; if (worst < 0 || v < diff[worst]) worst = i; });
-    function pps(x) { return x.shots ? (x.pts / x.shots).toFixed(2) : "—"; }
-    function half(a, b) { var s = 0; for (var i = a; i <= b; i++) s += diff[i]; return s; }
-    var usN = (club && club.name) || "Us", opN = oppName || "Opposition";
-    var rows = [
-      ["Points · " + usN, tb.us.map(function(x) { return x.pts; }), C.greenB],
-      ["Points · " + opN, tb.opp.map(function(x) { return x.pts; }), C.blue],
-      ["Difference", diff, null],
-      ["Shots · " + usN, tb.us.map(function(x) { return x.shots; }), C.slate],
-      ["Shots · " + opN, tb.opp.map(function(x) { return x.shots; }), C.slate],
-      ["Pts per shot · " + usN, tb.us.map(pps), C.greenB],
-      ["Pts per shot · " + opN, tb.opp.map(pps), C.blue]
-    ];
-    return React.createElement("div", null,
-      React.createElement("div", { style: _TM_CARD },
-        React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: FS.md, fontFamily: MONO } },
-          React.createElement("thead", null, React.createElement("tr", null,
-            React.createElement("th", { style: Object.assign({}, _TM_TH, { textAlign: "left" }) }, "MIN"),
-            labels.map(function(l, i) { return React.createElement("th", { key: i, style: Object.assign({}, _TM_TH, i === 6 ? { color: C.slateD } : null) }, l + (i === 6 ? "*" : "")); }))),
-          React.createElement("tbody", null, rows.map(function(r, ri) {
-            return React.createElement("tr", { key: ri, style: { borderBottom: "1px solid " + C.border + ALPHA.mid } },
-              React.createElement("td", { style: _TM_LBL }, r[0]),
-              r[1].map(function(v, ci) {
-                var muted = ci === 6, col = r[2], bg = "none";
-                if (r[2] === null) {
-                  col = v > 0 ? C.greenB : v < 0 ? C.red : C.slate;
-                  if (ci === best && diff[best] > 0) bg = C.greenB + ALPHA.faint;
-                  if (ci === worst && diff[worst] < 0) bg = C.red + ALPHA.faint;
-                }
-                return React.createElement("td", { key: ci, style: Object.assign({}, _TM_TD, { color: muted ? C.slateD : col, fontWeight: r[2] === null ? 800 : 600, background: muted ? "none" : bg, borderRadius: bg !== "none" && !muted ? RAD.md : 0 }) },
-                  r[2] === null ? _tmSigned(v) : String(v));
-              }));
-          })))),
-      React.createElement("div", { style: _TM_NOTE },
-        "0-29 ", _tmSigned(half(0, 2)), " · 30-59 ", _tmSigned(half(3, 5)), " · 60+ ", _tmSigned(diff[6]),
-        nM > 1 ? " · totals across " + nM + " games" : "",
-        React.createElement("br", null),
-        "* 60+ mixes 60- and 70-minute games, so it is left out of block comparisons.",
-        nM > 1 ? " Tagging density differs by analyst, so compare within one competition." : ""));
-  }
-  function PossLength({ pl, club, oppName }) {
-    if (!pl) return null;
-    var usN = (club && club.name) || "Us", opN = oppName || "Opposition";
-    function _tmPc(x) { return x == null ? "—" : Math.round(100 * x) + "%"; }
-    function pp(x) { return x == null ? "—" : x.toFixed(2); }
-    if (pl.us.n + pl.opp.n < 20) return React.createElement("div", { style: Object.assign({}, _TM_CARD, { fontSize: FS.sm, color: C.slateD, lineHeight: 1.6 }) },
-      "Not enough possessions tagged yet. A possession runs from a won ", restart_(), ", turnover or free to the next shot or loss.");
-    var ai = pl.ts.indexOf(pl.ref), uA = pl.us.alive[ai], u0 = pl.us.alive[0];
-    function bandLbl(b) { return b.hi == null ? b.lo + "s+" : b.lo + "-" + (b.hi - 1) + "s"; }
-    var aliveRows = [
-      ["Shot · " + usN, pl.us.alive.map(function(a) { return _tmPc(a.shot); }), C.greenB],
-      ["Pts/poss · " + usN, pl.us.alive.map(function(a) { return pp(a.ppp); }), C.greenB],
-      ["Shot · " + opN, pl.opp.alive.map(function(a) { return _tmPc(a.shot); }), C.blue],
-      ["Pts/poss · " + opN, pl.opp.alive.map(function(a) { return pp(a.ppp); }), C.blue],
-      ["Possessions · " + usN, pl.us.alive.map(function(a) { return String(a.n); }), C.slateD]
-    ];
-    function table(head, rows) {
-      return React.createElement("div", { style: _TM_CARD },
-        React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: FS.md, fontFamily: MONO } },
-          React.createElement("thead", null, React.createElement("tr", null,
-            React.createElement("th", { style: Object.assign({}, _TM_TH, { textAlign: "left" }) }, ""),
-            head.map(function(h, i) { return React.createElement("th", { key: i, style: _TM_TH }, h); }))),
-          React.createElement("tbody", null, rows.map(function(r, ri) {
-            return React.createElement("tr", { key: ri, style: { borderBottom: "1px solid " + C.border + ALPHA.mid } },
-              React.createElement("td", { style: _TM_LBL }, r[0]),
-              r[1].map(function(v, ci) { return React.createElement("td", { key: ci, style: Object.assign({}, _TM_TD, { color: r[2], fontWeight: 700 }) }, v); }));
-          }))));
-    }
-    return React.createElement("div", null,
-      React.createElement("div", { style: Object.assign({}, _TM_CARD, { marginBottom: 12 }) },
-        React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 700, color: C.white, lineHeight: 1.45 } },
-          "Still on the ball after ", pl.ref, "s, ", usN, " shoot ", _tmPc(uA.shot), " of the time"),
-        React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, fontFamily: MONO, marginTop: 6, lineHeight: 1.5 } },
-          "against ", _tmPc(u0.shot), " across all possessions · ", pp(uA.ppp), " pts per possession past ", pl.ref, "s",
-          React.createElement("br", null),
-          "median possession ", pl.us.med == null ? "—" : pl.us.med + "s", " ", usN, " · ", pl.opp.med == null ? "—" : pl.opp.med + "s", " ", opN)),
-      React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, margin: "14px 0 8px" } }, "STILL ALIVE AT"),
-      table(pl.ts.map(function(t) { return t + "s"; }), aliveRows),
-      React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, margin: "18px 0 8px" } }, "BY LENGTH · " + usN.toUpperCase()),
-      table(["n", "shot", "score", "pts/poss"], pl.us.bands.map(function(b) { return [bandLbl(b), [String(b.n), _tmPc(b.shot), _tmPc(b.score), pp(b.ppp)], C.slate]; })),
-      React.createElement("div", { style: _TM_NOTE },
-        "Read the alive table, not the bands: length is measured to the shot or loss, so longer possessions are more likely to have ended in a shot. ",
-        "Cut points scale with the sport (", pl.ref, "s reference for ", pl.sport, "). Stoppages count toward length; ",
-        pl.dropped.long, " possessions over 3 min and ", pl.dropped.neg, " with clock errors are left out."));
-  }
   function _tmMin(sec) { var s = Math.round(sec || 0); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
   function _tmMatchLbl(r) { return (r.date ? String(r.date).slice(5).replace("-", "/") + " " : "") + (r.opponent || "Match"); }
   // Group 2.1 of docs/RSA-SPEC-time-metrics.md: the longest spell each side went without a score.
