@@ -6347,6 +6347,19 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         return p ? Object.assign({}, p, patch) : p;
       });
     }
+    // Side credited by the tag being edited. A restart credits whoever won it, so a lost
+    // restart names the other team; same rule as applyEdit in the live tagger.
+    function vtEdCredUs() {
+      var er = editRow;
+      if (!er) return true;
+      var us = er.team === "us";
+      if (er.def && er.def.id === "kickout") {
+        var oc = evOutcomeStr(er.def, er.label);
+        var won = oc === "Won clean" || oc === "Break won";
+        return us ? won : !won;
+      }
+      return us;
+    }
     function saveEdit() {
       var er = editRow;
       if (!er) return;
@@ -7092,10 +7105,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return /* @__PURE__ */ React.createElement("button", { key: L, onClick: function() {
         setEK({ label: L });
       }, style: { padding: "7px 10px", borderRadius: RAD.md, border: "1px solid " + (on ? C.blue : C.border), background: on ? C.blue + ALPHA.soft : C.field, color: on ? C.blue : C.slate, fontSize: 12, fontWeight: 600, cursor: "pointer" } }, L);
-    })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: C.slateD, marginBottom: 5 } }, "PLAYER"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6 } }, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(function(n) {
-      var lab = editRow.team === "us" ? nameMap[n] || "#" + n : oppNameMap[n] || "#" + n;
+    })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: C.slateD, marginBottom: 5 } }, "PLAYER"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6 } }, (vtEdCredUs() && !SC && lineupJ ? lineupJ : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]).map(function(n) {
+      var credUs = vtEdCredUs();
+      var lab = credUs ? nameMap[n] || "#" + n : oppNameMap[n] || "#" + n;
       var on = editRow.player === lab;
-      var cc = editRow.team === "us" ? C.greenB : C.gold;
+      var cc = credUs ? C.greenB : C.gold;
       return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
         setEK({ player: lab });
       }, style: { padding: "9px 2px", background: on ? cc + ALPHA.soft : cc + ALPHA.faint, border: "1px solid " + (on ? cc : cc + ALPHA.soft), borderRadius: RAD.md, color: cc, textAlign: "center", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, n));
