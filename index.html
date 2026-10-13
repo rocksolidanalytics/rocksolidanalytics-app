@@ -4779,8 +4779,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setStatsOpen(false);
     }, style: { margin: 10, padding: 16, borderRadius: RAD.lg, border: "none", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 15, cursor: "pointer" } }, "\u2190 Back to tagging"));
     var mAlert = null;
+    // tagged is newest first; the streak checks below read oldest to newest.
+    var _chron = tagged.slice().sort(function(a, b) { return (a.seq || 0) - (b.seq || 0); });
+    function _ocIs(e, list) { return list.indexOf(canonOutcome(e.outcome).toLowerCase()) >= 0; }
     try {
-      var _sc = tagged.filter(function(e) { return (e.score || 0) > 0; });
+      var _sc = _chron.filter(function(e) { return (e.score || 0) > 0; });
       if (_sc.length >= 2) {
         var _oppR = 0, _usR = 0;
         for (var _i = _sc.length - 1; _i >= 0; _i--) {
@@ -4792,25 +4795,25 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         else if (_oppR >= 2) mAlert = { bg: C.alertAmber, icon: "\u26A1", msg: "2 unanswered opp scores \u2014 next is critical" };
       }
       if (!mAlert) {
-        var _kos = tagged.filter(function(e) { return e.ev && e.ev.id === "kickout" && (e.team === "us" || e.team === "h"); });
+        var _kos = _chron.filter(function(e) { return e.event_type === "Kickout" && (e.team === "us" || e.team === "h"); });
         if (_kos.length >= 3) {
           var _kl = 0;
           for (var _j = _kos.length - 1; _j >= 0; _j--) {
-            if (_kos[_j].outcome === "Lost clean" || _kos[_j].outcome === "Break lost") _kl++; else break;
+            if (_ocIs(_kos[_j], ["lost clean", "break lost"])) _kl++; else break;
           }
           if (_kl >= 3) mAlert = { bg: C.alertRed, icon: "\u26A0\uFE0F", msg: _kl + " consecutive " + RST() + " losses" };
           else {
             var _kw = 0;
             for (var _k = _kos.length - 1; _k >= 0; _k--) {
-              if (_kos[_k].outcome === "Won clean" || _kos[_k].outcome === "Break won") _kw++; else break;
+              if (_ocIs(_kos[_k], ["won clean", "break won"])) _kw++; else break;
             }
             if (_kw >= 4) mAlert = { bg: C.alertGreen, icon: "\uD83D\uDD25", msg: _kw + " consecutive restarts won \u2014 dominant" };
           }
         }
       }
       if (!mAlert) {
-        var _recent = tagged.slice(-8);
-        var _toCount = _recent.filter(function(e) { return e.ev && e.ev.id === "poss" && (e.team === "us" || e.team === "h"); }).length;
+        var _recent = _chron.slice(-8);
+        var _toCount = _recent.filter(function(e) { return e.event_type === "Possession lost" && (e.team === "us" || e.team === "h"); }).length;
         if (_toCount >= 3) mAlert = { bg: C.alertRed, icon: "\u26A0\uFE0F", msg: _toCount + " turnovers in last 8 events \u2014 slow it down" };
       }
     } catch(ex) { mAlert = null; }
@@ -4823,12 +4826,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           if ((e.score || 0) > 0) {
             if (e.team === "us" || e.team === "h") usScore += e.score; else opScore += e.score;
           }
-          if (e.ev && (e.ev.id === "shot" || e.ev.id === "free")) {
+          if (e.event_type === "Shot from play" || e.event_type === "Scoreable free") {
             if (e.team === "us" || e.team === "h") { usShots++; if ((e.score||0) > 0) usScored++; }
           }
-          if (e.ev && e.ev.id === "kickout" && (e.team === "us" || e.team === "h")) {
+          if (e.event_type === "Kickout" && (e.team === "us" || e.team === "h")) {
             usKO++;
-            if (e.outcome === "Won clean" || e.outcome === "Break won") usKOWon++;
+            if (_ocIs(e, ["won clean", "break won"])) usKOWon++;
           }
         });
         var scoreDiff = usScore - opScore;
@@ -9192,7 +9195,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           React.createElement("button", { onClick: function() { setTick(function(t) { return t + 1; }); }, style: { minHeight: 44, margin: "-9px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { background: C.greenB + ALPHA.soft, border: "1px solid " + C.greenB, color: C.greenB, borderRadius: RAD.md, padding: "6px 12px", fontSize: FS.sm, fontWeight: 800 } }, "\u21BB Refresh"))),
         err && React.createElement("div", { style: { padding: "8px 14px", color: C.red, fontSize: FS.sm } }, err),
         (function() {
-          var evts = d._events || [];
+          // Events arrive in database order; the streak checks read oldest to newest.
+          var evts = (d._events || []).slice().sort(function(a, b) { return (a.seq || 0) - (b.seq || 0); });
           // Momentum alert
           var _lspAlert = null;
           try {
