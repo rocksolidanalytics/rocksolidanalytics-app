@@ -1,4 +1,4 @@
-// openApp(file, { fixtures, hash, width, height, init }) -> { browser, page, errors }
+// openApp(file, { fixtures, hash, width, height, init, touch }) -> { browser, page, errors }
 // init: a function run in the page before any app script (for example to stub window.YT).
 // Real index.html in Chromium; CDN scripts from tools/node_modules; supabase-js replaced by fake_supabase.js when fixtures are given.
 const path = require('path');
@@ -12,7 +12,7 @@ async function openApp(file, o) {
     'supabase-js@2': o.fixtures ? path.join(__dirname, 'fake_supabase.js') : dir('@supabase/supabase-js') + '/dist/umd/supabase.js',
     'papaparse.min.js': dir('papaparse') + '/papaparse.min.js' };
   const browser = await chromium.launch();
-  const page = await browser.newPage({ viewport: { width: o.width || 360, height: o.height || 760 }, deviceScaleFactor: 2, reducedMotion: o.reducedMotion || 'no-preference' });
+  const page = await browser.newPage({ viewport: { width: o.width || 360, height: o.height || 760 }, deviceScaleFactor: 2, reducedMotion: o.reducedMotion || 'no-preference', hasTouch: !!o.touch, isMobile: !!o.touch });
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text().split('\n')[0]); });

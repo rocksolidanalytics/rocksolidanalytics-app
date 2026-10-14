@@ -3356,7 +3356,15 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       if (!pt || !pt.down) return;
       clearTimeout(timerRef.current);
       var p = Object.assign(at(e), { down: false, lens: false });
-      if (hold) { setPt(null); onTap(locOf(p)); } else setPt(p);
+      if (hold) { swallowClick(); setPt(null); onTap(locOf(p)); } else setPt(p);
+    }
+    // A phone fires a click after the finger lifts. By then the player picker has
+    // replaced the pitch, so that click would land on a player button. Drop it.
+    function swallowClick() {
+      var until = Date.now() + 500;
+      function eat(ev) { document.removeEventListener("click", eat, true); if (Date.now() < until) { ev.stopPropagation(); ev.preventDefault(); } }
+      document.addEventListener("click", eat, true);
+      setTimeout(function() { document.removeEventListener("click", eat, true); }, 600);
     }
     function ppCancel() {
       clearTimeout(timerRef.current);
