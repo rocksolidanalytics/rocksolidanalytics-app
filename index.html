@@ -3805,6 +3805,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [teamOpen, setTeamOpen] = useState(false);
     const [teamSide, setTeamSide] = useState("us");
     const [stHalf, setStHalf] = useState("all");
+    const [oppMore, setOppMore] = useState(false);
     const [kcMode, setKcMode] = useState("key");
     const [halfEnded, setHalfEnded] = useState(_sess0 ? !!_sess0.halfEnded : false);
     const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine !== false : true);
@@ -4226,6 +4227,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function commit(num) {
       var t2 = tx.current;
       if (!t2.ev || !t2.outcome) return;
+      setOppMore(false);
       var team = t2.team === "h" ? "us" : "opp";
       var credH = t2.team === "h";
       if (t2.ev && t2.ev.id === "kickout") {
@@ -5028,7 +5030,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var rs = window.__ltCredH ? rosterState() : null;
       var slots = rs ? rs.slots : null;
       var out = [];
-      FORMATION.forEach(function(row) {
+      // The opposition has no teamsheet here, so its subs are picked by number.
+      (!window.__ltCredH && oppMore ? [[16, 17, 18], [19, 20, 21], [22, 23, 24], [25, 26, 27], [28, 29, 30]] : FORMATION).forEach(function(row) {
         var cols = row.length === 1 ? [3] : row.length === 2 ? [2, 4] : [1, 3, 5];
         row.forEach(function(slot, ix) {
           var n = slots ? slots[slot] : slot;
@@ -5042,9 +5045,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         });
       });
       return out;
-    })()), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+    })()), /* @__PURE__ */ React.createElement("div", { style: { flexShrink: 0, display: "flex", gap: 6, marginTop: 4, marginBottom: -16 } }, React.createElement("button", { onClick: function() {
       commit(null);
-    }, style: { flexShrink: 0, marginTop: 4, marginBottom: -16, minHeight: 44, padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "flex-start" } }, React.createElement("span", { style: { flex: 1, padding: "7px 2px", background: C.field, border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slate, fontSize: 11, fontWeight: 700 } }, "NONE"))), idle && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, overflow: "auto" } }, tagged.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 11.5, paddingTop: 40, lineHeight: 1.6 } }, "Tap an event to begin.", /* @__PURE__ */ React.createElement("br", null), "Single tap = ", club.name.split(" ")[0], " \xB7 double tap = opposition") : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5 } }, /* @__PURE__ */ React.createElement("div", { key: "hint", style: { fontSize: 9.5, color: C.slateD, fontFamily: MONO, letterSpacing: 0.5, padding: "0 2px 3px", display: "flex", justifyContent: "space-between", alignItems: "center" } }, "TAP A TAG TO EDIT OR DELETE", tagged.length > 40 ? React.createElement("button", { onClick: function(e) { e.stopPropagation(); setShowAllTags(!showAllTags); }, style: { background: "none", border: "none", boxShadow: "none", padding: "15px 0", margin: "-15px 0", color: C.greenB, fontFamily: MONO, fontSize: 9.5, fontWeight: 800, letterSpacing: 0.5, cursor: "pointer" } }, showAllTags ? "LATEST 40" : "SHOW ALL " + tagged.length) : null), (showAllTags ? tagged : tagged.slice(0, 40)).map(function(r, i) {
+    }, style: { flex: 1, minHeight: 44, padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "flex-start" } }, React.createElement("span", { style: { flex: 1, padding: "7px 2px", background: C.field, border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slate, fontSize: 11, fontWeight: 700 } }, "NONE")), !window.__ltCredH && React.createElement("button", { onClick: function() {
+      setOppMore(!oppMore);
+    }, style: { flex: 1, minHeight: 44, padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "flex-start" } }, React.createElement("span", { style: { flex: 1, padding: "7px 2px", background: oppMore ? tc + ALPHA.soft : C.field, border: "1px solid " + (oppMore ? tc : C.border), borderRadius: RAD.md, color: oppMore ? tc : C.slate, fontSize: 11, fontWeight: 800 } }, oppMore ? "1\u201315" : "SUBS 16\u201330")))), idle && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, overflow: "auto" } }, tagged.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 11.5, paddingTop: 40, lineHeight: 1.6 } }, "Tap an event to begin.", /* @__PURE__ */ React.createElement("br", null), "Single tap = ", club.name.split(" ")[0], " \xB7 double tap = opposition") : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5 } }, /* @__PURE__ */ React.createElement("div", { key: "hint", style: { fontSize: 9.5, color: C.slateD, fontFamily: MONO, letterSpacing: 0.5, padding: "0 2px 3px", display: "flex", justifyContent: "space-between", alignItems: "center" } }, "TAP A TAG TO EDIT OR DELETE", tagged.length > 40 ? React.createElement("button", { onClick: function(e) { e.stopPropagation(); setShowAllTags(!showAllTags); }, style: { background: "none", border: "none", boxShadow: "none", padding: "15px 0", margin: "-15px 0", color: C.greenB, fontFamily: MONO, fontSize: 9.5, fontWeight: 800, letterSpacing: 0.5, cursor: "pointer" } }, showAllTags ? "LATEST 40" : "SHOW ALL " + tagged.length) : null), (showAllTags ? tagged : tagged.slice(0, 40)).map(function(r, i) {
       return /* @__PURE__ */ React.createElement("div", { key: r._id || i, onClick: function() {
         setEditRow(r);
         setEdOut(null);
@@ -6836,6 +6841,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function commit(num) {
       var t2 = tx.current;
       if (!t2.ev || !t2.outcome) return;
+      setSubsOpen(false);
       var team = t2.team === "h" ? "us" : "opp";
       var credH = t2.team === "h";
       if (t2.ev && t2.ev.id === "kickout") {
