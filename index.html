@@ -5696,12 +5696,45 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var root = await navigator.storage.getDirectory();
     return await root.getDirectoryHandle("rsa_videos", { create: true });
   }
+  // Saved videos are limited by free space on the device, not by a count. The
+  // browser reports usage and quota; a save must leave LOCKER_SPARE free so the
+  // app itself keeps working. Returns null when the browser cannot say.
+  var LOCKER_SPARE = 500 * 1048576;
+  async function lockerSpace() {
+    try {
+      if (!navigator.storage || !navigator.storage.estimate) return null;
+      var e = await navigator.storage.estimate();
+      if (!e || !e.quota) return null;
+      return { used: e.usage || 0, free: Math.max(0, e.quota - (e.usage || 0)) };
+    } catch (e2) {
+      return null;
+    }
+  }
+  function lockerFmt(b) {
+    b = b || 0;
+    return b >= 1073741824 ? (b / 1073741824).toFixed(1) + " GB" : Math.max(1, Math.round(b / 1048576)) + " MB";
+  }
+  function lockerIOSTab() {
+    try {
+      var ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      var home = window.navigator.standalone === true || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+      return ios && !home;
+    } catch (e) {
+      return false;
+    }
+  }
   async function lockerSave(id, file, meta) {
     var dir = await lockerDir();
-    var fh = await dir.getFileHandle("vid_" + id, { create: true });
-    var w = await fh.createWritable();
-    await w.write(file);
-    await w.close();
+    try {
+      var fh = await dir.getFileHandle("vid_" + id, { create: true });
+      var w = await fh.createWritable();
+      await w.write(file);
+      await w.close();
+    } catch (e) {
+      // A half written file would hold space and never show in the list.
+      try { await dir.removeEntry("vid_" + id); } catch (e2) {}
+      throw e;
+    }
     var idx = lockerIndex().filter(function(x) {
       return x.matchId !== id;
     });
@@ -6012,7 +6045,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   function VideoHub({ club, session, onPick, onNew, back, role }) {
     var isPlayer = role === "player";
     const [matches, setMatches] = useState(null);
-    const [, setTick] = useState(0);
+    const [tick, setTick] = useState(0);
+    const [vSpace, setVSpace] = useState(null);
+    useEffect(function() {
+      lockerSpace().then(setVSpace);
+    }, [tick]);
     const [clipMatch, setClipMatch] = useState(null);
     const [err, setErr] = useState("");
     const [scoutNew, setScoutNew] = useState(false);
@@ -6105,10 +6142,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setSBs(e.target.value);
     }, placeholder: "Team B squad (optional)", className: "rsa-field", style: TST }), /* @__PURE__ */ React.createElement("label", { style: LST }, "DATE (OPTIONAL)"), /* @__PURE__ */ React.createElement("input", { value: sDate, onChange: function(e) {
       setSDate(e.target.value);
-    }, placeholder: "e.g. 2026-06-21", className: "rsa-field", style: IST }), err && /* @__PURE__ */ React.createElement("div", { style: { color: C.red, fontSize: FS.sm, marginBottom: 10 } }, err), /* @__PURE__ */ React.createElement("button", { onClick: createScout, disabled: sBusy || !sA.trim() || !sB.trim(), style: { width: "100%", padding: 15, borderRadius: RAD.lg, marginTop: 6, background: sBusy || !sA.trim() || !sB.trim() ? C.border : C.gold, color: sBusy || !sA.trim() || !sB.trim() ? C.slate : C.bg, border: "none", fontSize: FS.lg, fontWeight: 800, cursor: "pointer" } }, sBusy ? "Creating\u2026" : "Create & tag")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, color: C.slate, lineHeight: 1.5, marginBottom: 16 } }, "Tag a match back from footage. Pick a game below, or set up a new one \u2014 events flow into the same dashboards as live and Performa data."), /* @__PURE__ */ React.createElement("button", { onClick: onNew, style: { width: "100%", padding: 16, borderRadius: RAD.lg, cursor: "pointer", textAlign: "left", background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB + ALPHA.strong, display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, color: C.greenB } }, "New match to tag"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 2 } }, "Set up opponent, squad, then tag from video")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: FS.h2, color: C.greenB } }, "+")), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 2, color: C.slateD, fontFamily: MONO } }, "SAVED VIDEOS"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, color: lockerIndex().length >= 2 ? C.gold : C.slate } }, lockerIndex().length, "/2 USED")), lockerIndex().length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.gold, background: C.gold + ALPHA.faint, border: "1px solid " + C.gold + ALPHA.mid, borderRadius: RAD.md, padding: "8px 10px", marginBottom: 8, lineHeight: 1.5 } }, "You\u2019ve used both video slots (2/2). Remove one below to store another game\u2019s footage."), lockerIndex().length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, background: C.bgCard, border: "1px dashed " + C.border, borderRadius: RAD.md, padding: "10px 12px", marginBottom: 8, lineHeight: 1.5 } }, "No videos saved on this device yet. When you finish tagging from video, choose \u201ckeep on device\u201d to store the footage here (up to 2) for clips."), lockerIndex().map(function(it) {
+    }, placeholder: "e.g. 2026-06-21", className: "rsa-field", style: IST }), err && /* @__PURE__ */ React.createElement("div", { style: { color: C.red, fontSize: FS.sm, marginBottom: 10 } }, err), /* @__PURE__ */ React.createElement("button", { onClick: createScout, disabled: sBusy || !sA.trim() || !sB.trim(), style: { width: "100%", padding: 15, borderRadius: RAD.lg, marginTop: 6, background: sBusy || !sA.trim() || !sB.trim() ? C.border : C.gold, color: sBusy || !sA.trim() || !sB.trim() ? C.slate : C.bg, border: "none", fontSize: FS.lg, fontWeight: 800, cursor: "pointer" } }, sBusy ? "Creating\u2026" : "Create & tag")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, color: C.slate, lineHeight: 1.5, marginBottom: 16 } }, "Tag a match back from footage. Pick a game below, or set up a new one \u2014 events flow into the same dashboards as live and Performa data."), /* @__PURE__ */ React.createElement("button", { onClick: onNew, style: { width: "100%", padding: 16, borderRadius: RAD.lg, cursor: "pointer", textAlign: "left", background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB + ALPHA.strong, display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, color: C.greenB } }, "New match to tag"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 2 } }, "Set up opponent, squad, then tag from video")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: FS.h2, color: C.greenB } }, "+")), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 2, color: C.slateD, fontFamily: MONO } }, "SAVED VIDEOS"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, color: vSpace && vSpace.free < 2147483648 ? C.gold : C.slate, textAlign: "right" } }, lockerIndex().length, " \xB7 ", lockerFmt(lockerIndex().reduce(function(a, x) { return a + (x.size || 0); }, 0)), vSpace ? " \xB7 ~" + lockerFmt(vSpace.free) + " FREE" : "")), vSpace && vSpace.free < 2147483648 && React.createElement("div", { style: { fontSize: FS.sm, color: C.gold, background: C.gold + ALPHA.faint, border: "1px solid " + C.gold + ALPHA.mid, borderRadius: RAD.md, padding: "8px 10px", marginBottom: 8, lineHeight: 1.5 } }, "Space is running low on this device. Remove a saved video below to make room for the next one."), lockerIndex().length > 0 && lockerIOSTab() && React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginBottom: 8, lineHeight: 1.5 } }, "On iPhone and iPad, add this app to your Home Screen so saved videos are not cleared after a week without use."), lockerIndex().length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, background: C.bgCard, border: "1px dashed " + C.border, borderRadius: RAD.md, padding: "10px 12px", marginBottom: 8, lineHeight: 1.5 } }, "No videos saved on this device yet. When you finish tagging from video, choose \u201ckeep on device\u201d to store the footage here for clips. How many fit depends on the free space on this device."), lockerIndex().map(function(it) {
       return /* @__PURE__ */ React.createElement("div", { key: it.matchId, style: { display: "flex", alignItems: "center", gap: 8, background: C.bgCard, border: "1px solid " + C.greenB + ALPHA.mid, borderRadius: RAD.lg, padding: "10px 12px", marginBottom: 7 } }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
         setClipMatch({ id: it.matchId, opponent: it.opponent, date: it.date });
-      }, style: { flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", boxShadow: "none", cursor: "pointer", textAlign: "left", padding: "8px 0", margin: "-8px 0" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB, fontSize: FS.md } }, "\u25B6"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, fontWeight: 700, color: C.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, matchVsLabel(it)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, fontFamily: MONO } }, it.date || "", " \xB7 ", Math.round((it.size || 0) / 1048576), " MB \xB7 tap for clips"))), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+      }, style: { flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", boxShadow: "none", cursor: "pointer", textAlign: "left", padding: "8px 0", margin: "-8px 0" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.greenB, fontSize: FS.md } }, "\u25B6"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, fontWeight: 700, color: C.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, matchVsLabel(it)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, fontFamily: MONO } }, it.date || "", " \xB7 ", lockerFmt(it.size), " \xB7 tap for clips"))), /* @__PURE__ */ React.createElement("button", { onClick: function() {
         lockerRemove(it.matchId).then(function() {
           setTick(function(x) {
             return x + 1;
@@ -6180,6 +6217,14 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [showKeep, setShowKeep] = useState(false);
     const [keepBusy, setKeepBusy] = useState(false);
     const [dropId, setDropId] = useState(null);
+    const [keepSpace, setKeepSpace] = useState(null);
+    const [keepErr, setKeepErr] = useState("");
+    useEffect(function() {
+      if (!showKeep) return;
+      setKeepErr("");
+      setKeepSpace(null);
+      lockerSpace().then(function(sp) { setKeepSpace(sp || { unknown: true }); });
+    }, [showKeep]);
     const localFileRef = useRef(null);
     const [land, setLand] = useState(typeof window !== "undefined" && window.innerWidth > window.innerHeight);
     const [big, setBig] = useState(typeof window !== "undefined" && (Math.min(window.innerWidth, window.innerHeight) >= 740 || window.innerWidth >= 1e3));
@@ -7004,7 +7049,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var u = sc("us"), o = sc("opp");
       await db.from("matches").update({ status: "final", our_score: nota(u), opp_score: nota(o), our_total: u.g * 3 + u.p, opp_total: o.g * 3 + o.p }).eq("id", match.id);
       if (localFileRef.current && lockerOK() && !lockerHas(match.id)) {
-        setDropId(null);
+        setDropId([]);
         setShowKeep(true);
       } else {
         back();
@@ -7014,9 +7059,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setKeepBusy(true);
       (async function() {
         try {
-          if (lockerIndex().length >= 2 && dropId) {
-            await lockerRemove(dropId);
-          }
+          for (var di = 0; di < (dropId || []).length; di++) await lockerRemove(dropId[di]);
           await lockerSave(match.id, localFileRef.current, { opponent: match.opponent || "", date: match.date || "", scouting: !!match.scouting });
           if (navigator.storage && navigator.storage.persist) {
             try {
@@ -7025,12 +7068,25 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             }
           }
         } catch (e) {
+          // Tell the analyst rather than leave them to find out at training.
+          setKeepBusy(false);
+          setDropId([]);
+          setKeepErr("Couldn\u2019t save the video on this device" + (e && e.name === "QuotaExceededError" ? ": not enough free space." : ".") + " Your tags are saved; only the video copy failed.");
+          lockerSpace().then(function(sp) { setKeepSpace(sp || { unknown: true }); });
+          return;
         }
         setKeepBusy(false);
         setShowKeep(false);
         back();
       })();
     }
+    var keepSize = localFileRef.current && localFileRef.current.size || 0;
+    var keepFreed = lockerIndex().filter(function(x) { return (dropId || []).indexOf(x.matchId) >= 0; }).reduce(function(a, x) { return a + (x.size || 0); }, 0);
+    var keepKnown = keepSpace && !keepSpace.unknown;
+    var keepNeed = keepKnown ? Math.max(0, keepSize + LOCKER_SPARE - keepSpace.free - keepFreed) : 0;
+    var keepShort = keepKnown && keepSize + LOCKER_SPARE > keepSpace.free && lockerIndex().length > 0;
+    var keepBlock = keepBusy || !keepSpace || keepNeed > 0;
+    var keepInfo = React.createElement("div", { style: { fontSize: 11.5, color: C.slate, fontFamily: MONO, marginBottom: 12, lineHeight: 1.6 } }, "THIS VIDEO ", lockerFmt(keepSize), keepKnown ? " \xB7 FREE ON DEVICE ~" + lockerFmt(keepSpace.free) : "", keepNeed > 0 && lockerIndex().length === 0 ? React.createElement("div", { style: { fontFamily: "inherit", color: C.red, marginTop: 4 } }, "Not enough free space on this device for this video.") : null, lockerIOSTab() ? React.createElement("div", { style: { fontFamily: "inherit", color: C.slateD, marginTop: 4 } }, "On iPhone and iPad, add this app to your Home Screen so saved videos are not cleared after a week without use.") : null);
     var t = tx.current, us = score("us"), op = score("opp");
     var _vg = vidToGame(curT), _ssV = function(tm) { return _vg ? React.createElement(SinceScore, { r: secsSinceScore(tagged, tm, _vg.period, _vg.secs - (_vg.period === 2 ? 1800 : 0)) }) : null; };
     var tc = t.team === "h" ? C.greenB : C.blue;
@@ -7457,15 +7513,15 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setEK({ player: null });
     }, style: { padding: "9px 2px", background: editRow.player == null ? C.slate + ALPHA.soft : C.field, border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slate, fontSize: 10, fontWeight: 700, cursor: "pointer" } }, "NONE")), editRow.def && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: C.slateD, marginBottom: 5 } }, "PITCH LOCATION"), /* @__PURE__ */ React.createElement("button", { onClick: function() { setEK({ _locOpen: !editRow._locOpen }); }, style: { width: "100%", padding: "10px", borderRadius: RAD.md, border: "1px solid " + (editRow._locEd ? C.greenB : C.border), background: editRow._locEd ? C.greenB + ALPHA.soft : C.field, color: editRow._locEd ? C.greenB : C.slate, fontWeight: 700, fontSize: 11.5, cursor: "pointer" } }, editRow._locEd ? "\u2713 NEW SPOT SET \xB7 TAP TO REDO" : (editRow._locOpen ? "TAP THE PITCH BELOW" : editRow.x == null ? "\u25CE ADD LOCATION" : "\u25CE MOVE LOCATION")), editRow._locOpen && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 8 } }, /* @__PURE__ */ React.createElement(TagPitchLand, { active: true, onTap: function(loc) { setEK({ x: loc.x, y: loc.y, _locEd: true }); }, marks: [editRow._ox != null && { x: editRow._ox, y: editRow._oy, kind: "old" }, editRow._locEd && { x: editRow.x, y: editRow.y, kind: "new" }] }), React.createElement("div", { style: { display: "flex", gap: 14, fontSize: 9.5, color: C.slateD, marginTop: 6 } }, React.createElement("span", null, "\u25CC current spot"), React.createElement("span", { style: { color: C.greenB } }, "\u25CF new spot"))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: C.slateD, marginTop: 6 } }, editRow.x == null && !editRow._locEd ? "No spot saved yet. Optional." : "Leave untouched to keep the current spot.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 14 } }, /* @__PURE__ */ React.createElement("button", { onClick: delEdit, style: { flex: 1, padding: "12px", borderRadius: RAD.lg, border: "1px solid " + C.red, background: C.red + ALPHA.faint, color: C.red, fontWeight: 700, cursor: "pointer" } }, "Delete"), /* @__PURE__ */ React.createElement("button", { onClick: saveEdit, style: { flex: 2, padding: "12px", borderRadius: RAD.lg, border: "none", background: C.greenB, color: C.bg, fontWeight: 800, cursor: "pointer" } }, "Save")))),
        
-      flash && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", left: "50%", bottom: 78, transform: "translateX(-50%)", background: "#000d", color: C.white, padding: "8px 16px", borderRadius: RAD.xl, fontSize: 12.5, fontWeight: 600, zIndex: 50, whiteSpace: "nowrap", maxWidth: "92vw", overflow: "hidden", textOverflow: "ellipsis" } }, flash), showKeep && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, background: "#000a", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.xl, padding: 20, maxWidth: 360, width: "100%" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, marginBottom: 6 } }, "Keep this video on the device?"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12.5, color: C.slate, lineHeight: 1.5, marginBottom: 16 } }, "Stored privately in the app so you can pull up clips at training without re-loading. Works offline; never uploaded."), lockerIndex().length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.gold, fontFamily: MONO, marginBottom: 8 } }, "DEVICE IS FULL (2/2) \xB7 PICK ONE TO REPLACE"), lockerIndex().map(function(it) {
-      var on = dropId === it.matchId;
+      flash && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", left: "50%", bottom: 78, transform: "translateX(-50%)", background: "#000d", color: C.white, padding: "8px 16px", borderRadius: RAD.xl, fontSize: 12.5, fontWeight: 600, zIndex: 50, whiteSpace: "nowrap", maxWidth: "92vw", overflow: "hidden", textOverflow: "ellipsis" } }, flash), showKeep && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, background: "#000a", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.xl, padding: 20, maxWidth: 360, width: "100%" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, marginBottom: 6 } }, "Keep this video on the device?"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12.5, color: C.slate, lineHeight: 1.5, marginBottom: 16 } }, "Stored privately in the app so you can pull up clips at training without re-loading. Works offline; never uploaded."), keepInfo, keepShort && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.gold, fontFamily: MONO, marginBottom: 8 } }, keepNeed > 0 ? "NOT ENOUGH ROOM \xB7 PICK VIDEOS TO REMOVE (" + lockerFmt(keepNeed) + " MORE)" : "ROOM MADE \xB7 THESE WILL BE REMOVED"), lockerIndex().map(function(it) {
+      var on = (dropId || []).indexOf(it.matchId) >= 0;
       return /* @__PURE__ */ React.createElement("button", { key: it.matchId, onClick: function() {
-        setDropId(it.matchId);
-      }, style: { width: "100%", textAlign: "left", marginBottom: 7, padding: "10px 12px", borderRadius: RAD.lg, cursor: "pointer", background: on ? C.gold + ALPHA.soft : C.field, border: "1px solid " + (on ? C.gold : C.border), color: C.white } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 700 } }, matchVsLabel(it)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: C.slate, fontFamily: MONO } }, it.date || "", " \xB7 ", Math.round((it.size || 0) / 1048576), " MB"));
-    })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
+        setDropId(function(p) { p = p || []; return p.indexOf(it.matchId) >= 0 ? p.filter(function(x) { return x !== it.matchId; }) : p.concat([it.matchId]); });
+      }, style: { width: "100%", textAlign: "left", marginBottom: 7, padding: "10px 12px", borderRadius: RAD.lg, cursor: "pointer", background: on ? C.gold + ALPHA.soft : C.field, border: "1px solid " + (on ? C.gold : C.border), color: C.white } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 700 } }, matchVsLabel(it)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10.5, color: C.slate, fontFamily: MONO } }, it.date || "", " \xB7 ", lockerFmt(it.size)));
+    })), keepErr && React.createElement("div", { style: { fontSize: 12.5, color: C.red, background: C.red + ALPHA.faint, border: "1px solid " + C.red + ALPHA.mid, borderRadius: RAD.md, padding: "8px 10px", marginBottom: 12, lineHeight: 1.5 } }, keepErr), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setShowKeep(false);
       back();
-    }, style: { flex: 1, padding: 13, borderRadius: RAD.lg, border: "1px solid " + C.border, background: "none", color: C.slate, fontWeight: 700, fontSize: 13.5, cursor: "pointer" } }, "No thanks"), /* @__PURE__ */ React.createElement("button", { onClick: doKeep, disabled: keepBusy || lockerIndex().length >= 2 && !dropId, style: { flex: 1.4, padding: 13, borderRadius: RAD.lg, border: "none", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 14, cursor: "pointer", opacity: keepBusy || lockerIndex().length >= 2 && !dropId ? 0.5 : 1 } }, keepBusy ? "Saving\u2026" : "Keep on device")))));
+    }, style: { flex: 1, padding: 13, borderRadius: RAD.lg, border: "1px solid " + C.border, background: "none", color: C.slate, fontWeight: 700, fontSize: 13.5, cursor: "pointer" } }, "No thanks"), /* @__PURE__ */ React.createElement("button", { onClick: doKeep, disabled: keepBlock, style: { flex: 1.4, padding: 13, borderRadius: RAD.lg, border: "none", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 14, cursor: "pointer", opacity: keepBlock ? 0.5 : 1 } }, keepBusy ? "Saving\u2026" : keepErr ? "Try again" : "Keep on device")))));
   }
   function MatchList({ matches, onPick }) {
     return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 2, color: C.slateD, fontFamily: MONO, fontWeight: 700, marginBottom: 4 } }, "TAP A MATCH FOR ITS FULL REPORT"), matches.slice().reverse().map(function(m) {
@@ -9206,6 +9262,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [fHalf, setFHalf] = useState("all");
     const [colBy, setColBy] = useState("team");
     const [pick, setPick] = useState(null);
+    const [focus, setFocus] = useState(null);
     const [wide, setWide] = useState(typeof window !== "undefined" && window.innerWidth >= 900);
     useEffect(function() {
       function onRs() { setWide(window.innerWidth >= 900); }
@@ -9293,8 +9350,28 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var tn = pxTone(o), list = toneCols[tn], k = toneUsed[tn]++;
       outCol[o] = k < list.length ? list[k] : toneCols.mid[(toneUsed.mid++) % toneCols.mid.length];
     });
+    // With every event type on the map, outcomes from different events would
+    // share colours and mean nothing, so the dots are coloured by event type.
+    var keyMode = colBy === "team" ? "team" : type === "*" ? "type" : "outcome";
+    // Colours go to the event types that actually have dots on the map first.
+    var typeN = {}, typeXY = {};
+    base.forEach(function(e) {
+      typeN[e.event_type] = (typeN[e.event_type] || 0) + 1;
+      if (e.x != null && e.y != null) typeXY[e.event_type] = (typeXY[e.event_type] || 0) + 1;
+    });
+    var typeList = Object.keys(typeN).sort(function(a, b) { return (typeXY[b] || 0) - (typeXY[a] || 0) || typeN[b] - typeN[a]; });
+    var TYPE_COLS = [C.greenB, C.blue, C.gold, C.purple, C.pink, C.teal];
+    var typeCol = {};
+    typeList.forEach(function(k, i) { typeCol[k] = i < TYPE_COLS.length ? TYPE_COLS[i] : C.slateD; });
+    function pxLegKey(e) {
+      if (keyMode === "team") return e.team;
+      if (keyMode === "type") return typeList.indexOf(e.event_type) < TYPE_COLS.length ? e.event_type : "__other";
+      var o = e.outcome || "—";
+      return outList.indexOf(o) < OUT_COLS ? o : "__other";
+    }
     function pxColour(e) {
-      if (colBy === "outcome") return outCol[e.outcome || "—"] || C.slateD;
+      if (keyMode === "outcome") return outCol[e.outcome || "—"] || C.slateD;
+      if (keyMode === "type") return typeCol[e.event_type] || C.slateD;
       return e.team === "us" ? C.greenB : C.blue;
     }
     function pxNum(p) {
@@ -9308,8 +9385,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return [(1 - n.x) * W, n.y * H];
     });
     var PS = rsaScatter(P0);
-    var thirds = [0, 0, 0];
-    P0.forEach(function(p) { thirds[Math.min(2, Math.floor(p[0] / W * 3))]++; });
+    // The thirds split follows the focused legend row when there is one.
+    var thirds = [0, 0, 0], thirdN = 0;
+    P0.forEach(function(p, i) {
+      if (focus && pxLegKey(mapped[i]) !== focus) return;
+      thirds[Math.min(2, Math.floor(p[0] / W * 3))]++;
+      thirdN++;
+    });
     var mx = function(d) { return d / 144 * W; };
     var my = function(a) { return H / 2 + a * H / GAA_W; };
     var lineSt = { main: [PITCH.lineMap, 1.6], soft: [PITCH.lineSoft, 1.2], faint: [PITCH.lineSoft, 1], dot: PITCH.lineMap };
@@ -9323,9 +9405,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       React.createElement("line", { x1: W / 2, y1: 0, x2: W / 2, y2: H, stroke: PITCH.lineMap, strokeWidth: 1.4, strokeDasharray: "6 5" }),
       React.createElement("rect", { x: 1, y: 1, width: W - 2, height: H - 2, fill: "none", stroke: PITCH.lineMap, strokeWidth: 2 }),
       React.createElement("text", { x: W / 2, y: H - 8, fill: PITCH.chalk, fontSize: 10, fontFamily: MONO, letterSpacing: 1.5, textAnchor: "middle", opacity: 0.75 }, (club.name || "US").toUpperCase() + " ATTACK →"),
-      mapped.map(function(e, i) {
-        var col = pxColour(e), on = pickOn === e, num = pxNum(e.player);
-        return React.createElement("g", { key: e.id || i, onClick: function() { setPick(on ? null : e); }, style: { cursor: "pointer" } },
+      mapped.map(function(e, i) { return i; }).sort(function(a, b) { return focus ? (pxLegKey(mapped[a]) === focus) - (pxLegKey(mapped[b]) === focus) : 0; }).map(function(i) {
+        var e = mapped[i];
+        var col = pxColour(e), on = pickOn === e, num = pxNum(e.player), dim = focus && pxLegKey(e) !== focus;
+        return React.createElement("g", { key: e.id || i, onClick: function() { setPick(on ? null : e); }, style: { cursor: "pointer", opacity: dim ? 0.15 : 1 } },
           React.createElement("circle", { cx: PS[i][0], cy: PS[i][1], r: 15, fill: "transparent" }),
           React.createElement("circle", { cx: PS[i][0], cy: PS[i][1], r: on ? 11 : 9, fill: col, stroke: on ? C.white : C.bg, strokeWidth: on ? 2.5 : 2 }),
           num && React.createElement("text", { x: PS[i][0], y: PS[i][1] + 3.2, fill: _hexLum(col) > 0.3 ? C.bg : C.white, fontSize: num.length > 1 ? 8.5 : 9.5, fontWeight: 800, fontFamily: MONO, textAnchor: "middle", style: { pointerEvents: "none" } }, num));
@@ -9333,14 +9416,14 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function pxSel(label, val, set, opts) {
       return React.createElement("label", { style: { flex: 1, minWidth: 140, display: "block" } },
         React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, marginBottom: 5 } }, label),
-        React.createElement("select", { value: val, onChange: function(ev) { set(ev.target.value); setPick(null); }, className: "rsa-field", style: fld }, opts.map(function(o) { return React.createElement("option", { key: o[0], value: o[0] }, o[1]); })));
+        React.createElement("select", { value: val, onChange: function(ev) { set(ev.target.value); setPick(null); setFocus(null); }, className: "rsa-field", style: fld }, opts.map(function(o) { return React.createElement("option", { key: o[0], value: o[0] }, o[1]); })));
     }
     function pxChips(label, val, set, opts) {
       return React.createElement("div", { style: { flex: 1, minWidth: 140 } },
         React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, marginBottom: 5 } }, label),
         React.createElement("div", { style: { display: "flex", gap: 4 } }, opts.map(function(o) {
           var on = val === o[0];
-          return React.createElement("button", { key: o[0], onClick: function() { set(o[0]); setPick(null); }, style: { flex: 1, minHeight: 44, borderRadius: RAD.md, cursor: "pointer", fontSize: FS.sm, fontWeight: 700, background: on ? C.greenB + ALPHA.soft : C.field, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.greenB : C.slate } }, o[1]);
+          return React.createElement("button", { key: o[0], onClick: function() { set(o[0]); setPick(null); setFocus(null); }, style: { flex: 1, minHeight: 44, borderRadius: RAD.md, cursor: "pointer", fontSize: FS.sm, fontWeight: 700, background: on ? C.greenB + ALPHA.soft : C.field, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.greenB : C.slate } }, o[1]);
         })));
     }
     var filters = React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } },
@@ -9352,21 +9435,38 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } },
         pxSel("OUTCOME", outN[fOut] ? fOut : "all", setFOut, [["all", "All outcomes"]].concat(outList.map(function(o) { return [o, o + " (" + outN[o] + ")"]; }))),
         pxSel("PLAYER", plN[fPl] ? fPl : "all", setFPl, [["all", "All players"]].concat(plList.map(function(p) { return [p, p + " (" + plN[p] + ")"]; })))),
-      pxChips("COLOUR BY", colBy, setColBy, [["team", "Team"], ["outcome", "Outcome"]]));
-    var legendItems = colBy === "outcome" ? outList.slice(0, OUT_COLS).map(function(o) { return [outCol[o], o]; }).concat(outList.length > OUT_COLS ? [[C.slateD, "Other"]] : []) : (fTeam === "both" ? [[C.greenB, club.name || "Us"], [C.blue, "Opposition"]] : []);
-    var legend = legendItems.length > 0 && React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: "6px 14px", marginTop: 10 } }, legendItems.map(function(it) {
-      return React.createElement("span", { key: it[1], style: { display: "inline-flex", alignItems: "center", gap: 6, fontSize: FS.sm, color: C.slate } }, React.createElement("span", { style: { width: 10, height: 10, borderRadius: 5, background: it[0], flexShrink: 0 } }), it[1]);
-    }));
+      pxChips("COLOUR BY", colBy, setColBy, [["team", "Team"], ["outcome", type === "*" ? "Event type" : "Outcome"]]));
+    // Legend: one row per colour on the map, with how many dots it covers.
+    // Tapping a row fades every other dot so that group can be read alone.
+    var legN = {};
+    mapped.forEach(function(e) { var k = pxLegKey(e); legN[k] = (legN[k] || 0) + 1; });
+    var legKeys = keyMode === "team" ? ["us", "opp"] : (keyMode === "type" ? typeList : outList).slice(0, keyMode === "type" ? TYPE_COLS.length : OUT_COLS).concat(["__other"]);
+    var legRows = legKeys.filter(function(k) { return legN[k] > 0 || focus === k; }).map(function(k) {
+      var col = k === "__other" ? C.slateD : keyMode === "team" ? (k === "us" ? C.greenB : C.blue) : keyMode === "type" ? typeCol[k] : outCol[k];
+      var lab = k === "__other" ? "Other" : keyMode === "team" ? (k === "us" ? club.name || "Us" : "Opposition") : keyMode === "type" ? evLabel(k) : k;
+      return { k: k, col: col, lab: lab, n: legN[k] || 0 };
+    });
+    var legTot = mapped.length || 1;
+    var legend = legRows.length > 0 && React.createElement("div", { style: { marginTop: 10 } },
+      React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } }, legRows.map(function(r) {
+        var on = focus === r.k, faded = focus && !on;
+        return React.createElement("button", { key: r.k, onClick: function() { setFocus(on ? null : r.k); setPick(null); }, style: { display: "inline-flex", alignItems: "center", gap: 7, minHeight: 36, padding: "4px 10px", borderRadius: RAD.pill, cursor: "pointer", background: on ? r.col + ALPHA.faint : C.field, border: "1px solid " + (on ? r.col : C.border), color: C.white, fontSize: FS.sm, opacity: faded ? 0.5 : 1, boxShadow: "none" } },
+          React.createElement("span", { style: { width: 10, height: 10, borderRadius: 5, background: r.col, flexShrink: 0 } }),
+          React.createElement("span", { style: { fontWeight: 600 } }, r.lab),
+          React.createElement("span", { style: { fontFamily: MONO, fontWeight: 800 } }, r.n),
+          React.createElement("span", { style: { fontFamily: MONO, color: C.slateD } }, Math.round(r.n / legTot * 100) + "%"));
+      })),
+      React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, marginTop: 7, lineHeight: 1.5 } }, focus ? "Tap the highlighted row again to show every dot. " : "Tap a row to pick out that group. ", "Dots show the jersey number, or initials when no number was tagged."));
     var pm = pickOn && raw.byId[pickOn.match_id];
     var detail = pickOn && React.createElement("div", { style: { marginTop: 10, padding: "10px 12px", borderRadius: RAD.md, background: C.bgCard, border: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } },
       React.createElement("div", { style: { flex: 1, minWidth: 0 } },
         React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800 } }, (pickOn.player || "No player"), " \xB7 ", evLabel(pickOn.event_type), pickOn.outcome ? " \xB7 " + pickOn.outcome : ""),
         React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 3, fontFamily: MONO } }, pm ? "v " + (pm.opponent || "TBC") + (pm.date ? " \xB7 " + pm.date : "") : "", " \xB7 H", pickOn.period || 1, pickOn.time_text ? " " + pickOn.time_text : "")),
       React.createElement("button", { onClick: function() { setPick(null); }, title: "Close", style: { background: "none", border: "none", color: C.slate, cursor: "pointer", fontSize: FS.lg, width: 44, height: 44, padding: 0, flexShrink: 0 } }, "\xD7"));
-    var tot = P0.length || 1;
+    var tot = thirdN || 1;
     var thirdsRow = React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } }, [["OUR END", thirds[0]], ["MIDDLE", thirds[1]], ["THEIR END", thirds[2]]].map(function(t) {
       return React.createElement("div", { key: t[0], style: { flex: 1, textAlign: "center", padding: "8px 4px", borderRadius: RAD.md, background: C.field, border: "1px solid " + C.border } },
-        React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, fontFamily: MONO } }, P0.length ? Math.round(t[1] / tot * 100) + "%" : "—"),
+        React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, fontFamily: MONO } }, thirdN ? Math.round(t[1] / tot * 100) + "%" : "—"),
         React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO, letterSpacing: 1, marginTop: 2 } }, t[0], " \xB7 ", t[1]));
     }));
     var counts = React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginBottom: 8, lineHeight: 1.5 } },
