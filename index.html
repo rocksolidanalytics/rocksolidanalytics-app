@@ -1120,7 +1120,7 @@
         React.createElement("span", { style: { fontSize: FS.lg, color: C.bg, flexShrink: 0 } }, "\u2192")),
       !isPlayer && Label("MATCH"),
       Row(onNewMatch, "+", C.greenB, "New match", "Set up a game & squad, ready to tag", null, 20),
-      !isPlayer && resumeMatch && React.createElement("button", { onClick: function() { onResume(resumeMatch); }, style: { width: "100%", marginTop: 12, padding: 14, borderRadius: RAD.xl, background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB + ALPHA.mid, boxShadow: "0 0 20px " + C.greenB + ALPHA.faint, cursor: "pointer", display: "flex", alignItems: "center", gap: 12 } },
+      !isPlayer && resumeMatch && club && resumeMatch.club_id === club.id && React.createElement("button", { onClick: function() { onResume(resumeMatch); }, style: { width: "100%", marginTop: 12, padding: 14, borderRadius: RAD.xl, background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB + ALPHA.mid, boxShadow: "0 0 20px " + C.greenB + ALPHA.faint, cursor: "pointer", display: "flex", alignItems: "center", gap: 12 } },
         Badge("\u25B6", C.greenB, 12),
         React.createElement("div", { style: { textAlign: "left", flex: 1, minWidth: 0 } },
           React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800, color: C.greenB, letterSpacing: -0.2 } }, "Resume Tagging"),
@@ -9325,6 +9325,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [matchCount, setMatchCount] = useState(0);
     const enteredRef = useRef(false);
     const recoveryRef = useRef(false);
+    // Bumped on every sign in and sign out. Async lookups started for one
+    // account compare against it so a late reply cannot land in another.
+    const authGenRef = useRef(0);
     async function loadCount(id) {
       try {
         const r = await db.from("matches").select("id", { count: "exact", head: true }).eq("club_id", id).eq("scouting", false);
@@ -9336,11 +9339,25 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setSession(s);
       if (!s) {
         enteredRef.current = false;
+        // Signing out does not reload the page, so wipe everything tied to
+        // the previous account. Otherwise the next account to sign in on this
+        // device inherits its resume card, club and open match.
+        authGenRef.current++;
+        setResumeMatch(null);
+        setTagMatch(null);
+        setEditMatch(null);
+        setTplMatch(null);
+        setClub(null);
+        setRole("analyst");
+        setMatchCount(0);
+        try { window.__rsaClubId = null; } catch (e) {}
         setPhase("auth");
         return;
       }
       if (enteredRef.current) return;
       enteredRef.current = true;
+      const gen = ++authGenRef.current;
+      setResumeMatch(null);
       const prof = await db.from("profiles").select("club_id,role").eq("id", s.user.id).maybeSingle();
     try { db.rpc("touch_last_seen").then(function() {}, function() {}); } catch (e) {
     }
@@ -9353,7 +9370,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           try { setSportTerms(c.data.sport); } catch (e) {}
           loadCount(c.data.id);
           setPhase("home");
-      db.from("matches").select("*").eq("club_id", prof.data.club_id).neq("status", "final").order("date", { ascending: false }).limit(1).then(function(r) { if (r.data && r.data[0]) setResumeMatch(r.data[0]); });
+      db.from("matches").select("*").eq("club_id", prof.data.club_id).neq("status", "final").order("date", { ascending: false }).limit(1).then(function(r) {
+        if (gen !== authGenRef.current) return;
+        var rm = r.data && r.data[0];
+        setResumeMatch(rm && rm.club_id === prof.data.club_id ? rm : null);
+      });
       // If the analyst was mid-match when the browser reclaimed the page, walk
       // straight back into the tagger rather than stranding them on the home
       // screen with a running game. The pointer expires after 6 hours and is
@@ -9372,6 +9393,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         if (act.clubId && act.clubId !== prof.data.club_id) { activeClear(); return; }
         db.from("matches").select("*").eq("id", act.matchId)
           .eq("club_id", prof.data.club_id).maybeSingle().then(function(mr) {
+          if (gen !== authGenRef.current) return;
           if (!mr.data) { activeClear(); return; }
           if (mr.data.club_id !== prof.data.club_id) { activeClear(); return; }
           if (mr.data.status === "final") { activeClear(); return; }
@@ -9466,6 +9488,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       route(data.session);
     } });
     if (phase === "onboarding") return /* @__PURE__ */ React.createElement(Onboarding, { session, onDone: (c, r) => {
+      setResumeMatch(null);
       setClub(c);
       try { setSportTerms(c.sport); } catch (e) {}
       if (r) setRole(r);
@@ -9525,7 +9548,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     return /* @__PURE__ */ React.createElement(Home, { club, onSignOut: () => { try { activeClear(); } catch (e) {} db.auth.signOut(); }, onImport: () => setPhase("import"), onGameFilm: () => setPhase("gamefilm"), onLineups: () => setPhase("lineups"), onStats: () => setPhase("stats"), onNewMatch: () => setPhase("newmatch"), onVideoHub: () => setPhase("videohub"), onTemplate: () => {
       setTplMatch(null);
       setPhase("template");
-    }, onLive: () => setPhase("live"), onLivePad: () => setPhase("livepad"), onResume: function(m) { setTagMatch(m); setPhase("tagger"); }, resumeMatch, onTactic: () => setPhase("tactic"), onHelp: () => setPhase("help"), onSquad: () => setPhase("squad"), role, matchCount });
+    }, onLive: () => setPhase("live"), onLivePad: () => setPhase("livepad"), onResume: function(m) { if (!club || m.club_id !== club.id) { setResumeMatch(null); return; } setTagMatch(m); setPhase("tagger"); }, resumeMatch, onTactic: () => setPhase("tactic"), onHelp: () => setPhase("help"), onSquad: () => setPhase("squad"), role, matchCount });
   }
   ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(RSABoundary, null, /* @__PURE__ */ React.createElement(App, null)));
 })();
