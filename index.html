@@ -1597,7 +1597,7 @@
     async function load() {
       try {
         const m = await db.from("matches").select("*").eq("club_id", club.id).eq("scouting", false).order("date");
-        const p = await db.from("players").select("id,name,preferred_slot").eq("club_id", club.id).order("name");
+        const p = await db.from("players").select("id,name,preferred_slot,helmet").eq("club_id", club.id).order("name");
         const a = await db.from("appearances").select("match_id,position_slot").eq("club_id", club.id);
         const cnt = {};
         (a.data || []).forEach((r) => {
@@ -1949,7 +1949,11 @@
     const [lastHel, setLastHel] = useState({});
     const [helFor, setHelFor] = useState(null);
     var stick = club.sport === "hurling" || club.sport === "camogie";
-    function helOfP(pid) { return helP[pid] !== undefined ? helP[pid] : lastHel[pid] || ""; }
+    function helOfP(pid) {
+      if (helP[pid] !== undefined) return helP[pid];
+      var pl = players.find(function(x) { return x.id === pid; });
+      return pl && pl.helmet || lastHel[pid] || "";
+    }
     function usHelBtn(pid) {
       var h = helOfP(pid);
       return React.createElement("span", { role: "button", title: "Helmet colour", onClick: function(e) { e.stopPropagation(); setHelFor({ kind: "us", pid: pid }); }, style: { width: 40, height: 40, margin: "-8px -6px -8px 0", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" } }, h ? React.createElement(HelmetDot, { h: h, s: 20 }) : React.createElement("span", { style: { width: 18, height: 18, borderRadius: "50%", border: "1.5px dashed " + C.borderB } }));
@@ -5847,7 +5851,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [sqBusy, setSqBusy] = useState(false);
     async function loadSquad() {
       try {
-        const r = await db.from("players").select("id,name,preferred_slot").eq("club_id", club.id).order("name");
+        const r = await db.from("players").select("id,name,preferred_slot,helmet").eq("club_id", club.id).order("name");
         if (!r.error) setSquad(r.data || []);
       } catch (e) {
       }
@@ -5855,6 +5859,18 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     useEffect(function() {
       loadSquad();
     }, []);
+    // Default helmet colour for hurling and camogie. The line-up editor uses it
+    // unless a different helmet is set for that match.
+    var sqStick = club.sport === "hurling" || club.sport === "camogie";
+    const [sqHel, setSqHel] = useState(null);
+    async function setHelmetDefault(pid, h) {
+      setSqHel(null);
+      setSquad(function(prev) { return (prev || []).map(function(x) { return x.id === pid ? Object.assign({}, x, { helmet: h || null }) : x; }); });
+      try {
+        await db.from("players").update({ helmet: h || null }).eq("id", pid);
+      } catch (e) {
+      }
+    }
     async function setPref(pid, slot) {
       setSqEdit(null);
       try {
@@ -5902,11 +5918,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
               /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, fontSize: FS.sm, color: C.slate, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, a.email),
               /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: g.c, fontFamily: MONO, fontWeight: 700 } }, g.t), g.d && /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO, marginTop: 1 } }, g.d)));
           })));
-    })()), React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, marginBottom: 12, lineHeight: 1.5 } }, "Preferred position feeds team selection suggestions. Actual positions are still set per match on the teamsheet."), squad === null && /* @__PURE__ */ React.createElement(SkelRows, { n: 5, h: 46 }), squad && squad.length === 0 && React.createElement("div", { style: { background: C.bgCard, border: "1px dashed " + C.border, borderRadius: RAD.lg, padding: "14px 12px", color: C.slate, fontSize: FS.md, textAlign: "center" } }, "No players yet. Add your first one below."), squad && squad.map(function(p) {
+    })()), React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, marginBottom: 12, lineHeight: 1.5 } }, sqStick ? "Preferred position and helmet colour are the defaults for team selection. Both can still be changed per match on the teamsheet." : "Preferred position feeds team selection suggestions. Actual positions are still set per match on the teamsheet."), squad === null && /* @__PURE__ */ React.createElement(SkelRows, { n: 5, h: 46 }), squad && squad.length === 0 && React.createElement("div", { style: { background: C.bgCard, border: "1px dashed " + C.border, borderRadius: RAD.lg, padding: "14px 12px", color: C.slate, fontSize: FS.md, textAlign: "center" } }, "No players yet. Add your first one below."), squad && squad.map(function(p) {
       var pi = POSITIONS.find(function(x) {
         return x.slot === Number(p.preferred_slot);
       }) || null;
-      return /* @__PURE__ */ React.createElement("div", { key: p.id, style: { marginBottom: 6 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.lg, padding: "9px 12px" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontSize: FS.md, fontWeight: 700, color: C.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, p.name), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+      return /* @__PURE__ */ React.createElement("div", { key: p.id, style: { marginBottom: 6 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.lg, padding: "9px 12px" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontSize: FS.md, fontWeight: 700, color: C.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, p.name), /* @__PURE__ */ sqStick && sqHel === p.id && React.createElement(HelmetPick, { value: p.helmet, title: p.name + " \xB7 default", onClose: function() { setSqHel(null); }, onPick: function(h) { setHelmetDefault(p.id, h); } }), sqStick && React.createElement("button", { onClick: function() { setSqHel(p.id); }, title: "Default helmet colour", style: { flexShrink: 0, width: 44, minHeight: 44, margin: "-10px 0 -9px", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, p.helmet ? React.createElement(HelmetDot, { h: p.helmet, s: 22 }) : React.createElement("span", { style: { width: 20, height: 20, borderRadius: "50%", border: "1.5px dashed " + C.borderB } })), React.createElement("button", { onClick: function() {
         setSqEdit(sqEdit === p.id ? null : p.id);
       }, style: { flexShrink: 0, minHeight: 44, margin: "-10px 0 -9px", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { padding: "5px 11px", borderRadius: RAD.md, background: pi ? C.greenB + ALPHA.faint : C.field, border: "1px solid " + (pi ? C.greenB + ALPHA.strong : C.border), color: pi ? C.greenB : C.slateD, fontSize: FS.sm, fontWeight: 800, fontFamily: MONO } }, pi ? "No." + pi.slot + " " + pi.code : "SET POS"))), sqEdit === p.id && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 5, padding: "8px 2px 2px" } }, POSITIONS.map(function(x) {
         var on = Number(p.preferred_slot) === x.slot;
