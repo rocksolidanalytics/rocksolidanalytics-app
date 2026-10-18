@@ -1660,14 +1660,15 @@
   // 16-30 subs, 101+ scout team B); jersey is the number worn. Rows saved before the
   // jersey column was used have jersey null, and their number is the slot.
   function lineupFromApps(rows) {
-    var names = {}, away = {}, bySlot = {}, used = {}, slots = {}, has = false;
+    var names = {}, away = {}, hel = {}, helAway = {}, bySlot = {}, used = {}, slots = {}, has = false;
     (rows || []).forEach(function(a) {
       var sl = Number(a.position_slot);
       if (!sl) return;
       slots[sl] = true;
-      if (sl > 100) { away[a.jersey != null ? Number(a.jersey) : sl - 100] = a.player_name; return; }
+      if (sl > 100) { var aj = a.jersey != null ? Number(a.jersey) : sl - 100; away[aj] = a.player_name; if (a.helmet) helAway[aj] = a.helmet; return; }
       var j = a.jersey != null ? Number(a.jersey) : sl;
       names[j] = a.player_name;
+      if (a.helmet) hel[j] = a.helmet;
       if (sl <= 15) { bySlot[sl] = j; used[j] = true; has = true; }
     });
     var starters = null;
@@ -1682,7 +1683,7 @@
         starters.push(n1);
       }
     }
-    return { names: names, away: away, starters: starters, slots: slots };
+    return { names: names, away: away, hel: hel, helAway: helAway, starters: starters, slots: slots };
   }
   // Names for a scouting match. Both taggers use the home side as their own team and the
   // away side as the opposition. Names come from the scout squads saved on the match
@@ -1701,6 +1702,46 @@
     var sl = 16;
     while (slots[sl]) sl++;
     return sl;
+  }
+  // Hurling and camogie helmets: one or two colours, kept on the line-up row as
+  // "red" or "green+white". A small dot beside a player makes them easier to
+  // pick out on video and in scouting.
+  var HELMETS = [["white", "White", "#F4F4F4"], ["black", "Black", "#161616"], ["grey", "Grey", "#8A8F98"], ["red", "Red", "#D7263D"], ["maroon", "Maroon", "#7A1F2B"], ["orange", "Orange", "#F28C28"], ["yellow", "Yellow", "#F5D000"], ["green", "Green", "#1E9E4A"], ["dgreen", "Dark green", "#0E5A2C"], ["sky", "Sky blue", "#7CC6F2"], ["blue", "Blue", "#1F5FD6"], ["navy", "Navy", "#14244F"], ["purple", "Purple", "#6B3FA0"], ["pink", "Pink", "#F49AC1"]];
+  function helmetParts(h) {
+    return String(h || "").split("+").map(function(k) { return HELMETS.filter(function(x) { return x[0] === k; })[0]; }).filter(Boolean).slice(0, 2);
+  }
+  function helmetLabel(h) {
+    return helmetParts(h).map(function(x) { return x[1]; }).join(" + ");
+  }
+  function HelmetDot({ h, s, ml }) {
+    var c = helmetParts(h);
+    if (!c.length) return null;
+    s = s || 10;
+    return React.createElement("span", { title: helmetLabel(h) + " helmet", style: { display: "inline-block", width: s, height: s, borderRadius: "50%", background: c.length > 1 ? "linear-gradient(135deg," + c[0][2] + " 50%," + c[1][2] + " 50%)" : c[0][2], boxShadow: "0 0 0 1px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.22)", verticalAlign: "middle", marginLeft: ml || 0, flexShrink: 0 } });
+  }
+  function HelmetPick({ value, title, onPick, onClose }) {
+    const [sel, setSel] = useState(function() { return helmetParts(value).map(function(x) { return x[0]; }); });
+    function tapSw(k) {
+      setSel(function(p) {
+        if (p.indexOf(k) >= 0) return p.filter(function(x) { return x !== k; });
+        return p.length < 2 ? p.concat([k]) : [p[0], k];
+      });
+    }
+    var hv = sel.join("+");
+    return React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, background: C.black + ALPHA.scrim, zIndex: 130, display: "flex", alignItems: "flex-end", justifyContent: "center" } },
+      React.createElement("div", { onClick: function(e) { e.stopPropagation(); }, style: { width: "100%", maxWidth: 520, background: C.bgCard, borderTop: "1px solid " + C.borderB, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, boxSizing: "border-box" } },
+        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 12 } },
+          sel.length ? React.createElement(HelmetDot, { h: hv, s: 34 }) : React.createElement("span", { style: { width: 34, height: 34, borderRadius: "50%", border: "2px dashed " + C.borderB, flexShrink: 0 } }),
+          React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+            React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800 } }, "Helmet colour"),
+            React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, title || "", " \xB7 ", sel.length ? helmetLabel(hv) : "pick one or two colours"))),
+        React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8, marginBottom: 14 } }, HELMETS.map(function(x) {
+          var ix = sel.indexOf(x[0]);
+          return React.createElement("button", { key: x[0], onClick: function() { tapSw(x[0]); }, title: x[1], style: { aspectRatio: "1", minHeight: 40, borderRadius: "50%", background: x[2], border: ix >= 0 ? "3px solid " + C.greenB : "1px solid rgba(255,255,255,0.25)", cursor: "pointer", position: "relative", padding: 0, boxShadow: "none" } }, ix >= 0 && React.createElement("span", { style: { position: "absolute", right: -4, top: -4, width: 16, height: 16, borderRadius: 8, background: C.greenB, color: C.bg, fontSize: 10, fontWeight: 800, lineHeight: "16px", fontFamily: MONO } }, ix + 1));
+        })),
+        React.createElement("div", { style: { display: "flex", gap: 8 } },
+          React.createElement("button", { onClick: function() { onPick(""); }, style: { flex: 1, minHeight: 44, borderRadius: RAD.lg, border: "1px solid " + C.border, background: "none", color: C.slate, fontWeight: 700, fontSize: FS.md, cursor: "pointer" } }, "No helmet colour"),
+          React.createElement("button", { onClick: function() { onPick(hv); }, style: { flex: 1.3, minHeight: 44, borderRadius: RAD.lg, border: "none", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: FS.md, cursor: "pointer" } }, "Done"))));
   }
   // Team sheet from a photo. The image is shrunk on the phone, checked for
   // darkness and blur before anything is sent, then read by the teamsheet-read
@@ -1902,22 +1943,41 @@
     // Opposition team sheet: names by jersey number, stored at position_slot 101 to 130
     // with no player id. Both taggers show these names on the opposition buttons.
     const [opp, setOpp] = useState([]);
+    // Helmets by player id for this match; lastHel holds the most recent helmet of each player
+    // helmet from other matches, used until one is set here.
+    const [helP, setHelP] = useState({});
+    const [lastHel, setLastHel] = useState({});
+    const [helFor, setHelFor] = useState(null);
+    var stick = club.sport === "hurling" || club.sport === "camogie";
+    function helOfP(pid) { return helP[pid] !== undefined ? helP[pid] : lastHel[pid] || ""; }
+    function usHelBtn(pid) {
+      var h = helOfP(pid);
+      return React.createElement("span", { role: "button", title: "Helmet colour", onClick: function(e) { e.stopPropagation(); setHelFor({ kind: "us", pid: pid }); }, style: { width: 40, height: 40, margin: "-8px -6px -8px 0", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" } }, h ? React.createElement(HelmetDot, { h: h, s: 20 }) : React.createElement("span", { style: { width: 18, height: 18, borderRadius: "50%", border: "1.5px dashed " + C.borderB } }));
+    }
     const [sheetFor, setSheetFor] = useState(null);
     useEffect(() => {
       (async () => {
         try {
-          const a = await db.from("appearances").select("position_slot,player_id,player_name,jersey").eq("match_id", match.id);
-          const m = {}, jm = {}, op = [];
+          const a = await db.from("appearances").select("position_slot,player_id,player_name,jersey,helmet").eq("match_id", match.id);
+          const m = {}, jm = {}, op = [], hp = {};
           (a.data || []).forEach((r) => {
             if (r.position_slot > 100) { op.push(r); return; }
             if (r.position_slot) m[r.position_slot] = r.player_id;
+            if (r.player_id && r.helmet) hp[r.player_id] = r.helmet;
             if (r.position_slot && r.jersey != null && Number(r.jersey) !== Number(r.position_slot)) jm[r.position_slot] = String(r.jersey);
           });
           setAssign(m);
           setJerseyMap(jm);
           op.sort(function(x, y) { return x.position_slot - y.position_slot; });
-          setOpp(op.map(function(r) { return { n: String(r.jersey != null ? r.jersey : r.position_slot - 100), name: r.player_name || "", start: r.position_slot <= 115 }; }));
-          const all = await db.from("appearances").select("player_id,position_slot").eq("club_id", club.id).neq("match_id", match.id);
+          setOpp(op.map(function(r) { return { n: String(r.jersey != null ? r.jersey : r.position_slot - 100), name: r.player_name || "", start: r.position_slot <= 115, h: r.helmet || "" }; }));
+          setHelP(hp);
+          const all = await db.from("appearances").select("player_id,position_slot,helmet,created_at").eq("club_id", club.id).neq("match_id", match.id);
+          const lh = {}, lhAt = {};
+          (all.data || []).forEach((r) => {
+            if (!r.player_id || !r.helmet) return;
+            if (!lhAt[r.player_id] || String(r.created_at || "") > lhAt[r.player_id]) { lhAt[r.player_id] = String(r.created_at || ""); lh[r.player_id] = r.helmet; }
+          });
+          setLastHel(lh);
           const h = {};
           (all.data || []).forEach((r) => {
             if (!r.player_id || !r.position_slot) return;
@@ -2020,19 +2080,20 @@
     }
     function oppRowsFor(list) {
       var st = 101, sb = 116;
-      return (list || []).filter(function(o) { return String(o.name || "").trim() && Number(o.n) > 0; }).map(function(o) {
+      return (list || []).filter(function(o) { return (String(o.name || "").trim() || o.h) && Number(o.n) > 0; }).map(function(o) {
         var sl = o.start && st <= 115 ? st++ : sb++;
-        return { club_id: club.id, match_id: match.id, player_id: null, player_name: String(o.name).trim(), position_slot: sl, jersey: Number(o.n), position: null, is_start: sl <= 115, created_by: session.user.id };
+        return { club_id: club.id, match_id: match.id, player_id: null, player_name: String(o.name || "").trim(), position_slot: sl, jersey: Number(o.n), position: null, is_start: sl <= 115, helmet: o.h || null, created_by: session.user.id };
       }).filter(function(r) { return r.position_slot <= 130; });
     }
     function oppClash(list) {
       var seen = {};
       for (var i = 0; i < (list || []).length; i++) {
         var o = list[i];
-        if (!String(o.name || "").trim()) continue;
-        if (!(Number(o.n) > 0)) return "Opposition: " + o.name + " needs a number before saving.";
-        if (seen[o.n]) return "Opposition: " + seen[o.n] + " and " + o.name + " both have #" + o.n + ". Change one before saving.";
-        seen[o.n] = o.name;
+        var onm = String(o.name || "").trim() || (o.h ? helmetLabel(o.h) + " helmet" : "");
+        if (!onm) continue;
+        if (!(Number(o.n) > 0)) return "Opposition: " + onm + " needs a number before saving.";
+        if (seen[o.n]) return "Opposition: " + seen[o.n] + " and " + onm + " both have #" + o.n + ". Change one before saving.";
+        seen[o.n] = onm;
       }
       return null;
     }
@@ -2042,7 +2103,11 @@
       setSheetFor(null);
       setErr("");
       if (sheetFor === "opp") {
-        setOpp(list.map(function(r) { return { n: r.n, name: r.name, start: r.start }; }));
+        setOpp(function(prev) {
+          var hOld = {};
+          (prev || []).forEach(function(o) { if (o.h) hOld[o.n] = o.h; });
+          return list.map(function(r) { return { n: r.n, name: r.name, start: r.start, h: hOld[r.n] || "" }; });
+        });
         return;
       }
       var na = {}, nj = {}, usedP = {}, nextSub = 16;
@@ -2081,6 +2146,7 @@
           jersey: jerseyMap[sl] ? Number(jerseyMap[sl]) : Number(sl),
           position: pos ? pos.code : null,
           is_start: Number(sl) <= 15,
+          helmet: helOfP(pid) || null,
           created_by: session.user.id
         };
       });
@@ -2144,7 +2210,7 @@
       display: "flex",
       alignItems: "center",
       gap: 12
-    } }, assign[p.slot] ? React.createElement("select", { value: jerseyMap[p.slot] || String(p.slot), onChange: function(e) { e.stopPropagation(); setJerseyMap(function(prev) { var o = Object.assign({}, prev); o[p.slot] = e.target.value; return o; }); }, onClick: function(e) { e.stopPropagation(); }, style: { width: 44, height: 44, margin: "-8px 0", flexShrink: 0, borderRadius: RAD.md, background: C.navyL, border: "1px solid " + (jerseyMap[p.slot] && jerseyMap[p.slot] !== String(p.slot) ? C.greenB : C.border), color: C.white, fontFamily: MONO, fontSize: FS.md, fontWeight: 700, textAlign: "center", appearance: "none", WebkitAppearance: "none", padding: "0 2px", outline: "none" } }, Array.from({length: 35}, function(_, i) { return i + 1; }).map(function(n) { return React.createElement("option", { key: n, value: String(n) }, n); })) : React.createElement("span", { style: { width: 44, height: 26, flexShrink: 0, borderRadius: RAD.md, background: C.navyL, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontSize: FS.sm, fontWeight: 700 } }, p.slot), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, fontWeight: 600, color: assign[p.slot] ? C.white : C.slateD } }, assign[p.slot] ? nameOf(assign[p.slot]) : "Tap to assign"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, color: C.slate, fontFamily: MONO } }, p.label))))))), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 8, padding: "10px 12px", background: C.red + ALPHA.faint, border: "1px solid " + C.red + ALPHA.mid, borderRadius: RAD.lg, color: C.red, fontSize: FS.md } }, err)), /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 18px", borderTop: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { marginTop: 20, marginBottom: 16 } },
+    } }, assign[p.slot] ? React.createElement("select", { value: jerseyMap[p.slot] || String(p.slot), onChange: function(e) { e.stopPropagation(); setJerseyMap(function(prev) { var o = Object.assign({}, prev); o[p.slot] = e.target.value; return o; }); }, onClick: function(e) { e.stopPropagation(); }, style: { width: 44, height: 44, margin: "-8px 0", flexShrink: 0, borderRadius: RAD.md, background: C.navyL, border: "1px solid " + (jerseyMap[p.slot] && jerseyMap[p.slot] !== String(p.slot) ? C.greenB : C.border), color: C.white, fontFamily: MONO, fontSize: FS.md, fontWeight: 700, textAlign: "center", appearance: "none", WebkitAppearance: "none", padding: "0 2px", outline: "none" } }, Array.from({length: 35}, function(_, i) { return i + 1; }).map(function(n) { return React.createElement("option", { key: n, value: String(n) }, n); })) : React.createElement("span", { style: { width: 44, height: 26, flexShrink: 0, borderRadius: RAD.md, background: C.navyL, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontSize: FS.sm, fontWeight: 700 } }, p.slot), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, fontWeight: 600, color: assign[p.slot] ? C.white : C.slateD } }, assign[p.slot] ? nameOf(assign[p.slot]) : "Tap to assign"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, color: C.slate, fontFamily: MONO } }, p.label)), stick && assign[p.slot] ? usHelBtn(assign[p.slot]) : null))))), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 8, padding: "10px 12px", background: C.red + ALPHA.faint, border: "1px solid " + C.red + ALPHA.mid, borderRadius: RAD.lg, color: C.red, fontSize: FS.md } }, err)), /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 18px", borderTop: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { marginTop: 20, marginBottom: 16 } },
         React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 8 } }, "SUBSTITUTES"),
         React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, marginBottom: 10 } }, "Add subs with their jersey numbers"),
         (function() {
@@ -2164,18 +2230,19 @@
                   style: { flex: 1, minWidth: 0, height: 44, borderRadius: RAD.md, background: C.navyL, border: "1px solid " + C.border, color: subAssign ? C.white : C.slateD, fontSize: FS.md, outline: "none", padding: "0 8px" } },
                   React.createElement("option", { value: "" }, "— Select sub —"),
                   availSubs.map(function(p2) { return React.createElement("option", { key: p2.id, value: p2.id }, p2.name); }),
-                  subAssign && !availSubs.find(function(p2) { return p2.id === subAssign; }) ? React.createElement("option", { key: subAssign, value: subAssign }, subName) : null));
+                  subAssign && !availSubs.find(function(p2) { return p2.id === subAssign; }) ? React.createElement("option", { key: subAssign, value: subAssign }, subName) : null), stick && subAssign ? usHelBtn(subAssign) : null);
             }));
         }())),
       ready && React.createElement("div", { style: { marginBottom: 14, padding: 14, background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.lg } },
         React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 } },
           React.createElement("div", { style: { flex: 1, fontSize: FS.xs, letterSpacing: 2, color: C.blue, fontFamily: MONO, fontWeight: 700 } }, "OPPOSITION \xB7 ", String(match.opponent || "").toUpperCase()),
           opp.length > 0 && React.createElement("button", { onClick: function() { setOpp([]); }, style: { minHeight: 36, padding: "0 10px", borderRadius: RAD.md, border: "1px solid " + C.border, background: "none", color: C.slateD, fontSize: FS.xs, fontFamily: MONO, cursor: "pointer" } }, "CLEAR")),
-        opp.length === 0 && React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, lineHeight: 1.5, marginBottom: 10 } }, "Add their team sheet and both taggers show their names on the player buttons instead of just numbers."),
+        opp.length === 0 && React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, lineHeight: 1.5, marginBottom: 10 } }, stick ? "Add their team sheet and both taggers show their names and helmet colours on the player buttons. A number with just a helmet colour is fine." : "Add their team sheet and both taggers show their names on the player buttons instead of just numbers."),
         opp.map(function(o, i) {
           return React.createElement("div", { key: i, style: { display: "flex", gap: 6, alignItems: "center", marginBottom: 4 } },
             React.createElement("input", { value: o.n, inputMode: "numeric", onChange: function(e) { var v = e.target.value.replace(/[^0-9]/g, "").slice(0, 2); setOpp(function(p) { return p.map(function(x, j) { return j === i ? Object.assign({}, x, { n: v }) : x; }); }); }, className: "rsa-field", style: { width: 44, minHeight: 40, textAlign: "center", borderRadius: RAD.md, background: C.navyL, border: "1px solid " + C.border, color: C.white, fontFamily: MONO, fontWeight: 800, fontSize: FS.md, flexShrink: 0, boxSizing: "border-box" } }),
             React.createElement("input", { value: o.name, onChange: function(e) { var v = e.target.value; setOpp(function(p) { return p.map(function(x, j) { return j === i ? Object.assign({}, x, { name: v }) : x; }); }); }, placeholder: "Name", className: "rsa-field", style: { flex: 1, minWidth: 0, minHeight: 40, padding: "0 10px", borderRadius: RAD.md, background: C.navyL, border: "1px solid " + C.border, color: C.white, fontSize: FS.md, boxSizing: "border-box" } }),
+            stick && React.createElement("button", { onClick: function() { setHelFor({ kind: "opp", i: i }); }, title: "Helmet colour", style: { width: 36, minHeight: 40, background: "none", border: "none", boxShadow: "none", padding: 0, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" } }, o.h ? React.createElement(HelmetDot, { h: o.h, s: 20 }) : React.createElement("span", { style: { width: 18, height: 18, borderRadius: "50%", border: "1.5px dashed " + C.borderB } })),
             React.createElement("button", { onClick: function() { setOpp(function(p) { return p.map(function(x, j) { return j === i ? Object.assign({}, x, { start: !x.start }) : x; }); }); }, style: { minWidth: 48, minHeight: 40, borderRadius: RAD.md, border: "1px solid " + (o.start ? C.blue + ALPHA.mid : C.border), background: o.start ? C.blue + ALPHA.faint : "none", color: o.start ? C.blue : C.slateD, fontSize: FS.xs, fontWeight: 800, cursor: "pointer", flexShrink: 0 } }, o.start ? "START" : "SUB"),
             React.createElement("button", { onClick: function() { setOpp(function(p) { return p.filter(function(x, j) { return j !== i; }); }); }, title: "Remove", style: { width: 32, minHeight: 40, background: "none", border: "none", color: C.slateD, fontSize: FS.lg, cursor: "pointer", padding: 0, flexShrink: 0 } }, "\xD7"));
         }),
@@ -2196,7 +2263,12 @@
       alignItems: "center",
       justifyContent: "center",
       gap: 8
-    } }, busy ? /* @__PURE__ */ React.createElement(Spin, { s: 18, c: C.bg }) : "Save line-up")), sheetFor && React.createElement(SheetImport, { side: sheetFor, session: session, players: players, teamName: sheetFor === "opp" ? match.opponent || "Opposition" : club.name, onApply: applySheet, onClose: function() { setSheetFor(null); } }), picking !== null && /* @__PURE__ */ React.createElement("div", { onClick: () => {
+    } }, busy ? /* @__PURE__ */ React.createElement(Spin, { s: 18, c: C.bg }) : "Save line-up")), sheetFor && React.createElement(SheetImport, { side: sheetFor, session: session, players: players, teamName: sheetFor === "opp" ? match.opponent || "Opposition" : club.name, onApply: applySheet, onClose: function() { setSheetFor(null); } }), helFor && React.createElement(HelmetPick, { value: helFor.kind === "us" ? helOfP(helFor.pid) : (opp[helFor.i] || {}).h, title: helFor.kind === "us" ? nameOf(helFor.pid) : ((opp[helFor.i] || {}).n ? "#" + opp[helFor.i].n + " " : "") + ((opp[helFor.i] || {}).name || ""), onClose: function() { setHelFor(null); }, onPick: function(h) {
+      var hf = helFor;
+      setHelFor(null);
+      if (hf.kind === "us") setHelP(function(p) { var o = Object.assign({}, p); o[hf.pid] = h; return o; });
+      else setOpp(function(p) { return p.map(function(x, j) { return j === hf.i ? Object.assign({}, x, { h: h }) : x; }); });
+    } }), picking !== null && /* @__PURE__ */ React.createElement("div", { onClick: () => {
       setAdding(false);
       setPicking(null);
     }, style: { position: "fixed", inset: 0, background: C.black + ALPHA.scrim, zIndex: 100, display: "flex", alignItems: "flex-end" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "100%", maxHeight: "70vh", overflowY: "auto", background: C.bgCard, borderTop: `1px solid ${C.borderB}`, borderRadius: RAD.xl + "px " + RAD.xl + "px 0 0", padding: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: FS.md, fontWeight: 700 } }, (POSITIONS.find((p) => p.slot === picking) || {}).label, " \u2014 #", picking), /* @__PURE__ */ React.createElement("button", { onClick: () => setSlot(picking, null), style: { background: "none", border: "none", color: C.red, fontSize: FS.sm, cursor: "pointer", fontFamily: MONO, padding: "16px 6px", margin: "-16px 0" } }, "Clear")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, players.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: C.slate, fontSize: FS.md, padding: "10px 0" } }, "No players in your panel yet."), rankPlayers(picking).map((rk) => {
@@ -4082,6 +4154,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [nameMap, setNameMap] = useState({});
     // Starting fifteen as jersey numbers in teamsheet slot order, or null when no teamsheet.
     const [lineupJ, setLineupJ] = useState(null);
+    const [ltHelmets, setLtHelmets] = useState({ us: {}, opp: {} });
+    function ltHel(isUs, n) { var h = (isUs ? ltHelmets.us : ltHelmets.opp)[n]; return h ? React.createElement(HelmetDot, { h: h, s: 11, ml: 4 }) : null; }
     const apSlotsRef = useRef({});
     const [subOpen, setSubOpen] = useState(false);
     const [squad, setSquad] = useState([]);
@@ -4122,12 +4196,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }, String(t2).indexOf("\u2713") === 0 ? 3500 : 1300);
     }
     useEffect(function() {
-      db.from("appearances").select("position_slot,player_name,jersey").eq("match_id", match.id).then(function(r) {
+      db.from("appearances").select("position_slot,player_name,jersey,helmet").eq("match_id", match.id).then(function(r) {
         var lu = lineupFromApps(r.data);
         apSlotsRef.current = lu.slots;
         var sm = match.scouting ? scoutNameMaps(match, lu) : null;
         setNameMap(sm ? sm.home : lu.names);
         setOppNameMap(sm ? sm.away : lu.away);
+        setLtHelmets({ us: lu.hel, opp: lu.helAway });
         setLineupJ(lu.starters);
       });
     }, []);
@@ -5293,7 +5368,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         var on = edPl === n;
         return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
           setEdPl(n);
-        }, style: { padding: "10px 2px", background: on ? C.greenB + ALPHA.soft : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), borderRadius: RAD.md, color: on ? C.greenB : C.slate, cursor: "pointer", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, n), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nm.split(" ").slice(-1)[0]));
+        }, style: { padding: "10px 2px", background: on ? C.greenB + ALPHA.soft : C.bgCard, border: "1px solid " + (on ? C.greenB : C.border), borderRadius: RAD.md, color: on ? C.greenB : C.slate, cursor: "pointer", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, n, ltHel(credH, n)), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nm.split(" ").slice(-1)[0]));
       }), /* @__PURE__ */ React.createElement("button", { onClick: function() {
         setEdPl(null);
       }, style: { minHeight: 44, padding: "10px 2px", background: edPl === null ? C.greenB + ALPHA.soft : C.field, border: "1px solid " + (edPl === null ? C.greenB : C.border), borderRadius: RAD.md, color: edPl === null ? C.greenB : C.slateD, cursor: "pointer", fontSize: 10.5, fontWeight: 700 } }, "NONE"), React.createElement("button", { onClick: function() { setEdMore(!edMore); }, style: { minHeight: 44, padding: "10px 2px", background: C.field, border: "1px dashed " + C.borderB, borderRadius: RAD.md, color: C.slate, cursor: "pointer", fontSize: 10.5, fontWeight: 700 } }, edMore ? "FEWER" : "+ SUBS")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: C.slateD, marginTop: 8 } }, "Leave player untouched to keep ", editRow.player || "none", "."), def && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: C.slate, fontFamily: MONO, fontWeight: 700, margin: "0 0 6px" } }, "PITCH LOCATION"), /* @__PURE__ */ React.createElement("button", { onClick: function() { setEdLocOpen(!edLocOpen); }, style: { width: "100%", minHeight: 44, padding: "11px", borderRadius: RAD.md, border: "1px solid " + (edLoc ? C.greenB : C.border), background: edLoc ? C.greenB + ALPHA.soft : C.field, color: edLoc ? C.greenB : C.slate, fontWeight: 700, fontSize: 11.5, cursor: "pointer" } }, edLoc ? "\u2713 NEW SPOT SET \xB7 TAP TO REDO" : (edLocOpen ? "TAP THE PITCH BELOW" : editRow.x == null ? "\u25CE ADD LOCATION" : "\u25CE MOVE LOCATION")), edLocOpen && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 8 } }, /* @__PURE__ */ React.createElement(TagPitch, { active: true, onTap: function(loc) { setEdLoc(loc); }, marks: [editRow.x != null && { x: editRow.x, y: editRow.y, kind: "old" }, edLoc && { x: edLoc.x, y: edLoc.y, kind: "new" }] }), React.createElement("div", { style: { display: "flex", gap: 14, fontSize: 9.5, color: C.slateD, marginTop: 6 } }, React.createElement("span", null, "\u25CC current spot"), React.createElement("span", { style: { color: C.greenB } }, "\u25CF new spot"))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: C.slateD, marginTop: 6 } }, editRow.x == null ? "No spot saved yet. Optional." : "Leave untouched to keep the current spot.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 16 } }, /* @__PURE__ */ React.createElement("button", { onClick: deleteEdit, style: { minHeight: 44, padding: "13px 16px", borderRadius: RAD.lg, border: "1px solid " + C.red + ALPHA.strong, background: C.red + ALPHA.faint, color: C.red, fontWeight: 800, fontSize: 12.5, cursor: "pointer" } }, "DELETE"), /* @__PURE__ */ React.createElement("button", { onClick: applyEdit, style: { flex: 1, minHeight: 44, padding: "13px 12px", borderRadius: RAD.lg, border: "none", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 13.5, cursor: "pointer" } }, "SAVE CHANGES")));
@@ -5336,7 +5411,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           var off = cd && (cd.red || binLeft > 0);
           out.push(/* @__PURE__ */ React.createElement("button", { key: slot, onClick: off ? void 0 : function() {
             commit(n);
-          }, style: { gridColumn: cols[ix] + " / span 2", padding: "2px", background: off ? C.field : tc + ALPHA.faint, border: "1px solid " + (off ? C.border : tc + ALPHA.mid), borderRadius: RAD.md, color: off ? C.slateD : tc, cursor: off ? "default" : "pointer", opacity: off ? 0.45 : 1, position: "relative", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", lineHeight: 1.15, minHeight: 0 } }, cd && cd.y > 0 && !cd.red && /* @__PURE__ */ React.createElement("span", { style: { position: "absolute", top: 3, right: 4, width: 6, height: 8, borderRadius: RAD.sm, background: C.gold } }), cd && cd.red && /* @__PURE__ */ React.createElement("span", { style: { position: "absolute", top: 3, right: 4, width: 6, height: 8, borderRadius: RAD.sm, background: C.red } }), n !== slot && /* @__PURE__ */ React.createElement("span", { style: { position: "absolute", top: 3, left: 4, fontSize: 7.5, color: C.slateD, fontFamily: MONO } }, slot), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, n), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "96%" } }, nm.split(" ").slice(-1)[0]), binLeft > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, color: C.gold, fontWeight: 800 } }, Math.floor(binLeft / 60) + ":" + String(binLeft % 60).padStart(2, "0"))));
+          }, style: { gridColumn: cols[ix] + " / span 2", padding: "2px", background: off ? C.field : tc + ALPHA.faint, border: "1px solid " + (off ? C.border : tc + ALPHA.mid), borderRadius: RAD.md, color: off ? C.slateD : tc, cursor: off ? "default" : "pointer", opacity: off ? 0.45 : 1, position: "relative", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", lineHeight: 1.15, minHeight: 0 } }, cd && cd.y > 0 && !cd.red && /* @__PURE__ */ React.createElement("span", { style: { position: "absolute", top: 3, right: 4, width: 6, height: 8, borderRadius: RAD.sm, background: C.gold } }), cd && cd.red && /* @__PURE__ */ React.createElement("span", { style: { position: "absolute", top: 3, right: 4, width: 6, height: 8, borderRadius: RAD.sm, background: C.red } }), n !== slot && /* @__PURE__ */ React.createElement("span", { style: { position: "absolute", top: 3, left: 4, fontSize: 7.5, color: C.slateD, fontFamily: MONO } }, slot), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, n, ltHel(window.__ltCredH, n)), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "96%" } }, nm.split(" ").slice(-1)[0]), binLeft > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, color: C.gold, fontWeight: 800 } }, Math.floor(binLeft / 60) + ":" + String(binLeft % 60).padStart(2, "0"))));
         });
       });
       return out;
@@ -5354,27 +5429,29 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setStatsOpen(true);
     }, style: { flex: 1, padding: "15px 4px", borderRadius: RAD.lg, border: "1px solid " + C.blue + ALPHA.strong, background: C.blue + ALPHA.faint, color: C.blue, fontWeight: 800, fontSize: 13.5, cursor: "pointer" } }, "VIEW STATS"), /* @__PURE__ */ React.createElement("button", { onClick: halfBtn.fn, style: { flex: 1, padding: "15px 4px", borderRadius: RAD.lg, border: "none", background: halfBtn.bg, color: C.bg, fontWeight: 800, fontSize: 13.5, cursor: "pointer" } }, halfBtn.l)));
   }
-  function ScoutTeamsheet({ match, teamA, teamB, onDone }) {
+  function ScoutTeamsheet({ match, teamA, teamB, stick, onDone }) {
     const [namesA, setNamesA] = useState({});
     const [namesB, setNamesB] = useState({});
+    const [helA, setHelA] = useState({});
+    const [helB, setHelB] = useState({});
+    const [helPick, setHelPick] = useState(null);
     const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState("a");
 
     async function save() {
       setSaving(true);
       var rows = [];
-      Object.keys(namesA).forEach(function(k) {
-        if (namesA[k]) rows.push({ club_id: match.club_id, match_id: match.id, player_name: namesA[k], position_slot: Number(k), is_start: Number(k) <= 15 });
-      });
-      Object.keys(namesB).forEach(function(k) {
-        if (namesB[k]) rows.push({ club_id: match.club_id, match_id: match.id, player_name: namesB[k], position_slot: Number(k) + 100, is_start: Number(k) <= 15 });
+      // A number with only a helmet colour is kept: it is often all a scout can see.
+      [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].forEach(function(k) {
+        if (namesA[k] || helA[k]) rows.push({ club_id: match.club_id, match_id: match.id, player_name: namesA[k] || "", position_slot: k, is_start: k <= 15, helmet: helA[k] || null });
+        if (namesB[k] || helB[k]) rows.push({ club_id: match.club_id, match_id: match.id, player_name: namesB[k] || "", position_slot: k + 100, is_start: k <= 15, helmet: helB[k] || null });
       });
       if (rows.length) await db.from("appearances").insert(rows);
       setSaving(false);
       onDone();
     }
 
-    function grid(names, setNames) {
+    function grid(names, setNames, hel, side) {
       var nums = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
       return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } },
         nums.map(function(n) {
@@ -5382,7 +5459,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             React.createElement("div", { style: { width: 28, textAlign: "center", fontSize: FS.lg, fontWeight: 800, color: n <= 15 ? C.greenB : C.gold, fontFamily: MONO } }, n),
             React.createElement("input", { value: names[n] || "", onChange: function(e) { setNames(function(p) { var o = Object.assign({}, p); o[n] = e.target.value; return o; }); },
               placeholder: n <= 15 ? "Starter" : "Sub",
-              className: "rsa-field", style: { "--rsa-ring": C.greenB, flex: 1, minHeight: 44, padding: "10px 12px", borderRadius: RAD.md, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: FS.lg, fontFamily: "inherit", outline: "none" } }));
+              className: "rsa-field", style: { "--rsa-ring": C.greenB, flex: 1, minHeight: 44, padding: "10px 12px", borderRadius: RAD.md, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: FS.lg, fontFamily: "inherit", outline: "none" } }),
+            stick && React.createElement("button", { onClick: function() { setHelPick({ side: side, n: n }); }, title: "Helmet colour", style: { width: 44, height: 44, flexShrink: 0, background: "none", border: "none", boxShadow: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, hel[n] ? React.createElement(HelmetDot, { h: hel[n], s: 22 }) : React.createElement("span", { style: { width: 20, height: 20, borderRadius: "50%", border: "1.5px dashed " + C.borderB } })));
         }));
     }
 
@@ -5392,7 +5470,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 16 } },
         React.createElement("button", { onClick: function() { setActiveTab("a"); }, style: { flex: 1, minHeight: 44, padding: "10px", borderRadius: RAD.md, border: "1px solid " + (activeTab === "a" ? C.greenB : C.border), background: activeTab === "a" ? C.greenB + ALPHA.soft : "none", color: activeTab === "a" ? C.greenB : C.slate, fontWeight: 800, fontSize: FS.md, cursor: "pointer" } }, teamA || "Home"),
         React.createElement("button", { onClick: function() { setActiveTab("b"); }, style: { flex: 1, minHeight: 44, padding: "10px", borderRadius: RAD.md, border: "1px solid " + (activeTab === "b" ? C.blue : C.border), background: activeTab === "b" ? C.blue + ALPHA.soft : "none", color: activeTab === "b" ? C.blue : C.slate, fontWeight: 800, fontSize: FS.md, cursor: "pointer" } }, teamB || "Away")),
-      activeTab === "a" ? grid(namesA, setNamesA) : grid(namesB, setNamesB),
+      activeTab === "a" ? grid(namesA, setNamesA, helA, "a") : grid(namesB, setNamesB, helB, "b"),
+      helPick && React.createElement(HelmetPick, { value: (helPick.side === "a" ? helA : helB)[helPick.n], title: (helPick.side === "a" ? teamA : teamB) + " #" + helPick.n, onClose: function() { setHelPick(null); }, onPick: function(h) {
+        var hp = helPick;
+        setHelPick(null);
+        (hp.side === "a" ? setHelA : setHelB)(function(p) { var o = Object.assign({}, p); if (h) o[hp.n] = h; else delete o[hp.n]; return o; });
+      } }),
       React.createElement("button", { onClick: save, disabled: saving, style: { width: "100%", marginTop: 20, padding: "16px", borderRadius: RAD.lg, border: "none", background: C.greenB, color: C.bg, fontSize: FS.lg, fontWeight: 800, cursor: "pointer" } }, saving ? "Saving..." : "\u2713 Save & Continue"));
   }
   // A scouting match already holds both teams in opponent ("A v B"), so the
@@ -5489,7 +5572,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }
       setBusy(false);
     }
-    if (stage === "squad" && match && isScout) return /* @__PURE__ */ React.createElement(ScoutTeamsheet, { match: match, teamA: teamA, teamB: opponent, onDone: function() { setStage("done"); } });
+    if (stage === "squad" && match && isScout) return /* @__PURE__ */ React.createElement(ScoutTeamsheet, { match: match, teamA: teamA, teamB: opponent, stick: club.sport === "hurling" || club.sport === "camogie", onDone: function() { setStage("done"); } });
     if (stage === "squad" && match) return /* @__PURE__ */ React.createElement(
       Teamsheet,
       {
@@ -6464,6 +6547,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [oppNameMap, setOppNameMap] = useState({});
     // Starting fifteen as jersey numbers in teamsheet slot order, or null when no teamsheet.
     const [lineupJ, setLineupJ] = useState(null);
+    const [vtHelmets, setVtHelmets] = useState({ us: {}, opp: {} });
+    function vtHel(isUs, n) { var h = (isUs ? vtHelmets.us : vtHelmets.opp)[n]; return h ? React.createElement(HelmetDot, { h: h, s: 11, ml: 4 }) : null; }
     const apSlotsRef = useRef({});
     const [flash, setFlash] = useState(null);
     const [, bump] = useState(0);
@@ -6554,12 +6639,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     useEffect(function() {
       db.from("matches").update({ video_tagged: true }).eq("id", match.id).then(function() {
       });
-      db.from("appearances").select("position_slot,player_name,jersey").eq("match_id", match.id).then(function(r) {
+      db.from("appearances").select("position_slot,player_name,jersey,helmet").eq("match_id", match.id).then(function(r) {
         var lu = lineupFromApps(r.data);
         apSlotsRef.current = lu.slots;
         var sm = match.scouting ? scoutNameMaps(match, lu) : null;
         setNameMap(sm ? sm.home : lu.names);
         setOppNameMap(sm ? sm.away : lu.away);
+        setVtHelmets({ us: lu.hel, opp: lu.helAway });
         setLineupJ(lu.starters);
       });
       db.from("players").select("id,name").eq("club_id", club.id).then(function(r) { setVtSquad(r.data || []); });
@@ -7533,7 +7619,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         var nm2 = credH2 ? nameMap[n] : oppNameMap[n] || null;
         return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
           commit(n);
-        }, style: { flexShrink: 0, minWidth: 46, padding: "6px 3px", borderRadius: RAD.md, cursor: "pointer", background: tc2 + ALPHA.faint, border: "1px solid " + tc2 + ALPHA.mid, color: tc2, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13.5, fontWeight: 800 } }, n), nm2 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8, opacity: 0.85, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 60 } }, nm2.split(" ").slice(-1)[0]));
+        }, style: { flexShrink: 0, minWidth: 46, padding: "6px 3px", borderRadius: RAD.md, cursor: "pointer", background: tc2 + ALPHA.faint, border: "1px solid " + tc2 + ALPHA.mid, color: tc2, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13.5, fontWeight: 800 } }, n, vtHel(credH2, n)), nm2 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8, opacity: 0.85, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 60 } }, nm2.split(" ").slice(-1)[0]));
       }), /* @__PURE__ */ React.createElement("button", { onClick: function() {
         setSubsOpen(!subsOpen);
       }, style: { flexShrink: 0, minWidth: 48, padding: "9px 3px", borderRadius: RAD.md, cursor: "pointer", background: subsOpen ? tc2 + ALPHA.soft : C.field, border: "1px solid " + (subsOpen ? tc2 : C.border), color: subsOpen ? tc2 : C.slate, fontSize: 9.5, fontWeight: 800 } }, subsOpen ? "1\u201315" : "SUBS"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
@@ -7564,7 +7650,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var nm = credHome ? nameMap[n] : oppNameMap[n] || null;
       return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
         commit(n);
-      }, style: { padding: "12px 2px", background: ptc + ALPHA.faint, border: "1px solid " + ptc + ALPHA.mid, borderRadius: RAD.md, color: ptc, cursor: "pointer", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, n), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nm.split(" ").slice(-1)[0]));
+      }, style: { padding: "12px 2px", background: ptc + ALPHA.faint, border: "1px solid " + ptc + ALPHA.mid, borderRadius: RAD.md, color: ptc, cursor: "pointer", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, n, vtHel(credHome, n)), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nm.split(" ").slice(-1)[0]));
     }), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       commit(null);
     }, style: { minHeight: 44, padding: "12px 2px", background: C.field, border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slate, cursor: "pointer", fontSize: 11, fontWeight: 700 } }, "NONE"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
@@ -7661,7 +7747,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var nm = credHome ? nameMap[n] : oppNameMap[n] || null;
       return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
         commit(n);
-      }, style: { padding: "12px 2px", background: ptc + ALPHA.faint, border: "1px solid " + ptc + ALPHA.mid, borderRadius: RAD.md, color: ptc, cursor: "pointer", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, n), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nm.split(" ").slice(-1)[0]));
+      }, style: { padding: "12px 2px", background: ptc + ALPHA.faint, border: "1px solid " + ptc + ALPHA.mid, borderRadius: RAD.md, color: ptc, cursor: "pointer", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, n, vtHel(credHome, n)), nm && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nm.split(" ").slice(-1)[0]));
     }), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       commit(null);
     }, style: { minHeight: 44, padding: "12px 2px", background: C.field, border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slate, cursor: "pointer", fontSize: 11, fontWeight: 700 } }, "NONE"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
@@ -7771,7 +7857,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var cc = credUs ? C.greenB : C.blue;
       return /* @__PURE__ */ React.createElement("button", { key: n, onClick: function() {
         setEK({ player: lab });
-      }, style: { padding: "9px 2px", background: on ? cc + ALPHA.soft : cc + ALPHA.faint, border: "1px solid " + (on ? cc : cc + ALPHA.soft), borderRadius: RAD.md, color: cc, textAlign: "center", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, n));
+      }, style: { padding: "9px 2px", background: on ? cc + ALPHA.soft : cc + ALPHA.faint, border: "1px solid " + (on ? cc : cc + ALPHA.soft), borderRadius: RAD.md, color: cc, textAlign: "center", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, n, vtHel(vtEdCredUs(), n)));
     }), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setEK({ player: null });
     }, style: { padding: "9px 2px", background: editRow.player == null ? C.slate + ALPHA.soft : C.field, border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slate, fontSize: 10, fontWeight: 700, cursor: "pointer" } }, "NONE")), editRow.def && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: C.slateD, marginBottom: 5 } }, "PITCH LOCATION"), /* @__PURE__ */ React.createElement("button", { onClick: function() { setEK({ _locOpen: !editRow._locOpen }); }, style: { width: "100%", padding: "10px", borderRadius: RAD.md, border: "1px solid " + (editRow._locEd ? C.greenB : C.border), background: editRow._locEd ? C.greenB + ALPHA.soft : C.field, color: editRow._locEd ? C.greenB : C.slate, fontWeight: 700, fontSize: 11.5, cursor: "pointer" } }, editRow._locEd ? "\u2713 NEW SPOT SET \xB7 TAP TO REDO" : (editRow._locOpen ? "TAP THE PITCH BELOW" : editRow.x == null ? "\u25CE ADD LOCATION" : "\u25CE MOVE LOCATION")), editRow._locOpen && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 8 } }, /* @__PURE__ */ React.createElement(TagPitchLand, { active: true, onTap: function(loc) { setEK({ x: loc.x, y: loc.y, _locEd: true }); }, marks: [editRow._ox != null && { x: editRow._ox, y: editRow._oy, kind: "old" }, editRow._locEd && { x: editRow.x, y: editRow.y, kind: "new" }] }), React.createElement("div", { style: { display: "flex", gap: 14, fontSize: 9.5, color: C.slateD, marginTop: 6 } }, React.createElement("span", null, "\u25CC current spot"), React.createElement("span", { style: { color: C.greenB } }, "\u25CF new spot"))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: C.slateD, marginTop: 6 } }, editRow.x == null && !editRow._locEd ? "No spot saved yet. Optional." : "Leave untouched to keep the current spot.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 14 } }, /* @__PURE__ */ React.createElement("button", { onClick: delEdit, style: { flex: 1, padding: "12px", borderRadius: RAD.lg, border: "1px solid " + C.red, background: C.red + ALPHA.faint, color: C.red, fontWeight: 700, cursor: "pointer" } }, "Delete"), /* @__PURE__ */ React.createElement("button", { onClick: saveEdit, style: { flex: 2, padding: "12px", borderRadius: RAD.lg, border: "none", background: C.greenB, color: C.bg, fontWeight: 800, cursor: "pointer" } }, "Save")))),
