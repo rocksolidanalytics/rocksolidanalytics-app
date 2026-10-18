@@ -9877,6 +9877,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [noteDraft, setNoteDraft] = useState(null);
     const [noteSaved, setNoteSaved] = useState(false);
     const [mergeOpen, setMergeOpen] = useState(false);
+    const [odTab, setOdTab] = useState("played");
+    const [renameTo, setRenameTo] = useState(null);
     useEffect(function() {
       (async function() {
         async function odFetch(table, cols) {
@@ -9972,6 +9974,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       if (sub || close) sugg.push([A, B, pk]);
     }
     async function odMerge(fromKey, intoKey) {
+      if (!fromKey || fromKey === intoKey || odRoot(intoKey) === fromKey) return;
       try {
         await odSaveTs(function(t) {
           t.oppAlias = t.oppAlias || {};
@@ -10002,11 +10005,19 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }
     if (!g) {
       var ql = odKey(q);
-      var shown = list.filter(function(x) { return !ql || odKey(x.name).indexOf(ql) >= 0 || Object.keys(x.names).some(function(n) { return odKey(n).indexOf(ql) >= 0; }); });
+      // Played: teams met in a real match (their scouted games count too).
+      // Scouted: teams only ever seen in scouting matches.
+      var isPlayed = function(x) { return x.entries.some(function(e) { return !e.scout; }); };
+      var nPlayed = list.filter(isPlayed).length, nScout = list.length - nPlayed;
+      var shown = list.filter(function(x) { return (odTab === "played") === isPlayed(x); }).filter(function(x) { return !ql || odKey(x.name).indexOf(ql) >= 0 || Object.keys(x.names).some(function(n) { return odKey(n).indexOf(ql) >= 0; }); });
       return React.createElement("div", { className: "rs-wide rsa-fb", style: shell }, head("Opposition", list.length + " TEAMS", back),
         React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } },
           err && React.createElement("div", { style: { color: C.red, fontSize: FS.sm, marginBottom: 10 } }, err),
           React.createElement("input", { value: q, onChange: function(e) { setQ(e.target.value); }, placeholder: "Search teams…", className: "rsa-field", style: { "--rsa-ring": C.greenB, width: "100%", minHeight: 44, padding: "10px 12px", borderRadius: RAD.lg, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: FS.md, boxSizing: "border-box", marginBottom: 12 } }),
+          React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 12 } }, [["played", "Played", nPlayed], ["scouted", "Scouted only", nScout]].map(function(t) {
+            var on = odTab === t[0];
+            return React.createElement("button", { key: t[0], onClick: function() { setOdTab(t[0]); }, style: { flex: 1, minHeight: 44, borderRadius: RAD.md, cursor: "pointer", fontSize: FS.sm, fontWeight: 800, background: on ? C.greenB + ALPHA.soft : C.field, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.greenB : C.slate } }, t[1], " \xB7 ", t[2]);
+          })),
           !q && sugg.length > 0 && React.createElement("div", { style: Object.assign({}, card, { borderColor: C.gold + ALPHA.mid }) },
             React.createElement("div", { style: Object.assign({}, lab, { color: C.gold }) }, "SAME TEAM?"),
             sugg.map(function(s2) {
@@ -10016,14 +10027,14 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                 React.createElement("button", { onClick: function() { odMerge(small.key, big.key); }, style: { minHeight: 40, padding: "0 12px", borderRadius: RAD.md, border: "none", background: C.gold, color: C.bg, fontWeight: 800, fontSize: FS.sm, cursor: "pointer" } }, "Merge"),
                 React.createElement("button", { onClick: function() { odNotSame(s2[2]); }, style: { minHeight: 40, padding: "0 10px", borderRadius: RAD.md, border: "1px solid " + C.border, background: "none", color: C.slate, fontWeight: 700, fontSize: FS.sm, cursor: "pointer" } }, "No"));
             })),
-          shown.length === 0 && React.createElement("div", { style: { textAlign: "center", color: C.slateD, padding: "30px 0" } }, list.length ? "No team matches that search." : "No opposition yet. Teams appear here once you have played or scouted them."),
+          shown.length === 0 && React.createElement("div", { style: { textAlign: "center", color: C.slateD, padding: "30px 0" } }, list.length ? (q ? "No team matches that search." : odTab === "played" ? "No matches played yet." : "No scouted-only teams.") : "No opposition yet. Teams appear here once you have played or scouted them."),
           shown.map(function(x) {
             var real = x.entries.filter(function(e) { return !e.scout; }).length, sc = x.entries.length - real, L = x.last;
-            return React.createElement("button", { key: x.key, onClick: function() { setSel(x.key); setNoteDraft(null); setMergeOpen(false); }, style: { width: "100%", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.lg, padding: "12px 14px", marginBottom: 8, color: C.white } },
+            return React.createElement("button", { key: x.key, onClick: function() { setSel(x.key); setNoteDraft(null); setMergeOpen(false); setRenameTo(null); }, style: { width: "100%", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.lg, padding: "12px 14px", marginBottom: 8, color: C.white } },
               React.createElement("div", { style: { flex: 1, minWidth: 0 } },
                 React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, x.name),
                 React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 3 } }, real ? real + (real === 1 ? " match" : " matches") : "", real && sc ? " \xB7 " : "", sc ? sc + " scouted" : "", L.m.date ? " \xB7 last " + L.m.date : "")),
-              real > 0 && odRec(x),
+              x.w + x.d + x.l > 0 && odRec(x),
               React.createElement("span", { style: { color: C.slateD, fontSize: FS.lg } }, "›"));
           })));
     }
@@ -10092,7 +10103,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             return React.createElement("div", { key: e.m.id + e.side, style: { display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderTop: i ? "1px solid " + C.border : "none" } },
               React.createElement("span", { style: { width: 26, height: 26, borderRadius: RAD.md, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, background: res ? rc + ALPHA.faint : C.field, color: res ? rc : C.slateD, border: "1px solid " + (res ? rc + ALPHA.mid : C.border) } }, res || (e.scout ? "S" : "–")),
               React.createElement("div", { style: { flex: 1, minWidth: 0 } },
-                React.createElement("div", { style: { fontSize: FS.md, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, e.scout ? g.name + " v " + e.vs : club.name + " v " + g.name, e.scout && React.createElement("span", { style: { fontSize: FS.xs, color: C.gold, fontFamily: MONO, marginLeft: 6 } }, "SCOUTED")),
+                React.createElement("div", { style: { fontSize: FS.md, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, e.scout ? g.name + " v " + ((byKey[odRoot(odKey(e.vs))] || {}).name || e.vs) : club.name + " v " + g.name, e.scout && React.createElement("span", { style: { fontSize: FS.xs, color: C.gold, fontFamily: MONO, marginLeft: 6 } }, "SCOUTED")),
                 React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, [e.m.date, e.m.competition, e.m.round].filter(Boolean).join(" \xB7 ") || "No date")),
               React.createElement("div", { style: { fontFamily: MONO, fontWeight: 800, fontSize: FS.md, textAlign: "right", whiteSpace: "nowrap" } }, e.done || e.forS ? (e.scout ? (e.forS || "0-00") + " : " + (e.agS || "0-00") : (e.agS || "0-00") + " : " + (e.forS || "0-00")) : "—"));
           }),
@@ -10139,6 +10150,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             noteSaved && React.createElement("span", { style: { fontSize: FS.sm, color: C.greenB } }, "✓ Saved"))),
         React.createElement("div", { style: card },
           React.createElement("div", { style: lab }, "NAMES"),
+          React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 10 } },
+            React.createElement("input", { value: renameTo != null ? renameTo : g.name, onChange: function(e) { setRenameTo(e.target.value); }, className: "rsa-field", style: { "--rsa-ring": C.greenB, flex: 1, minWidth: 0, minHeight: 40, padding: "0 10px", borderRadius: RAD.md, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: FS.md, boxSizing: "border-box" } }),
+            React.createElement("button", { disabled: renameTo == null, onClick: function() {
+              var nv = String(renameTo || "").trim();
+              odSaveTs(function(t) { t.oppName = t.oppName || {}; if (nv) t.oppName[g.key] = nv; else delete t.oppName[g.key]; return t; }).then(function() { setRenameTo(null); }, function() { setErr("Could not save the name."); });
+            }, style: { minHeight: 40, padding: "0 12px", borderRadius: RAD.md, border: "none", background: renameTo == null ? C.field : C.greenB, color: renameTo == null ? C.slateD : C.bg, fontWeight: 800, fontSize: FS.sm, cursor: renameTo == null ? "default" : "pointer" } }, "Rename")),
           React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, lineHeight: 1.5, marginBottom: 8 } }, "Matches listed as ", Object.keys(g.names).map(function(n) { return "“" + n + "”"; }).join(", "), "."),
           g.merged && Object.keys(g.merged).map(function(k) {
             return React.createElement("div", { key: k, style: { display: "flex", alignItems: "center", gap: 8, padding: "4px 0" } },
