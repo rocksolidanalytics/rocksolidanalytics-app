@@ -1,6 +1,6 @@
 // Reads a photo or screenshot of a GAA team sheet and returns the players on it.
 // Called from the line-up editor. The image is sent to Claude and never stored.
-// Needs the ANTHROPIC_API_KEY secret (Supabase > Edge Functions > Secrets).
+// Needs the ANTHROPIC_API_KEY secret, or Tadhg_Claude_api (Supabase > Edge Functions > Secrets).
 import Anthropic from "npm:@anthropic-ai/sdk";
 
 const CORS = {
@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
   const c = claims(req);
   if (!c || c.role !== "authenticated" || c.is_anonymous === true) return json({ error: "sign_in" }, 401);
 
-  const key = Deno.env.get("ANTHROPIC_API_KEY");
+  const key = Deno.env.get("ANTHROPIC_API_KEY") || Deno.env.get("Tadhg_Claude_api");
   if (!key) return json({ error: "not_configured" }, 503);
 
   let body: { image?: string; media_type?: string };
