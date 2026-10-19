@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
   const c = claims(req);
   if (!c || c.role !== "authenticated" || c.is_anonymous === true) return json({ error: "sign_in" }, 401);
 
-  const key = Deno.env.get("ANTHROPIC_API_KEY") || Deno.env.get("Tadhg_Claude_api");
+  const key = (Deno.env.get("ANTHROPIC_API_KEY") || Deno.env.get("Tadhg_Claude_api") || "").trim();
   if (!key) return json({ error: "not_configured" }, 503);
 
   let body: { image?: string; media_type?: string };
@@ -110,6 +110,7 @@ Deno.serve(async (req) => {
     if (!text || text.type !== "text") return json({ error: "no_result" }, 502);
     return json(JSON.parse(text.text));
   } catch (e) {
+    console.error("teamsheet-read", e instanceof Error ? `${e.name}: ${e.message}` : String(e));
     if (e instanceof Anthropic.RateLimitError) return json({ error: "busy" }, 429);
     if (e instanceof Anthropic.AuthenticationError) return json({ error: "bad_key" }, 503);
     if (e instanceof Anthropic.APIError) return json({ error: "api", status: e.status }, 502);
