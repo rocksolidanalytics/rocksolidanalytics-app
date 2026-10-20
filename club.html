@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rock Solid Analytics · GAA stats and video for every club</title>
+<meta name="description" content="Tag matches live or from video, see the stats and pitch maps, and know your opposition. Free to start, no monthly subscription.">
+<meta name="theme-color" content="#0A0A0D">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Rock Solid Analytics · GAA stats and video for every club">
+<meta property="og:description" content="Tag live or from video, see the stats and pitch maps, and know your opposition. Free to start, no monthly subscription.">
+<meta property="og:url" content="https://rocksolidanalytics.github.io/rocksolidanalytics-app/club.html">
+<meta property="og:image" content="https://rocksolidanalytics.github.io/rocksolidanalytics-app/club/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0A0D; --card: #141417; --field: #0F0F12; --border: #232327; --borderB: #33333A;
+    --white: #FFFFFF; --slate: #9CA3AF; --slateD: #858C99;
+    --green: #34C967; --greenD: #1E5C38; --blue: #4A9EFF; --gold: #F0C040; --teal: #3FB6A8;
+    --head: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --body: "Barlow", system-ui, -apple-system, sans-serif;
+    --radius: 16px; --wrap: 1120px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--white); font-family: var(--body); font-size: 17px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  img { display: block; max-width: 100%; }
+  a { color: inherit; }
+  .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 20px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 800; line-height: 1.05; margin: 0; letter-spacing: -0.2px; }
+  h1 { font-size: clamp(44px, 7vw, 76px); }
+  h2 { font-size: clamp(34px, 4.6vw, 52px); }
+  h3 { font-size: 24px; font-weight: 700; }
+  p { margin: 0; }
+  .kicker { font-family: var(--head); font-weight: 700; font-size: 15px; letter-spacing: 3px; text-transform: uppercase; color: var(--green); margin-bottom: 12px; }
+  .lead { font-size: 19px; color: var(--slate); max-width: 560px; margin-top: 18px; }
+  .muted { color: var(--slate); }
+
+  /* Header */
+  header { position: sticky; top: 0; z-index: 10; background: rgba(10,10,13,0.86); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
+  header .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--head); font-weight: 800; font-size: 20px; white-space: nowrap; }
+  .brand img { width: 36px; height: 36px; border-radius: 8px; }
+  .brand span { color: var(--green); }
+  .nav { display: flex; align-items: center; gap: 8px; }
+  .icon-btn { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--border); background: var(--card); }
+  .icon-btn svg { width: 20px; height: 20px; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 0 24px; border-radius: 14px; font-family: var(--head); font-weight: 700; font-size: 20px; letter-spacing: 0.3px; text-decoration: none; border: 1px solid transparent; transition: transform .15s ease, background .15s ease; }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--green); color: #06120A; }
+  .btn-primary:hover { background: #45D677; }
+  .btn-ghost { background: var(--card); border-color: var(--borderB); color: var(--white); }
+  .btn-ghost:hover { background: #1B1B1F; }
+  .btn-sm { min-height: 44px; padding: 0 16px; font-size: 17px; }
+  .btns { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+
+  /* Phones */
+  .phone { background: var(--card); border: 1px solid var(--borderB); border-radius: 26px; padding: 7px; box-shadow: 0 24px 60px rgba(0,0,0,0.55); }
+  .phone img { border-radius: 20px; width: 100%; height: auto; }
+  .phones { display: flex; gap: 18px; justify-content: center; align-items: flex-start; }
+  .phones .phone { width: min(250px, 46%); }
+  .phones .phone.lower { margin-top: 48px; }
+
+  /* Sections */
+  section { padding: 84px 0; }
+  section + section { border-top: 1px solid var(--border); }
+  .split { display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px; align-items: center; }
+  .split.flip > :first-child { order: 2; }
+  .hero { padding: 64px 0 76px; }
+  .hero .split { grid-template-columns: 1.1fr 1fr; }
+  .codes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+  .code { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: var(--card); border: 1px solid var(--border); font-family: var(--head); font-weight: 700; font-size: 17px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+
+  .points { list-style: none; padding: 0; margin: 26px 0 0; display: grid; gap: 16px; }
+  .points li { display: grid; grid-template-columns: 12px 1fr; gap: 14px; }
+  .points li::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--green); margin-top: 8px; }
+  .points b { color: var(--white); }
+  .points span { color: var(--slate); }
+
+  .video-frame { background: var(--card); border: 1px solid var(--borderB); border-radius: 22px; padding: 7px; box-shadow: 0 24px 60px rgba(0,0,0,0.55); margin-top: 36px; }
+  .video-frame img { border-radius: 16px; width: 100%; height: auto; }
+  .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 26px; }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+  .card h3 { margin-bottom: 8px; }
+  .card p { color: var(--slate); font-size: 16px; }
+
+  .toolkit { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 36px; }
+  .col-head { display: flex; align-items: center; gap: 10px; font-family: var(--head); font-weight: 700; letter-spacing: 3px; font-size: 15px; margin-bottom: 16px; }
+  .toolkit ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+  .toolkit li b { display: block; font-family: var(--head); font-size: 20px; font-weight: 700; line-height: 1.15; }
+  .toolkit li span { color: var(--slate); font-size: 15px; }
+
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 36px; counter-reset: step; }
+  .step .num { font-family: var(--head); font-weight: 800; font-size: 64px; line-height: 1; color: var(--green); margin-bottom: 14px; }
+
+  .promise { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 36px; }
+  .promise .big { font-family: var(--head); font-weight: 800; font-size: clamp(56px, 7vw, 84px); line-height: 1; }
+  .promise p { font-size: 19px; margin-top: 6px; }
+  .mission { margin-top: 36px; font-size: 20px; font-style: italic; }
+
+  .contact { text-align: center; }
+  .contact .lead { margin-left: auto; margin-right: auto; }
+  .contact .btns { justify-content: center; }
+  .email { margin-top: 18px; color: var(--slate); font-size: 16px; word-break: break-all; }
+
+  footer { border-top: 1px solid var(--border); padding: 28px 0 40px; color: var(--slateD); font-size: 14px; }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+  footer a { color: var(--slate); }
+
+  @media (max-width: 900px) {
+    section { padding: 64px 0; }
+    .split, .hero .split { grid-template-columns: 1fr; gap: 40px; }
+    .split.flip > :first-child { order: 0; }
+    .toolkit, .steps { grid-template-columns: repeat(2, 1fr); }
+    .trio { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    body { font-size: 16px; }
+    .wrap { padding: 0 16px; }
+    .hero { padding: 40px 0 56px; }
+    .brand { font-size: 18px; }
+    .nav .btn-sm { display: none; }
+    .toolkit, .steps, .promise { grid-template-columns: 1fr; }
+    .btns .btn { flex: 1 1 100%; }
+    .phones { gap: 12px; }
+    .phones .phone { border-radius: 20px; padding: 5px; }
+    .phones .phone img { border-radius: 15px; }
+    .phones .phone.lower { margin-top: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Rock Solid Analytics home"><img src="icon-192.png" alt="" width="36" height="36">Rock Solid <span>Analytics</span></a>
+    <nav class="nav" aria-label="Main">
+      <a class="icon-btn" href="https://www.instagram.com/rocksolidanalytics" target="_blank" rel="noopener" aria-label="Rock Solid Analytics on Instagram">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.8" fill="currentColor"/></svg>
+      </a>
+      <a class="btn btn-primary btn-sm" href="./?demo=1">Try the demo</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="wrap split">
+      <div>
+        <div class="kicker">GAA stats and video</div>
+        <h1>Proper match analysis for every club</h1>
+        <p class="lead">Tag the game live from the sideline or afterwards from the video. See the stats, the pitch maps and the clips, and know your next opponent before you meet them.</p>
+        <div class="btns">
+          <a class="btn btn-primary" href="./?demo=1">Try the demo</a>
+          <a class="btn btn-ghost" href="#contact">Set up your club</a>
+        </div>
+        <div class="codes" aria-label="Codes supported">
+          <span class="code"><span class="dot" style="background:var(--green)"></span>Football</span>
+          <span class="code"><span class="dot" style="background:var(--blue)"></span>Hurling</span>
+          <span class="code"><span class="dot" style="background:var(--gold)"></span>Camogie</span>
+          <span class="code"><span class="dot" style="background:var(--teal)"></span>Ladies football</span>
+        </div>
+      </div>
+      <div class="phones">
+        <div class="phone"><img src="club/img/live_tagger.webp" alt="Live tagger during a match with the score and player buttons" width="560" height="1212"></div>
+        <div class="phone lower"><img src="club/img/pitch_map.webp" alt="Pitch map showing where shots were taken" width="560" height="1212"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="match-day">
+    <div class="wrap split">
+      <div>
+        <div class="kicker">Match day</div>
+        <h2>Tag the game as it happens</h2>
+        <ul class="points">
+          <li><div><b>One tap for us, two for them.</b> <span>Every event goes to the right team without menus.</span></div></li>
+          <li><div><b>Pick the player by number.</b> <span>Scorers, wides and turnovers land on the right name.</span></div></li>
+          <li><div><b>Restarts tracked.</b> <span>Kickouts and puckouts, won or lost, and who won them.</span></div></li>
+          <li><div><b>Spots on the pitch.</b> <span>Mark where it happened live, after the match, or not at all.</span></div></li>
+          <li><div><b>Team sheet from a photo.</b> <span>Snap the sheet and the line-up fills itself, matched to your squad.</span></div></li>
+        </ul>
+      </div>
+      <div class="phones">
+        <div class="phone"><img src="club/img/live_feed.webp" alt="Live tagger with the score and recent tags" width="560" height="1212" loading="lazy"></div>
+        <div class="phone lower"><img src="club/img/sheet_import.webp" alt="Team sheet read from a photo, ready to check" width="560" height="1212" loading="lazy"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="video">
+    <div class="wrap">
+      <div class="kicker">After the match</div>
+      <h2>Every score, every turnover, one tap away</h2>
+      <p class="lead">Load the match video, sync it to the throw-in and tag it back. Every moment becomes a clip you can find in seconds.</p>
+      <div class="video-frame"><img src="club/img/video_tagger.webp" alt="Video tagger with the scoreboard over the match footage" width="1200" height="555" loading="lazy"></div>
+      <div class="trio">
+        <div class="card"><h3>Synced to the throw-in</h3><p>Events line up with the match clock, half by half.</p></div>
+        <div class="card"><h3>Clips and playlists</h3><p>Every kickout, or every touch for one player, exported as one video.</p></div>
+        <div class="card"><h3>Add spots afterwards</h3><p>Go back through the clips and mark where each one happened.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="stats">
+    <div class="wrap split flip">
+      <div>
+        <div class="kicker">Stats and pitch map</div>
+        <h2>See where the game was won and lost</h2>
+        <ul class="points">
+          <li><div><b>Season and match dashboards.</b> <span>Attack, defence, restarts and players, for one game or the whole year.</span></div></li>
+          <li><div><b>Player breakdown.</b> <span>Scores, shots, tackles, restarts and turnovers for every player.</span></div></li>
+          <li><div><b>Expected scores.</b> <span>Bad shooting or bad shot choice? xS shows the quality of chances.</span></div></li>
+          <li><div><b>Pitch map.</b> <span>Every spot on one pitch, coloured by event or outcome.</span></div></li>
+          <li><div><b>Benchmark and conditions.</b> <span>Compare with other teams, and by referee, venue and weather.</span></div></li>
+        </ul>
+      </div>
+      <div class="phones">
+        <div class="phone"><img src="club/img/stats.webp" alt="Match report with key stats" width="560" height="1212" loading="lazy"></div>
+        <div class="phone lower"><img src="club/img/players.webp" alt="Player breakdown table" width="560" height="1212" loading="lazy"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="fan-zone">
+    <div class="wrap split">
+      <div>
+        <div class="kicker">Fan Zone and Live Stats Pad</div>
+        <h2>Everyone follows the game, not just the tagger</h2>
+        <ul class="points">
+          <li><div><b>Fan Zone.</b> <span>A live scoreboard anyone can open from a link. Share it in the club WhatsApp; no app or login needed.</span></div></li>
+          <li><div><b>Live Stats Pad.</b> <span>Management follow the numbers on their own phone while someone else tags.</span></div></li>
+          <li><div><b>Win probability and momentum.</b> <span>See the game swing, and get a flag after three scores in a row.</span></div></li>
+        </ul>
+      </div>
+      <div class="phones">
+        <div class="phone"><img src="club/img/fanzone.webp" alt="Fan Zone live scoreboard" width="560" height="1212" loading="lazy"></div>
+        <div class="phone lower"><img src="club/img/livepad.webp" alt="Live Stats Pad with win probability" width="560" height="1212" loading="lazy"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="opposition">
+    <div class="wrap split flip">
+      <div>
+        <div class="kicker">Opposition and coaching</div>
+        <h2>Know who you are playing before you meet them</h2>
+        <ul class="points">
+          <li><div><b>Opposition file.</b> <span>Every team you have met: results, scorers, shot map and your notes.</span></div></li>
+          <li><div><b>Scouting matches.</b> <span>Tag a rival's game from the stand and add it to their file.</span></div></li>
+          <li><div><b>Tactical pad.</b> <span>Drag jerseys on a pitch to explain a kickout or a defensive shape.</span></div></li>
+          <li><div><b>Player logins.</b> <span>Players join with the club code to see the stats and film for themselves.</span></div></li>
+        </ul>
+      </div>
+      <div class="phones">
+        <div class="phone"><img src="club/img/opposition.webp" alt="Opposition team page with results and scorers" width="560" height="1212" loading="lazy"></div>
+        <div class="phone lower"><img src="club/img/tactical.webp" alt="Tactical pad with jerseys on a pitch" width="560" height="1212" loading="lazy"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="toolkit">
+    <div class="wrap">
+      <div class="kicker">Everything in the app</div>
+      <h2>From the week before to the week after</h2>
+      <div class="toolkit">
+        <div class="card">
+          <div class="col-head" style="color:var(--green)"><span class="dot" style="background:var(--green)"></span>BEFORE</div>
+          <ul>
+            <li><b>Squad and positions</b><span>Preferred positions and helmet colours</span></li>
+            <li><b>Team sheet from a photo</b><span>Line-up filled from a picture</span></li>
+            <li><b>Match details</b><span>Referee, venue and weather</span></li>
+            <li><b>Import past matches</b><span>Bring in older stats from a CSV</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="col-head" style="color:var(--gold)"><span class="dot" style="background:var(--gold)"></span>DURING</div>
+          <ul>
+            <li><b>Live tagger</b><span>Every event, credited to a player</span></li>
+            <li><b>Momentum alerts</b><span>Flags three scores in a row</span></li>
+            <li><b>Live Stats Pad</b><span>Management follow on a second phone</span></li>
+            <li><b>Fan Zone</b><span>Live scoreboard for fans, no login</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="col-head" style="color:var(--blue)"><span class="dot" style="background:var(--blue)"></span>AFTER</div>
+          <ul>
+            <li><b>Video and game film</b><span>Jump to any moment in the match</span></li>
+            <li><b>Clips and playlists</b><span>Export a reel as one video</span></li>
+            <li><b>Dashboards</b><span>Season, match and player numbers</span></li>
+            <li><b>Pitch map and benchmark</b><span>Where it happened, how you compare</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="col-head" style="color:var(--teal)"><span class="dot" style="background:var(--teal)"></span>PLAN AND SHARE</div>
+          <ul>
+            <li><b>Opposition file</b><span>Results, scorers and notes</span></li>
+            <li><b>Scouting matches</b><span>Tag a rival from the stand</span></li>
+            <li><b>Tactical pad</b><span>Drag jerseys to explain a setup</span></li>
+            <li><b>Player logins</b><span>Players join with a club code</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="start">
+    <div class="wrap">
+      <div class="kicker">Getting started</div>
+      <h2>From sign-up to your first tagged match</h2>
+      <div class="steps">
+        <div class="card step"><div class="num">1</div><h3>Sign up</h3><p>Create the club and pick your code and colours.</p></div>
+        <div class="card step"><div class="num">2</div><h3>Add the squad</h3><p>Type it in or snap a team sheet.</p></div>
+        <div class="card step"><div class="num">3</div><h3>Tag a match</h3><p>Live on the line, or from the video afterwards.</p></div>
+        <div class="card step"><div class="num">4</div><h3>Share the story</h3><p>Go through the stats and clips with players and management.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="promise">
+    <div class="wrap">
+      <div class="kicker">Our promise</div>
+      <h2>Good analysis should not depend on your budget</h2>
+      <div class="promise">
+        <div><div class="big" style="color:var(--green)">Free</div><p>to get started</p></div>
+        <div><div class="big" style="color:var(--gold)">No</div><p>monthly subscription</p></div>
+        <div><div class="big" style="color:var(--blue)">Every</div><p>club, every grade</p></div>
+      </div>
+      <div class="card mission">Rock Solid Analytics is built by a club volunteer to put proper match analysis in the hands of every GAA team, not just the ones with a budget for it.</div>
+    </div>
+  </section>
+
+  <section id="contact" class="contact">
+    <div class="wrap">
+      <div class="kicker">Get in touch</div>
+      <h2>Let's tag your next match</h2>
+      <p class="lead">Want help setting up your club, your squad and your first match? Send us an email or a message on Instagram.</p>
+      <div class="btns">
+        <a class="btn btn-primary" href="mailto:staff.rocksolidanalytics@gmail.com?subject=Setting%20up%20our%20club">Email us</a>
+        <a class="btn btn-ghost" href="https://www.instagram.com/rocksolidanalytics" target="_blank" rel="noopener">Message on Instagram</a>
+      </div>
+      <p class="email">staff.rocksolidanalytics@gmail.com</p>
+      <div class="btns">
+        <a class="btn btn-ghost btn-sm" href="./?demo=1">Try the demo first</a>
+        <a class="btn btn-ghost btn-sm" href="./">Open the app</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>&copy; 2026 Rock Solid Analytics</span>
+    <span><a href="mailto:staff.rocksolidanalytics@gmail.com">Email</a> &middot; <a href="https://www.instagram.com/rocksolidanalytics" target="_blank" rel="noopener">Instagram</a> &middot; <a href="./">Open the app</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
