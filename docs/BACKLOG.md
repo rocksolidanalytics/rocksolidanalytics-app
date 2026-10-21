@@ -33,20 +33,29 @@ Agreed 2026-10-21.
   pages~~: done 2026-10-22. Opposition crest upload on each team page (64px, stored as
   `tag_settings.oppCrest` by team key, carried by merges). Match lists show the opposition
   crest, else their kit. Taggers and Fan Zone show crests; the public link reads them once
-  from `live_crests`, see supabase/migrations/20261022_live_crests.sql.
+  from `live_crests` (applied 2026-10-22), see supabase/migrations/20261022_live_crests.sql.
 - Pitch map and dashboard dots in team colours.
 
 ## vs Others comparison
 
-Started 2026-10-22. The dashboard ranks a club against every team at its sport and grade:
+**Done 2026-10-22.** The dashboard ranks a club against every team at its sport and grade:
 other clubs using the app plus the teams they have played or scouted (League and
 Championship), see supabase/migrations/20261022_club_rankings2.sql. Opponents count for
-scores, shot and restart efficiency; line and keeper numbers compare app clubs only.
+scores, shot and restart efficiency; line and keeper numbers compare app clubs only. The
+tab says what the field is (N clubs using the app plus M teams they played or scouted) and
+falls back to the clubs-only `club_rankings` if the new function is missing.
 
-- Same team under two names counts twice (St Pats / St Patrick's, Bray1 / Bray Emmets):
-  tidy with Opposition renames, waiting on a go-ahead.
-- Test matches (Ta v Tb in St Jude's hurling) add fake teams: delete or exclude, waiting on
-  a go-ahead.
+- Data tidy, done: Bray football sees St Pats as St Patrick's and St Patrick's sees Bray1 as
+  Bray Emmets (`tag_settings.oppName`), so neither is counted twice. The two Ta v Tb test
+  matches in St Jude's hurling were deleted.
+- Fields after the tidy: Wicklow senior football 10 teams (2 clubs + 8 opponents), senior
+  hurling 8 (Bray Emmets, St Jude's + 6 opponents), camogie 16 (1 club + 15 opponents).
+
+**Still to do:**
+- A club that names an app club differently from that club's own name is counted twice.
+  Each new club needs the same Opposition rename; worth an automatic suggestion later.
+- Small samples: a club with one game (St Patrick's) can rank near the top. Consider a
+  minimum games count before showing a rank.
 
 ## Payments (Stripe)
 
