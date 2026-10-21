@@ -16,13 +16,20 @@ Agreed 2026-10-21.
   notes; delete it while it has no matches.
 - Crest upload on the home banner, stored small on `clubs.crest`.
 
-**Step 2, next:**
-- **Team colours are the default** on the tagging buttons, scores and pitch dots, using
-  each kit main colour. Fall back to green (us) and blue (them) when the two kits are too
-  similar or a colour reads badly on the dark background.
-- Show kits next to team names in both taggers' scoreboards (parity), the line-up screen,
-  match lists and Fan Zone; crests in the taggers, Fan Zone and opposition pages.
-- Per-match away kit override from the line-up screen.
+**Step 2, done 2026-10-22 (colours):**
+- Both taggers use team colours by default (teamCols): each kit main colour, or its second
+  when the main is too dark to read (navy with sky blue reads as sky blue), lightened in
+  OKLab until it reads on the dark tagger. When the two are too close it tries the other
+  side's second colour, then ours, then falls back to green (us) and blue (them). A side
+  with no kit keeps its usual colour. Kits are read fresh when a tagger opens.
+- Small jerseys beside the team names in both taggers' scoreboards.
+
+**Still to do:**
+- Kits beside team names on the line-up screen, match lists and Fan Zone; crests in the
+  taggers, Fan Zone and opposition pages.
+- Per-match away kit override from the line-up screen (`tag_settings.matchKit` by match id is
+  already read by teamCols).
+- Pitch map and dashboard dots in team colours.
 
 ## Payments (Stripe)
 
