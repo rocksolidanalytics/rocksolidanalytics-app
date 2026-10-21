@@ -1,0 +1,35 @@
+{
+  "_about": "Names that mean the same thing, grouped for the Cards, Tagged score sources and Other events views. Matching ignores case, spaces and punctuation. Stored data is never changed, and the main stats do not use this list. Edit with care: the app reads this file on start and keeps a copy for offline use.",
+  "events": {
+    "Cards": ["Bookings", "Booking", "Card", "Cards"],
+    "Restarts": ["Kickout", "Puck Out", "Puckout"],
+    "Video notes": ["Video Analysis", "Video analysis"],
+    "Score source": ["Score Source"],
+    "Turnover won": ["Turnover won"],
+    "Turnover lost": ["Possession lost"]
+  },
+  "byOutcome": [
+    { "event": "Turnover", "outcomes": ["Turnover won", "Interception", "In contact"], "group": "Turnover won" },
+    { "event": "Turnover", "outcomes": ["Turnover lost strike", "Turnover lost handling", "Turnover lost handpass"], "group": "Turnover lost" }
+  ],
+  "outcomes": {
+    "Cards": {
+      "Yellow": ["Yellow", "Yellow card"],
+      "Red": ["Red", "Red card", "Second yellow"],
+      "Black": ["Black", "Black card"]
+    },
+    "Restarts": {
+      "Lost over the sideline": ["Straight Over Sideline", "Sideline ball"]
+    },
+    "Score source": {
+      "Turnover": ["Point Turnover", "Goal Turnover"],
+      "Own restart": ["Point Own Puck Out", "Goal Own Puck Out", "Point Own Kickout", "Goal Own Kickout"],
+      "Their restart": ["Point Opposition Puck Out", "Goal Opposition Puck Out", "Point Opposition Kickout", "Goal Opposition Kickout"],
+      "Throw-in": ["Point Throw In", "Goal Throw In"]
+    },
+    "*": {
+      "In contact": ["In contact", "In Contact"],
+      "Interception": ["Interception", "Intercepted"]
+    }
+  }
+}

@@ -73,6 +73,17 @@ use the club kit colour against blue, with the tagger clash check.
 - Tag which play was called on a kickout and show how often it was won.
 - Export a play as a short video for the squad WhatsApp.
 
+## Cards, score sources and other events
+
+**Done 2026-10-22.** New dashboard views, season and per match: Discipline (cards for us
+and them, in order for a match, game by game and by player for a season) on Defence;
+Tagged score sources (from Score Source tags, next to the automatic breakdown) on Attack;
+an Other tab for every event with no view of its own (counts, outcomes, top players),
+shown only when there is something in it.
+Names that mean the same thing are grouped by `event-synonyms.json` (see the
+event-synonyms skill). These views only; the main stats do not use it, and stored data is
+never rewritten.
+
 ## Half-time view
 
 **Done 2026-10-22.** Live tagger stats (Key Callouts) open with a half-time card from 25
