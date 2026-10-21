@@ -32,6 +32,18 @@ Agreed 2026-10-21.
 - Kits beside team names in match lists; crests in the taggers, Fan Zone and opposition pages.
 - Pitch map and dashboard dots in team colours.
 
+## vs Others comparison
+
+Started 2026-10-22. The dashboard ranks a club against every team at its sport and grade:
+other clubs using the app plus the teams they have played or scouted (League and
+Championship), see supabase/migrations/20261022_club_rankings2.sql. Opponents count for
+scores, shot and restart efficiency; line and keeper numbers compare app clubs only.
+
+- Same team under two names counts twice (St Pats / St Patrick's, Bray1 / Bray Emmets):
+  tidy with Opposition renames, waiting on a go-ahead.
+- Test matches (Ta v Tb in St Jude's hurling) add fake teams: delete or exclude, waiting on
+  a go-ahead.
+
 ## Payments (Stripe)
 
 Discussed 2026-10-21. Waiting on a price decision.
