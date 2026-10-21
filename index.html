@@ -462,29 +462,42 @@
     const [busy, setBusy] = useState(false);
     const [err, setErr] = useState("");
     const u = (patch) => setD((s) => ({ ...s, ...patch }));
-    const canNext = [!!d.sport, !!d.county, !!d.club, !!d.primary && !!d.secondary, true][i];
+    // New clubs need a single-use access code (club_codes). The server checks it again in create_club.
+    const [clubCode, setClubCode] = useState("");
+    const [codeErr, setCodeErr] = useState("");
+    const [codeBusy, setCodeBusy] = useState(false);
+    const canNext = [!!d.sport && !!clubCode.trim(), !!d.county, !!d.club, !!d.primary && !!d.secondary, true][i];
+    async function checkCode() {
+      if (codeBusy) return;
+      setCodeBusy(true);
+      setCodeErr("");
+      try {
+        const r = await db.rpc("check_club_code", { p_code: clubCode.trim() });
+        if (r.error) throw new Error(r.error.message);
+        if (r.data === true) setI(1);
+        else setCodeErr("That code is not valid or has already been used.");
+      } catch (ex) {
+        setCodeErr("Could not check the code. Check your signal and try again.");
+      }
+      setCodeBusy(false);
+    }
     async function finish() {
       setErr("");
       setBusy(true);
       try {
-        const ins = await db.from("clubs").insert({
-          name: d.club.name,
-          county: d.county,
-          sport: d.sport,
-          colour_primary: d.primary,
-          colour_secondary: d.secondary,
-          verified: !!d.club.verified,
-          created_by: session.user.id,
-          grade: d.grade || "Senior"
-        }).select().single();
-        if (ins.error) {
-          setErr(ins.error.message);
-          setBusy(false);
-          return;
-        }
-        const up = await db.from("profiles").update({ club_id: ins.data.id }).eq("id", session.user.id);
-        if (up.error) {
-          setErr(up.error.message);
+        // create_club uses up the access code, creates the club and links this account in one step.
+        const ins = await db.rpc("create_club", {
+          p_code: clubCode.trim(),
+          p_name: d.club.name,
+          p_county: d.county,
+          p_sport: d.sport,
+          p_colour_primary: d.primary,
+          p_colour_secondary: d.secondary,
+          p_verified: !!d.club.verified,
+          p_grade: d.grade || "Senior"
+        });
+        if (ins.error || !ins.data) {
+          setErr(ins.error ? ins.error.message : "Could not save club.");
           setBusy(false);
           return;
         }
@@ -503,7 +516,12 @@
     ][i];
     return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 18px 10px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 14 } }, /* @__PURE__ */ React.createElement("img", { src: LOGO, alt: "", width: 26, height: 26 }), /* @__PURE__ */ React.createElement("span", { style: { fontSize: FS.sm, fontFamily: MONO, color: C.slate, letterSpacing: 1 } }, "SET UP YOUR CLUB")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, STEPS.map((_, idx) => /* @__PURE__ */ React.createElement("div", { key: idx, style: { flex: 1, height: 4, borderRadius: RAD.sm, background: idx <= i ? C.greenB : C.border } }))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO, marginTop: 6 } }, "STEP ", i + 1, " / ", STEPS.length, " \xB7 ", STEPS[i].toUpperCase())), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "4px 18px 18px" } }, /* @__PURE__ */ React.createElement("h1", { style: { fontSize: FS.h2, fontWeight: 800, margin: "6px 0 4px" } }, titles[0]), /* @__PURE__ */ React.createElement("p", { style: { fontSize: FS.md, color: C.slate, margin: "0 0 18px" } }, titles[1]), i === 0 && !joinMode && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setJoinMode(true);
-    }, style: { width: "100%", padding: "18px 15px", borderRadius: RAD.xl, cursor: "pointer", textAlign: "left", background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB, display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, color: C.greenB } }, "I\u2019m a player \u2014 join my club"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 3, fontWeight: 600 } }, "Enter your club code to see the dashboards")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: FS.h2 } }, "\u{1F464}")), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: FS.xs, fontFamily: MONO, letterSpacing: 2, margin: "18px 0 14px" } }, "OR SET UP A NEW CLUB"), /* @__PURE__ */ React.createElement(StepSport, { value: d.sport, set: (v) => u({ sport: v }) })), i === 0 && joinMode && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, color: C.slate, marginBottom: 14, lineHeight: 1.6 } }, "Ask your analyst for the 6-character player code (it's on their home screen), enter it here, and you're in."), /* @__PURE__ */ React.createElement("input", { value: joinCode, onChange: function(e) {
+    }, style: { width: "100%", padding: "18px 15px", borderRadius: RAD.xl, cursor: "pointer", textAlign: "left", background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB, display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, color: C.greenB } }, "I\u2019m a player \u2014 join my club"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 3, fontWeight: 600 } }, "Enter your club code to see the dashboards")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: FS.h2 } }, "\u{1F464}")), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: FS.xs, fontFamily: MONO, letterSpacing: 2, margin: "18px 0 14px" } }, "OR SET UP A NEW CLUB"), React.createElement("div", { style: { marginBottom: 18 } },
+      React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, letterSpacing: 1, marginBottom: 6 } }, "CLUB ACCESS CODE"),
+      React.createElement("input", { value: clubCode, onChange: function(e) { setClubCode(e.target.value.toUpperCase()); setCodeErr(""); }, placeholder: "Your club code", autoCapitalize: "characters", autoComplete: "off", style: { width: "100%", boxSizing: "border-box", background: C.field, border: "1px solid " + (codeErr ? C.red : C.border), borderRadius: RAD.lg, color: C.white, fontSize: FS.lg, letterSpacing: 2, padding: "13px 12px", fontFamily: MONO, fontWeight: 800 } }),
+      codeErr && React.createElement("div", { style: { color: C.red, fontSize: FS.sm, marginTop: 8 } }, codeErr),
+      React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 8, lineHeight: 1.5 } }, "New clubs need a code from us. Email ", React.createElement("a", { href: "mailto:staff.rocksolidanalytics@gmail.com?subject=Club%20access%20code", style: { color: C.greenB } }, "staff.rocksolidanalytics@gmail.com"), " or message ", React.createElement("a", { href: "https://www.instagram.com/rocksolidanalytics", target: "_blank", rel: "noopener", style: { color: C.greenB } }, "@rocksolidanalytics"), " on Instagram.")),
+      /* @__PURE__ */ React.createElement(StepSport, { value: d.sport, set: (v) => u({ sport: v }) })), i === 0 && joinMode && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, color: C.slate, marginBottom: 14, lineHeight: 1.6 } }, "Ask your analyst for the 6-character player code (it's on their home screen), enter it here, and you're in."), /* @__PURE__ */ React.createElement("input", { value: joinCode, onChange: function(e) {
       setJoinCode(e.target.value.toUpperCase());
     }, placeholder: "e.g. A3F9K2", maxLength: 8, style: { width: "100%", boxSizing: "border-box", background: C.field, border: "1px solid " + C.border, borderRadius: RAD.lg, color: C.white, fontSize: FS.xl, letterSpacing: 6, textAlign: "center", padding: "14px 12px", fontFamily: MONO, fontWeight: 800 } }), joinErr && /* @__PURE__ */ React.createElement("div", { style: { color: C.red, fontSize: FS.sm, marginTop: 10 } }, joinErr), /* @__PURE__ */ React.createElement("button", { onClick: doJoin, disabled: joinBusy || !joinCode.trim(), style: { width: "100%", marginTop: 14, padding: "14px 12px", borderRadius: RAD.lg, border: "none", cursor: "pointer", background: joinBusy || !joinCode.trim() ? C.bgCard : C.greenB, color: joinBusy || !joinCode.trim() ? C.slateD : C.bg, fontSize: FS.lg, fontWeight: 800 } }, joinBusy ? "Joining\u2026" : "Join club"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setJoinMode(false);
@@ -511,8 +529,8 @@
     }, style: { width: "100%", minHeight: 44, marginTop: 10, padding: "10px", borderRadius: RAD.lg, cursor: "pointer", background: "none", border: "none", color: C.slateD, fontSize: FS.md, fontWeight: 700 } }, "\u2190 Setting up a club instead")), i === 1 && /* @__PURE__ */ React.createElement(StepCounty, { value: d.county, set: (v) => u({ county: v, club: null }) }), i === 2 && /* @__PURE__ */ React.createElement(StepClub, { county: d.county, value: d.club, set: (v) => u({ club: v }) }), i === 3 && /* @__PURE__ */ React.createElement(StepColours, { primary: d.primary, secondary: d.secondary, set: u }), i === 4 && /* @__PURE__ */ React.createElement(StepConfirm, { d, set: u }), err && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16, padding: "10px 12px", background: C.red + ALPHA.faint, border: "1px solid " + C.red + ALPHA.mid, borderRadius: RAD.lg, color: C.red, fontSize: FS.md } }, err)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, padding: "12px 18px", borderTop: `1px solid ${C.border}` } }, i > 0 && /* @__PURE__ */ React.createElement("button", { onClick: () => setI(i - 1), style: { height: 50, padding: "0 18px", borderRadius: RAD.lg, background: C.bgCard, border: `1px solid ${C.border}`, color: C.white, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 } }, /* @__PURE__ */ React.createElement(Back, { s: 17 }), " Back"), /* @__PURE__ */ React.createElement(
       "button",
       {
-        onClick: () => i === STEPS.length - 1 ? finish() : setI(i + 1),
-        disabled: !canNext || busy,
+        onClick: () => i === STEPS.length - 1 ? finish() : i === 0 ? checkCode() : setI(i + 1),
+        disabled: !canNext || busy || codeBusy,
         style: {
           flex: 1,
           height: 50,
