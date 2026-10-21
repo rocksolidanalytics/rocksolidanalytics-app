@@ -3971,6 +3971,18 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return Object.assign({}, t, { x: p[0] + (q[0] - p[0]) * k, y: p[1] + (q[1] - p[1]) * k });
     });
   }
+  // A mark drawn on one step (kept in that step under _d): an arrow for a run or kick, or a
+  // zone such as a drop zone, from the two corners of the drag.
+  function tacMark(m, key, draft) {
+    var col = C.gold;
+    if (m.k === "zone") {
+      return React.createElement("ellipse", { key: key, cx: (m.x1 + m.x2) / 2, cy: (m.y1 + m.y2) / 2, rx: Math.max(4, Math.abs(m.x2 - m.x1) / 2), ry: Math.max(4, Math.abs(m.y2 - m.y1) / 2), fill: col, fillOpacity: 0.18, stroke: col, strokeWidth: 1.4, strokeDasharray: "4 3", opacity: draft ? 0.7 : 1, style: { pointerEvents: "none" } });
+    }
+    var dx = m.x2 - m.x1, dy = m.y2 - m.y1, L = Math.sqrt(dx * dx + dy * dy) || 1, ux = dx / L, uy = dy / L, bx = m.x2 - ux * 7, by = m.y2 - uy * 7;
+    return React.createElement("g", { key: key, opacity: draft ? 0.7 : 1, style: { pointerEvents: "none" } },
+      React.createElement("line", { x1: m.x1, y1: m.y1, x2: bx, y2: by, stroke: col, strokeWidth: 2.2, strokeLinecap: "round" }),
+      React.createElement("polygon", { points: m.x2 + "," + m.y2 + " " + (bx - uy * 4.2) + "," + (by + ux * 4.2) + " " + (bx + uy * 4.2) + "," + (by - ux * 4.2), fill: col }));
+  }
   function TacticalPad({ club, back, role }) {
     const boxRef = useRef(null), dragRef = useRef(null), animRef = useRef(null);
     const [tokens, setTokens] = useState(tacticFormation);
@@ -3984,6 +3996,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [naming, setNaming] = useState(null);
     const [busy, setBusy] = useState(false);
     const [msg, setMsg] = useState("");
+    const [tool, setTool] = useState("move");
+    const [draft, setDraft] = useState(null);
+    const drawRef = useRef(null);
     // The club kit colour made readable on the pitch, as in the taggers, against a plain blue
     // opposition; the same clash check falls back to green and blue when the two are too close.
     var padCols = kitCols(clubKit(club), { p: "plain", a: C.blue, b: C.blue });
@@ -4014,10 +4029,25 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function down(id, e) {
       // A saved play is watch-only for players, and nothing moves by hand while it plays.
       if (play && (!canEdit || playing)) return;
+      // With Arrow or Zone picked, a press on a jersey starts a mark there instead of a drag.
+      if (play && tool !== "move") return;
       e.preventDefault();
       dragRef.current = id;
     }
+    function startDraw(e) {
+      if (!play || !canEdit || playing || tool === "move") return;
+      e.preventDefault();
+      var q = pt(e);
+      drawRef.current = { k: tool, x1: q.x, y1: q.y, x2: q.x, y2: q.y };
+      setDraft(drawRef.current);
+    }
     function move(e) {
+      if (drawRef.current) {
+        var q = pt(e);
+        drawRef.current = Object.assign({}, drawRef.current, { x2: q.x, y2: q.y });
+        setDraft(drawRef.current);
+        return;
+      }
       if (dragRef.current == null) return;
       var p = pt(e);
       setTokens(function(ts) {
@@ -4027,8 +4057,23 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       });
     }
     function up() {
+      if (drawRef.current) {
+        var d = drawRef.current;
+        drawRef.current = null;
+        setDraft(null);
+        // A tap without a drag draws nothing.
+        if (play && Math.abs(d.x2 - d.x1) + Math.abs(d.y2 - d.y1) > 10) {
+          var sd = play.steps.slice(), cur = Object.assign({}, sd[step]);
+          cur._d = (cur._d || []).concat([{ k: d.k, x1: Math.round(d.x1), y1: Math.round(d.y1), x2: Math.round(d.x2), y2: Math.round(d.y2) }]);
+          sd[step] = cur;
+          setPlay(Object.assign({}, play, { steps: sd }));
+          setDirty(true);
+        }
+        return;
+      }
       if (dragRef.current != null && play) {
         var snap = tacSnap(tokens), st = play.steps.slice();
+        if (play.steps[step]._d) snap._d = play.steps[step]._d;
         st[step] = snap;
         setPlay(Object.assign({}, play, { steps: st }));
         setDirty(true);
@@ -4079,6 +4124,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setShow(c.show || { 0: true, 1: true });
       setStep(0);
       setTokens(tacApply(tacticFormation(), c.steps[0]));
+      setTool("move");
       setDirty(false);
       setNaming(null);
       setMsg("");
@@ -4088,6 +4134,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       stopAnim();
       setPlay(null);
       setStep(0);
+      setTool("move");
       setDirty(false);
       setNaming(null);
       setMsg("");
@@ -4107,6 +4154,15 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }
       setDirty(true);
       setMsg("");
+    }
+    function undoMark() {
+      var cur = play && play.steps[step];
+      if (!cur || !cur._d || !cur._d.length) return;
+      var st = play.steps.slice(), nx = Object.assign({}, cur, { _d: cur._d.slice(0, -1) });
+      if (!nx._d.length) delete nx._d;
+      st[step] = nx;
+      setPlay(Object.assign({}, play, { steps: st }));
+      setDirty(true);
     }
     function delStep() {
       if (!play || play.steps.length < 2) return;
@@ -4153,6 +4209,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return React.createElement("button", { key: o.k || label, onClick: onClick, disabled: o.dis, style: { minHeight: 44, padding: "0 13px", borderRadius: RAD.md, border: "1px solid " + (o.on ? C.greenB : C.border), background: o.fill ? C.greenB : o.on ? C.greenB + ALPHA.soft : C.bgCard, color: o.fill ? C.bg : o.red ? C.red : o.on ? C.greenB : C.white, fontWeight: 800, fontSize: FS.sm, cursor: o.dis ? "default" : "pointer", opacity: o.dis ? 0.45 : 1, flexShrink: 0, whiteSpace: "nowrap" } }, label);
     };
     var nSteps = play ? play.steps.length : 0;
+    var curMarks = play && play.steps[step] && play.steps[step]._d || [];
+    var marks = curMarks.map(function(m, i) { return tacMark(m, "mk" + i); }).concat(draft ? [tacMark(draft, "draft", true)] : []);
     // Each moving jersey leaves a faint trail through every step, so the runs read when paused.
     var trails = play && nSteps > 1 ? tokens.filter(function(t) { return t.team === "ball" || show[t.team]; }).map(function(t) {
       var ps = play.steps.map(function(s) { return s[t.id]; }).filter(Boolean);
@@ -4161,7 +4219,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var col = t.team === "ball" ? C.white : t.team === 0 ? brayCol : oppCol;
       return React.createElement("polyline", { key: "tr" + t.id, points: ps.map(function(p) { return p[0] + "," + p[1]; }).join(" "), fill: "none", stroke: col, strokeWidth: 1.6, strokeDasharray: t.team === "ball" ? "none" : "3 3", strokeLinecap: "round", strokeLinejoin: "round", opacity: t.team === "ball" ? 0.55 : 0.5, style: { pointerEvents: "none" } });
     }) : null;
-    var hint = play ? (canEdit ? (playing ? "" : "Drag jerseys to set this step. + Step adds the next move.") : "Tap ▶ to watch the play, or step through it.") : (canEdit ? "Drag the jerseys to set up a shape, then tap + Step to start a set play." : "Drag the jerseys to set up a shape. Saved plays from your coaches are above.");
+    var hint = play ? (canEdit ? (playing ? "" : tool === "arrow" ? "Drag on the pitch to draw an arrow on this step." : tool === "zone" ? "Drag on the pitch to mark a zone on this step." : "Drag jerseys to set this step. + Step adds the next move. Arrows and zones belong to the step they are drawn on.") : "Tap ▶ to watch the play, or step through it. Arrows and zones show what each step is for.") : (canEdit ? "Drag the jerseys to set up a shape, then tap + Step to start a set play." : "Drag the jerseys to set up a shape. Saved plays from your coaches are above.");
     return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 16px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, title: "Back", style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, play ? (play.name || "New play") + (dirty ? " •" : "") : "Tactical pad"), play ? /* @__PURE__ */ React.createElement("button", { onClick: closePlay, style: { minHeight: 44, margin: "-9px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slate, fontSize: FS.sm, fontWeight: 700, padding: "6px 11px" } }, "Close")) : /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setTokens(tacticFormation());
     }, style: { minHeight: 44, margin: "-9px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slate, fontSize: FS.sm, fontWeight: 700, padding: "6px 11px" } }, "Reset"))),
@@ -4185,12 +4243,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       "div",
       {
         ref: boxRef,
+        onPointerDown: startDraw,
         onPointerMove: move,
         onPointerUp: up,
         onPointerLeave: up,
-        style: { position: "relative", width: "100%", maxWidth: 420, aspectRatio: "224 / 360", touchAction: "none", borderRadius: RAD.lg, overflow: "hidden", boxShadow: "0 10px 40px " + C.black + ALPHA.strong }
+        style: { position: "relative", width: "100%", maxWidth: 420, aspectRatio: "224 / 360", touchAction: "none", cursor: play && canEdit && tool !== "move" ? "crosshair" : "default", borderRadius: RAD.lg, overflow: "hidden", boxShadow: "0 10px 40px " + C.black + ALPHA.strong }
       },
-      /* @__PURE__ */ React.createElement(PitchSVG, null, trails, tokens.filter(function(t) {
+      /* @__PURE__ */ React.createElement(PitchSVG, null, trails, marks, tokens.filter(function(t) {
         return t.team === "ball" || show[t.team];
       }).map(function(t) {
         if (t.team === "ball") {
@@ -4210,6 +4269,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       chip("▶", function() { goTo(step + 1); }, { k: "next", dis: step >= nSteps - 1 || playing }),
       chip(playing ? "⏸ Stop" : "▶ Play", playing ? stopAnim : playAll, { k: "play", fill: !playing, dis: nSteps < 2 }),
       chip(speed === 1 ? "1\xD7" : "\xBD\xD7", function() { setSpeed(speed === 1 ? 0.5 : 1); }, { k: "spd" })),
+    play && canEdit && !naming && React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", padding: "0 14px 8px" } },
+      chip("✋ Move", function() { setTool("move"); }, { k: "tmove", on: tool === "move", dis: playing }),
+      chip("↗ Arrow", function() { setTool("arrow"); }, { k: "tarrow", on: tool === "arrow", dis: playing }),
+      chip("◯ Zone", function() { setTool("zone"); }, { k: "tzone", on: tool === "zone", dis: playing }),
+      chip("↶ Undo mark", undoMark, { k: "tundo", dis: playing || !curMarks.length })),
     canEdit && !naming && React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", padding: "0 14px 8px" } },
       chip("+ Step", addStep, { dis: playing || busy }),
       play && nSteps > 1 && chip("Delete step", delStep, { dis: playing || busy }),

@@ -67,7 +67,9 @@ delete and delete step. Players see the saved plays and can watch them, not edit
 use the club kit colour against blue, with the tagger clash check.
 
 **Later:**
-- Arrows or zones drawn on a step (e.g. drop zone).
+- ~~Arrows or zones drawn on a step~~: done 2026-10-22. Move / Arrow / Zone / Undo mark
+  tools while a play is open; each mark belongs to the step it is drawn on (kept in that
+  step under `_d`), shows while that step is on screen, and players see them read-only.
 - Tag which play was called on a kickout and show how often it was won.
 - Export a play as a short video for the squad WhatsApp.
 
