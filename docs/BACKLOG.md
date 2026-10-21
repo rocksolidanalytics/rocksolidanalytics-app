@@ -29,7 +29,11 @@ Agreed 2026-10-21.
   screen with a one-match opposition kit (`tag_settings.matchKit` by match id, read by both
   taggers and Fan Zone). Fan Zone shows jerseys and kit colours; the public link gets them
   from `live_board` (club_kit, opp_kit), see supabase/migrations/20261022_live_board_kits.sql.
-- Kits beside team names in match lists; crests in the taggers, Fan Zone and opposition pages.
+- ~~Kits beside team names in match lists; crests in the taggers, Fan Zone and opposition
+  pages~~: done 2026-10-22. Opposition crest upload on each team page (64px, stored as
+  `tag_settings.oppCrest` by team key, carried by merges). Match lists show the opposition
+  crest, else their kit. Taggers and Fan Zone show crests; the public link reads them once
+  from `live_crests`, see supabase/migrations/20261022_live_crests.sql.
 - Pitch map and dashboard dots in team colours.
 
 ## vs Others comparison
