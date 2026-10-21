@@ -269,6 +269,61 @@
   function Jersey({ primary, secondary, size = 96 }) {
     return /* @__PURE__ */ React.createElement("svg", { width: size, height: size, viewBox: "0 0 100 100" }, /* @__PURE__ */ React.createElement("path", { d: "M30 18 L16 30 L24 44 L34 36 Z", fill: secondary || C.border }), /* @__PURE__ */ React.createElement("path", { d: "M70 18 L84 30 L76 44 L66 36 Z", fill: secondary || C.border }), /* @__PURE__ */ React.createElement("path", { d: "M34 18 C40 26 60 26 66 18 L66 86 L34 86 Z", fill: primary || C.bgCard, stroke: "#00000022", strokeWidth: "0.5" }), /* @__PURE__ */ React.createElement("rect", { x: "34", y: "52", width: "32", height: "9", fill: secondary || C.border }), /* @__PURE__ */ React.createElement("path", { d: "M40 18 C44 24 56 24 60 18 L57 14 C53 18 47 18 43 14 Z", fill: secondary || C.border }));
   }
+  // Team kits: a pattern, a main and second colour and a number colour. The club kit is
+  // clubs.tag_settings.ourKit; opposition kits are tag_settings.oppKit by team key.
+  var KIT_PATTERNS = [["plain", "Plain"], ["hoops", "Hoops"], ["stripes", "Stripes"], ["halves", "Halves"], ["sash", "Sash"], ["band", "Band"]];
+  var _kitSeq = 0;
+  function kitOf(k) {
+    if (!k || !k.a) return null;
+    return { p: k.p || "plain", a: k.a, b: k.b || k.a, n: k.n || (_hexLum(k.a) > 0.35 ? "#14181f" : "#f2f4f8") };
+  }
+  function clubKit(club) {
+    var ts = (club && club.tag_settings) || {};
+    return kitOf(ts.ourKit) || kitOf({ p: "plain", a: club && club.colour_primary || C.green, b: club && (club.colour_secondary || club.colour_primary) || C.green });
+  }
+  function KitJersey({ kit, num, size }) {
+    var idRef = useRef(null);
+    if (!idRef.current) idRef.current = "kj" + (++_kitSeq);
+    var k = kitOf(kit), sz = size || 48, cid = idRef.current;
+    var body = "M32 16 L14 28 L22 44 L32 38 L32 88 L68 88 L68 38 L78 44 L86 28 L68 16 C62 24 38 24 32 16 Z";
+    if (!k) return React.createElement("svg", { width: sz, height: sz, viewBox: "0 0 100 100", "aria-hidden": true }, React.createElement("path", { d: body, fill: "none", stroke: C.borderB, strokeWidth: 3, strokeDasharray: "5 4" }));
+    var kids = [React.createElement("rect", { key: "base", x: 0, y: 0, width: 100, height: 100, fill: k.a })];
+    if (k.p === "hoops") [26, 48, 70].forEach(function(y, i) { kids.push(React.createElement("rect", { key: "h" + i, x: 0, y: y, width: 100, height: 11, fill: k.b })); });
+    if (k.p === "stripes") [36, 48, 60].forEach(function(x, i) { kids.push(React.createElement("rect", { key: "s" + i, x: x, y: 0, width: 6, height: 100, fill: k.b })); });
+    if (k.p === "halves") kids.push(React.createElement("rect", { key: "hv", x: 50, y: 0, width: 50, height: 100, fill: k.b }));
+    if (k.p === "sash") kids.push(React.createElement("polygon", { key: "sa", points: "24,16 40,16 80,92 64,92", fill: k.b }));
+    if (k.p === "band") kids.push(React.createElement("rect", { key: "bd", x: 0, y: 44, width: 100, height: 13, fill: k.b }));
+    if (k.p === "plain") kids.push(React.createElement("path", { key: "sl", d: "M14 28 L22 44 L32 38 L32 24 Z M86 28 L78 44 L68 38 L68 24 Z", fill: k.b }));
+    return React.createElement("svg", { width: sz, height: sz, viewBox: "0 0 100 100", role: "img", "aria-label": (KIT_PATTERNS.filter(function(x) { return x[0] === k.p; })[0] || ["", "Plain"])[1] + " jersey" },
+      React.createElement("defs", null, React.createElement("clipPath", { id: cid }, React.createElement("path", { d: body }))),
+      React.createElement("g", { clipPath: "url(#" + cid + ")" }, kids),
+      React.createElement("path", { d: "M40 18 C44 24 56 24 60 18", fill: "none", stroke: k.b === k.a ? k.n : k.b, strokeWidth: 3 }),
+      React.createElement("path", { d: body, fill: "none", stroke: "rgba(255,255,255,0.4)", strokeWidth: 1.5 }),
+      num != null && React.createElement("text", { x: 50, y: 74, textAnchor: "middle", fontFamily: MONO, fontWeight: 800, fontSize: 26, fill: k.n, stroke: k.p === "plain" ? "none" : k.a, strokeWidth: 0.8 }, num));
+  }
+  // Pattern, colours and number colour, with a live preview. onChange gets the whole kit.
+  function KitPicker({ kit, onChange }) {
+    const [slot, setSlot] = useState("a");
+    var k = kitOf(kit) || kitOf({ a: SWATCHES[0].h });
+    function set(patch) { onChange(Object.assign({}, k, patch)); }
+    var slots = [["a", "Main"], ["b", "Second"], ["n", "Number"]];
+    return React.createElement("div", null,
+      React.createElement("div", { style: { display: "flex", justifyContent: "center", marginBottom: 12 } }, React.createElement(KitJersey, { kit: k, num: 7, size: 116 })),
+      React.createElement("div", { style: { display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, marginBottom: 12 } }, KIT_PATTERNS.map(function(pt) {
+        var on = k.p === pt[0];
+        return React.createElement("button", { key: pt[0], onClick: function() { set({ p: pt[0] }); }, style: { flex: "0 0 auto", minWidth: 62, padding: "6px 4px 4px", borderRadius: RAD.md, cursor: "pointer", background: on ? C.greenB + ALPHA.faint : C.field, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.greenB : C.slate, fontSize: FS.xs, fontWeight: 700, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 } }, React.createElement(KitJersey, { kit: Object.assign({}, k, { p: pt[0] }), size: 40 }), pt[1]);
+      })),
+      React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 10 } }, slots.map(function(sl) {
+        var on = slot === sl[0];
+        return React.createElement("button", { key: sl[0], onClick: function() { setSlot(sl[0]); }, style: { flex: 1, minHeight: 44, borderRadius: RAD.md, cursor: "pointer", background: on ? C.greenB + ALPHA.faint : C.field, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.greenB : C.slate, fontSize: FS.sm, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 } },
+          React.createElement("span", { style: { width: 16, height: 16, borderRadius: 4, background: k[sl[0]], border: "1px solid " + C.borderB } }), sl[1]);
+      })),
+      React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(8, minmax(0, 1fr))", gap: 6 } }, SWATCHES.map(function(sw) {
+        var on = k[slot] === sw.h, pt = {};
+        pt[slot] = sw.h;
+        return React.createElement("button", { key: sw.h, onClick: function() { set(pt); }, title: sw.n, "aria-label": sw.n, style: { aspectRatio: "1", minHeight: 34, borderRadius: RAD.md, cursor: "pointer", background: sw.h, border: on ? "3px solid " + C.white : "1px solid " + C.borderB } });
+      })));
+  }
   function AuthField({ icon, type, val, set, ph, error, ac, right, onEnter }) {
     return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "rsa-field", style: {
       "--rsa-ring": error ? C.red : C.greenB,
@@ -1153,7 +1208,26 @@
     const [crestOpen, setCrestOpen] = useState(false);
     const [crestBusy, setCrestBusy] = useState(false);
     const [crestErr, setCrestErr] = useState("");
+    const [sheetTab, setSheetTab] = useState("crest");
+    const [kitDraft, setKitDraft] = useState(null);
     const crestFileRef = useRef(null);
+    async function saveKit() {
+      setCrestBusy(true);
+      setCrestErr("");
+      try {
+        var cr = await db.from("clubs").select("tag_settings").eq("id", club.id).maybeSingle();
+        var next = Object.assign({}, cr && cr.data && cr.data.tag_settings || {}, { ourKit: kitDraft });
+        // The banner sash follows the kit colours.
+        var fields = { tag_settings: next, colour_primary: kitDraft.a, colour_secondary: kitDraft.b };
+        var r = await db.from("clubs").update(fields).eq("id", club.id);
+        if (r.error) throw r.error;
+        if (onClub) onClub(Object.assign({}, club, fields));
+        setCrestOpen(false);
+      } catch (e) {
+        setCrestErr("Could not save the kit. Check your signal and try again.");
+      }
+      setCrestBusy(false);
+    }
     async function saveCrest(val) {
       setCrestBusy(true);
       setCrestErr("");
@@ -1178,7 +1252,18 @@
       var cur = crestOf(club), own = !!(club.crest && /^data:image\//.test(club.crest));
       var btn = { width: "100%", minHeight: 48, borderRadius: RAD.lg, fontSize: FS.md, fontWeight: 800, cursor: "pointer", marginTop: 10 };
       return React.createElement("div", { onClick: function() { if (!crestBusy) setCrestOpen(false); }, style: { position: "fixed", inset: 0, zIndex: 80, background: C.black + ALPHA.scrim, display: "flex", alignItems: "flex-end", justifyContent: "center" } },
-        React.createElement("div", { onClick: function(ev) { ev.stopPropagation(); }, style: { width: "100%", maxWidth: 460, background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.xl + "px " + RAD.xl + "px 0 0", padding: "18px 18px calc(18px + env(safe-area-inset-bottom, 0px))" } },
+        React.createElement("div", { onClick: function(ev) { ev.stopPropagation(); }, style: { width: "100%", maxWidth: 460, maxHeight: "92dvh", overflowY: "auto", background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.xl + "px " + RAD.xl + "px 0 0", padding: "18px 18px calc(18px + env(safe-area-inset-bottom, 0px))" } },
+          React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 12 } }, [["crest", "Crest"], ["kit", "Kit"]].map(function(t) {
+            var on = sheetTab === t[0];
+            return React.createElement("button", { key: t[0], onClick: function() { setSheetTab(t[0]); setCrestErr(""); }, style: { flex: 1, minHeight: 44, borderRadius: RAD.md, cursor: "pointer", fontSize: FS.md, fontWeight: 800, background: on ? C.greenB + ALPHA.soft : C.field, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.greenB : C.slate } }, t[1]);
+          })),
+          sheetTab === "kit" ? React.createElement("div", null,
+            React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginBottom: 12, lineHeight: 1.5 } }, "Your club jersey. Its colours are used for your team while tagging, unless they are too close to the opposition."),
+            React.createElement(KitPicker, { kit: kitDraft || clubKit(club), onChange: setKitDraft }),
+            crestErr && React.createElement("div", { style: { color: C.red, fontSize: FS.sm, marginTop: 10 } }, crestErr),
+            React.createElement("button", { onClick: saveKit, disabled: crestBusy || !kitDraft, style: Object.assign({}, btn, { border: "none", background: kitDraft ? C.greenB : C.field, color: kitDraft ? C.bg : C.slateD, marginTop: 14 }) }, crestBusy ? "Saving\u2026" : "Save kit"),
+            React.createElement("button", { onClick: function() { setCrestOpen(false); }, disabled: crestBusy, style: Object.assign({}, btn, { background: "none", border: "none", color: C.slateD, fontWeight: 700 }) }, "Cancel")) :
+          React.createElement("div", null,
           React.createElement("div", { style: { fontSize: FS.xl, fontWeight: 800 } }, "Club crest"),
           React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 4, lineHeight: 1.5 } }, "Shown on the home screen and the dashboard. A square PNG with a clear background looks best; it is shrunk to fit."),
           cur && React.createElement("div", { style: { width: 88, height: 88, margin: "16px auto 4px", borderRadius: "50%", background: "#F2F4F8", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement("img", { src: cur, alt: "Current crest", style: { width: 68, height: 72, objectFit: "contain" } })),
@@ -1186,7 +1271,7 @@
           React.createElement("button", { onClick: function() { if (crestFileRef.current) crestFileRef.current.click(); }, disabled: crestBusy, style: Object.assign({}, btn, { border: "none", background: C.greenB, color: C.bg }) }, crestBusy ? "Saving\u2026" : own ? "Choose a new image" : "Upload a crest"),
           own && React.createElement("button", { onClick: function() { saveCrest(null); }, disabled: crestBusy, style: Object.assign({}, btn, { background: "none", border: "1px solid " + C.border, color: C.white }) }, "Remove uploaded crest"),
           crestErr && React.createElement("div", { style: { color: C.red, fontSize: FS.sm, marginTop: 10 } }, crestErr),
-          React.createElement("button", { onClick: function() { setCrestOpen(false); }, disabled: crestBusy, style: Object.assign({}, btn, { background: "none", border: "none", color: C.slateD, fontWeight: 700 }) }, "Cancel")));
+          React.createElement("button", { onClick: function() { setCrestOpen(false); }, disabled: crestBusy, style: Object.assign({}, btn, { background: "none", border: "none", color: C.slateD, fontWeight: 700 }) }, "Cancel"))));
     }
     useEffect(function() {
       if (role === "player") return;
@@ -1217,7 +1302,7 @@
         React.createElement("img", { src: LOGO, alt: "", width: 30, height: 30 }),
         React.createElement("div", { style: { flex: 1 } }, React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800, letterSpacing: -0.2 } }, "Rock Solid ", React.createElement("span", { style: { color: C.greenB } }, "Analytics"))),
         React.createElement("button", { onClick: onSignOut, style: { minHeight: 44, margin: "-8px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { border: "1px solid " + C.border, borderRadius: RAD.lg, color: C.slate, fontSize: FS.sm, padding: "7px 12px", fontFamily: MONO } }, "Sign out"))),
-      React.createElement(ClubBanner, { club: club, sportLabel: sport ? sport.label : club.sport, extra: !club.verified ? Pill("Unverified", C.gold) : null, onCrest: isPlayer ? null : function() { setCrestErr(""); setCrestOpen(true); } }),
+      React.createElement(ClubBanner, { club: club, sportLabel: sport ? sport.label : club.sport, extra: !club.verified ? Pill("Unverified", C.gold) : null, onCrest: isPlayer ? null : function() { setCrestErr(""); setKitDraft(null); setSheetTab("crest"); setCrestOpen(true); } }),
       crestSheet(),
       React.createElement("button", { onClick: onStats, style: { width: "100%", marginTop: 14, padding: "16px 14px", borderRadius: RAD.xl, cursor: "pointer", textAlign: "left", background: "linear-gradient(135deg," + C.greenB + "," + C.green + ")", border: "1px solid " + C.greenB + ALPHA.strong, boxShadow: "0 8px 28px " + C.greenB + ALPHA.soft, display: "flex", alignItems: "center", gap: 12 } },
         React.createElement("div", { style: { width: 36, height: 36, borderRadius: RAD.lg, background: C.white + ALPHA.mid, color: C.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: FS.lg, fontWeight: 800, lineHeight: 1, flexShrink: 0 } }, "\u25A6"),
@@ -10011,6 +10096,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [mergeOpen, setMergeOpen] = useState(false);
     const [odTab, setOdTab] = useState("played");
     const [renameTo, setRenameTo] = useState(null);
+    const [kitEdit, setKitEdit] = useState(null);
+    const [addName, setAddName] = useState(null);
     useEffect(function() {
       (async function() {
         async function odFetch(table, cols) {
@@ -10078,17 +10165,28 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         g.entries.push({ m: m, side: sd[1], vs: sd[2], scout: !!m.scouting, forS: sd[1] === "us" ? m.our_score : m.opp_score, agS: sd[1] === "us" ? m.opp_score : m.our_score, forT: forT, agT: agT, done: m.status === "final" });
       });
     });
+    // Teams set up by hand before any match against them (tag_settings.oppTeams).
+    Object.keys(ts.oppTeams || {}).forEach(function(k0) {
+      var k = odRoot(k0);
+      if (!groups[k]) groups[k] = { key: k, names: {}, entries: [], setup: (ts.oppTeams[k0] || {}).name || k0 };
+    });
+    var kits = ts.oppKit || {};
     var list = Object.keys(groups).map(function(k) {
       var g = groups[k];
       g.entries.sort(function(a, b) { return String(b.m.date || "").localeCompare(String(a.m.date || "")); });
       var real = g.entries.filter(function(e) { return !e.scout; });
       var nameSrc = (real[0] || g.entries[0]);
-      g.name = ts.oppName && ts.oppName[k] || (nameSrc.scout ? Object.keys(g.names).sort(function(a, b) { return g.names[b] - g.names[a]; })[0] : nameSrc.m.opponent.trim());
+      g.kit = kitOf(kits[k]);
+      g.name = ts.oppName && ts.oppName[k] || (!nameSrc ? g.setup : nameSrc.scout ? Object.keys(g.names).sort(function(a, b) { return g.names[b] - g.names[a]; })[0] : nameSrc.m.opponent.trim());
       g.w = 0; g.d = 0; g.l = 0;
       real.forEach(function(e) { if (!e.done || e.forT == null || e.agT == null) return; if (e.agT < e.forT) g.l++; else if (e.agT > e.forT) g.w++; else g.d++; });
-      g.last = g.entries[0];
+      g.last = g.entries[0] || null;
       return g;
-    }).sort(function(a, b) { return String(b.last.m.date || "").localeCompare(String(a.last.m.date || "")); });
+    }).sort(function(a, b) {
+      // Teams with no matches yet (just set up) first, then the most recent meeting.
+      if (!a.last || !b.last) return (a.last ? 1 : 0) - (b.last ? 1 : 0);
+      return String(b.last.m.date || "").localeCompare(String(a.last.m.date || ""));
+    });
     var byKey = {};
     list.forEach(function(g) { byKey[g.key] = g; });
     // Close spellings offered as "same team?": one name a subset of the other once
@@ -10113,6 +10211,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           t.oppAlias[fromKey] = intoKey;
           Object.keys(t.oppAlias).forEach(function(k) { if (t.oppAlias[k] === fromKey) t.oppAlias[k] = intoKey; });
           if (t.oppNotes && t.oppNotes[fromKey]) { t.oppNotes[intoKey] = [t.oppNotes[intoKey], t.oppNotes[fromKey]].filter(Boolean).join("\n\n"); delete t.oppNotes[fromKey]; }
+          if (t.oppKit && t.oppKit[fromKey]) { if (!t.oppKit[intoKey]) t.oppKit[intoKey] = t.oppKit[fromKey]; delete t.oppKit[fromKey]; }
+          if (t.oppTeams && t.oppTeams[fromKey]) delete t.oppTeams[fromKey];
           return t;
         });
       } catch (e) { setErr("Could not save the merge. Check signal and try again."); }
@@ -10139,7 +10239,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var ql = odKey(q);
       // Played: teams met in a real match (their scouted games count too).
       // Scouted: teams only ever seen in scouting matches.
-      var isPlayed = function(x) { return x.entries.some(function(e) { return !e.scout; }); };
+      var isPlayed = function(x) { return !x.entries.length || x.entries.some(function(e) { return !e.scout; }); };
       var nPlayed = list.filter(isPlayed).length, nScout = list.length - nPlayed;
       var shown = list.filter(function(x) { return (odTab === "played") === isPlayed(x); }).filter(function(x) { return !ql || odKey(x.name).indexOf(ql) >= 0 || Object.keys(x.names).some(function(n) { return odKey(n).indexOf(ql) >= 0; }); });
       return React.createElement("div", { className: "rs-wide rsa-fb", style: shell }, head("Opposition", list.length + " TEAMS", back),
@@ -10150,6 +10250,18 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             var on = odTab === t[0];
             return React.createElement("button", { key: t[0], onClick: function() { setOdTab(t[0]); }, style: { flex: 1, minHeight: 44, borderRadius: RAD.md, cursor: "pointer", fontSize: FS.sm, fontWeight: 800, background: on ? C.greenB + ALPHA.soft : C.field, border: "1px solid " + (on ? C.greenB : C.border), color: on ? C.greenB : C.slate } }, t[1], " \xB7 ", t[2]);
           })),
+          odTab === "played" && (addName == null ? React.createElement("button", { onClick: function() { setAddName(""); }, style: { width: "100%", minHeight: 44, marginBottom: 12, borderRadius: RAD.lg, border: "1px dashed " + C.borderB, background: "none", color: C.slate, fontWeight: 700, fontSize: FS.sm, cursor: "pointer" } }, "+ Add a team") :
+            React.createElement("div", { style: Object.assign({}, card, { display: "grid", gap: 8 }) },
+              React.createElement("div", { style: lab }, "ADD A TEAM"),
+              React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, lineHeight: 1.5 } }, "Set up a team before you meet them, with their kit and notes. Matches against them join up automatically."),
+              React.createElement("input", { value: addName, autoFocus: true, onChange: function(e) { setAddName(e.target.value); }, placeholder: "Team name", className: "rsa-field", style: { "--rsa-ring": C.greenB, width: "100%", minHeight: 44, padding: "10px 12px", borderRadius: RAD.lg, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: FS.md, boxSizing: "border-box" } }),
+              React.createElement("div", { style: { display: "flex", gap: 8 } },
+                React.createElement("button", { disabled: !odKey(addName), onClick: function() {
+                  var nm = String(addName).trim(), k = odRoot(odKey(nm));
+                  if (byKey[k]) { setAddName(null); setSel(k); return; }
+                  odSaveTs(function(t) { t.oppTeams = t.oppTeams || {}; t.oppTeams[k] = { name: nm }; return t; }).then(function() { setAddName(null); setSel(k); setKitEdit(null); }, function() { setErr("Could not add the team. Check signal and try again."); });
+                }, style: { flex: 1, minHeight: 44, borderRadius: RAD.md, border: "none", background: odKey(addName) ? C.greenB : C.field, color: odKey(addName) ? C.bg : C.slateD, fontWeight: 800, fontSize: FS.sm, cursor: "pointer" } }, "Add team"),
+                React.createElement("button", { onClick: function() { setAddName(null); }, style: { minHeight: 44, padding: "0 14px", borderRadius: RAD.md, border: "1px solid " + C.border, background: "none", color: C.slate, fontWeight: 700, fontSize: FS.sm, cursor: "pointer" } }, "Cancel")))),
           !q && sugg.length > 0 && React.createElement("div", { style: Object.assign({}, card, { borderColor: C.gold + ALPHA.mid }) },
             React.createElement("div", { style: Object.assign({}, lab, { color: C.gold }) }, "SAME TEAM?"),
             sugg.map(function(s2) {
@@ -10162,10 +10274,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           shown.length === 0 && React.createElement("div", { style: { textAlign: "center", color: C.slateD, padding: "30px 0" } }, list.length ? (q ? "No team matches that search." : odTab === "played" ? "No matches played yet." : "No scouted-only teams.") : "No opposition yet. Teams appear here once you have played or scouted them."),
           shown.map(function(x) {
             var real = x.entries.filter(function(e) { return !e.scout; }).length, sc = x.entries.length - real, L = x.last;
-            return React.createElement("button", { key: x.key, onClick: function() { setSel(x.key); setNoteDraft(null); setMergeOpen(false); setRenameTo(null); }, style: { width: "100%", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.lg, padding: "12px 14px", marginBottom: 8, color: C.white } },
+            return React.createElement("button", { key: x.key, onClick: function() { setSel(x.key); setNoteDraft(null); setMergeOpen(false); setRenameTo(null); setKitEdit(null); }, style: { width: "100%", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.lg, padding: "12px 14px", marginBottom: 8, color: C.white } },
+              React.createElement("span", { style: { flexShrink: 0, display: "flex" } }, React.createElement(KitJersey, { kit: x.kit, size: 34 })),
               React.createElement("div", { style: { flex: 1, minWidth: 0 } },
                 React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, x.name),
-                React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 3 } }, real ? real + (real === 1 ? " match" : " matches") : "", real && sc ? " \xB7 " : "", sc ? sc + " scouted" : "", L.m.date ? " \xB7 last " + L.m.date : "")),
+                React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 3 } }, !L ? "No matches yet" : "", real ? real + (real === 1 ? " match" : " matches") : "", real && sc ? " \xB7 " : "", sc ? sc + " scouted" : "", L && L.m.date ? " \xB7 last " + L.m.date : "")),
               x.w + x.d + x.l > 0 && odRec(x),
               React.createElement("span", { style: { color: C.slateD, fontSize: FS.lg } }, "›"));
           })));
@@ -10227,7 +10340,25 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           stat(avgFor != null ? avgFor.toFixed(1) : "—", "AVG SCORED"),
           stat(avgAg != null ? avgAg.toFixed(1) : "—", "AVG CONCEDED")),
         React.createElement("div", { style: card },
+          React.createElement("div", { style: lab }, "KIT"),
+          kitEdit ? React.createElement("div", null,
+            React.createElement(KitPicker, { kit: kitEdit, onChange: setKitEdit }),
+            React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 12 } },
+              React.createElement("button", { onClick: function() {
+                var nk = kitEdit;
+                odSaveTs(function(t) { t.oppKit = t.oppKit || {}; t.oppKit[g.key] = nk; return t; }).then(function() { setKitEdit(null); }, function() { setErr("Could not save the kit. Check signal and try again."); });
+              }, style: { flex: 1, minHeight: 44, borderRadius: RAD.md, border: "none", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: FS.sm, cursor: "pointer" } }, "Save kit"),
+              g.kit && React.createElement("button", { onClick: function() {
+                odSaveTs(function(t) { if (t.oppKit) delete t.oppKit[g.key]; return t; }).then(function() { setKitEdit(null); }, function() { setErr("Could not remove the kit."); });
+              }, style: { minHeight: 44, padding: "0 12px", borderRadius: RAD.md, border: "1px solid " + C.border, background: "none", color: C.slate, fontWeight: 700, fontSize: FS.sm, cursor: "pointer" } }, "Remove"),
+              React.createElement("button", { onClick: function() { setKitEdit(null); }, style: { minHeight: 44, padding: "0 12px", borderRadius: RAD.md, border: "none", background: "none", color: C.slateD, fontWeight: 700, fontSize: FS.sm, cursor: "pointer" } }, "Cancel"))) :
+          React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 14 } },
+            React.createElement(KitJersey, { kit: g.kit, size: 64 }),
+            React.createElement("div", { style: { flex: 1, minWidth: 0, fontSize: FS.sm, color: C.slate, lineHeight: 1.5 } }, g.kit ? "Used for " + g.name + " while tagging, unless it is too close to your own kit." : "No kit set. Add their colours so taggers can tell the teams apart at a glance."),
+            React.createElement("button", { onClick: function() { setKitEdit(g.kit || kitOf({ a: SWATCHES[0].h, b: SWATCHES[9].h })); }, style: { minHeight: 44, padding: "0 14px", borderRadius: RAD.md, border: "1px solid " + C.borderB, background: C.field, color: C.white, fontWeight: 800, fontSize: FS.sm, cursor: "pointer", flexShrink: 0 } }, g.kit ? "Edit" : "Set kit"))),
+        React.createElement("div", { style: card },
           React.createElement("div", { style: lab }, "RESULTS"),
+          ents.length === 0 && React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD } }, "No matches against ", g.name, " yet."),
           ents.map(function(e, i) {
             // Our matches read from our side; scouted matches just show both scores.
             var res = !e.scout && e.done && e.forT != null && e.agT != null ? (e.agT > e.forT ? "W" : e.agT < e.forT ? "L" : "D") : null;
@@ -10288,7 +10419,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
               var nv = String(renameTo || "").trim();
               odSaveTs(function(t) { t.oppName = t.oppName || {}; if (nv) t.oppName[g.key] = nv; else delete t.oppName[g.key]; return t; }).then(function() { setRenameTo(null); }, function() { setErr("Could not save the name."); });
             }, style: { minHeight: 40, padding: "0 12px", borderRadius: RAD.md, border: "none", background: renameTo == null ? C.field : C.greenB, color: renameTo == null ? C.slateD : C.bg, fontWeight: 800, fontSize: FS.sm, cursor: renameTo == null ? "default" : "pointer" } }, "Rename")),
-          React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, lineHeight: 1.5, marginBottom: 8 } }, "Matches listed as ", Object.keys(g.names).map(function(n) { return "“" + n + "”"; }).join(", "), "."),
+          ents.length ? React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, lineHeight: 1.5, marginBottom: 8 } }, "Matches listed as ", Object.keys(g.names).map(function(n) { return "“" + n + "”"; }).join(", "), ".") :
+            React.createElement("button", { onClick: function() {
+              odSaveTs(function(t) { ["oppTeams", "oppKit", "oppNotes", "oppName"].forEach(function(f) { if (t[f]) delete t[f][g.key]; }); return t; }).then(function() { setSel(null); }, function() { setErr("Could not delete the team."); });
+            }, style: { minHeight: 40, marginBottom: 8, padding: "0 12px", borderRadius: RAD.md, border: "1px solid " + C.red + ALPHA.mid, background: "none", color: C.red, fontWeight: 700, fontSize: FS.sm, cursor: "pointer" } }, "Delete this team"),
           g.merged && Object.keys(g.merged).map(function(k) {
             return React.createElement("div", { key: k, style: { display: "flex", alignItems: "center", gap: 8, padding: "4px 0" } },
               React.createElement("span", { style: { flex: 1, fontSize: FS.sm } }, "Merged: ", g.merged[k]),
