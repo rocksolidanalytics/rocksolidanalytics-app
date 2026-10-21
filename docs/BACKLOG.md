@@ -25,10 +25,11 @@ Agreed 2026-10-21.
 - Small jerseys beside the team names in both taggers' scoreboards.
 
 **Still to do:**
-- Kits beside team names on the line-up screen, match lists and Fan Zone; crests in the
-  taggers, Fan Zone and opposition pages.
-- Per-match away kit override from the line-up screen (`tag_settings.matchKit` by match id is
-  already read by teamCols).
+- ~~Line-up screen and Fan Zone kits~~: done 2026-10-22. Kits card at the top of the line-up
+  screen with a one-match opposition kit (`tag_settings.matchKit` by match id, read by both
+  taggers and Fan Zone). Fan Zone shows jerseys and kit colours; the public link gets them
+  from `live_board` (club_kit, opp_kit), see supabase/migrations/20261022_live_board_kits.sql.
+- Kits beside team names in match lists; crests in the taggers, Fan Zone and opposition pages.
 - Pitch map and dashboard dots in team colours.
 
 ## Payments (Stripe)
