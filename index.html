@@ -197,15 +197,65 @@
   }
   // One crest per club, shared by its football, hurling and ladies sections.
   var CLUB_CRESTS = { "972a7387-aeaa-4567-ad09-0f24f3b79e3c": "bray", "7e4a8c8a-b8b4-47cc-9066-c04c219e3a3c": "bray", "cacb04a5-0eef-4118-a046-80ddd778a340": "bray", "382a6343-a360-43de-94d6-752dc2842215": "eadestown", "81c42154-8c12-4406-815f-ebe8b74c0664": "stjude", "b82b0e7e-b098-4f88-9338-7f6f46ce234e": "stjude" };
-  function ClubBanner({ club, sportLabel, extra }) {
+  // A crest uploaded in the app (clubs.crest, a small image) wins over the built-in ones.
+  function crestOf(club) {
+    if (!club) return null;
+    if (club.crest && /^data:image\//.test(club.crest)) return club.crest;
+    var k = CLUB_CRESTS[club.id];
+    return k === "bray" ? BRAY_CREST : k === "eadestown" ? EADESTOWN_CREST : k === "stjude" ? ST_JUDE_CREST : null;
+  }
+  // Shrinks a picked image to fit 160px and returns it as a data URL small enough to keep on the club row.
+  function crestFromFile(file) {
+    return new Promise(function(resolve, reject) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function() {
+        var k = Math.min(1, 160 / Math.max(img.width, img.height)), cv = document.createElement("canvas");
+        cv.width = Math.max(1, Math.round(img.width * k));
+        cv.height = Math.max(1, Math.round(img.height * k));
+        var cx = cv.getContext("2d");
+        cx.drawImage(img, 0, 0, cv.width, cv.height);
+        URL.revokeObjectURL(url);
+        // A white page around the crest (a photo or a JPG) becomes see-through. Only white joined
+        // to the edge is cleared, so white inside the crest itself is kept.
+        try {
+          var W2 = cv.width, H2 = cv.height, id = cx.getImageData(0, 0, W2, H2), d = id.data, seen = new Uint8Array(W2 * H2), st = [], i2;
+          for (i2 = 0; i2 < W2; i2++) st.push(i2, (H2 - 1) * W2 + i2);
+          for (i2 = 0; i2 < H2; i2++) st.push(i2 * W2, i2 * W2 + W2 - 1);
+          while (st.length) {
+            var q = st.pop();
+            if (seen[q]) continue;
+            seen[q] = 1;
+            var o = q * 4;
+            if (d[o + 3] < 20 || (d[o] > 232 && d[o + 1] > 232 && d[o + 2] > 232)) {
+              d[o + 3] = 0;
+              var qx = q % W2, qy = (q - qx) / W2;
+              if (qx > 0) st.push(q - 1);
+              if (qx < W2 - 1) st.push(q + 1);
+              if (qy > 0) st.push(q - W2);
+              if (qy < H2 - 1) st.push(q + W2);
+            }
+          }
+          cx.putImageData(id, 0, 0);
+        } catch (e) {}
+        var out = cv.toDataURL("image/png");
+        if (out.length > 120000) out = cv.toDataURL("image/webp", 0.85);
+        resolve(out);
+      };
+      img.onerror = function() { URL.revokeObjectURL(url); reject(new Error("bad_image")); };
+      img.src = url;
+    });
+  }
+  function ClubBanner({ club, sportLabel, extra, onCrest }) {
     var p = club.colour_primary || C.green, q = club.colour_secondary || p;
     // A very dark first colour vanishes on the card, so the sash leads with the brighter one.
     var lead = _hexLum(p) < 0.03 && _hexLum(q) > _hexLum(p) ? q : p, second = lead === p ? q : p;
-    var crestKey = CLUB_CRESTS[club.id], crest = crestKey === "bray" ? BRAY_CREST : crestKey === "eadestown" ? EADESTOWN_CREST : crestKey === "stjude" ? ST_JUDE_CREST : null;
+    var crest = crestOf(club);
     // Crests sit on a light plate: some are dark line art that would vanish on the card.
     var mark = crest ? React.createElement("div", { style: { width: 64, height: 64, borderRadius: "50%", flexShrink: 0, background: "#F2F4F8", boxShadow: "inset 0 0 0 3px " + lead + ", 0 4px 14px rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" } },
         React.createElement("img", { src: crest, alt: "", style: { width: 50, height: 54, objectFit: "contain" } }))
       : React.createElement("div", { style: { width: 64, height: 64, borderRadius: "50%", flexShrink: 0, background: p, boxShadow: "inset 0 0 0 3px " + q + ", 0 4px 14px rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", color: _hexLum(p) > 0.45 ? C.ink : C.white, fontFamily: MONO, fontWeight: 800, fontSize: 26, letterSpacing: 1 } }, clubInitials(club.name));
+    if (onCrest) mark = React.createElement("button", { onClick: onCrest, "aria-label": crest ? "Change club crest" : "Add club crest", style: { position: "relative", flexShrink: 0, padding: 0, margin: 0, background: "none", border: "none", boxShadow: "none", borderRadius: "50%", cursor: "pointer" } }, mark,
+      React.createElement("span", { "aria-hidden": true, style: { position: "absolute", right: -2, bottom: -2, width: 24, height: 24, borderRadius: "50%", background: C.bgCard, border: "1px solid " + C.borderB, color: C.white, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" } }, "\u270E"));
     function tag(t) { return React.createElement("span", { key: t, style: { padding: "3px 9px", borderRadius: RAD.pill, background: C.white + ALPHA.faint, border: "1px solid " + C.white + ALPHA.soft, color: C.slate, fontFamily: MONO, fontSize: FS.sm, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", whiteSpace: "nowrap" } }, t); }
     return React.createElement("div", { style: { position: "relative", overflow: "hidden", borderRadius: RAD.xl, background: "radial-gradient(120% 140% at 100% 0%, " + lead + ALPHA.soft + " 0%, " + C.bgCard + " 55%)", border: "1px solid " + C.border, boxShadow: "0 10px 34px " + C.black + ALPHA.strong, padding: "20px 18px" } },
       React.createElement("div", { "aria-hidden": true, style: { position: "absolute", top: -40, bottom: -40, right: 34, width: 34, background: lead, transform: "skewX(-18deg)", opacity: 0.9 } }),
@@ -1098,8 +1148,46 @@
     });
     return React.createElement("div", { className: "rsa-screen rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "14px 14px 24px" } }, React.createElement(ClipBank, { club: club }), body));
   }
-  function Home({ club, onSignOut, onImport, onGameFilm, onLineups, onStats, onNewMatch, onVideoHub, onTemplate, onLive, onTactic, onHelp, onSquad, onLivePad, onResume, resumeMatch, matchCount, role, onPitchMap, onOpposition }) {
+  function Home({ club, onSignOut, onImport, onGameFilm, onLineups, onStats, onNewMatch, onVideoHub, onTemplate, onLive, onTactic, onHelp, onSquad, onLivePad, onResume, resumeMatch, matchCount, role, onPitchMap, onOpposition, onClub }) {
     const [hact, setHact] = useState(null);
+    const [crestOpen, setCrestOpen] = useState(false);
+    const [crestBusy, setCrestBusy] = useState(false);
+    const [crestErr, setCrestErr] = useState("");
+    const crestFileRef = useRef(null);
+    async function saveCrest(val) {
+      setCrestBusy(true);
+      setCrestErr("");
+      try {
+        var r = await db.from("clubs").update({ crest: val }).eq("id", club.id);
+        if (r.error) throw r.error;
+        if (onClub) onClub(Object.assign({}, club, { crest: val }));
+        setCrestOpen(false);
+      } catch (e) {
+        setCrestErr("Could not save the crest. Check your signal and try again.");
+      }
+      setCrestBusy(false);
+    }
+    function pickCrest(e) {
+      var f = e.target.files && e.target.files[0];
+      e.target.value = "";
+      if (!f) return;
+      crestFromFile(f).then(saveCrest, function() { setCrestErr("That file could not be read as an image. Try a PNG or JPG."); });
+    }
+    function crestSheet() {
+      if (!crestOpen) return null;
+      var cur = crestOf(club), own = !!(club.crest && /^data:image\//.test(club.crest));
+      var btn = { width: "100%", minHeight: 48, borderRadius: RAD.lg, fontSize: FS.md, fontWeight: 800, cursor: "pointer", marginTop: 10 };
+      return React.createElement("div", { onClick: function() { if (!crestBusy) setCrestOpen(false); }, style: { position: "fixed", inset: 0, zIndex: 80, background: C.black + ALPHA.scrim, display: "flex", alignItems: "flex-end", justifyContent: "center" } },
+        React.createElement("div", { onClick: function(ev) { ev.stopPropagation(); }, style: { width: "100%", maxWidth: 460, background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.xl + "px " + RAD.xl + "px 0 0", padding: "18px 18px calc(18px + env(safe-area-inset-bottom, 0px))" } },
+          React.createElement("div", { style: { fontSize: FS.xl, fontWeight: 800 } }, "Club crest"),
+          React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 4, lineHeight: 1.5 } }, "Shown on the home screen and the dashboard. A square PNG with a clear background looks best; it is shrunk to fit."),
+          cur && React.createElement("div", { style: { width: 88, height: 88, margin: "16px auto 4px", borderRadius: "50%", background: "#F2F4F8", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement("img", { src: cur, alt: "Current crest", style: { width: 68, height: 72, objectFit: "contain" } })),
+          React.createElement("input", { ref: crestFileRef, type: "file", accept: "image/*", onChange: pickCrest, style: { display: "none" } }),
+          React.createElement("button", { onClick: function() { if (crestFileRef.current) crestFileRef.current.click(); }, disabled: crestBusy, style: Object.assign({}, btn, { border: "none", background: C.greenB, color: C.bg }) }, crestBusy ? "Saving\u2026" : own ? "Choose a new image" : "Upload a crest"),
+          own && React.createElement("button", { onClick: function() { saveCrest(null); }, disabled: crestBusy, style: Object.assign({}, btn, { background: "none", border: "1px solid " + C.border, color: C.white }) }, "Remove uploaded crest"),
+          crestErr && React.createElement("div", { style: { color: C.red, fontSize: FS.sm, marginTop: 10 } }, crestErr),
+          React.createElement("button", { onClick: function() { setCrestOpen(false); }, disabled: crestBusy, style: Object.assign({}, btn, { background: "none", border: "none", color: C.slateD, fontWeight: 700 }) }, "Cancel")));
+    }
     useEffect(function() {
       if (role === "player") return;
       db.rpc("club_activity").then(function(r) { if (!r.error && r.data) setHact(r.data); }, function() {});
@@ -1129,7 +1217,8 @@
         React.createElement("img", { src: LOGO, alt: "", width: 30, height: 30 }),
         React.createElement("div", { style: { flex: 1 } }, React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800, letterSpacing: -0.2 } }, "Rock Solid ", React.createElement("span", { style: { color: C.greenB } }, "Analytics"))),
         React.createElement("button", { onClick: onSignOut, style: { minHeight: 44, margin: "-8px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { border: "1px solid " + C.border, borderRadius: RAD.lg, color: C.slate, fontSize: FS.sm, padding: "7px 12px", fontFamily: MONO } }, "Sign out"))),
-      React.createElement(ClubBanner, { club: club, sportLabel: sport ? sport.label : club.sport, extra: !club.verified ? Pill("Unverified", C.gold) : null }),
+      React.createElement(ClubBanner, { club: club, sportLabel: sport ? sport.label : club.sport, extra: !club.verified ? Pill("Unverified", C.gold) : null, onCrest: isPlayer ? null : function() { setCrestErr(""); setCrestOpen(true); } }),
+      crestSheet(),
       React.createElement("button", { onClick: onStats, style: { width: "100%", marginTop: 14, padding: "16px 14px", borderRadius: RAD.xl, cursor: "pointer", textAlign: "left", background: "linear-gradient(135deg," + C.greenB + "," + C.green + ")", border: "1px solid " + C.greenB + ALPHA.strong, boxShadow: "0 8px 28px " + C.greenB + ALPHA.soft, display: "flex", alignItems: "center", gap: 12 } },
         React.createElement("div", { style: { width: 36, height: 36, borderRadius: RAD.lg, background: C.white + ALPHA.mid, color: C.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: FS.lg, fontWeight: 800, lineHeight: 1, flexShrink: 0 } }, "\u25A6"),
         React.createElement("div", { style: { flex: 1, minWidth: 0 } },
@@ -9477,7 +9566,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         borderBottom: `2px solid ${tab === id ? C.greenB : "transparent"}`
       } }, label);
     };
-    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px 0", borderBottom: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, club.crest ? React.createElement("img", { src: club.crest, style: { width: 26, height: 26, objectFit: "contain" } }) : null, React.createElement("span", { style: { fontSize: FS.lg, fontWeight: 800 } }, club.name)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, color: C.slate, fontFamily: MONO } }, (yearF === "all" ? "ALL SEASONS" : yearF + " SEASON"), " \xB7 ", sport ? sport.label.toUpperCase() : ""))), React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 10 } }, React.createElement("select", { value: comp, onChange: function(e) { var v = e.target.value; setComp(v); if (v === "scout" && tab === "season") setTab("matches"); }, style: { flex: 1, minHeight: 44, padding: "7px 12px", borderRadius: RAD.pill, background: C.field, border: "1px solid transparent", color: comp === "all" ? C.slate : C.greenB, fontSize: FS.sm, fontWeight: 700, fontFamily: MONO, outline: "none" } }, React.createElement("option", { value: "all" }, "ALL COMPS"), React.createElement("option", { value: "League" }, "LEAGUE"), React.createElement("option", { value: "Championship" }, "CHAMPIONSHIP"), React.createElement("option", { value: "Challenge" }, "CHALLENGE"), React.createElement("option", { value: "League,Championship" }, "LEAGUE + CHAMP"), React.createElement("option", { value: "scout" }, "SCOUT")), (function() { var yrs = {}; (raw && raw.matches || []).forEach(function(m2) { if (m2.date) yrs[m2.date.slice(0,4)] = 1; }); var ks = Object.keys(yrs).sort().reverse(); return ks.length > 1 ? React.createElement("select", { value: yearF, onChange: function(e) { setYearF(e.target.value); }, style: { minHeight: 44, padding: "7px 12px", borderRadius: RAD.pill, background: C.field, border: "1px solid transparent", color: yearF === "all" ? C.slate : C.greenB, fontSize: FS.sm, fontWeight: 700, fontFamily: MONO, outline: "none" } }, React.createElement("option", { value: "all" }, "ALL YEARS"), ks.map(function(y) { return React.createElement("option", { key: y, value: y }, y); })) : null; }())), /* @__PURE__ */ React.createElement("div", { className: "rsa-noscroll", style: { display: "flex", overflowX: "auto", WebkitOverflowScrolling: "touch" } }, /* @__PURE__ */ React.createElement(Tab, { id: "season", label: "Season" }), /* @__PURE__ */ React.createElement(Tab, { id: "matches", label: "Matches" }), /* @__PURE__ */ React.createElement(Tab, { id: "bench", label: "Benchmark" }), /* @__PURE__ */ React.createElement(Tab, { id: "cond", label: "Conditions" }), /* @__PURE__ */ React.createElement(Tab, { id: "rank", label: "vs Others" }))),   /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, err && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 12px", background: C.red + ALPHA.faint, border: "1px solid " + C.red + ALPHA.mid, borderRadius: RAD.lg, color: C.red, fontSize: FS.md } }, err), !d && !err && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 60 } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.greenB })), d && tab === "season" && (d.matches.length ? /* @__PURE__ */ React.createElement(DashView, { d, club, scope: "season" }) : /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: FS.md, paddingTop: 40, lineHeight: 1.6 } }, "No ", comp === "all" ? "" : comp.toLowerCase() + " ", "games yet.", /* @__PURE__ */ React.createElement("br", null), "Matches appear here once they have a final score.")), d && tab === "bench" && (d.benchmark && d.benchmark.length > 1 ? /* @__PURE__ */ React.createElement(Benchmark, { rows: d.benchmark, club }) : /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: FS.md, paddingTop: 40, lineHeight: 1.6 } }, "Not enough teams yet.", /* @__PURE__ */ React.createElement("br", null), "Tag a couple of matches and the benchmark fills out.")), d && tab === "cond" && /* @__PURE__ */ React.createElement(Conditions, { matches: d.matches, events: d._events, club }), d && tab === "rank" && /* @__PURE__ */ React.createElement(RankView, { club }), d && tab === "matches" && (selMatch ? editingMatch ? React.createElement(EditMatch, { club: club, match: editingMatch, back: function() { setEditingMatch(null); }, onSaved: function() { setEditingMatch(null); } }) : selMatch.scouting ? React.createElement(ScoutDash, { m: selMatch, club: club, back: function() { setSelMatch(null); } }) : React.createElement(DashView, { key: selMatch.id, d: Object.assign({}, matchStats(selMatch), { ratings: d.ratings }), club, scope: "match", match: selMatch, onEdit: function(mm) { setEditingMatch(mm); }, onBack: function() {
+    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px 0", borderBottom: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, crestOf(club) ? React.createElement("img", { src: crestOf(club), alt: "", style: { width: 26, height: 26, objectFit: "contain" } }) : null, React.createElement("span", { style: { fontSize: FS.lg, fontWeight: 800 } }, club.name)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, color: C.slate, fontFamily: MONO } }, (yearF === "all" ? "ALL SEASONS" : yearF + " SEASON"), " \xB7 ", sport ? sport.label.toUpperCase() : ""))), React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 10 } }, React.createElement("select", { value: comp, onChange: function(e) { var v = e.target.value; setComp(v); if (v === "scout" && tab === "season") setTab("matches"); }, style: { flex: 1, minHeight: 44, padding: "7px 12px", borderRadius: RAD.pill, background: C.field, border: "1px solid transparent", color: comp === "all" ? C.slate : C.greenB, fontSize: FS.sm, fontWeight: 700, fontFamily: MONO, outline: "none" } }, React.createElement("option", { value: "all" }, "ALL COMPS"), React.createElement("option", { value: "League" }, "LEAGUE"), React.createElement("option", { value: "Championship" }, "CHAMPIONSHIP"), React.createElement("option", { value: "Challenge" }, "CHALLENGE"), React.createElement("option", { value: "League,Championship" }, "LEAGUE + CHAMP"), React.createElement("option", { value: "scout" }, "SCOUT")), (function() { var yrs = {}; (raw && raw.matches || []).forEach(function(m2) { if (m2.date) yrs[m2.date.slice(0,4)] = 1; }); var ks = Object.keys(yrs).sort().reverse(); return ks.length > 1 ? React.createElement("select", { value: yearF, onChange: function(e) { setYearF(e.target.value); }, style: { minHeight: 44, padding: "7px 12px", borderRadius: RAD.pill, background: C.field, border: "1px solid transparent", color: yearF === "all" ? C.slate : C.greenB, fontSize: FS.sm, fontWeight: 700, fontFamily: MONO, outline: "none" } }, React.createElement("option", { value: "all" }, "ALL YEARS"), ks.map(function(y) { return React.createElement("option", { key: y, value: y }, y); })) : null; }())), /* @__PURE__ */ React.createElement("div", { className: "rsa-noscroll", style: { display: "flex", overflowX: "auto", WebkitOverflowScrolling: "touch" } }, /* @__PURE__ */ React.createElement(Tab, { id: "season", label: "Season" }), /* @__PURE__ */ React.createElement(Tab, { id: "matches", label: "Matches" }), /* @__PURE__ */ React.createElement(Tab, { id: "bench", label: "Benchmark" }), /* @__PURE__ */ React.createElement(Tab, { id: "cond", label: "Conditions" }), /* @__PURE__ */ React.createElement(Tab, { id: "rank", label: "vs Others" }))),   /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, err && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 12px", background: C.red + ALPHA.faint, border: "1px solid " + C.red + ALPHA.mid, borderRadius: RAD.lg, color: C.red, fontSize: FS.md } }, err), !d && !err && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 60 } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.greenB })), d && tab === "season" && (d.matches.length ? /* @__PURE__ */ React.createElement(DashView, { d, club, scope: "season" }) : /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: FS.md, paddingTop: 40, lineHeight: 1.6 } }, "No ", comp === "all" ? "" : comp.toLowerCase() + " ", "games yet.", /* @__PURE__ */ React.createElement("br", null), "Matches appear here once they have a final score.")), d && tab === "bench" && (d.benchmark && d.benchmark.length > 1 ? /* @__PURE__ */ React.createElement(Benchmark, { rows: d.benchmark, club }) : /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: FS.md, paddingTop: 40, lineHeight: 1.6 } }, "Not enough teams yet.", /* @__PURE__ */ React.createElement("br", null), "Tag a couple of matches and the benchmark fills out.")), d && tab === "cond" && /* @__PURE__ */ React.createElement(Conditions, { matches: d.matches, events: d._events, club }), d && tab === "rank" && /* @__PURE__ */ React.createElement(RankView, { club }), d && tab === "matches" && (selMatch ? editingMatch ? React.createElement(EditMatch, { club: club, match: editingMatch, back: function() { setEditingMatch(null); }, onSaved: function() { setEditingMatch(null); } }) : selMatch.scouting ? React.createElement(ScoutDash, { m: selMatch, club: club, back: function() { setSelMatch(null); } }) : React.createElement(DashView, { key: selMatch.id, d: Object.assign({}, matchStats(selMatch), { ratings: d.ratings }), club, scope: "match", match: selMatch, onEdit: function(mm) { setEditingMatch(mm); }, onBack: function() {
       setSelMatch(null);
     } }) : /* @__PURE__ */ React.createElement(MatchList, { matches: d.matches, onPick: setSelMatch }))));
   }
@@ -10721,7 +10810,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     if (phase === "stats") return /* @__PURE__ */ React.createElement(Stats, { club, back: () => setPhase("home") });
     if (phase === "livepad") return /* @__PURE__ */ React.createElement(LiveStatsPad, { club, back: function() { setPhase("home"); } });
     if (phase === "gamefilm") return /* @__PURE__ */ React.createElement(GameFilm, { club, role, back: () => setPhase("home") });
-    return /* @__PURE__ */ React.createElement(Home, { club, onSignOut: () => { try { activeClear(); } catch (e) {} db.auth.signOut(); }, onImport: () => setPhase("import"), onGameFilm: () => setPhase("gamefilm"), onLineups: () => setPhase("lineups"), onStats: () => setPhase("stats"), onNewMatch: () => setPhase("newmatch"), onVideoHub: () => setPhase("videohub"), onTemplate: () => {
+    return /* @__PURE__ */ React.createElement(Home, { club, onClub: setClub, onSignOut: () => { try { activeClear(); } catch (e) {} db.auth.signOut(); }, onImport: () => setPhase("import"), onGameFilm: () => setPhase("gamefilm"), onLineups: () => setPhase("lineups"), onStats: () => setPhase("stats"), onNewMatch: () => setPhase("newmatch"), onVideoHub: () => setPhase("videohub"), onTemplate: () => {
       setTplMatch(null);
       setPhase("template");
     }, onLive: () => setPhase("live"), onLivePad: () => setPhase("livepad"), onResume: function(m) { if (!club || m.club_id !== club.id) { setResumeMatch(null); return; } setTagMatch(m); setPhase("tagger"); }, resumeMatch, onTactic: () => setPhase("tactic"), onHelp: () => setPhase("help"), onSquad: () => setPhase("squad"), onPitchMap: () => setPhase("pitchmap"), onOpposition: () => setPhase("opposition"), role, matchCount });

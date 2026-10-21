@@ -17,9 +17,9 @@ Agreed 2026-10-21. Not started.
 - **Colours on tagging buttons**: keep green (us) and blue (them) as the default. An optional
   "use team colours" setting falls back to green/blue when the kits clash or a colour has
   poor contrast.
-- **Crest upload**: a club or county crest image. `clubs.crest` already exists and the
-  dashboard header shows it when set; needs an upload (resize on the phone, store in
-  Supabase Storage) and use alongside or instead of the jersey.
+- ~~**Crest upload**~~: done 2026-10-21. Tap the crest on the home banner (analysts only) to
+  upload or remove one; stored small on `clubs.crest`. Still to do with kits: show crests
+  in the taggers, Fan Zone and opposition pages.
 
 ## Payments (Stripe)
 
