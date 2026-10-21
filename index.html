@@ -4802,6 +4802,31 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [stHalf, setStHalf] = useState("all");
     const [oppMore, setOppMore] = useState(false);
     const [kcMode, setKcMode] = useState("key");
+    const [htBase, setHtBase] = useState(null);
+    // The usual first half: averages over the last 10 finished games, read once when the
+    // stats open. Offline or no history simply means no season comparison.
+    useEffect(function() {
+      if (!statsOpen || htBase) return;
+      (async function() {
+        try {
+          var mr = await db.from("matches").select("id,date,status,scouting").eq("club_id", club.id).eq("status", "final").order("date", { ascending: false }).limit(12);
+          var ids = (mr.data || []).filter(function(m) { return !m.scouting && m.id !== match.id; }).slice(0, 10).map(function(m) { return m.id; });
+          if (ids.length < 3) { setHtBase({ n: 0 }); return; }
+          var er = await db.from("events").select("match_id,team,event_type,outcome,score,period").in("match_id", ids).eq("period", 1);
+          var by = {};
+          (er.data || []).forEach(function(e) { if (ids.indexOf(e.match_id) >= 0 && e.team === "us") (by[e.match_id] = by[e.match_id] || []).push(e); });
+          var ko = [], to = [], acc = [];
+          Object.keys(by).forEach(function(k) {
+            var ev = by[k], kk = ev.filter(function(e) { return e.event_type === "Kickout"; }), sh = ev.filter(htIsShot);
+            if (kk.length >= 3) ko.push(100 * kk.filter(htKoWon).length / kk.length);
+            to.push(ev.filter(htIsTO).length);
+            if (sh.length >= 4) acc.push(100 * sh.filter(function(e) { return e.score > 0; }).length / sh.length);
+          });
+          var avg = function(a) { return a.length >= 3 ? a.reduce(function(x, y) { return x + y; }, 0) / a.length : null; };
+          setHtBase({ n: Object.keys(by).length, ko: avg(ko), to: avg(to), acc: avg(acc) });
+        } catch (e) { setHtBase({ n: 0 }); }
+      })();
+    }, [statsOpen]);
     const [halfEnded, setHalfEnded] = useState(_sess0 ? !!_sess0.halfEnded : false);
     const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine !== false : true);
     const [customEvents, setCustomEvents] = useState([]);
@@ -5533,11 +5558,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
               if (dd > 0 && dd <= 120) spd = dd;
             }
           }
-          if (r.team === tm && r.x != null) {
-            var flip = tm === "us" ? String(r.period) === "2" : String(r.period) !== "2";
-            var x = r.x;
-            if (flip) x = 1 - x;
-            out.push({ x, won: r.outcome === "Won clean" || r.outcome === "Break won", spd });
+          // Same direction and the same half filter as the zone grid, so the lengths agree.
+          if (r.team === tm && r.x != null && inHalf(r)) {
+            var _fk = koNorm({ x: r.x, y: r.y }, koOwnGoal(koDir(tagged), r.match_id, r.period, tm));
+            out.push({ x: _fk.x, won: r.outcome === "Won clean" || r.outcome === "Break won", spd });
           }
           trig = null;
         }
@@ -5717,9 +5741,14 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                 } }, c[2]), c[3]);
           })));
     }
-    if (statsOpen) return /* @__PURE__ */ React.createElement("div", { className: "rsa-screen rsa-fb", style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", fontFamily: MONO } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderBottom: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontSize: 11, letterSpacing: 1, color: C.greenB } }, "LIVE STATS \xB7 ", running ? fmtFull(dispSec).slice(3) : "--:--", " \xB7 ", period === 1 ? "1ST" : "2ND"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+    // Half-time reads as HALF TIME with the time the half ended, not a blank clock.
+    var htClock = (period === 1 && halfEnded ? "HALF TIME \xB7 " : "") + fmtFull(dispSec).slice(3) + " \xB7 " + (period === 1 ? "1ST" : "2ND");
+    var htClockLbl = "LIVE STATS \xB7 " + htClock;
+    var htShow = period === 2 || halfEnded || dispSec >= 1500;
+    var htTitle = period === 1 ? (halfEnded ? "HALF TIME" : "FIRST HALF SO FAR") : "MATCH SO FAR";
+    if (statsOpen) return /* @__PURE__ */ React.createElement("div", { className: "rsa-screen rsa-fb", style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", fontFamily: MONO } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderBottom: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontSize: 11, letterSpacing: 1, color: C.greenB } }, htClockLbl), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setStatsOpen(false);
-    }, style: { minWidth: 44, minHeight: 44, margin: "-8px -3px", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement("span", { style: { border: "1px solid " + C.border, borderRadius: RAD.md, color: C.white, padding: "6px 13px", fontSize: 13 } }, "\u2715"))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflow: "auto", padding: "12px 14px 16px" } }, /* @__PURE__ */ React.createElement(KcToggle, { mode: kcMode, setMode: setKcMode }), kcMode === "key" ? React.createElement(KeyCalloutsPanel, { kc: keyCallouts(tagged), usName: _scNames ? _scNames[0].trim() : club.name, oppName: _scNames ? _scNames[1].trim() : (match.opponent || "Opposition"), clock: (running ? fmtFull(dispSec).slice(3) : "--:--") + " \xB7 " + (period === 1 ? "1ST" : "2ND") }) : React.createElement(React.Fragment, null, React.createElement("div", { style: { display: "flex", gap: 5, alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slateD, letterSpacing: 1, marginRight: 2 } }, "HALF"), [["all","FULL"],["1","1ST"],["2","2ND"]].map(function(hf){ var on = stHalf === hf[0]; return /* @__PURE__ */ React.createElement("button", { key: hf[0], onClick: function(){ setStHalf(hf[0]); }, style: { flex: 1, minHeight: 44, padding: "7px 0", borderRadius: RAD.md, border: "1px solid " + (on ? C.greenB : C.border), background: on ? C.greenB + ALPHA.soft : "none", color: on ? C.greenB : C.slate, fontWeight: 800, fontSize: 11.5, cursor: "pointer" } }, hf[1]); })), /* @__PURE__ */ React.createElement(CompareBars, { rows: liveCompare(), club }), /* @__PURE__ */ (function() {
+    }, style: { minWidth: 44, minHeight: 44, margin: "-8px -3px", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement("span", { style: { border: "1px solid " + C.border, borderRadius: RAD.md, color: C.white, padding: "6px 13px", fontSize: 13 } }, "\u2715"))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflow: "auto", padding: "12px 14px 16px" } }, /* @__PURE__ */ React.createElement(KcToggle, { mode: kcMode, setMode: setKcMode }), kcMode === "key" ? React.createElement(React.Fragment, null, htShow && React.createElement(HalfTimeCard, { evs: tagged, usName: _scNames ? _scNames[0].trim() : club.name, oppName: _scNames ? _scNames[1].trim() : (match.opponent || "Opposition"), title: htTitle, base: period === 1 ? htBase : null }), React.createElement(KeyCalloutsPanel, { kc: keyCallouts(tagged), usName: _scNames ? _scNames[0].trim() : club.name, oppName: _scNames ? _scNames[1].trim() : (match.opponent || "Opposition"), clock: htClock })) : React.createElement(React.Fragment, null, React.createElement("div", { style: { display: "flex", gap: 5, alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slateD, letterSpacing: 1, marginRight: 2 } }, "HALF"), [["all","FULL"],["1","1ST"],["2","2ND"]].map(function(hf){ var on = stHalf === hf[0]; return /* @__PURE__ */ React.createElement("button", { key: hf[0], onClick: function(){ setStHalf(hf[0]); }, style: { flex: 1, minHeight: 44, padding: "7px 0", borderRadius: RAD.md, border: "1px solid " + (on ? C.greenB : C.border), background: on ? C.greenB + ALPHA.soft : "none", color: on ? C.greenB : C.slate, fontWeight: 800, fontSize: 11.5, cursor: "pointer" } }, hf[1]); })), /* @__PURE__ */ React.createElement(CompareBars, { rows: liveCompare(), club }), /* @__PURE__ */ (function() {
       // Per-10-minute breakdown, same bands as the dashboard Periods tab.
       // At half-time this is the fastest read on which block you lost.
       var _blocks = [["0-10",0,600],["10-20",600,1200],["20-30",1200,1800],
@@ -5731,7 +5760,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       });
       // Only show bands that have actually happened.
       var _maxS = _ev.reduce(function(a, e) { return Math.max(a, e.s); }, dispSec || 0);
-      var _live = _blocks.filter(function(b) { return _maxS >= b[1]; });
+      // A band shows once it has a tag in it or has fully passed, so stoppage time at the
+      // end of a half does not add an empty column.
+      var _live = _blocks.filter(function(b) { return _maxS >= b[2] || _ev.some(function(e) { return e.s >= b[1] && e.s < b[2]; }); });
       if (!_live.length || !_ev.length) return null;
 
       var _isShot = function(e) { return e.et === "Shot from play" || e.et === "Scoreable free"; };
@@ -9244,6 +9275,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return /* @__PURE__ */ React.createElement("div", { key: i, style: { fontSize: FS.md, lineHeight: 1.6, color: C.white, marginBottom: i < d.notes.length - 1 ? 10 : 0 } }, n);
     }))),
     dtab === "overview" && isMatch && React.createElement(KcToggle, { mode: ovMode, setMode: setOvMode }),
+    dtab === "overview" && isMatch && ovMode === "key" && match && match.status !== "final" && (d._events || []).length >= 30 && React.createElement(HalfTimeCard, { evs: (d._events || []).filter(function(e) { return !e.match_id || e.match_id === match.id; }), usName: club.name, oppName: oppName || match.opponent || "Opposition", title: (d._events || []).some(function(e) { return String(e.period) === "2"; }) ? "TALKING POINTS \u00B7 SO FAR" : "TALKING POINTS \u00B7 1ST HALF" }),
     dtab === "overview" && isMatch && ovMode === "key" && d.callouts && React.createElement(KeyCalloutsPanel, { kc: d.callouts, usName: club.name, oppName: oppName || (match && match.opponent) || "THEM", clock: half === "1" ? "1ST" : half === "2" ? "2ND" : match && match.status !== "final" ? "LIVE" : "FT" }),
     dtab === "overview" && !(isMatch && ovMode === "key") && React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } },
       isMatch && match && React.createElement("div", { style: { padding: "16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid } },
@@ -10282,6 +10314,136 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
               React.createElement("span", { style: { flex: 1, minWidth: 0, fontSize: FS.sm, color: C.slate, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, s.label),
               React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.sm, fontWeight: 800, color: C.white } }, s.n));
           }))));
+  }
+  // Half-time talking points. Built from this match only, plus an optional season baseline
+  // (first halves of recent games) used at half-time. Each point carries a weight so the
+  // biggest stories come first, and nothing is said about a measure until there is enough
+  // of it (for example 4 restarts) to mean something.
+  function htSecs(e) {
+    if (e.time_secs != null) return e.time_secs;
+    var p = String(e.time_text || "").split(":").map(Number);
+    if (p.some(isNaN) || !p.length || p[0] === 0 && p.length === 1) return null;
+    return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p.length === 2 ? p[0] * 60 + p[1] : null;
+  }
+  function htGP(evs, tm) {
+    var g = 0, p = 0;
+    evs.forEach(function(e) { if (e.team === tm && (e.score || 0) > 0) { if (e.score === 3) g++; else p += e.score; } });
+    return { g: g, p: p, t: g * 3 + p, s: g + "-" + (p < 10 ? "0" : "") + p };
+  }
+  function htIsShot(e) { return e.event_type === "Shot from play" || e.event_type === "Scoreable free"; }
+  function htKoWon(e) { return e.outcome === "Won clean" || e.outcome === "Break won"; }
+  function htIsTO(e) { return e.event_type === "Possession lost" && String(e.outcome || "").toLowerCase().indexOf("shot") < 0; }
+  // Restart zone, the same bands and sides as the restart grid on the live stats screen.
+  function htKoZone(e, idx, tm) {
+    if (e.x == null) return null;
+    var f = koNorm({ x: e.x, y: e.y }, koOwnGoal(idx, e.match_id, e.period, tm)), d = (1 - f.x) * 144;
+    return { len: d < 45 ? "short" : d <= 65 ? "mid" : "long", side: f.y < 1 / 3 ? "left" : f.y < 2 / 3 ? "centre" : "right" };
+  }
+  function htSummary(evs, usName, oppName, base) {
+    evs = (evs || []).slice().sort(function(a, b) { return (a.seq || 0) - (b.seq || 0); });
+    var idx = koDir(evs), R = RESTARTS().toLowerCase();
+    var us = htGP(evs, "us"), op = htGP(evs, "opp");
+    var pts = [];
+    function htCnt(tm, fn) { return evs.filter(function(e) { return e.team === tm && fn(e); }).length; }
+    // Our restarts
+    var uK = evs.filter(function(e) { return e.team === "us" && e.event_type === "Kickout"; }), uKW = uK.filter(htKoWon).length;
+    if (uK.length >= 4) {
+      var pct = Math.round(100 * uKW / uK.length), lost = {}, top = null;
+      uK.filter(function(e) { return !htKoWon(e); }).forEach(function(e) { var z = htKoZone(e, idx, "us"); if (!z) return; var k = z.len + " " + z.side; lost[k] = (lost[k] || 0) + 1; if (!top || lost[k] > lost[top]) top = k; });
+      var where = top && lost[top] >= 2 ? ", " + lost[top] + " of the losses went " + top : "";
+      if (pct <= 55) pts.push({ w: 60 - pct + uK.length, bad: true, t: "Your " + R + ": " + uKW + " of " + uK.length + " won (" + pct + "%)" + where + "." });
+      else if (pct >= 80) pts.push({ w: pct - 60, t: "Your " + R + " are working: " + uKW + " of " + uK.length + " won." });
+    }
+    // Shooting
+    var uS = htCnt("us", htIsShot), oS = htCnt("opp", htIsShot), uSc = htCnt("us", function(e) { return htIsShot(e) && e.score > 0; }), oSc = htCnt("opp", function(e) { return htIsShot(e) && e.score > 0; });
+    var uW = htCnt("us", function(e) { return htIsShot(e) && String(e.outcome || "").toLowerCase().indexOf("wide") >= 0; });
+    if (uS >= 5 && oS >= 3) {
+      var ua = Math.round(100 * uSc / uS), oa = Math.round(100 * oSc / oS);
+      if (uS > oS && us.t <= op.t) pts.push({ w: 40 + (uS - oS) * 3, bad: true, t: uS + " shots to their " + oS + " but not ahead: accuracy " + ua + "% v " + oa + "%, " + uW + " wides." });
+      else if (oa - ua >= 15) pts.push({ w: oa - ua, bad: true, t: "Shooting: " + ua + "% for you v " + oa + "% for them (" + uW + " wides)." });
+      else if (ua - oa >= 20) pts.push({ w: (ua - oa) * 0.8, t: "Shooting well: " + ua + "% v their " + oa + "%." });
+    }
+    // Turnovers, and the way most of ours went
+    var uT = evs.filter(function(e) { return e.team === "us" && htIsTO(e); }), oT = htCnt("opp", htIsTO);
+    if (uT.length >= 5) {
+      var how = {}, hk = null;
+      uT.forEach(function(e) { var k = String(e.outcome || "").trim() || "other"; how[k] = (how[k] || 0) + 1; if (!hk || how[k] > how[hk]) hk = k; });
+      var hs = hk && hk !== "other" && how[hk] >= 3 ? ", " + how[hk] + " in " + hk.toLowerCase() : "";
+      if (uT.length - oT >= 3) pts.push({ w: 20 + (uT.length - oT) * 4, bad: true, t: "Turnovers: " + uT.length + " lost to their " + oT + hs + "." });
+      else if (oT - uT.length >= 4) pts.push({ w: 10 + (oT - uT.length) * 3, t: "Winning the turnover battle: " + uT.length + " lost v their " + oT + "." });
+    }
+    // Frees conceded in scoring range
+    var oF = evs.filter(function(e) { return e.team === "opp" && e.event_type === "Scoreable free"; }), oFS = oF.filter(function(e) { return e.score > 0; });
+    if (oF.length >= 3) pts.push({ w: 15 + oF.length * 4 + oFS.length * 3, bad: true, t: "Discipline: " + oF.length + " scoreable frees given away, " + oFS.length + " scored (" + htGP(oFS, "opp").s + ")." });
+    // Against the usual first half, at half-time only
+    if (base && base.n >= 3) {
+      if (uK.length >= 4 && base.ko != null) { var kp = 100 * uKW / uK.length; if (kp - base.ko <= -20) pts.push({ w: base.ko - kp, bad: true, t: "Restarts well below your usual first half (" + Math.round(kp) + "% v " + Math.round(base.ko) + "%)." }); }
+      if (base.to != null && uT.length - base.to >= 4) pts.push({ w: 10 + (uT.length - base.to) * 3, bad: true, t: uT.length + " turnovers, your usual first half is " + Math.round(base.to) + "." });
+      if (uS >= 5 && base.acc != null) { var ac = 100 * uSc / uS; if (ac - base.acc <= -15) pts.push({ w: base.acc - ac, bad: true, t: "Accuracy " + Math.round(ac) + "%, below your usual " + Math.round(base.acc) + "%." }); }
+    }
+    pts.sort(function(a, b) { return b.w - a.w; });
+    // Their danger player
+    var sc = {};
+    evs.forEach(function(e) {
+      if (e.team !== "opp" || !(e.score > 0)) return;
+      var nm = String(e.player || "").trim() || "Unknown", s = sc[nm] || (sc[nm] = { nm: nm, g: 0, p: 0, fr: 0 });
+      if (e.score === 3) s.g++; else s.p += e.score;
+      if (e.event_type === "Scoreable free") s.fr++;
+    });
+    var dl = Object.keys(sc).map(function(k) { var s = sc[k]; s.t = s.g * 3 + s.p; return s; }).filter(function(s) { return s.nm !== "Unknown"; }).sort(function(a, b) { return b.t - a.t; });
+    var danger = dl.length && dl[0].t >= 2 ? dl[0] : null;
+    // Their restarts: how many won and where most went
+    var oK = evs.filter(function(e) { return e.team === "opp" && e.event_type === "Kickout"; }), oKW = oK.filter(htKoWon).length, zs = {}, zk = null;
+    oK.forEach(function(e) { var z = htKoZone(e, idx, "opp"); if (!z) return; var k = z.len + " " + z.side; zs[k] = zs[k] || { n: 0, w: 0 }; zs[k].n++; if (htKoWon(e)) zs[k].w++; if (!zk || zs[k].n > zs[zk].n) zk = k; });
+    // When no one zone repeats, fall back to the most common length (long, mid or short).
+    var ls = {}, lk = null;
+    oK.forEach(function(e) { var z = htKoZone(e, idx, "opp"); if (!z) return; ls[z.len] = ls[z.len] || { n: 0, w: 0 }; ls[z.len].n++; if (htKoWon(e)) ls[z.len].w++; if (!lk || ls[z.len].n > ls[lk].n) lk = z.len; });
+    var oZone = zk && zs[zk].n >= 2 ? { k: zk, n: zs[zk].n, w: zs[zk].w } : lk && ls[lk].n >= 3 ? { k: lk, n: ls[lk].n, w: ls[lk].w } : null;
+    var oKo = oK.length ? { n: oK.length, w: oKW, zone: oZone } : null;
+    // Last 10 minutes of the current half
+    var per = evs.reduce(function(a, e) { return Math.max(a, +(e.period || 1)); }, 1), inP = evs.filter(function(e) { return +(e.period || 1) === per; });
+    var mx = inP.reduce(function(a, e) { var s = htSecs(e); return s != null && s > a ? s : a; }, 0), l10 = null;
+    if (mx >= 900) {
+      var rec = inP.filter(function(e) { var s = htSecs(e); return s != null && s > mx - 600; });
+      var lu = htGP(rec, "us"), lo = htGP(rec, "opp"), lk = rec.filter(function(e) { return e.team === "us" && e.event_type === "Kickout"; });
+      l10 = { us: lu.s, opp: lo.s, d: lu.t - lo.t, kn: lk.length, kw: lk.filter(htKoWon).length };
+    }
+    return { us: us, op: op, points: pts.slice(0, 3), danger: danger, oKo: oKo, l10: l10, usName: usName, oppName: oppName };
+  }
+  function htText(h, title) {
+    var R = RESTARTS().toLowerCase(), L = [];
+    L.push(title + " · " + h.usName + " " + h.us.s + " v " + h.op.s + " " + h.oppName);
+    h.points.forEach(function(p) { L.push("• " + p.t); });
+    if (h.danger) L.push("Their danger: " + h.danger.nm + " " + h.danger.g + "-" + (h.danger.p < 10 ? "0" : "") + h.danger.p + (h.danger.fr ? " (" + h.danger.fr + " from frees)" : ""));
+    if (h.oKo) L.push("Their " + R + ": " + h.oKo.w + " of " + h.oKo.n + " won" + (h.oKo.zone ? ", " + h.oKo.zone.n + " went " + h.oKo.zone.k + " (" + h.oKo.zone.w + " won)" : ""));
+    if (h.l10) L.push("Last 10 min: " + h.l10.us + " v " + h.l10.opp + (h.l10.kn ? ", our " + R + " " + h.l10.kw + " of " + h.l10.kn : ""));
+    L.push("Rock Solid Analytics");
+    return L.join("\n");
+  }
+  function HalfTimeCard({ evs, usName, oppName, title, base }) {
+    var h = htSummary(evs, usName, oppName, base), R = RESTARTS().toLowerCase();
+    function htShare() {
+      var txt = htText(h, title);
+      if (navigator.share) { navigator.share({ text: txt }).catch(function() {}); return; }
+      try { window.open("https://wa.me/?text=" + encodeURIComponent(txt), "_blank"); } catch (e) {}
+    }
+    var row = function(k, label, body) {
+      return React.createElement("div", { key: k, style: { display: "flex", gap: 10, padding: "8px 0", borderTop: "1px solid " + C.border, fontSize: FS.sm, lineHeight: 1.45 } },
+        React.createElement("span", { style: { flexShrink: 0, width: 92, color: C.slateD, fontFamily: MONO, fontSize: FS.xs, letterSpacing: 1, paddingTop: 2 } }, label),
+        React.createElement("span", { style: { flex: 1, color: C.white } }, body));
+    };
+    return React.createElement("div", { style: { background: C.bgCard, border: "1px solid " + C.gold + ALPHA.strong, borderRadius: RAD.lg, padding: "12px 14px", marginBottom: 12 } },
+      React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 } },
+        React.createElement("div", { style: { flex: 1, fontSize: FS.xs, letterSpacing: 2, color: C.gold, fontFamily: MONO, fontWeight: 800 } }, title),
+        React.createElement("button", { onClick: htShare, style: { minHeight: 36, padding: "0 12px", borderRadius: RAD.md, border: "1px solid " + C.gold + ALPHA.strong, background: C.gold + ALPHA.faint, color: C.gold, fontWeight: 800, fontSize: FS.sm, cursor: "pointer" } }, "Share")),
+      h.points.length ? h.points.map(function(p, i) {
+        return React.createElement("div", { key: "p" + i, style: { display: "flex", gap: 8, padding: "5px 0", fontSize: FS.md, lineHeight: 1.45, color: C.white } },
+          React.createElement("span", { style: { flexShrink: 0, width: 8, height: 8, borderRadius: "50%", marginTop: 7, background: p.bad ? C.red : C.greenB } }), p.t);
+      }) : React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, padding: "4px 0 8px" } }, "No big gaps yet. The talking points appear once there is enough tagged to back them up."),
+      React.createElement("div", { style: { marginTop: 6 } },
+        row("d", "THEIR DANGER", h.danger ? h.danger.nm + " · " + h.danger.g + "-" + (h.danger.p < 10 ? "0" : "") + h.danger.p + (h.danger.fr ? " (" + h.danger.fr + " from frees)" : "") : "No one standing out yet."),
+        row("k", "THEIR " + RST() + "s", h.oKo ? h.oKo.w + " of " + h.oKo.n + " won" + (h.oKo.zone ? " · " + h.oKo.zone.n + " went " + h.oKo.zone.k + " (" + h.oKo.zone.w + " won)" : "") : "None tagged yet."),
+        h.l10 ? row("l", "LAST 10 MIN", React.createElement("span", null, h.l10.us + " v " + h.l10.opp, " ", React.createElement("b", { style: { color: h.l10.d > 0 ? C.greenB : h.l10.d < 0 ? C.red : C.slate } }, h.l10.d > 0 ? "+" + h.l10.d : h.l10.d === 0 ? "level" : h.l10.d), h.l10.kn ? " · our " + R + " " + h.l10.kw + " of " + h.l10.kn : "")) : null));
   }
   function KeyCalloutsPanel({ kc, usName, oppName, clock }) {
     var gp = function(o) { return fmtScoreGP(o); };

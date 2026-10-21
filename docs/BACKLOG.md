@@ -73,6 +73,19 @@ use the club kit colour against blue, with the tagger clash check.
 - Tag which play was called on a kickout and show how often it was won.
 - Export a play as a short video for the squad WhatsApp.
 
+## Half-time view
+
+**Done 2026-10-22.** Live tagger stats (Key Callouts) open with a half-time card from 25
+minutes, at half-time and in the second half: up to three talking points ranked by the
+biggest gaps (restarts and where they were lost, shooting, turnovers and how, frees given
+away, and at half-time anything well off the usual first half from the last 10 games),
+their danger player, where their restarts go and are won, the last 10 minutes, and a
+Share button (phone share sheet, else WhatsApp). Nothing is said about a measure until
+there is enough of it. The Live Stats Pad shows the same card for a match in progress.
+Fixes: header reads HALF TIME with the time; the restart speed x length grid uses the same
+direction and half filter as the zone grid, so lengths agree; no empty 10-minute column.
+The video tagger has no live stats screen, so it is unchanged.
+
 ## Opposition match rating
 
 **Done 2026-10-22.** The match rating (attack, defence, restarts, ranked 0 to 100 against
