@@ -3954,16 +3954,66 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     out.push({ id: "ball", team: "ball", num: 0, x: 112, y: 184 });
     return out;
   }
-  function TacticalPad({ club, back }) {
-    const boxRef = useRef(null), dragRef = useRef(null);
+  // Set plays: a play is a list of steps, each step the spot of every jersey and the ball.
+  // Kept on the club as tag_settings.plays, so players can watch them and analysts edit them.
+  function tacSnap(tokens) {
+    var s = {};
+    tokens.forEach(function(t) { s[t.id] = [Math.round(t.x), Math.round(t.y)]; });
+    return s;
+  }
+  function tacApply(tokens, snap) {
+    return tokens.map(function(t) { var p = snap && snap[t.id]; return p ? Object.assign({}, t, { x: p[0], y: p[1] }) : t; });
+  }
+  function tacBlend(tokens, a, b, k) {
+    return tokens.map(function(t) {
+      var p = a && a[t.id], q = b && b[t.id];
+      if (!p || !q) return t;
+      return Object.assign({}, t, { x: p[0] + (q[0] - p[0]) * k, y: p[1] + (q[1] - p[1]) * k });
+    });
+  }
+  function TacticalPad({ club, back, role }) {
+    const boxRef = useRef(null), dragRef = useRef(null), animRef = useRef(null);
     const [tokens, setTokens] = useState(tacticFormation);
     const [show, setShow] = useState({ 0: true, 1: true });
-    var brayCol = club.colour_primary || C.green, oppCol = C.blue;
+    const [plays, setPlays] = useState(null);
+    const [play, setPlay] = useState(null);
+    const [step, setStep] = useState(0);
+    const [playing, setPlaying] = useState(false);
+    const [speed, setSpeed] = useState(1);
+    const [dirty, setDirty] = useState(false);
+    const [naming, setNaming] = useState(null);
+    const [busy, setBusy] = useState(false);
+    const [msg, setMsg] = useState("");
+    // The club kit colour made readable on the pitch, as in the taggers, against a plain blue
+    // opposition; the same clash check falls back to green and blue when the two are too close.
+    var padCols = kitCols(clubKit(club), { p: "plain", a: C.blue, b: C.blue });
+    var brayCol = padCols.us, oppCol = padCols.opp;
+    var canEdit = role !== "player";
+    useEffect(function() {
+      db.from("clubs").select("tag_settings").eq("id", club.id).maybeSingle().then(function(r) {
+        var ts = r && r.data && r.data.tag_settings || {};
+        setPlays(Array.isArray(ts.plays) ? ts.plays : []);
+      }, function() { setPlays([]); });
+      return function() { if (animRef.current) cancelAnimationFrame(animRef.current); };
+    }, []);
+    // Read, change and write back the whole list, so another screen saving settings is not lost.
+    async function savePlays(fn) {
+      var cr = await db.from("clubs").select("tag_settings").eq("id", club.id).maybeSingle();
+      if (cr.error) throw new Error(cr.error.message);
+      var next = JSON.parse(JSON.stringify(cr.data && cr.data.tag_settings || {}));
+      next.plays = fn(Array.isArray(next.plays) ? next.plays : []);
+      var up = await db.from("clubs").update({ tag_settings: next }).eq("id", club.id);
+      if (up.error) throw new Error(up.error.message);
+      setPlays(next.plays);
+      return next.plays;
+    }
     function pt(e) {
       var r = boxRef.current.getBoundingClientRect();
       return { x: Math.max(8, Math.min(216, (e.clientX - r.left) / r.width * 224)), y: Math.max(8, Math.min(352, (e.clientY - r.top) / r.height * 360)) };
     }
     function down(id, e) {
+      // A saved play is watch-only for players, and nothing moves by hand while it plays.
+      if (play && (!canEdit || playing)) return;
       e.preventDefault();
       dragRef.current = id;
     }
@@ -3977,11 +4027,151 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       });
     }
     function up() {
+      if (dragRef.current != null && play) {
+        var snap = tacSnap(tokens), st = play.steps.slice();
+        st[step] = snap;
+        setPlay(Object.assign({}, play, { steps: st }));
+        setDirty(true);
+      }
       dragRef.current = null;
     }
-    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 16px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, title: "Back", style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, flex: 1 } }, "Tactical pad"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+    function stopAnim() {
+      if (animRef.current) cancelAnimationFrame(animRef.current);
+      animRef.current = null;
+      setPlaying(false);
+    }
+    function goTo(i) {
+      if (!play) return;
+      stopAnim();
+      i = Math.max(0, Math.min(play.steps.length - 1, i));
+      setStep(i);
+      setTokens(function(ts) { return tacApply(ts, play.steps[i]); });
+    }
+    function playAll() {
+      if (!play || play.steps.length < 2) return;
+      stopAnim();
+      var st = play.steps, i0 = step >= st.length - 1 ? 0 : step, MOVE = 1100 / speed, HOLD = 350 / speed, seg = MOVE + HOLD, t0 = null;
+      setTokens(function(ts) { return tacApply(ts, st[i0]); });
+      setStep(i0);
+      setPlaying(true);
+      function frame(now) {
+        if (t0 == null) t0 = now;
+        var el = now - t0, i = i0 + Math.floor(el / seg);
+        if (i >= st.length - 1) {
+          setTokens(function(ts) { return tacApply(ts, st[st.length - 1]); });
+          setStep(st.length - 1);
+          animRef.current = null;
+          setPlaying(false);
+          return;
+        }
+        var k = Math.min(1, (el - (i - i0) * seg) / MOVE), ez = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+        setTokens(function(ts) { return tacBlend(ts, st[i], st[i + 1], ez); });
+        setStep(k >= 1 ? i + 1 : i);
+        animRef.current = requestAnimationFrame(frame);
+      }
+      animRef.current = requestAnimationFrame(frame);
+    }
+    function openPlay(p) {
+      if (dirty && !window.confirm("Discard the changes to this play?")) return;
+      stopAnim();
+      var c = JSON.parse(JSON.stringify(p));
+      setPlay(c);
+      setShow(c.show || { 0: true, 1: true });
+      setStep(0);
+      setTokens(tacApply(tacticFormation(), c.steps[0]));
+      setDirty(false);
+      setNaming(null);
+      setMsg("");
+    }
+    function closePlay() {
+      if (dirty && !window.confirm("Discard the changes to this play?")) return;
+      stopAnim();
+      setPlay(null);
+      setStep(0);
+      setDirty(false);
+      setNaming(null);
+      setMsg("");
+    }
+    // The first step is the shape on the pitch now; the new step starts as a copy to move from.
+    function addStep() {
+      stopAnim();
+      var snap = tacSnap(tokens);
+      if (!play) {
+        setPlay({ id: null, name: "", steps: [snap, snap] });
+        setStep(1);
+      } else {
+        var st = play.steps.slice();
+        st.splice(step + 1, 0, snap);
+        setPlay(Object.assign({}, play, { steps: st }));
+        setStep(step + 1);
+      }
+      setDirty(true);
+      setMsg("");
+    }
+    function delStep() {
+      if (!play || play.steps.length < 2) return;
+      stopAnim();
+      var st = play.steps.slice();
+      st.splice(step, 1);
+      var i = Math.min(step, st.length - 1);
+      setPlay(Object.assign({}, play, { steps: st }));
+      setStep(i);
+      setTokens(function(ts) { return tacApply(ts, st[i]); });
+      setDirty(true);
+    }
+    function doSave(name) {
+      name = String(name || "").trim();
+      if (!name) return;
+      var p = Object.assign({}, play, { name: name, show: show, id: play.id || "p" + Date.now().toString(36), at: new Date().toISOString().slice(0, 10) });
+      setBusy(true);
+      setMsg("");
+      savePlays(function(list) { return list.filter(function(x) { return x.id !== p.id; }).concat([p]); }).then(function() {
+        setPlay(p);
+        setDirty(false);
+        setNaming(null);
+        setMsg("Saved — the squad can watch it now.");
+      }, function() { setMsg("Could not save the play. Check signal and try again."); }).then(function() { setBusy(false); });
+    }
+    function delPlay() {
+      if (!play || !play.id || !window.confirm("Delete “" + play.name + "” for everyone?")) return;
+      var id = play.id;
+      setBusy(true);
+      savePlays(function(list) { return list.filter(function(x) { return x.id !== id; }); }).then(function() {
+        stopAnim();
+        setPlay(null);
+        setDirty(false);
+        setMsg("");
+      }, function() { setMsg("Could not delete the play."); }).then(function() { setBusy(false); });
+    }
+    function copyPlay() {
+      setPlay(Object.assign({}, play, { id: null }));
+      setDirty(true);
+      setNaming(play.name + " 2");
+    }
+    var chip = function(label, onClick, o) {
+      o = o || {};
+      return React.createElement("button", { key: o.k || label, onClick: onClick, disabled: o.dis, style: { minHeight: 44, padding: "0 13px", borderRadius: RAD.md, border: "1px solid " + (o.on ? C.greenB : C.border), background: o.fill ? C.greenB : o.on ? C.greenB + ALPHA.soft : C.bgCard, color: o.fill ? C.bg : o.red ? C.red : o.on ? C.greenB : C.white, fontWeight: 800, fontSize: FS.sm, cursor: o.dis ? "default" : "pointer", opacity: o.dis ? 0.45 : 1, flexShrink: 0, whiteSpace: "nowrap" } }, label);
+    };
+    var nSteps = play ? play.steps.length : 0;
+    // Each moving jersey leaves a faint trail through every step, so the runs read when paused.
+    var trails = play && nSteps > 1 ? tokens.filter(function(t) { return t.team === "ball" || show[t.team]; }).map(function(t) {
+      var ps = play.steps.map(function(s) { return s[t.id]; }).filter(Boolean);
+      var moved = ps.some(function(p) { return Math.abs(p[0] - ps[0][0]) + Math.abs(p[1] - ps[0][1]) > 3; });
+      if (!moved) return null;
+      var col = t.team === "ball" ? C.white : t.team === 0 ? brayCol : oppCol;
+      return React.createElement("polyline", { key: "tr" + t.id, points: ps.map(function(p) { return p[0] + "," + p[1]; }).join(" "), fill: "none", stroke: col, strokeWidth: 1.6, strokeDasharray: t.team === "ball" ? "none" : "3 3", strokeLinecap: "round", strokeLinejoin: "round", opacity: t.team === "ball" ? 0.55 : 0.5, style: { pointerEvents: "none" } });
+    }) : null;
+    var hint = play ? (canEdit ? (playing ? "" : "Drag jerseys to set this step. + Step adds the next move.") : "Tap ▶ to watch the play, or step through it.") : (canEdit ? "Drag the jerseys to set up a shape, then tap + Step to start a set play." : "Drag the jerseys to set up a shape. Saved plays from your coaches are above.");
+    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 16px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, title: "Back", style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, play ? (play.name || "New play") + (dirty ? " •" : "") : "Tactical pad"), play ? /* @__PURE__ */ React.createElement("button", { onClick: closePlay, style: { minHeight: 44, margin: "-9px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slate, fontSize: FS.sm, fontWeight: 700, padding: "6px 11px" } }, "Close")) : /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setTokens(tacticFormation());
-    }, style: { minHeight: 44, margin: "-9px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slate, fontSize: FS.sm, fontWeight: 700, padding: "6px 11px" } }, "Reset"))), /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 14px 6px", display: "flex", gap: 8, justifyContent: "center" } }, [[0, club.name || "Club", brayCol], [1, "Opposition", oppCol]].map(function(o) {
+    }, style: { minHeight: 44, margin: "-9px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slate, fontSize: FS.sm, fontWeight: 700, padding: "6px 11px" } }, "Reset"))),
+    React.createElement("div", { style: { padding: "10px 14px 0" } },
+      React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 2, color: C.slateD, fontFamily: MONO, fontWeight: 700, marginBottom: 6 } }, "SET PLAYS"),
+      plays === null ? React.createElement(Spin, { s: 16, c: C.greenB }) : plays.length === 0 ? React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD } }, canEdit ? "None saved yet." : "None yet. Your coaches can add them here.") :
+      React.createElement("div", { className: "rsa-noscroll", style: { display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 } }, plays.map(function(p) {
+        return chip(p.name, function() { openPlay(p); }, { k: p.id, on: play && play.id === p.id });
+      }))),
+    /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 14px 6px", display: "flex", gap: 8, justifyContent: "center" } }, [[0, club.name || "Club", brayCol], [1, "Opposition", oppCol]].map(function(o) {
       var on = show[o[0]];
       return /* @__PURE__ */ React.createElement("button", { key: o[0], onClick: function() {
         setShow(function(s) {
@@ -3989,8 +4179,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           n[o[0]] = !n[o[0]];
           return n;
         });
+        if (play && canEdit) setDirty(true);
       }, style: { minHeight: 44, margin: "-8px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { display: "flex", alignItems: "center", gap: 7, padding: "6px 11px", borderRadius: RAD.pill, fontSize: FS.sm, fontWeight: 700, background: on ? C.bgCard : "transparent", border: "1px solid " + (on ? o[2] : C.border), color: on ? C.white : C.slateD } }, /* @__PURE__ */ React.createElement("span", { style: { width: 11, height: 11, borderRadius: "50%", background: o[2], opacity: on ? 1 : 0.4 } }), o[1]));
-    })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "8px 14px 20px" } }, /* @__PURE__ */ React.createElement(
+    })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "8px 14px 10px" } }, /* @__PURE__ */ React.createElement(
       "div",
       {
         ref: boxRef,
@@ -3999,7 +4190,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         onPointerLeave: up,
         style: { position: "relative", width: "100%", maxWidth: 420, aspectRatio: "224 / 360", touchAction: "none", borderRadius: RAD.lg, overflow: "hidden", boxShadow: "0 10px 40px " + C.black + ALPHA.strong }
       },
-      /* @__PURE__ */ React.createElement(PitchSVG, null, tokens.filter(function(t) {
+      /* @__PURE__ */ React.createElement(PitchSVG, null, trails, tokens.filter(function(t) {
         return t.team === "ball" || show[t.team];
       }).map(function(t) {
         if (t.team === "ball") {
@@ -4012,7 +4203,26 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           down(t.id, e);
         }, style: { cursor: "grab" } }, /* @__PURE__ */ React.createElement("circle", { cx: t.x, cy: t.y, r: "9.5", fill: col, stroke: C.bg, strokeWidth: "1.6" }), /* @__PURE__ */ React.createElement("text", { x: t.x, y: t.y + 3.4, textAnchor: "middle", fontSize: "9.5", fontWeight: "800", fill: C.white, style: { pointerEvents: "none", userSelect: "none" } }, t.num));
       }))
-    )), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", fontSize: FS.sm, color: C.slateD, padding: "0 18px 18px" } }, "Drag the jerseys to set up a shape. Toggle a team off to focus on one."));
+    )),
+    play && React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "0 14px 8px" } },
+      chip("◀", function() { goTo(step - 1); }, { dis: step === 0 || playing }),
+      React.createElement("div", { style: { minWidth: 92, textAlign: "center", fontFamily: MONO, fontSize: FS.sm, fontWeight: 700, color: C.slate } }, "STEP " + (step + 1) + " / " + nSteps),
+      chip("▶", function() { goTo(step + 1); }, { k: "next", dis: step >= nSteps - 1 || playing }),
+      chip(playing ? "⏸ Stop" : "▶ Play", playing ? stopAnim : playAll, { k: "play", fill: !playing, dis: nSteps < 2 }),
+      chip(speed === 1 ? "1\xD7" : "\xBD\xD7", function() { setSpeed(speed === 1 ? 0.5 : 1); }, { k: "spd" })),
+    canEdit && !naming && React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", padding: "0 14px 8px" } },
+      chip("+ Step", addStep, { dis: playing || busy }),
+      play && nSteps > 1 && chip("Delete step", delStep, { dis: playing || busy }),
+      play && chip("Save", function() { if (play.name) doSave(play.name); else setNaming(""); }, { on: dirty, dis: busy || !dirty }),
+      play && play.id && chip("Rename", function() { setNaming(play.name); }, { dis: busy }),
+      play && play.id && chip("Copy", copyPlay, { dis: busy }),
+      play && play.id && chip("Delete", delPlay, { red: true, dis: busy })),
+    canEdit && naming != null && React.createElement("div", { style: { display: "flex", gap: 6, padding: "0 14px 8px", maxWidth: 448, width: "100%", margin: "0 auto", boxSizing: "border-box" } },
+      React.createElement("input", { autoFocus: true, value: naming, onChange: function(e) { setNaming(e.target.value); }, onKeyDown: function(e) { if (e.key === "Enter") doSave(naming); }, placeholder: "Name, e.g. Kickout – long left", className: "rsa-field", style: { flex: 1, minWidth: 0, minHeight: 44, padding: "0 12px", borderRadius: RAD.md, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: FS.md, outline: "none" } }),
+      chip("Save", function() { doSave(naming); }, { k: "nsave", fill: true, dis: busy || !String(naming).trim() }),
+      chip("Cancel", function() { setNaming(null); }, { k: "ncancel" })),
+    msg && React.createElement("div", { style: { textAlign: "center", fontSize: FS.sm, color: /^Could/.test(msg) ? C.red : C.greenB, padding: "0 18px 8px" } }, msg),
+    /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", fontSize: FS.sm, color: C.slateD, padding: "0 18px 18px" } }, hint));
   }
   // Pitch location picker shared by the live and video taggers. The feel is provisional,
   // so every knob lives in PITCH_PICK.
@@ -11115,7 +11325,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setPhase("video");
     }, onNew: () => setPhase("newmatch"), back: () => setPhase("home") });
     if (phase === "live") return /* @__PURE__ */ React.createElement(LiveMirror, { club, back: () => setPhase("home") });
-    if (phase === "tactic") return /* @__PURE__ */ React.createElement(TacticalPad, { club, back: () => setPhase("home") });
+    if (phase === "tactic") return /* @__PURE__ */ React.createElement(TacticalPad, { club, role, back: () => setPhase("home") });
     if (phase === "help") return /* @__PURE__ */ React.createElement(HelpCenter, { club, session, back: () => setPhase("home") });
     if (phase === "squad") return /* @__PURE__ */ React.createElement(SquadScreen, { club, back: () => setPhase("home") });
     if (phase === "video") return /* @__PURE__ */ React.createElement(VideoTagger, { club, session, match: tagMatch, back: () => {

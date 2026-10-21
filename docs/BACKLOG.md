@@ -57,6 +57,20 @@ falls back to the clubs-only `club_rankings` if the new function is missing.
 - Small samples: a club with one game (St Patrick's) can rank near the top. Consider a
   minimum games count before showing a rank.
 
+## Set plays on the tactical pad
+
+**Done 2026-10-22.** Analysts build a play as steps: set the shape, tap + Step, move the
+jerseys and ball, repeat. Play glides between steps (1x or half speed) with faint trails for
+every run; step back and forward by hand. Plays are saved by name on the club
+(`tag_settings.plays`, each step the spot of every jersey and the ball), with rename, copy,
+delete and delete step. Players see the saved plays and can watch them, not edit them. Dots
+use the club kit colour against blue, with the tagger clash check.
+
+**Later:**
+- Arrows or zones drawn on a step (e.g. drop zone).
+- Tag which play was called on a kickout and show how often it was won.
+- Export a play as a short video for the squad WhatsApp.
+
 ## Payments (Stripe)
 
 Discussed 2026-10-21. Waiting on a price decision.
