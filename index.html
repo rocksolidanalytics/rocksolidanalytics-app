@@ -8803,26 +8803,26 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         React.createElement("span", { style: { fontSize: FS.xs, color: C.slateD, display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 6, height: 2, background: C.gold, display: "inline-block" } }), RST()),
         React.createElement("span", { style: { fontSize: FS.xs, color: C.slateD, display: "flex", alignItems: "center", gap: 3 } }, React.createElement("span", { style: { width: 4, height: 4, background: C.orange, display: "inline-block" } }), "TO")));
   }
+  // Each match is rated against the other games of the club: every measure is ranked within the
+  // season, 0 to 100. The opposition is rated on the same yardstick, from their side of the
+  // ball, so the two ratings for a game can be compared directly.
   function matchRatings(matches, allEvents) {
     if (!matches || matches.length < 2) return {};
-    var mStats = matches.map(function(m) {
-      var ev = allEvents.filter(function(e) { return e.match_id === m.id; });
-      var usShots = ev.filter(function(e) { return e.team === "us" && (e.event_type === "Shot from play" || e.event_type === "Scoreable free"); });
-      var opShots = ev.filter(function(e) { return e.team === "opp" && (e.event_type === "Shot from play" || e.event_type === "Scoreable free"); });
+    function sideStats(ev, a, b) {
+      var usShots = ev.filter(function(e) { return e.team === a && (e.event_type === "Shot from play" || e.event_type === "Scoreable free"); });
+      var opShots = ev.filter(function(e) { return e.team === b && (e.event_type === "Shot from play" || e.event_type === "Scoreable free"); });
       var usScored = usShots.filter(function(e) { return (e.score || 0) > 0; }).length;
       var usFrees = usShots.filter(function(e) { return e.event_type === "Scoreable free"; });
       var usFreesSc = usFrees.filter(function(e) { return (e.score || 0) > 0; }).length;
       var opScored = opShots.filter(function(e) { return (e.score || 0) > 0; }).length;
-      var usTackles = ev.filter(function(e) { return e.team === "us" && e.event_type === "Tackle"; }).length;
-      var usTO = ev.filter(function(e) { return e.team === "us" && e.event_type === "Possession lost"; }).length;
-      var usKO = ev.filter(function(e) { return e.team === "us" && e.event_type === "Kickout"; });
+      var usTO = ev.filter(function(e) { return e.team === a && e.event_type === "Possession lost"; }).length;
+      var usKO = ev.filter(function(e) { return e.team === a && e.event_type === "Kickout"; });
       var usKOWon = usKO.filter(function(e) { return e.outcome === "Won clean" || e.outcome === "Break won"; }).length;
       var usBrkT = usKO.filter(function(e) { return e.outcome === "Break won" || e.outcome === "Break lost"; }).length;
       var usBrkW = usKO.filter(function(e) { return e.outcome === "Break won"; }).length;
-      var opKO = ev.filter(function(e) { return e.team === "opp" && e.event_type === "Kickout"; });
+      var opKO = ev.filter(function(e) { return e.team === b && e.event_type === "Kickout"; });
       var opKOLost = opKO.filter(function(e) { return e.outcome === "Lost clean" || e.outcome === "Break lost"; }).length;
       return {
-        id: m.id,
         atk_shots: usShots.length,
         atk_acc: usShots.length ? 100 * usScored / usShots.length : 0,
         atk_scores: usScored,
@@ -8834,10 +8834,22 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         rst_brkPct: usBrkT ? 100 * usBrkW / usBrkT : 50,
         rst_oppSteal: opKOLost
       };
+    }
+    var mStats = [], oStats = [];
+    matches.forEach(function(m) {
+      var ev = allEvents.filter(function(e) { return e.match_id === m.id; });
+      mStats.push(Object.assign({ id: m.id }, sideStats(ev, "us", "opp")));
+      oStats.push(Object.assign({ id: m.id }, sideStats(ev, "opp", "us")));
     });
     function pctRank(arr, val, lower) {
       var below = arr.filter(function(v) { return lower ? v > val : v < val; }).length;
       return Math.round(100 * below / Math.max(arr.length - 1, 1));
+    }
+    // For a value from outside the pool (the opposition), ranked as if it were one more game;
+    // a tie counts half, so matching our best game is not quite top.
+    function pctOut(arr, val, lower) {
+      var below = arr.filter(function(v) { return lower ? v > val : v < val; }).length, same = arr.filter(function(v) { return v === val; }).length;
+      return Math.min(100, Math.round(100 * (below + same / 2) / Math.max(arr.length, 1)));
     }
     var result = {};
     var keys = {
@@ -8845,12 +8857,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       def: [["def_oppShots",true],["def_oppAcc",true],["def_to",true]],
       rst: [["rst_koPct",false],["rst_brkPct",false],["rst_oppSteal",false]]
     };
-    mStats.forEach(function(ms) {
+    function rate(ms, rk) {
       var pillars = {};
       ["atk","def","rst"].forEach(function(pil) {
         var scores = keys[pil].map(function(k) {
           var vals = mStats.map(function(s) { return s[k[0]]; });
-          return pctRank(vals, ms[k[0]], k[1]);
+          return rk(vals, ms[k[0]], k[1]);
         });
         pillars[pil] = Math.round(scores.reduce(function(a,b){return a+b;},0) / scores.length);
       });
@@ -8859,10 +8871,14 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       ["atk","def","rst"].forEach(function(pil) {
         keys[pil].forEach(function(k) {
           var vals = mStats.map(function(s){return s[k[0]];});
-          pillars.detail[k[0]] = { val: typeof ms[k[0]]==="number" ? Math.round(ms[k[0]]) : ms[k[0]], pct: pctRank(vals, ms[k[0]], k[1]) };
+          pillars.detail[k[0]] = { val: typeof ms[k[0]]==="number" ? Math.round(ms[k[0]]) : ms[k[0]], pct: rk(vals, ms[k[0]], k[1]) };
         });
       });
-      result[ms.id] = pillars;
+      return pillars;
+    }
+    mStats.forEach(function(ms, i) {
+      result[ms.id] = rate(ms, pctRank);
+      result[ms.id].opp = rate(oStats[i], pctOut);
     });
         return result;
   }
@@ -9235,19 +9251,30 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       d.ratings && match && d.ratings[match.id] && (function() {
         var r = d.ratings[match.id];
         var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? C.gold : C.red; };
-        function pill(label, icon, val) {
+        var ro = r.opp;
+        function pill(label, icon, val, oval) {
           return React.createElement("div", { style: { flex: 1, textAlign: "center", padding: "10px 4px", background: C.field, borderRadius: RAD.md } },
             React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, letterSpacing: 1, fontFamily: MONO } }, icon + " " + label),
-            React.createElement("div", { style: { fontSize: FS.h2, fontWeight: 900, color: clr(val), marginTop: 4 } }, val));
+            React.createElement("div", { style: { fontSize: FS.h2, fontWeight: 900, color: clr(val), marginTop: 4 } }, val),
+            oval != null ? React.createElement("div", { style: { fontSize: FS.sm, fontFamily: MONO, color: C.slateD, marginTop: 2 } }, "them ", React.createElement("b", { style: { color: clr(oval) } }, oval)) : null);
         }
+        // Who played better by the ratings, beside what the scoreboard said.
+        var gap = ro ? r.overall - ro.overall : 0;
+        var won = (match.our_total || 0) > (match.opp_total || 0), lost = (match.our_total || 0) < (match.opp_total || 0);
+        var verdict = !ro ? null : gap >= 8 ? (lost ? "You played the better game but lost it." : "You outplayed them.") : gap <= -8 ? (won ? "They played the better game; you won it anyway." : "They played the better game.") : "Evenly matched on the day.";
         return React.createElement("div", { style: { padding: "14px 16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid, marginBottom: 12 } },
-          React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 } },
+          React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: ro ? 4 : 10 } },
             React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 2, color: C.slateD, fontFamily: MONO, fontWeight: 700 } }, "MATCH RATING"),
-            React.createElement("div", { style: { fontSize: FS.h1, fontWeight: 900, color: clr(r.overall) } }, r.overall)),
+            React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 10 } },
+              React.createElement("div", { style: { fontSize: FS.h1, fontWeight: 900, color: clr(r.overall) } }, r.overall),
+              ro ? React.createElement("div", { style: { fontSize: FS.md, fontFamily: MONO, color: C.slateD } }, "v ", React.createElement("b", { style: { fontSize: FS.xl, color: clr(ro.overall) } }, ro.overall)) : null)),
+          ro ? React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: FS.sm, color: C.slate, marginBottom: 10 } },
+            React.createElement("span", null, verdict),
+            React.createElement("span", { style: { fontFamily: MONO, color: C.slateD, whiteSpace: "nowrap", marginLeft: 8 } }, (club.name || "Us").slice(0, 12) + " v " + String(match.opponent || "Opp").slice(0, 12))) : null,
           React.createElement("div", { style: { display: "flex", gap: 6 } },
-            pill("ATK", "\uD83C\uDFAF", r.atk),
-            pill("DEF", "\uD83D\uDEE1\uFE0F", r.def),
-            pill("RST", "\u21BB", r.rst)),
+            pill("ATK", "\uD83C\uDFAF", r.atk, ro && ro.atk),
+            pill("DEF", "\uD83D\uDEE1\uFE0F", r.def, ro && ro.def),
+            pill("RST", "\u21BB", r.rst, ro && ro.rst)),
           React.createElement("div", { onClick: function() { setROpen(!rOpen); }, style: { textAlign: "center", marginTop: 10, cursor: "pointer", fontSize: FS.sm, color: C.slateD, fontFamily: MONO } }, rOpen ? "\u25B2 Hide breakdown" : "\u25BC Show breakdown"),
           rOpen && r.detail && React.createElement("div", { style: { marginTop: 10, borderTop: "1px solid " + C.border, paddingTop: 10 } },
             (function() {
@@ -9267,7 +9294,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                   { name: "Opp " + RST() + " steals", k: "rst_oppSteal" }]}
               ];
               var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? C.gold : C.red; };
-              return groups.map(function(grp) {
+              var cap = ro ? React.createElement("div", { key: "cap", style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO, marginBottom: 8, lineHeight: 1.5 } }, "YOUR FIGURE \u00B7 RATING \u00B7 THEIR RATING. Each side from its own point of view: their \u201cOpp shots\u201d are your shots.") : null;
+              return [cap].concat(groups.map(function(grp) {
                 return React.createElement("div", { key: grp.label, style: { marginBottom: 8 } },
                   React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1, color: C.slateD, fontFamily: MONO, marginBottom: 4 } }, grp.label),
                   grp.items.map(function(it) {
@@ -9277,9 +9305,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                       React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.sm, fontWeight: 700, color: C.white, minWidth: 36, textAlign: "right" } }, d2.val + (it.pct ? "%" : "")),
                       React.createElement("div", { style: { width: 50, height: 5, borderRadius: RAD.sm, background: C.border } },
                         React.createElement("div", { style: { width: d2.pct + "%", height: 5, borderRadius: RAD.sm, background: clr(d2.pct) } })),
-                      React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.sm, fontWeight: 800, color: clr(d2.pct), minWidth: 22, textAlign: "right" } }, d2.pct));
+                      React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.sm, fontWeight: 800, color: clr(d2.pct), minWidth: 22, textAlign: "right" } }, d2.pct),
+                      ro && ro.detail[it.k] ? React.createElement("span", { title: "Them: " + ro.detail[it.k].val + (it.pct ? "%" : ""), style: { fontFamily: MONO, fontSize: FS.sm, color: C.slateD, minWidth: 30, textAlign: "right" } }, ro.detail[it.k].pct) : null);
                   }));
-              });
+              }));
             }())));
       }()),
       (function() {
@@ -9356,7 +9385,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                   React.createElement("th", { onClick: function(){setRSort("atk");}, style: { padding: "8px 4px", textAlign: "center", fontSize: FS.xs, cursor: "pointer", color: rSort==="atk"?C.greenB:C.slate } }, "\uD83C\uDFAF", rSort==="atk"?" \u25BC":""),
                   React.createElement("th", { onClick: function(){setRSort("def");}, style: { padding: "8px 4px", textAlign: "center", fontSize: FS.xs, cursor: "pointer", color: rSort==="def"?C.greenB:C.slate } }, "\uD83D\uDEE1\uFE0F", rSort==="def"?" \u25BC":""),
                   React.createElement("th", { onClick: function(){setRSort("rst");}, style: { padding: "8px 4px", textAlign: "center", fontSize: FS.xs, cursor: "pointer", color: rSort==="rst"?C.greenB:C.slate } }, "\u21BB", rSort==="rst"?" \u25BC":""),
-                  React.createElement("th", { onClick: function(){setRSort("overall");}, style: { padding: "8px 4px", textAlign: "center", color: rSort==="overall"?C.greenB:C.slateD, fontSize: FS.xs, fontFamily: MONO, cursor: "pointer" } }, "OVR", rSort==="overall"?" \u25BC":""))),
+                  React.createElement("th", { onClick: function(){setRSort("overall");}, style: { padding: "8px 4px", textAlign: "center", color: rSort==="overall"?C.greenB:C.slateD, fontSize: FS.xs, fontFamily: MONO, cursor: "pointer" } }, "OVR", rSort==="overall"?" \u25BC":""),
+                  React.createElement("th", { title: "The opposition rated on the same yardstick", style: { padding: "8px 4px", textAlign: "center", color: C.slateD, fontSize: FS.xs, fontFamily: MONO } }, "THEM"))),
               React.createElement("tbody", null,
                 d.matches.slice().sort(function(a,b) { if (rSort === "date") return (b.date||"").localeCompare(a.date||""); var ra = d.ratings && d.ratings[a.id] ? d.ratings[a.id][rSort] || 0 : 0; var rb = d.ratings && d.ratings[b.id] ? d.ratings[b.id][rSort] || 0 : 0; return rb - ra; }).map(function(m2) {
                   var r = d.ratings ? d.ratings[m2.id] : null;
@@ -9370,12 +9400,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                     React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, color: r ? clr(r.atk) : C.slateD } }, r ? r.atk : "-"),
                     React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, color: r ? clr(r.def) : C.slateD } }, r ? r.def : "-"),
                     React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, color: r ? clr(r.rst) : C.slateD } }, r ? r.rst : "-"),
-                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: FS.md, color: r ? clr(r.overall) : C.slateD } }, r ? r.overall : "-"));
+                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: FS.md, color: r ? clr(r.overall) : C.slateD } }, r ? r.overall : "-"),
+                    React.createElement("td", { style: { padding: "8px 4px", textAlign: "center", fontWeight: 700, fontFamily: MONO, fontSize: FS.sm, color: r && r.opp ? clr(r.opp.overall) : C.slateD } }, r && r.opp ? r.opp.overall : "-"));
                 })), React.createElement("tfoot", null, (function() {
         var rated = d.matches.filter(function(m2) { return d.ratings && d.ratings[m2.id]; });
         if (!rated.length) return null;
-        var sA = 0, sD = 0, sR = 0, sO = 0;
-        rated.forEach(function(m2) { var r = d.ratings[m2.id]; sA += r.atk; sD += r.def; sR += r.rst; sO += r.overall; });
+        var sA = 0, sD = 0, sR = 0, sO = 0, sT = 0;
+        rated.forEach(function(m2) { var r = d.ratings[m2.id]; sA += r.atk; sD += r.def; sR += r.rst; sO += r.overall; sT += r.opp ? r.opp.overall : 0; });
         var n = rated.length;
         var avgA = Math.round(sA/n), avgD = Math.round(sD/n), avgR = Math.round(sR/n), avgO = Math.round(sO/n);
         var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? C.gold : C.red; };
@@ -9384,7 +9415,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           React.createElement("td", { style: { padding: "10px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: FS.md, color: clr(avgA) } }, avgA),
           React.createElement("td", { style: { padding: "10px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: FS.md, color: clr(avgD) } }, avgD),
           React.createElement("td", { style: { padding: "10px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: FS.md, color: clr(avgR) } }, avgR),
-          React.createElement("td", { style: { padding: "10px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: FS.md, color: clr(avgO) } }, avgO));
+          React.createElement("td", { style: { padding: "10px 4px", textAlign: "center", fontWeight: 800, fontFamily: MONO, fontSize: FS.md, color: clr(avgO) } }, avgO),
+          React.createElement("td", { style: { padding: "10px 4px", textAlign: "center", fontWeight: 700, fontFamily: MONO, fontSize: FS.sm, color: clr(Math.round(sT / n)) } }, Math.round(sT / n)));
       }())))))),
     dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "TOP SCORERS" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 7 } }, d.scorers.slice(0, 12).map(function(sc, i) {
       return /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: RAD.lg, background: C.bgCard, border: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: FS.md } }, sc.name), sc.tp > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontSize: FS.xs, color: C.gold, fontFamily: MONO } }, sc.tp, "x2pt"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.md, fontWeight: 700, color: C.greenB } }, sc.g, "-", String(sc.ptot).padStart(2, "0")));

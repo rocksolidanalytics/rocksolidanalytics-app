@@ -73,6 +73,26 @@ use the club kit colour against blue, with the tagger clash check.
 - Tag which play was called on a kickout and show how often it was won.
 - Export a play as a short video for the squad WhatsApp.
 
+## Opposition match rating
+
+**Done 2026-10-22.** The match rating (attack, defence, restarts, ranked 0 to 100 against
+the other games of the club) now also rates the opposition on the same yardstick, from
+their side of the ball, so the two numbers for a game compare directly. Match card shows
+both with a verdict (outplayed them, evenly matched, they played better, or a win or loss
+against the run of play); the breakdown adds their rating per measure; the season ratings
+table adds a THEM column and average. Our own ratings are unchanged.
+
+## How the app is built
+
+Discussed 2026-10-22. The app is one file (`index.html`, about 1 MB, no build step).
+
+- **Pin library versions** (10 minutes, do soon): React and Supabase load as `react@18` and
+  `supabase-js@2`, so a new release reaches every user with no deploy from us and could
+  break sign-in or saving. Pin exact versions, as PapaParse already is.
+- **Split into a built codebase** only when one of these happens: a second developer, a
+  second app sharing code, or past roughly 50 clubs where smaller updates matter. About a
+  week of careful work, screen by screen, with the same checks running throughout.
+
 ## Payments (Stripe)
 
 Discussed 2026-10-21. Waiting on a price decision.

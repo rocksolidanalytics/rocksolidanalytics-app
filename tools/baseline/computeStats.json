@@ -25425,6 +25425,54 @@
      "val": 4
     }
    },
+   "opp": {
+    "atk": 69,
+    "def": 29,
+    "detail": {
+     "atk_acc": {
+      "pct": 75,
+      "val": 46
+     },
+     "atk_freeAcc": {
+      "pct": 50,
+      "val": 44
+     },
+     "atk_scores": {
+      "pct": 75,
+      "val": 12
+     },
+     "atk_shots": {
+      "pct": 75,
+      "val": 26
+     },
+     "def_oppAcc": {
+      "pct": 0,
+      "val": 63
+     },
+     "def_oppShots": {
+      "pct": 25,
+      "val": 19
+     },
+     "def_to": {
+      "pct": 63,
+      "val": 7
+     },
+     "rst_brkPct": {
+      "pct": 100,
+      "val": 80
+     },
+     "rst_koPct": {
+      "pct": 100,
+      "val": 38
+     },
+     "rst_oppSteal": {
+      "pct": 50,
+      "val": 2
+     }
+    },
+    "overall": 60,
+    "rst": 83
+   },
    "overall": 58,
    "rst": 89
   },
@@ -25472,6 +25520,54 @@
      "pct": 33,
      "val": 1
     }
+   },
+   "opp": {
+    "atk": 35,
+    "def": 50,
+    "detail": {
+     "atk_acc": {
+      "pct": 38,
+      "val": 40
+     },
+     "atk_freeAcc": {
+      "pct": 50,
+      "val": 44
+     },
+     "atk_scores": {
+      "pct": 25,
+      "val": 6
+     },
+     "atk_shots": {
+      "pct": 25,
+      "val": 15
+     },
+     "def_oppAcc": {
+      "pct": 50,
+      "val": 42
+     },
+     "def_oppShots": {
+      "pct": 25,
+      "val": 24
+     },
+     "def_to": {
+      "pct": 75,
+      "val": 4
+     },
+     "rst_brkPct": {
+      "pct": 25,
+      "val": 0
+     },
+     "rst_koPct": {
+      "pct": 100,
+      "val": 43
+     },
+     "rst_oppSteal": {
+      "pct": 100,
+      "val": 8
+     }
+    },
+    "overall": 53,
+    "rst": 75
    },
    "overall": 42,
    "rst": 11
@@ -25521,6 +25617,54 @@
      "val": 5
     }
    },
+   "opp": {
+    "atk": 50,
+    "def": 38,
+    "detail": {
+     "atk_acc": {
+      "pct": 75,
+      "val": 57
+     },
+     "atk_freeAcc": {
+      "pct": 75,
+      "val": 57
+     },
+     "atk_scores": {
+      "pct": 25,
+      "val": 8
+     },
+     "atk_shots": {
+      "pct": 25,
+      "val": 14
+     },
+     "def_oppAcc": {
+      "pct": 63,
+      "val": 40
+     },
+     "def_oppShots": {
+      "pct": 0,
+      "val": 30
+     },
+     "def_to": {
+      "pct": 50,
+      "val": 8
+     },
+     "rst_brkPct": {
+      "pct": 25,
+      "val": 0
+     },
+     "rst_koPct": {
+      "pct": 75,
+      "val": 23
+     },
+     "rst_oppSteal": {
+      "pct": 88,
+      "val": 5
+     }
+    },
+    "overall": 50,
+    "rst": 63
+   },
    "overall": 49,
    "rst": 56
   },
@@ -25568,6 +25712,54 @@
      "pct": 0,
      "val": 0
     }
+   },
+   "opp": {
+    "atk": 16,
+    "def": 92,
+    "detail": {
+     "atk_acc": {
+      "pct": 13,
+      "val": 0
+     },
+     "atk_freeAcc": {
+      "pct": 13,
+      "val": 0
+     },
+     "atk_scores": {
+      "pct": 13,
+      "val": 0
+     },
+     "atk_shots": {
+      "pct": 25,
+      "val": 1
+     },
+     "def_oppAcc": {
+      "pct": 88,
+      "val": 0
+     },
+     "def_oppShots": {
+      "pct": 100,
+      "val": 0
+     },
+     "def_to": {
+      "pct": 88,
+      "val": 0
+     },
+     "rst_brkPct": {
+      "pct": 63,
+      "val": 50
+     },
+     "rst_koPct": {
+      "pct": 25,
+      "val": 0
+     },
+     "rst_oppSteal": {
+      "pct": 13,
+      "val": 0
+     }
+    },
+    "overall": 47,
+    "rst": 34
    },
    "overall": 41,
    "rst": 22
