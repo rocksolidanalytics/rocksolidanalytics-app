@@ -93,6 +93,28 @@ Discussed 2026-10-22. The app is one file (`index.html`, about 1 MB, no build st
   second app sharing code, or past roughly 50 clubs where smaller updates matter. About a
   week of careful work, screen by screen, with the same checks running throughout.
 
+## All-Ireland 2026 showcase (replaces the demo)
+
+Agreed 2026-10-22. Tadhg tags 3 or 4 All-Ireland 2026 games first (football and hurling),
+then we gate and present them.
+
+- Setup: two showcase clubs, "All-Ireland 2026 - Football" and "All-Ireland 2026 - Hurling"
+  (one sport per club), each with its own analyst sign-in (Gmail plus addresses). Kept out
+  of vs Others.
+- Tagging: each game as a scouting match ("County A v County B"), Championship, both team
+  sheets, both counties set up under Opposition with kit and crest, same tagging detail for
+  every game.
+- After tagging: read-only viewer mode enforced in the database (visitors can look, never
+  change); `?demo=1` opens a "pick a match" front door with match cards; club site demo
+  button points to it; strip broadcast video links; no individual player ratings on show.
+  Rock Solid Gaels stays until the showcase is live.
+
+## Security: tighten write rules by role
+
+Found 2026-10-22. RLS on matches, events and appearances lets any club member write
+(players and demo visitors included); the app only hides the buttons. Limit insert, update
+and delete to analysts before paying clubs come on.
+
 ## Payments (Stripe)
 
 Discussed 2026-10-21. Waiting on a price decision.
