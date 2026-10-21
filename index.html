@@ -4129,6 +4129,19 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setNaming(null);
       setMsg("");
     }
+    // Back to the starting line-up with no play open, ready to build the next one.
+    function newPlay() {
+      if (dirty && !window.confirm("Discard the changes to this play?")) return;
+      stopAnim();
+      setPlay(null);
+      setStep(0);
+      setTool("move");
+      setDirty(false);
+      setNaming(null);
+      setMsg("");
+      setShow({ 0: true, 1: true });
+      setTokens(tacticFormation());
+    }
     function closePlay() {
       if (dirty && !window.confirm("Discard the changes to this play?")) return;
       stopAnim();
@@ -4225,10 +4238,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }, style: { minHeight: 44, margin: "-9px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slate, fontSize: FS.sm, fontWeight: 700, padding: "6px 11px" } }, "Reset"))),
     React.createElement("div", { style: { padding: "10px 14px 0" } },
       React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 2, color: C.slateD, fontFamily: MONO, fontWeight: 700, marginBottom: 6 } }, "SET PLAYS"),
-      plays === null ? React.createElement(Spin, { s: 16, c: C.greenB }) : plays.length === 0 ? React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD } }, canEdit ? "None saved yet." : "None yet. Your coaches can add them here.") :
-      React.createElement("div", { className: "rsa-noscroll", style: { display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 } }, plays.map(function(p) {
+      plays === null ? React.createElement(Spin, { s: 16, c: C.greenB }) : plays.length === 0 && !(canEdit && play) ? React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD } }, canEdit ? "None saved yet. Set up a shape and tap + Step to start one." : "None yet. Your coaches can add them here.") :
+      React.createElement("div", { className: "rsa-noscroll", style: { display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 } }, (canEdit && play ? [chip("+ New play", newPlay, { k: "newtop" })] : []).concat(plays.map(function(p) {
         return chip(p.name, function() { openPlay(p); }, { k: p.id, on: play && play.id === p.id });
-      }))),
+      })))),
     /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 14px 6px", display: "flex", gap: 8, justifyContent: "center" } }, [[0, club.name || "Club", brayCol], [1, "Opposition", oppCol]].map(function(o) {
       var on = show[o[0]];
       return /* @__PURE__ */ React.createElement("button", { key: o[0], onClick: function() {
@@ -4280,7 +4293,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       play && chip("Save", function() { if (play.name) doSave(play.name); else setNaming(""); }, { on: dirty, dis: busy || !dirty }),
       play && play.id && chip("Rename", function() { setNaming(play.name); }, { dis: busy }),
       play && play.id && chip("Copy", copyPlay, { dis: busy }),
-      play && play.id && chip("Delete", delPlay, { red: true, dis: busy })),
+      play && play.id && chip("Delete", delPlay, { red: true, dis: busy }),
+      play && chip("+ New play", newPlay, { k: "newbot", dis: busy })),
     canEdit && naming != null && React.createElement("div", { style: { display: "flex", gap: 6, padding: "0 14px 8px", maxWidth: 448, width: "100%", margin: "0 auto", boxSizing: "border-box" } },
       React.createElement("input", { autoFocus: true, value: naming, onChange: function(e) { setNaming(e.target.value); }, onKeyDown: function(e) { if (e.key === "Enter") doSave(naming); }, placeholder: "Name, e.g. Kickout – long left", className: "rsa-field", style: { flex: 1, minWidth: 0, minHeight: 44, padding: "0 12px", borderRadius: RAD.md, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: FS.md, outline: "none" } }),
       chip("Save", function() { doSave(naming); }, { k: "nsave", fill: true, dis: busy || !String(naming).trim() }),
