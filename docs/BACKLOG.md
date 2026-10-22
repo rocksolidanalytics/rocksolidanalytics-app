@@ -102,7 +102,8 @@ distance-and-angle model so every shot gets its own expected value.
   in a section closed by default (the user finds it harsh). Rate of punished turnovers
   (they scored before the ball was won back) against the team rate; only players with 8+
   turnovers in a season or 3+ in a match; red only when 10+ points above the team rate with
-  3+ punished.
+  3+ punished. Also on the live tagger stats (Detailed) and in the Live Stats Pad, closed
+  by default, with the 3+ cut-off for a single match.
 
 ## Cards, score sources and other events
 

@@ -5899,7 +5899,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "RESTART WIN % BY ZONE"), /* @__PURE__ */ React.createElement(ZoneGrid, { grid: liveKoGrid(stTeam), unit: RST() + "s" }), (function() {
       var sl = liveKoSL(stTeam);
       return /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, marginBottom: 8 } }, "RESTART WIN % \xB7 SPEED \xD7 LENGTH"), /* @__PURE__ */ React.createElement(ZoneGrid, { grid: sl.grid, unit: RST() + "s", cols: [["FAST", "fast"], ["SLOW", "slow"]] }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: C.slateD, marginTop: 6 } }, "fast = quicker than median restart (", sl.med, "s)"));
-    })(), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "BY PLAYER \xB7 TAP TO EXPAND"), BREAKS.map(function(b) {
+    })(), React.createElement("div", { style: { marginTop: 18 } }, React.createElement(TurnoverCost, { evs: tagged, isMatch: true })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "BY PLAYER \xB7 TAP TO EXPAND"), BREAKS.map(function(b) {
       var rows = breakdown(b.types, stTeam);
       var open = openSec === b.key;
       var tot = rows.reduce(function(a, r) {
