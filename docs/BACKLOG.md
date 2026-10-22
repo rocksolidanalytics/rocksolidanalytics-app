@@ -12,6 +12,13 @@ Open items first, then decisions, then what has been done, newest first.
   or the demo club settings; `live_match` (unused) no longer writable by anyone. App: players
   no longer see New match or Import data; Game film playlists and Opposition team pages are
   read-only for players with a message.
+- **Free plan: 10 matches per club, then lifetime access.** App side done 2026-10-22,
+  database part waiting to be run (supabase/migrations/20261022_club_licence_and_cap.sql).
+  The licence sits on the club (`club_orgs`), shared by all its teams; a new team joins its
+  club by name and county. Every match counts, scouting included. At 10 a new match or import
+  is refused with a message; everything already tagged stays. Home shows owners and analysts
+  "X of 10 free matches used" with an Unlock lifetime email link; players see nothing.
+  Bray Emmets and St Jude's are lifetime. Kill GAA test is deleted.
 - ~~Pin library versions~~: done 2026-10-22. React and React DOM 18.3.1, supabase-js
   2.118.0 (the versions users already ran), PapaParse 5.4.1.
 

@@ -1315,6 +1315,12 @@
   }
   function Home({ club, onSignOut, onImport, onGameFilm, onLineups, onStats, onNewMatch, onVideoHub, onTemplate, onLive, onTactic, onHelp, onSquad, onLivePad, onResume, resumeMatch, matchCount, role, onPitchMap, onOpposition, onClub }) {
     const [hact, setHact] = useState(null);
+    // Free clubs see how many of their free matches are used; lifetime clubs see nothing.
+    const [usage, setUsage] = useState(null);
+    useEffect(function() {
+      if (!club || !club.id) return;
+      db.rpc("club_usage", { p_club: club.id }).then(function(r) { if (r && !r.error && r.data) setUsage(r.data); }, function() {});
+    }, [club && club.id]);
     const [crestOpen, setCrestOpen] = useState(false);
     const [crestBusy, setCrestBusy] = useState(false);
     const [crestErr, setCrestErr] = useState("");
@@ -1420,6 +1426,18 @@
           React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, color: C.bg, letterSpacing: -0.2 } }, "Dashboard"),
           React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 600, color: C.bg, marginTop: 2 } }, "Season stats, scorers, " + restarts_() + " & positions")),
         React.createElement("span", { style: { fontSize: FS.lg, color: C.bg, flexShrink: 0 } }, "\u2192")),
+      !isPlayer && usage && usage.licence === "free" && (function() {
+        var full = usage.used >= usage.limit, mail = "mailto:staff.rocksolidanalytics@gmail.com?subject=" + encodeURIComponent("Lifetime access for " + (usage.club || club.name));
+        var col = full ? C.gold : C.greenB;
+        return React.createElement("div", { style: { marginTop: 12, padding: "12px 14px", borderRadius: RAD.lg, background: C.bgCard, border: "1px solid " + (full ? C.gold + ALPHA.strong : C.border) } },
+          React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+            React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+              React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, fontWeight: 700 } }, "FREE PLAN" + (usage.teams > 1 ? " \u00b7 " + usage.teams + " TEAMS SHARE IT" : "")),
+              React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800, color: C.white, marginTop: 3 } }, full ? "All " + usage.limit + " free matches used" : usage.used + " of " + usage.limit + " free matches used")),
+            React.createElement("a", { href: mail, style: { minHeight: 40, display: "inline-flex", alignItems: "center", padding: "0 12px", borderRadius: RAD.md, border: "1px solid " + col, color: col, fontSize: FS.sm, fontWeight: 800, textDecoration: "none", flexShrink: 0 } }, "Unlock lifetime")),
+          React.createElement("div", { style: { height: 6, background: C.field, borderRadius: RAD.sm, marginTop: 9, overflow: "hidden" } }, React.createElement("div", { style: { width: Math.min(100, Math.round(100 * usage.used / Math.max(1, usage.limit))) + "%", height: 6, background: col } })),
+          full ? React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 8, lineHeight: 1.5 } }, "Everything already tagged stays and keeps working. To add more matches, unlock lifetime access for the whole club.") : null);
+      })(),
       // On a wide screen (iPad landscape) the sections sit in two columns; on a phone they stack.
       React.createElement("div", { className: "rsa-home-cols" }, React.createElement("div", { className: "rsa-home-col" },
       !isPlayer && Label("MATCH"),
@@ -1718,6 +1736,9 @@
       let done = 0;
       const allP = /* @__PURE__ */ new Set();
       try {
+        // A free club has a match limit; stop before writing anything rather than halfway through.
+        var us = await db.rpc("club_usage", { p_club: club.id }).catch(function() { return null; }), u = us && us.data;
+        if (u && u.licence === "free" && u.used + matches.length > u.limit) throw new Error("This file has " + matches.length + " matches, and your club has " + Math.max(0, u.limit - u.used) + " of its " + u.limit + " free matches left. Import fewer, or get in touch to unlock lifetime access: staff.rocksolidanalytics@gmail.com");
         for (const m of matches) {
           setProgress("Saving " + m.opponent + "\u2026");
           const mi = await db.from("matches").insert({
