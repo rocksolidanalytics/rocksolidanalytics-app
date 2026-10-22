@@ -98,9 +98,11 @@ distance-and-angle model so every shot gets its own expected value.
 - Expected scores grid: scores/shots per zone only; green or red only where the gap is
   clear and beyond chance; best and worst zones written out; frees use the free table.
 
-**Next, if wanted:** turnovers by player that led to a score against, as a rate against the
-team average with a minimum number of turnovers, so busy players are not flagged for
-having the ball most.
+- ~~Turnovers by player that led to a score against~~: done 2026-10-22, on the Players tab
+  in a section closed by default (the user finds it harsh). Rate of punished turnovers
+  (they scored before the ball was won back) against the team rate; only players with 8+
+  turnovers in a season or 3+ in a match; red only when 10+ points above the team rate with
+  3+ punished.
 
 ## Cards, score sources and other events
 
