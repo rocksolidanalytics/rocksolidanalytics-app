@@ -3268,7 +3268,7 @@
       if (p.some(isNaN)) return null;
       return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p.length === 2 ? p[0] * 60 + p[1] : null;
     }
-    XP_BASE = computeXpBase(events); XP_FREE = computeXpFree(events); var koSp = { us: [], opp: [] }, byMatch = {};
+    XP_BASE = xpTable(); var koSp = { us: [], opp: [] }, byMatch = {};
     events.forEach(function(e) {
       (byMatch[e.match_id] = byMatch[e.match_id] || []).push(e);
     });
@@ -3543,12 +3543,12 @@
     function _pg(n) { if (!_pm[n]) _pm[n] = { name: n, g: 0, p: 0, sh: 0, tk: 0, kow: 0, tol: 0, xs: 0, scr: 0 }; return _pm[n]; }
     us.forEach(function(e) {
       var n = e.player; if (!n) return;
-      if (e.event_type === "Shot from play" || e.event_type === "Scoreable free") { _pg(n).sh++; if (e.x != null) { _pg(n).xs += xpFor(e); if ((e.score || 0) > 0) _pg(n).scr++; } if ((e.score || 0) > 0) { if (e.score === 3) _pg(n).g++; else _pg(n).p += e.score; } }
+      if (e.event_type === "Shot from play" || e.event_type === "Scoreable free") { _pg(n).sh++; if (e.x != null) { if ((e.score || 0) > 0) _pg(n).scr++; if (xpFromPlay(e)) { _pg(n).xs += xpFor(e); if ((e.score || 0) > 0) _pg(n).xsc = (_pg(n).xsc || 0) + 1; } } if ((e.score || 0) > 0) { if (e.score === 3) _pg(n).g++; else _pg(n).p += e.score; } }
       else if (e.event_type === "Tackle") _pg(n).tk++;
       else if (e.event_type === "Kickout" && KO_WON.has(e.outcome)) _pg(n).kow++;
       else if (e.event_type === "Possession lost") _pg(n).tol++;
     });
-    var players = Object.keys(_pm).map(function(k) { var _p = _pm[k]; _p.xsd = (_p.scr || 0) - (_p.xs || 0); return _p; });
+    var players = Object.keys(_pm).map(function(k) { var _p = _pm[k]; _p.xsd = (_p.xsc || 0) - (_p.xs || 0); return _p; });
     return {
       compare,
       notes,
@@ -3586,19 +3586,45 @@
     return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: FS.sm, marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, label), /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontFamily: MONO, fontWeight: 700 } }, value, suffix || "")), /* @__PURE__ */ React.createElement("div", { style: { height: 8, background: C.field, borderRadius: RAD.sm, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: pct + "%", background: color || C.greenB, borderRadius: RAD.sm } })));
   }
   function rsaScatter(pos){var g={},i,out=[];for(i=0;i<pos.length;i++){out.push([pos[i][0],pos[i][1]]);var k=Math.round(pos[i][0])+'_'+Math.round(pos[i][1]);(g[k]||(g[k]=[])).push(i);}Object.keys(g).forEach(function(k){var a=g[k],n=a.length;if(n<2)return;for(var j=0;j<n;j++){var r=Math.sqrt((j+0.5)/n)*24,t=j*2.399963;out[a[j]][0]=pos[a[j]][0]+Math.cos(t)*r;out[a[j]][1]=pos[a[j]][1]+Math.sin(t)*r;}});return out;}
-  var XP_BASE_DEFAULT = { "0_0":0.447,"0_1":0.765,"0_2":0.471,"1_0":0.441,"1_1":0.443,"1_2":0.429,"2_0":0.18,"2_1":0.18,"2_2":0.18 }; var XP_BASE = XP_BASE_DEFAULT;
-  // Placed balls convert far better than open play from the same ground: 0.76 vs
-  // 0.55 centrally inside the 45, 0.89 vs 0.60 close in. Scoring a free off the
-  // open-play table credited the taker for difficulty that was not there.
-  var XP_FREE_DEFAULT = { "0_0":0.769,"0_1":0.892,"0_2":0.824,"1_0":0.648,"1_1":0.764,"1_2":0.627,"2_0":0.378,"2_1":0.658,"2_2":0.434 };
-  var XP_FREE = XP_FREE_DEFAULT;
-  var XP_SPORT_BASE = null;
-  function computeXpTable(events, etype, fallback){ var t={},n={}; (events||[]).forEach(function(e){ if(e.event_type===etype && e.x!=null){ var k=xpZoneKey(e); n[k]=(n[k]||0)+1; if((e.score||0)>0) t[k]=(t[k]||0)+1; } }); var out={}; Object.keys(XP_BASE_DEFAULT).forEach(function(k){ out[k]=(n[k]>=15)?((t[k]||0)/n[k]):(fallback && fallback[k]!=null ? fallback[k] : XP_BASE_DEFAULT[k]); }); return out; }
-  function computeXpBase(events){ return computeXpTable(events, "Shot from play", (XP_SPORT_BASE || XP_BASE_DEFAULT)); }
-  function computeXpFree(events){ return computeXpTable(events, "Scoreable free", XP_FREE_DEFAULT); }
-  function xpFor(e){ var tbl = (e && e.event_type === "Scoreable free") ? XP_FREE : XP_BASE; return tbl[xpZoneKey(e)] || 0; }
-  function xpZoneKey(sh){ var x=sh.x,y=sh.y; if(x<0.5){x=1-x;y=1-y;} var dd=(1-x)*144; var b=dd<=21?0:dd<=45?1:2; var l=y<0.38?0:y<0.62?1:2; return b+"_"+l; }
-  function matchXp(shots){ var xs=0,act=0; (shots||[]).forEach(function(sh){ xs+=xpFor(sh); act+=((sh.score||0)>0?1:0); }); return {xs:xs,act:act,diff:act-xs}; }
+  // Expected scores (xS) cover shots from play only; frees have their own stats. The rate for
+  // each zone comes from every club of the same sport using the app (xp_baseline in the
+  // database), blended toward a typical rate where a zone has few shots, so a handful of
+  // shots cannot set a wild rate. Until that has loaded, the typical rates are used.
+  // Bands: football inside 21m, 21-45m, beyond 45m; hurling and camogie inside 20m, 20-45m,
+  // 45-65m, beyond 65m. Lanes: left, centre, right.
+  var XP_PRIOR_FOOT = { "0_0":0.50,"0_1":0.72,"0_2":0.50,"1_0":0.42,"1_1":0.55,"1_2":0.44,"2_0":0.25,"2_1":0.30,"2_2":0.25 };
+  var XP_PRIOR_STICK = { "0_0":0.55,"0_1":0.72,"0_2":0.55,"1_0":0.48,"1_1":0.58,"1_2":0.48,"2_0":0.42,"2_1":0.46,"2_2":0.42,"3_0":0.25,"3_1":0.30,"3_2":0.25 };
+  var XP_BLEND = 20;
+  var XP_BASE = XP_PRIOR_FOOT, XP_POOL = {};
+  function xpBands() { return _isStickSport() ? [20, 45, 65] : [21, 45]; }
+  function xpBandLabels(long) { return _isStickSport() ? (long ? ["inside 20m", "20-45m", "45-65m", "beyond 65m"] : ["≤20m", "20-45m", "45-65m", "65m+"]) : (long ? ["inside 21m", "21-45m", "beyond 45m"] : ["≤21m", "21-45m", "45m+"]); }
+  function xpPrior() { return _isStickSport() ? XP_PRIOR_STICK : XP_PRIOR_FOOT; }
+  // The table for the current sport: pooled where loaded, blended toward the typical rate.
+  function xpTable() {
+    var pr = xpPrior(), pool = XP_POOL[_RS_SPORT], out = {};
+    Object.keys(pr).forEach(function(k) { var z = pool && pool.zones && pool.zones[k]; out[k] = z && z.n ? (z.s + XP_BLEND * pr[k]) / (z.n + XP_BLEND) : pr[k]; });
+    return out;
+  }
+  function xpPoolInfo() { return XP_POOL[_RS_SPORT] || null; }
+  // Reads the pooled rates for a sport once (kept for offline use) and refreshes XP_BASE.
+  function loadXpPool(sport) {
+    sport = String(sport || "football").toLowerCase();
+    if (!XP_POOL[sport]) { try { var c = JSON.parse(localStorage.getItem("rsa_xp_" + sport) || "null"); if (c && c.zones) XP_POOL[sport] = c; } catch (e) {} }
+    XP_BASE = xpTable();
+    try {
+      return db.rpc("xp_baseline", { p_sport: sport }).then(function(r) {
+        if (r && !r.error && r.data && r.data.zones) {
+          XP_POOL[sport] = r.data;
+          try { localStorage.setItem("rsa_xp_" + sport, JSON.stringify(r.data)); } catch (e) {}
+          XP_BASE = xpTable();
+        }
+      }).catch(function() {});
+    } catch (e) { return Promise.resolve(); }
+  }
+  function xpFromPlay(sh) { return !!sh && sh.x != null && !sh.isFree && sh.event_type !== "Scoreable free"; }
+  function xpFor(e){ return xpFromPlay(e) ? (XP_BASE[xpZoneKey(e)] || 0) : 0; }
+  function xpZoneKey(sh){ var x=sh.x,y=sh.y; if(x<0.5){x=1-x;y=1-y;} var dd=(1-x)*144, bs=xpBands(), b=0; while(b<bs.length&&dd>bs[b]) b++; var l=y<0.38?0:y<0.62?1:2; return b+"_"+l; }
+  function matchXp(shots){ var xs=0,act=0,n=0; (shots||[]).forEach(function(sh){ if(!xpFromPlay(sh)) return; n++; xs+=xpFor(sh); act+=((sh.score||0)>0?1:0); }); return {xs:xs,act:act,diff:act-xs,n:n}; }
   // Expected scores, kept to one message: where you scored more or less than shots from that
   // zone usually return. Each zone shows scores/shots only; colour appears only where the gap is
   // clear (3+ shots and about a score either way), and the best and worst zones are written out.
@@ -3607,22 +3633,23 @@
     var h='<div style="margin-bottom:10px">'+row("OURS", usShots||[])+row("OPP", oppShots||[])+'</div>';
     // Expected per zone uses the rate for each shot (frees against the free table), and a zone is
     // only called out when the gap is also bigger than chance would explain for that many shots.
-    var cnt={}, scr={}, ex={}, vr={}; (shots||[]).forEach(function(sh){ var k=xpZoneKey(sh), q=xpFor(sh); cnt[k]=(cnt[k]||0)+1; ex[k]=(ex[k]||0)+q; vr[k]=(vr[k]||0)+q*(1-q); if((sh.score||0)>0) scr[k]=(scr[k]||0)+1; });
+    var cnt={}, scr={}, ex={}, vr={}; (shots||[]).forEach(function(sh){ if(!xpFromPlay(sh)) return; var k=xpZoneKey(sh), q=xpFor(sh); cnt[k]=(cnt[k]||0)+1; ex[k]=(ex[k]||0)+q; vr[k]=(vr[k]||0)+q*(1-q); if((sh.score||0)>0) scr[k]=(scr[k]||0)+1; });
     var clear=function(k, d){ return (cnt[k]||0)>=3 && Math.abs(d)>=0.75 && Math.abs(d)>=1.2*Math.sqrt(vr[k]||0.01); };
-    var lanes=["LEFT","CENTRE","RIGHT"], bands=["≤21m","21-45m","45m+"], bandsL=["inside 21m","21-45m","45m+"], lanesL=["left","centre","right"], best=null, worst=null;
-    for(var b0=0;b0<3;b0++) for(var l0=0;l0<3;l0++){ var k0=b0+"_"+l0, n0=cnt[k0]||0; if(n0<3) continue; var d0=(scr[k0]||0)-(ex[k0]||0), z={k:k0, n:n0, sc:scr[k0]||0, d:d0, name:bandsL[b0]+" "+lanesL[l0]}; if(!clear(k0, d0)) continue; if(d0>0&&(!best||d0>best.d)) best=z; if(d0<0&&(!worst||d0<worst.d)) worst=z; }
+    var lanes=["LEFT","CENTRE","RIGHT"], bands=xpBandLabels(false), bandsL=xpBandLabels(true), lanesL=["left","centre","right"], best=null, worst=null;
+    for(var b0=0;b0<bands.length;b0++) for(var l0=0;l0<3;l0++){ var k0=b0+"_"+l0, n0=cnt[k0]||0; if(n0<3) continue; var d0=(scr[k0]||0)-(ex[k0]||0), z={k:k0, n:n0, sc:scr[k0]||0, d:d0, name:bandsL[b0]+" "+lanesL[l0]}; if(!clear(k0, d0)) continue; if(d0>0&&(!best||d0>best.d)) best=z; if(d0<0&&(!worst||d0<worst.d)) worst=z; }
     var say=function(z, good){ return '<div style="font-size:'+FS.sm+'px;color:'+C.white+';padding:2px 0"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;background:'+(good?C.greenB:C.red)+'"></span>'+(good?"Best: ":"Worst: ")+z.name+", "+z.sc+" from "+z.n+' <span style="color:'+(good?C.greenB:C.red)+';font-weight:800">('+(z.d>0?"+":"")+z.d.toFixed(1)+')</span></div>'; };
     h+= best||worst ? '<div style="margin-bottom:10px">'+(best?say(best,true):"")+(worst?say(worst,false):"")+'</div>' : '<div style="font-size:'+FS.sm+'px;color:'+C.slateD+';margin-bottom:10px">No zone clearly above or below expected yet.</div>';
     h+='<div style="display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:5px">'; h+='<div></div>';
     for(var i=0;i<3;i++){ h+='<div style="font-size:'+FS.xs+'px;color:'+C.slateD+';text-align:center;font-family:'+MONO+'">'+lanes[i]+'</div>'; }
-    for(var b=0;b<3;b++){ h+='<div style="font-size:'+FS.xs+'px;color:'+C.slateD+';display:flex;align-items:center;font-family:'+MONO+'">'+bands[b]+'</div>';
+    for(var b=0;b<bands.length;b++){ h+='<div style="font-size:'+FS.xs+'px;color:'+C.slateD+';display:flex;align-items:center;font-family:'+MONO+'">'+bands[b]+'</div>';
       for(var l=0;l<3;l++){ var k=b+"_"+l, n=cnt[k]||0, sc=scr[k]||0, delta=sc-(ex[k]||0);
         var tone=clear(k, delta)?(delta>0?C.greenB:C.red):null;
         h+='<div style="background:'+(tone?tone+ALPHA.faint:C.field)+';border:1px solid '+(tone?tone+ALPHA.mid:C.border)+';border-radius:'+RAD.md+'px;padding:9px 2px;text-align:center;opacity:'+(n?1:0.45)+'">';
         h+='<div style="font-size:'+FS.lg+'px;font-weight:800;font-family:'+MONO+';color:'+(n?C.white:C.slateD)+'">'+(n?sc+"/"+n:"–")+'</div>';
         if(tone) h+='<div style="font-size:'+FS.xs+'px;font-weight:800;color:'+tone+';margin-top:2px">'+(delta>0?"+":"")+delta.toFixed(1)+'</div>';
         h+='</div>'; } }
-    h+='</div><div style="font-size:'+FS.xs+'px;color:'+C.slateD+';margin-top:7px;line-height:1.5">Scores / shots in each zone. Green or red only where that is clearly more or fewer than those shots usually return, beyond what luck would explain.</div>';
+    var pi=xpPoolInfo(), basis=pi&&pi.shots?"Expected rates from "+pi.shots+" shots from play across "+pi.clubs+(pi.clubs===1?" club":" clubs")+" in the app, blended toward a typical rate where a zone has few shots.":"Expected rates are typical rates until shots from other clubs have loaded.";
+    h+='</div><div style="font-size:'+FS.xs+'px;color:'+C.slateD+';margin-top:7px;line-height:1.5">Shots from play only; frees have their own stats. Scores / shots in each zone. Green or red only where that is clearly more or fewer than those shots usually return, beyond what luck would explain. '+basis+'</div>';
     return h; }
   // One GAA pitch end, in metres, shared by every pitch drawing in the app.
   // P(a, d) maps a point a metres across from the centre line and d metres out
@@ -3663,7 +3690,7 @@
       return '<path d="' + m.d + '" fill="none" stroke="' + st[m.w][0] + '" stroke-width="' + st[m.w][1] + '"/>';
     }).join("");
   }
-  function XpPanel({ shots, usShots, oppShots, noHeading }){ return React.createElement("div", {}, noHeading ? null : React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "EXPECTED SCORES · vs season baseline"), React.createElement("div", { dangerouslySetInnerHTML: { __html: xpPanelHtml(shots, usShots, oppShots) } })); }
+  function XpPanel({ shots, usShots, oppShots, noHeading }){ return React.createElement("div", {}, noHeading ? null : React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "EXPECTED SCORES FROM PLAY · vs all clubs"), React.createElement("div", { dangerouslySetInnerHTML: { __html: xpPanelHtml(shots, usShots, oppShots) } })); }
   
 function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(function(s){ return s.player === pl; }) : (list || []); }
   function fKo(list, band){ if(!band || band === "all") return list || []; return (list || []).filter(function(p){ var dd = (1 - p.x) * 144; var b = dd < 45 ? "short" : dd <= 65 ? "mid" : "long"; return b === band; }); }
@@ -4592,7 +4619,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     return EB;
   })();
   var _RS_SPORT = "football";
-  function setSportTerms(sport) { _RS_SPORT = String(sport || "football").toLowerCase(); }
+  var _xpAsked = {};
+  function setSportTerms(sport) { _RS_SPORT = String(sport || "football").toLowerCase(); if (!_xpAsked[_RS_SPORT]) { _xpAsked[_RS_SPORT] = 1; try { loadXpPool(_RS_SPORT); } catch (e) {} } else { XP_BASE = xpTable(); } }
   function _isStickSport() { return _RS_SPORT === "hurling" || _RS_SPORT === "camogie"; }
   function RESTART() { return _isStickSport() ? "Puckout" : "Kickout"; }
   // Display only: the stored event_type stays "Kickout" for every sport.
@@ -9156,14 +9184,15 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
 
     // Conversion by zone — using real xpZoneKey
     function zoneTable(teamEvs, color) {
-      var z={"0_0":{n:0,s:0},"0_1":{n:0,s:0},"0_2":{n:0,s:0},"1_0":{n:0,s:0},"1_1":{n:0,s:0},"1_2":{n:0,s:0},"2_0":{n:0,s:0},"2_1":{n:0,s:0},"2_2":{n:0,s:0}};
+      // Shots from play by zone, in the same bands as expected scores for the sport.
+      var z={}; Object.keys(xpPrior()).forEach(function(k){ z[k]={n:0,s:0}; });
       teamEvs.forEach(function(e){
-        if((e.event_type==="Shot from play"||e.event_type==="Scoreable free")&&e.x!=null){
+        if(e.event_type==="Shot from play"&&e.x!=null){
           var k=xpZoneKey(e);
           if(z[k]){z[k].n++;if((e.score||0)>0)z[k].s++;}
         }
       });
-      var labels=[["Close","0"],["Mid","1"],["Long","2"]];
+      var labels=xpBandLabels(false).map(function(l, i){ return [l, String(i)]; });
       var cols=["Left (0)","Centre (1)","Right (2)"];
       var t='<table class="tbl" style="font-size:11px"><tr><th></th><th>Left</th><th>Centre</th><th>Right</th></tr>';
       labels.forEach(function(row){
@@ -9248,7 +9277,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
 
     // xS
     var xU=matchXp(d.shots?d.shots.us:[]);var xO=matchXp(d.shots?d.shots.opp:[]);
-    h3.push('<h2>EXPECTED SCORES (xS)</h2><div class="card"><div class="row"><div class="col"><p class="m">'+cn+'</p><p style="font-size:14px;font-weight:800">Actual: <span class="gu">'+(match.our_score||"0-00")+'</span> \u00b7 xS: '+xU.xs.toFixed(1)+' \u00b7 <span style="color:'+(xU.diff>=0?'#34c967':'#e0584d')+'">'+(xU.diff>=0?'+':'')+xU.diff.toFixed(1)+'</span></p></div><div class="col"><p class="m">'+opp2+'</p><p style="font-size:14px;font-weight:800">Actual: <span class="go">'+(match.opp_score||"0-00")+'</span> \u00b7 xS: '+xO.xs.toFixed(1)+' \u00b7 <span style="color:'+(xO.diff>=0?'#34c967':'#e0584d')+'">'+(xO.diff>=0?'+':'')+xO.diff.toFixed(1)+'</span></p></div></div></div>');
+    h3.push('<h2>EXPECTED SCORES FROM PLAY (xS)</h2><div class="card"><div class="row"><div class="col"><p class="m">'+cn+'</p><p style="font-size:14px;font-weight:800">Scores from play: <span class="gu">'+xU.act+' from '+xU.n+' shots</span> \u00b7 xS: '+xU.xs.toFixed(1)+' \u00b7 <span style="color:'+(xU.diff>=0?'#34c967':'#e0584d')+'">'+(xU.diff>=0?'+':'')+xU.diff.toFixed(1)+'</span></p></div><div class="col"><p class="m">'+opp2+'</p><p style="font-size:14px;font-weight:800">Scores from play: <span class="go">'+xO.act+' from '+xO.n+' shots</span> \u00b7 xS: '+xO.xs.toFixed(1)+' \u00b7 <span style="color:'+(xO.diff>=0?'#34c967':'#e0584d')+'">'+(xO.diff>=0?'+':'')+xO.diff.toFixed(1)+'</span></p></div></div></div>');
 
     // Tackles
     var tkMap={};usEvs.forEach(function(e){if(e.event_type==="Tackle"&&e.player)tkMap[e.player]=(tkMap[e.player]||0)+1;});var tks=Object.keys(tkMap).map(function(n){return{name:n,count:tkMap[n]};}).sort(function(a,b){return b.count-a.count;});var mxT=tks.length?tks[0].count:1;
@@ -9585,7 +9614,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }, style: { flex: 1, minHeight: 44, margin: "-6px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { flex: 1, padding: "9px 0", borderRadius: RAD.md, background: shotTeam === t[0] ? C.greenB : "transparent", color: shotTeam === t[0] ? C.bg : C.slate, fontWeight: 700, fontSize: FS.md } }, t[1]));
     }))),
     dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: (shotTeam === "us" ? "OWN" : ON.toUpperCase()) + " SHOT MAP \xB7 " + fShots(d.shots[shotTeam], shotPl).length + " SHOTS" }, (function(){ var ns = []; (d.shots[shotTeam] || []).forEach(function(s){ if (s.player && ns.indexOf(s.player) < 0) ns.push(s.player); }); ns.sort(); return /* @__PURE__ */ React.createElement("select", { value: shotPl, onChange: function(e){ setShotPl(e.target.value); }, style: { width: "100%", minHeight: 44, boxSizing: "border-box", marginBottom: 9, padding: "10px 12px", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bgCard, color: shotPl === "all" ? C.slate : C.greenB, fontSize: FS.md, fontWeight: 700, cursor: "pointer", appearance: "none", WebkitAppearance: "none" } }, [/* @__PURE__ */ React.createElement("option", { key: "all", value: "all" }, "All players (" + (d.shots[shotTeam] || []).length + " shots)")].concat(ns.map(function(n){ var c = (d.shots[shotTeam] || []).filter(function(s){ return s.player === n; }).length; return /* @__PURE__ */ React.createElement("option", { key: n, value: n }, n + " (" + c + ")"); }))); })(), /* @__PURE__ */ React.createElement(PitchMap, { shots: fShots(d.shots[shotTeam], shotPl) }), /* @__PURE__ */ React.createElement(ShotLegend, null))),
-    dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "EXPECTED SCORES · vs season baseline" }, /* @__PURE__ */ React.createElement(XpPanel, { shots: fShots(d.shots[shotTeam], shotPl), usShots: d.shots.us, oppShots: d.shots.opp, noHeading: true }))), 
+    dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "EXPECTED SCORES FROM PLAY · vs all clubs" }, /* @__PURE__ */ React.createElement(XpPanel, { shots: fShots(d.shots[shotTeam], shotPl), usShots: d.shots.us, oppShots: d.shots.opp, noHeading: true }))), 
     dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "SHOT EFFICIENCY BY DISTANCE" }, [["Inside 21m", "inside21", C.greenB], ["21-45m", "mid", C.gold], ["45m+", "long", C.blue]].map(function(row) {
       var label = row[0], key = row[1], col = row[2];
       var b = d.bands[shotTeam][key];
@@ -9764,7 +9793,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var possPct = blocks.map(function(_, bi) { var t = possUs[bi] + possOpp[bi]; return t ? Math.round(100 * possUs[bi] / t) : null; });
       var xsUs = blocks.map(function(){ return 0; }), xsOpp = blocks.map(function(){ return 0; });
       evs.forEach(function(e) {
-        if (!((e.event_type === "Shot from play" || e.event_type === "Scoreable free") && e.x != null)) return;
+        if (!(e.event_type === "Shot from play" && e.x != null)) return;
         var secs = e.time_secs != null ? e.time_secs : 0;
         for (var bi = 0; bi < ranges.length; bi++) {
           if (inBlock(secs, bi)) {
@@ -9787,7 +9816,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             blocks.map(function(b, i2) { return React.createElement("th", { key: i2, style: { textAlign: "center", padding: "12px 14px", borderBottom: "2px solid " + C.border, color: C.slate, fontSize: FS.sm, fontWeight: 700, whiteSpace: "nowrap" } }, b); })
           )),
           React.createElement("tbody", null,
-            [["SCORING", null], ["Score (Us)", grid.score_us, C.greenB], ["xS (Us)", xsUs, C.greenB], ["Score (Opp)", grid.score_opp, C.blue], ["xS (Opp)", xsOpp, C.blue],
+            [["SCORING", null], ["Score (Us)", grid.score_us, C.greenB], ["xS from play (Us)", xsUs, C.greenB], ["Score (Opp)", grid.score_opp, C.blue], ["xS from play (Opp)", xsOpp, C.blue],
              ["SHOOTING", null], ["Shots (Us)", grid.shots_us, C.slate], ["Shots (Opp)", grid.shots_opp, C.slate], ["Wides (Us)", grid.wide_us, C.slateD], ["Wides (Opp)", grid.wide_opp, C.slateD],
              ["RESTARTS", null], ["Our Won %", koWinPct, C.gold], ["Our Total", grid.ko_total, C.slateD], ["Break Won %", brkPctUs, C.gold], ["Opp Won %", okoWinPct, C.gold], ["Opp Total", grid.oko_total, C.slateD],
              ["POSSESSIONS LOST", null], ["Us", grid.to_us, C.greenB], ["Opp", grid.to_opp, C.blue],
@@ -10178,16 +10207,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           const events = await fetchAll("events", "match_id,team,event_type,outcome,player,score,x,y,period,seq,time_text");
           const apps = await fetchAll("appearances", "match_id,player_name,position_slot,jersey");
           matches.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
-          try {
-            var xpR = await db.rpc("xp_baseline", { p_sport: club.sport || "football" });
-            if (xpR.data && typeof xpR.data === "object") {
-              var sb = {};
-              Object.keys(xpR.data).forEach(function(k) {
-                if (!k.endsWith("_n")) sb[k] = xpR.data[k];
-              });
-              if (Object.keys(sb).length) XP_SPORT_BASE = sb;
-            }
-          } catch(e) {}
+          // The pooled shot rates for the sport, read before the stats are worked out.
+          try { await loadXpPool(club.sport || "football"); } catch(e) {}
           setRaw({ matches, events, apps });
         } catch (ex) {
           setErr(ex.message || "Could not load stats.");

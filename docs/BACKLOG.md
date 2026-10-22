@@ -73,6 +73,20 @@ use the club kit colour against blue, with the tagger clash check.
 - Tag which play was called on a kickout and show how often it was won.
 - Export a play as a short video for the squad WhatsApp.
 
+## Expected scores from play, pooled across clubs
+
+**Done 2026-10-22.** xS covers shots from play only (frees have their own stats). Zone rates
+come from every club of the same sport in the app (`xp_baseline`, counts only, demo left
+out), blended toward a typical rate where a zone has few shots (20 shots of weight), so
+thin zones cannot set wild rates. Bands: football inside 21m, 21-45m, beyond 45m; hurling
+and camogie inside 20m, 20-45m, 45-65m, beyond 65m. Replaces the old baseline, which
+measured each club against its own season and never used the shared function (its zone
+keys did not match). See supabase/migrations/20261022_xp_baseline_from_play.sql.
+Pool on 2026-10-22: football 748 shots from 3 clubs, hurling 327 from 2, camogie 823 from 1.
+
+**Later:** once a sport passes about 2,000 shots from play, replace zones with a smooth
+distance-and-angle model so every shot gets its own expected value.
+
 ## Restart timeline and simpler expected scores
 
 **Done 2026-10-22.**
