@@ -3648,7 +3648,7 @@
         h+='<div style="font-size:'+FS.lg+'px;font-weight:800;font-family:'+MONO+';color:'+(n?C.white:C.slateD)+'">'+(n?sc+"/"+n:"–")+'</div>';
         if(tone) h+='<div style="font-size:'+FS.xs+'px;font-weight:800;color:'+tone+';margin-top:2px">'+(delta>0?"+":"")+delta.toFixed(1)+'</div>';
         h+='</div>'; } }
-    var pi=xpPoolInfo(), basis=pi&&pi.shots?"Expected rates from "+pi.shots+" shots from play across "+pi.clubs+(pi.clubs===1?" club":" clubs")+" in the app, blended toward a typical rate where a zone has few shots.":"Expected rates are typical rates until shots from other clubs have loaded.";
+    var pi=xpPoolInfo(), basis=pi&&pi.shots?"Expected rates from "+pi.shots+" shots from play, both sides, in "+(pi.games?pi.games+" games":"games")+(pi.teams?" involving "+pi.teams+" teams":"")+" tagged in the app, blended toward a typical rate where a zone has few shots.":"Expected rates are typical rates until shots from other clubs have loaded.";
     h+='</div><div style="font-size:'+FS.xs+'px;color:'+C.slateD+';margin-top:7px;line-height:1.5">Shots from play only; frees have their own stats. Scores / shots in each zone. Green or red only where that is clearly more or fewer than those shots usually return, beyond what luck would explain. '+basis+'</div>';
     return h; }
   // One GAA pitch end, in metres, shared by every pitch drawing in the app.

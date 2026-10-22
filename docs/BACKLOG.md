@@ -82,7 +82,8 @@ thin zones cannot set wild rates. Bands: football inside 21m, 21-45m, beyond 45m
 and camogie inside 20m, 20-45m, 45-65m, beyond 65m. Replaces the old baseline, which
 measured each club against its own season and never used the shared function (its zone
 keys did not match). See supabase/migrations/20261022_xp_baseline_from_play.sql.
-Pool on 2026-10-22: football 748 shots from 3 clubs, hurling 327 from 2, camogie 823 from 1.
+Both sides of every game count. Pool on 2026-10-22: football 748 shots, 19 games, 13 teams;
+hurling 327 shots, 7 games, 8 teams; camogie 823 shots, 22 games, 20 teams.
 
 **Later:** once a sport passes about 2,000 shots from play, replace zones with a smooth
 distance-and-angle model so every shot gets its own expected value.
