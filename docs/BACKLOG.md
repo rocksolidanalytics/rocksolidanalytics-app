@@ -37,10 +37,15 @@ All-Ireland 2026 games first (football and hurling), then we gate and present th
 
 **Payments (Revolut Business)**, decided 2026-10-22 (Revolut over Stripe: already the
 business bank). Price: EUR 850 one-time, lifetime access for the whole club (all its
-teams). Payment link requested, waiting on Revolut.
-- When the link arrives (and the price): Unlock lifetime button points to it; a "Need an
-  invoice? Pay by bank transfer" option by email; pricing section, terms of sale and privacy
-  pages; a ready-made SQL line to unlock a club after payment.
+teams); not VAT registered. Done 2026-10-22: pricing section on the club page (Pay by card
+via the Revolut link, Request an invoice by email), terms.html and privacy.html, the app's
+Unlock lifetime button opens the pricing section.
+- To unlock a club after payment (Supabase SQL editor; check the name and county match
+  `clubs` first):
+  `update club_orgs set licence = 'lifetime' where id in (select org_id from clubs where name = 'CLUB NAME' and county = 'COUNTY');`
+- Terms to confirm: 14-day full refund; 3 months notice if the service ever closes. The
+  seller is named only as "Rock Solid Analytics, Ireland"; add a legal name and postal
+  address if wanted (Irish consumer law expects a trader's identity and address).
 - Later, if payments become regular: automatic unlock from a Revolut payment notification.
 
 **Analysis, later**

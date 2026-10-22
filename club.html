@@ -109,6 +109,24 @@
   .promise p { font-size: 19px; margin-top: 6px; }
   .mission { margin-top: 36px; font-size: 20px; font-style: italic; }
 
+.pricing { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 36px; align-items: stretch; }
+  .plan { display: flex; flex-direction: column; }
+  .plan.best { border-color: var(--gold); }
+  .plan .tag { font-family: var(--head); font-weight: 700; font-size: 15px; letter-spacing: 3px; text-transform: uppercase; color: var(--slate); }
+  .plan.best .tag { color: var(--gold); }
+  .plan .price { font-family: var(--head); font-weight: 800; font-size: clamp(56px, 7vw, 76px); line-height: 1; margin-top: 10px; }
+  .plan .per { color: var(--slate); font-size: 17px; margin-top: 4px; }
+  .plan ul { list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 10px; flex: 1; }
+  .plan li { display: grid; grid-template-columns: 12px 1fr; gap: 12px; color: var(--slate); font-size: 16px; }
+  .plan li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--green); margin-top: 8px; }
+  .plan.best li::before { background: var(--gold); }
+  .plan .btns { margin-top: 24px; }
+  .plan .btn { flex: 1 1 auto; }
+  .btn-gold { background: var(--gold); color: #1A1404; }
+  .btn-gold:hover { background: #F5CD5C; }
+  .fine { margin-top: 18px; color: var(--slate); font-size: 15px; }
+  .fine a { color: var(--white); }
+
   .contact { text-align: center; }
   .contact .lead { margin-left: auto; margin-right: auto; }
   .contact .btns { justify-content: center; }
@@ -123,6 +141,7 @@
     .split, .hero .split { grid-template-columns: 1fr; gap: 40px; }
     .split.flip > :first-child { order: 0; }
     .toolkit, .steps { grid-template-columns: repeat(2, 1fr); }
+    .pricing { grid-template-columns: 1fr; }
     .trio { grid-template-columns: 1fr; }
   }
   @media (max-width: 560px) {
@@ -335,10 +354,46 @@
       <h2>Good analysis should not depend on your budget</h2>
       <div class="promise">
         <div><div class="big" style="color:var(--green)">Free</div><p>to get started</p></div>
-        <div><div class="big" style="color:var(--gold)">No</div><p>monthly subscription</p></div>
+        <div><div class="big" style="color:var(--gold)">Once</div><p>&euro;850 for the whole club, no monthly subscription</p></div>
         <div><div class="big" style="color:var(--blue)">Every</div><p>club, every grade</p></div>
       </div>
       <div class="card mission">Rock Solid Analytics is built by a club volunteer to put proper match analysis in the hands of every GAA team, not just the ones with a budget for it.</div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <div class="wrap">
+      <div class="kicker">Pricing</div>
+      <h2>Start free. Pay once, keep it for good.</h2>
+      <p class="lead">One price for the whole club: every team, every grade, football, hurling, camogie and ladies. No monthly subscription.</p>
+      <div class="pricing">
+        <div class="card plan">
+          <div class="tag">Free plan</div>
+          <div class="price">&euro;0</div>
+          <div class="per">your first 10 matches</div>
+          <ul>
+            <li><span>Everything in the app, nothing held back</span></li>
+            <li><span>10 matches shared by all the club's teams, scouted games included</span></li>
+            <li><span>When the 10 are used, everything already tagged stays and keeps working</span></li>
+          </ul>
+          <div class="btns"><a class="btn btn-ghost" href="mailto:staff.rocksolidanalytics@gmail.com?subject=Club%20access%20code">Email for a code</a></div>
+        </div>
+        <div class="card plan best">
+          <div class="tag">Lifetime access</div>
+          <div class="price">&euro;850</div>
+          <div class="per">once, for the whole club</div>
+          <ul>
+            <li><span>Unlimited matches for every team in the club</span></li>
+            <li><span>New teams added later are covered too</span></li>
+            <li><span>Every update and new feature, at no extra cost</span></li>
+          </ul>
+          <div class="btns">
+            <a class="btn btn-gold" href="https://checkout.revolut.com/pay/6fc714a2-915f-4f52-a4d4-8c1940aa94f8" target="_blank" rel="noopener">Pay by card</a>
+            <a class="btn btn-ghost" href="mailto:staff.rocksolidanalytics@gmail.com?subject=Invoice%20for%20lifetime%20access&amp;body=Club%20name%3A%0ACounty%3A%0AName%20and%20address%20for%20the%20invoice%3A%0A">Request an invoice</a>
+          </div>
+        </div>
+      </div>
+      <p class="fine">After paying by card, email <a href="mailto:staff.rocksolidanalytics@gmail.com?subject=Paid%20for%20lifetime%20access&amp;body=Club%20name%3A%0ACounty%3A%0A">staff.rocksolidanalytics@gmail.com</a> with your club name and county and we unlock it within one working day. Prefer a bank transfer from the club account? Request an invoice. &euro;850 is the full price: Rock Solid Analytics is not registered for VAT. See the <a href="terms.html">terms of sale</a> and <a href="privacy.html">privacy notice</a>.</p>
     </div>
   </section>
 
@@ -364,7 +419,7 @@
 <footer>
   <div class="wrap">
     <span>&copy; 2026 Rock Solid Analytics</span>
-    <span><a href="mailto:staff.rocksolidanalytics@gmail.com">Email</a> &middot; <a href="https://www.instagram.com/rocksolidanalytics" target="_blank" rel="noopener">Instagram</a> &middot; <a href="./">Open the app</a></span>
+    <span><a href="mailto:staff.rocksolidanalytics@gmail.com">Email</a> &middot; <a href="https://www.instagram.com/rocksolidanalytics" target="_blank" rel="noopener">Instagram</a> &middot; <a href="./">Open the app</a> &middot; <a href="#pricing">Pricing</a> &middot; <a href="terms.html">Terms</a> &middot; <a href="privacy.html">Privacy</a></span>
   </div>
 </footer>
 
