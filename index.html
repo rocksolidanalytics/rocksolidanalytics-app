@@ -61,9 +61,9 @@
     .rsa-fb button:active:not(:disabled) { transform: none; }
   }
 </style>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -1028,7 +1028,7 @@
       /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18, textAlign: "center", fontSize: FS.sm, color: C.slateD, fontFamily: MONO } }, "Rock Solid Analytics"));
   }
 
-  function PlaylistPanel({ match, hideHead }) {
+  function PlaylistPanel({ match, hideHead, readOnly }) {
     const [pls, setPls] = useState(null);
     const [open, setOpen] = useState(-1);
     const [msg, setMsg] = useState("");
@@ -1040,6 +1040,8 @@
     }, [match && match.id]);
 
     function save(next, i) {
+      // Players can watch and share playlists; only coaches and analysts change them.
+      if (readOnly) { setMsg("Only coaches and analysts can change playlists."); setTimeout(function() { setMsg(""); }, 4000); return; }
       setPls(next);
       var row = next[i];
       if (!row || !row.id) return;
@@ -1134,7 +1136,7 @@
       }));
   }
 
-  function ClipBank({ club }) {
+  function ClipBank({ club, readOnly }) {
     const [rows, setRows] = useState(null);
     const [open, setOpen] = useState(false);
     useEffect(function() {
@@ -1177,7 +1179,7 @@
           return /* @__PURE__ */ React.createElement("div", { key: m.id, style: { marginTop: 6 } },
             /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 800, color: C.greenB, fontFamily: MONO, letterSpacing: 0.5, paddingTop: 10, borderTop: "1px solid " + C.border } },
               (m.opponent || "Match") + (m.date ? "  \u00b7  " + m.date : "")),
-            /* @__PURE__ */ React.createElement(PlaylistPanel, { match: m, hideHead: true }));
+            /* @__PURE__ */ React.createElement(PlaylistPanel, { match: m, hideHead: true, readOnly: readOnly }));
         })));
   }
 
@@ -1294,7 +1296,7 @@
       return React.createElement("div", { className: "rsa-screen rs-wide rsa-fb", style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { className: "rsa-gf-detail", style: { flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" } }, React.createElement("div", { className: "rsa-gf-video", style: { position: "sticky", top: 0, zIndex: 5, background: C.bg, padding: "12px 14px 8px", borderBottom: "1px solid " + C.border } }, player, React.createElement("div", { style: { display: "flex", gap: 6, paddingTop: 8, alignItems: "stretch" } }, [[-10, "\u00ab 10"], [-5, "\u2039 5"], [0, "PP"], [5, "5 \u203a"], [10, "10 \u00bb"]].map(function(b) {
         if (b[0] === 0) return React.createElement("button", { key: "pp", onClick: toggle, style: { flex: 1.1, minHeight: 44, padding: "9px 0", borderRadius: RAD.md, border: "1px solid " + C.greenB, background: C.greenB + ALPHA.soft, color: C.greenB, fontWeight: 800, fontSize: FS.md, cursor: "pointer" } }, playing ? "\u23F8" : "\u25B6");
         return React.createElement("button", { key: b[0], onClick: function() { nudge(b[0]); }, style: { flex: 1, minHeight: 44, padding: "9px 0", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bgCard, color: C.slate, fontWeight: 800, fontSize: FS.md, fontFamily: MONO, cursor: "pointer" } }, b[1]);
-      })), React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, paddingTop: 8, fontFamily: MONO } }, "TAP AN EVENT \u00b7 STARTS 5s BEFORE")), React.createElement("div", { className: "rsa-gf-events", style: { padding: "0 14px 28px" } }, React.createElement(PlaylistPanel, { match: sel }), chips, gchips, body2)));
+      })), React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, paddingTop: 8, fontFamily: MONO } }, "TAP AN EVENT \u00b7 STARTS 5s BEFORE")), React.createElement("div", { className: "rsa-gf-events", style: { padding: "0 14px 28px" } }, React.createElement(PlaylistPanel, { match: sel, readOnly: role === "player" }), chips, gchips, body2)));
     }
     var visible = (matches || []).filter(function(m) { return manage ? true : (m.video_enabled && ytId(m.video_url)); });
     var body = matches === null ? React.createElement("div", { style: { paddingTop: 4 } }, React.createElement(SkelRows, { n: 2, h: 92 })) : visible.length === 0 ? React.createElement("div", { style: { padding: 24, textAlign: "center", color: C.slateD, fontSize: FS.md } }, manage ? "No video-tagged games yet." : isAnalyst ? "No games switched on yet. Tap Manage to add a link and enable one." : "No game film available yet.") : visible.map(function(m, i) {
@@ -1309,7 +1311,7 @@
       }
       return React.createElement("div", { key: m.id || i, style: { background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.lg, padding: 14, marginBottom: 12 } }, kids);
     });
-    return React.createElement("div", { className: "rsa-screen rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "14px 14px 24px" } }, React.createElement(ClipBank, { club: club }), body));
+    return React.createElement("div", { className: "rsa-screen rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "14px 14px 24px" } }, React.createElement(ClipBank, { club: club, readOnly: role === "player" }), body));
   }
   function Home({ club, onSignOut, onImport, onGameFilm, onLineups, onStats, onNewMatch, onVideoHub, onTemplate, onLive, onTactic, onHelp, onSquad, onLivePad, onResume, resumeMatch, matchCount, role, onPitchMap, onOpposition, onClub }) {
     const [hact, setHact] = useState(null);
@@ -1421,14 +1423,14 @@
       // On a wide screen (iPad landscape) the sections sit in two columns; on a phone they stack.
       React.createElement("div", { className: "rsa-home-cols" }, React.createElement("div", { className: "rsa-home-col" },
       !isPlayer && Label("MATCH"),
-      Row(onNewMatch, "+", C.greenB, "New match", "Set up a game & squad, ready to tag", null, 20),
+      !isPlayer && Row(onNewMatch, "+", C.greenB, "New match", "Set up a game & squad, ready to tag", null, 20),
       !isPlayer && resumeMatch && club && resumeMatch.club_id === club.id && React.createElement("button", { onClick: function() { onResume(resumeMatch); }, style: { width: "100%", marginTop: 12, padding: 14, borderRadius: RAD.xl, background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB + ALPHA.mid, boxShadow: "0 0 20px " + C.greenB + ALPHA.faint, cursor: "pointer", display: "flex", alignItems: "center", gap: 12 } },
         Badge("\u25B6", C.greenB, 12),
         React.createElement("div", { style: { textAlign: "left", flex: 1, minWidth: 0 } },
           React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800, color: C.greenB, letterSpacing: -0.2 } }, "Resume Tagging"),
           React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 500, color: C.slate, marginTop: 2, fontFamily: MONO } }, resumeMatch.opponent || "TBC")),
         Pill("Resume", C.greenB)),
-      Row(onImport, "\u2191", C.greenB, "Import data", "Upload match CSVs to build your history", null, 17),
+      !isPlayer && Row(onImport, "\u2191", C.greenB, "Import data", "Upload match CSVs to build your history", null, 17),
       !isPlayer && Row(onLineups, "\u2630", C.greenB, "Edit match information", "Line-ups, details, referee, venue and weather", null, 14),
       !isPlayer && Row(onSquad, "\u25C9", C.greenB, "Squad", "Add players \xB7 set preferred positions", null, 19),
       ), React.createElement("div", { className: "rsa-home-col" },
@@ -11247,7 +11249,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     return m ? Number(m[1]) * 3 + Number(m[2]) : null;
   }
   function odGP(g, p) { return g + "-" + (p < 10 ? "0" : "") + p; }
-  function OppDB({ club, back, focus }) {
+  function OppDB({ club, back, focus, role }) {
     const [raw, setRaw] = useState(null);
     const [err, setErr] = useState("");
     const [ts, setTs] = useState({});
@@ -11288,6 +11290,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       })();
     }, []);
     async function odSaveTs(patchFn) {
+      // Players can read the team pages; only coaches and analysts change them. The save never
+      // completes for a player, so no other message replaces this one.
+      if (role === "player") { setErr("Only coaches and analysts can change team details."); return new Promise(function() {}); }
       var cr = await db.from("clubs").select("tag_settings").eq("id", club.id).maybeSingle();
       var cur = cr && cr.data && cr.data.tag_settings || {};
       var next = patchFn(JSON.parse(JSON.stringify(cur)));
@@ -12112,7 +12117,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setPhase(tplMatch ? "editmatch" : "home");
     } });
     if (phase === "pitchmap") return /* @__PURE__ */ React.createElement(PitchExplorer, { club, back: () => setPhase("home") });
-    if (phase === "opposition") return /* @__PURE__ */ React.createElement(OppDB, { club, back: () => setPhase("home") });
+    if (phase === "opposition") return /* @__PURE__ */ React.createElement(OppDB, { club, role, back: () => setPhase("home") });
     if (phase === "videohub") return /* @__PURE__ */ React.createElement(VideoHub, { club, session, role, onPick: (m) => {
       setTagMatch(m);
       setPhase("video");

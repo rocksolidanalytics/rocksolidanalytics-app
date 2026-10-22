@@ -5,13 +5,15 @@ Open items first, then decisions, then what has been done, newest first.
 ## Open
 
 **Next up**
-- **Pin library versions** (10 minutes, do soon): React and Supabase load as `react@18` and
-  `supabase-js@2`, so a new release reaches every user with no deploy from us and could
-  break sign-in or saving. Pin exact versions, as PapaParse already is.
-- **Security: tighten write rules by role.** RLS on matches, events and appearances lets
-  any club member write (players and demo visitors included); the app only hides the
-  buttons. Limit insert, update and delete to analysts before paying clubs come on. Demo
-  visitors can currently edit or delete the demo club data, including its set plays.
+- **Write rules by role: app side done 2026-10-22, database rules waiting to be run.**
+  supabase/migrations/20261022_write_rules_by_role.sql: reading stays club-wide; insert,
+  update and delete only for the owner and analysts (`can_edit_club`); club settings the same;
+  demo visitors can add and change their own new rows but not the demo data (before 22 Oct)
+  or the demo club settings; `live_match` (unused) no longer writable by anyone. App: players
+  no longer see New match or Import data; Game film playlists and Opposition team pages are
+  read-only for players with a message.
+- ~~Pin library versions~~: done 2026-10-22. React and React DOM 18.3.1, supabase-js
+  2.118.0 (the versions users already ran), PapaParse 5.4.1.
 
 **All-Ireland 2026 showcase (replaces the demo)**, agreed 2026-10-22. Tadhg tags 3 or 4
 All-Ireland 2026 games first (football and hurling), then we gate and present them.
