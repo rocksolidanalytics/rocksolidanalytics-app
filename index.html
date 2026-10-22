@@ -9604,7 +9604,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, lineHeight: 1.55, marginTop: 8 } },
             "No break in play between losing the ball and the shot.")));
     })(),
-    dtab === "kickouts" && isMatch && React.createElement(Section, { title: (team === "us" ? "OWN" : ON.toUpperCase()) + " " + RESTARTS().toUpperCase() + " IN ORDER \u00b7 TIME TO TAKE" }, React.createElement(KoTimeline, { key: team, evs: d._events, side: team, sideName: team === "us" ? (club.name || "Us") : ON })),
+    dtab === "kickouts" && isMatch && React.createElement(Section, { title: (team === "us" ? "OWN" : ON.toUpperCase()) + " " + RESTARTS().toUpperCase() + " IN ORDER \u00b7 TIME TO TAKE" }, React.createElement(KoTimeline, { key: team, evs: d._events, side: team, sideName: team === "us" ? (club.name || "Us") : ON, otherName: team === "us" ? ON : (club.name || "Us") })),
     dtab === "kickouts" && (/* @__PURE__ */ React.createElement(Section, { title: (team === "us" ? "OWN" : ON.toUpperCase()) + " RESTART MAP" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, paddingBottom: 9 } }, [["all","All"],["short","Short"],["mid","Mid"],["long","Long"]].map(function(b){ var on = koBand === b[0]; return /* @__PURE__ */ React.createElement("button", { key: b[0], onClick: function(){ setKoBand(b[0]); }, style: { flex: 1, minHeight: 44, padding: "7px 0", borderRadius: RAD.md, border: "1px solid " + (on ? C.greenB : C.border), background: on ? C.greenB + ALPHA.soft : "none", color: on ? C.greenB : C.slate, fontWeight: 700, fontSize: FS.sm, cursor: "pointer" } }, b[1]); })), /* @__PURE__ */ React.createElement(KickoutMap, { pts: fKo(d.koPts[team], koBand) }), /* @__PURE__ */ React.createElement(KickoutLegend, null))),
     dtab === "kickouts" && (/* @__PURE__ */ React.createElement(Section, { title: (team === "us" ? "OWN" : ON.toUpperCase()) + " RESTART WIN % BY ZONE" }, /* @__PURE__ */ React.createElement(ZoneGrid, { grid: d.koGrid[team], unit: RST() + "s" }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, marginTop: 8 } }, restarts_() + " \u00b7 <45m / 45-65m / 65m+ from own goal x channel"))),
     dtab === "kickouts" && (/* @__PURE__ */ React.createElement(Section, { title: (team === "us" ? "OWN" : ON.toUpperCase()) + " RESTART WIN % \xB7 SPEED \xD7 LENGTH" }, /* @__PURE__ */ React.createElement(ZoneGrid, { grid: d.koSpeedGrid[team], unit: RST() + "s", cols: [["FAST", "fast"], ["SLOW", "slow"]] }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, marginTop: 8 } }, "fast = quicker than the median restart (", d.koMed[team], "s) \u00b7 length from own goal"))),
@@ -10553,51 +10553,68 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     });
     return out;
   }
-  function KoTimeline({ evs, side, sideName }) {
+  // Two questions, one each: the dots say whether each restart was won (green) or lost (red)
+  // and how long it took; the bars underneath say what came of it before the next restart
+  // (green up for the side taking it, red down for the other side, one step per point).
+  function KoTimeline({ evs, side, sideName, otherName }) {
     const [sel, setSel] = useState(null);
     var ko = koTimeline(evs, side), R = RESTART().toLowerCase();
     if (ko.length < 3) return React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD } }, "Not enough " + RESTARTS().toLowerCase() + " tagged in this match.");
-    var W = 340, H = 170, L = 30, B = 22, T = 8, Rp = 8, timed = ko.filter(function(k) { return k.spd != null; });
+    var W = 340, L = 30, Rp = 8, T = 10, H1 = 150, GAP = 14, SH = 60, H = H1 + GAP + SH + 14, timed = ko.filter(function(k) { return k.spd != null; });
     var top = Math.max(20, Math.ceil(Math.max.apply(null, [0].concat(timed.map(function(k) { return k.spd; }))) / 10) * 10);
     var X = function(n) { return L + (W - L - Rp) * (ko.length === 1 ? 0.5 : (n - 1) / (ko.length - 1)); };
-    var Y = function(s) { return T + (H - T - B) * (1 - Math.min(s, top) / top); };
+    var Y = function(s) { return T + (H1 - T) * (1 - Math.min(s, top) / top); };
+    var mid = H1 + GAP + SH / 2, step = 9;
+    var colW = Math.max(6, Math.min(16, (W - L - Rp) / ko.length));
+    var sp = timed.map(function(k) { return k.spd; }).sort(function(a, b) { return a - b; }), med = sp.length ? sp[Math.floor((sp.length - 1) / 2)] : null;
     var els = [];
     for (var g = 0; g <= top; g += top <= 40 ? 10 : 20) {
       els.push(React.createElement("line", { key: "g" + g, x1: L, x2: W - Rp, y1: Y(g), y2: Y(g), stroke: C.border, strokeWidth: 1 }));
       els.push(React.createElement("text", { key: "gt" + g, x: L - 6, y: Y(g) + 3.5, textAnchor: "end", fontSize: 10, fill: C.slateD, fontFamily: MONO }, g + "s"));
     }
+    if (med != null && sp.length >= 4) {
+      els.push(React.createElement("line", { key: "med", x1: L, x2: W - Rp, y1: Y(med), y2: Y(med), stroke: C.gold, strokeWidth: 1, strokeDasharray: "4 3", opacity: 0.8 }));
+    }
     var half = ko.findIndex(function(k) { return k.per === 2; });
     if (half > 0) {
       var hx = (X(ko[half - 1].n) + X(ko[half].n)) / 2;
-      els.push(React.createElement("line", { key: "ht", x1: hx, x2: hx, y1: T, y2: H - B, stroke: C.slate, strokeWidth: 1, strokeDasharray: "3 3" }));
-      els.push(React.createElement("text", { key: "htt", x: hx + 3, y: T + 9, fontSize: 9, fill: C.slate, fontFamily: MONO }, "2ND HALF"));
+      els.push(React.createElement("line", { key: "ht", x1: hx, x2: hx, y1: T, y2: H1 + GAP + SH, stroke: C.slate, strokeWidth: 1, strokeDasharray: "3 3" }));
+      els.push(React.createElement("text", { key: "htt", x: hx + 3, y: T + 8, fontSize: 9, fill: C.slate, fontFamily: MONO }, "2ND HALF"));
     }
+    // The strip for what followed, with its centre line
+    els.push(React.createElement("line", { key: "mid", x1: L, x2: W - Rp, y1: mid, y2: mid, stroke: C.borderB, strokeWidth: 1 }));
+    els.push(React.createElement("text", { key: "mu", x: L - 6, y: mid - 8, textAnchor: "end", fontSize: 9, fill: C.greenB, fontFamily: MONO }, side === "us" ? "US" : "OPP"));
+    els.push(React.createElement("text", { key: "md", x: L - 6, y: mid + 15, textAnchor: "end", fontSize: 9, fill: C.red, fontFamily: MONO }, side === "us" ? "OPP" : "US"));
     ko.forEach(function(k) {
-      var x = X(k.n), y = k.spd == null ? H - B - 4 : Y(k.spd), r = k.val >= 2 ? 7.5 : 5.5, col = k.won === true ? C.greenB : k.won === false ? C.red : C.slateD;
-      var shape = k.res === "for" ? React.createElement("circle", { cx: x, cy: y, r: r }) : k.res === "against" ? React.createElement("polygon", { points: x + "," + (y - r * 1.15) + " " + (x - r) + "," + (y + r * 0.85) + " " + (x + r) + "," + (y + r * 0.85) }) : React.createElement("rect", { x: x - r * 0.85, y: y - r * 0.85, width: r * 1.7, height: r * 1.7, rx: 1 });
-      els.push(React.createElement("g", { key: "k" + k.n, onClick: function() { setSel(sel === k.n ? null : k.n); }, style: { cursor: "pointer" }, fill: col, stroke: sel === k.n ? C.white : C.bg, strokeWidth: sel === k.n ? 2 : 1, opacity: k.spd == null ? 0.55 : 1 },
-        React.createElement("circle", { cx: x, cy: y, r: 12, fill: "transparent", stroke: "none" }), shape));
+      var x = X(k.n), col = k.won === true ? C.greenB : k.won === false ? C.red : C.slateD, on = sel === k.n;
+      if (k.res) {
+        var hgt = Math.max(1, k.val) * step, up = k.res === "for";
+        els.push(React.createElement("rect", { key: "b" + k.n, x: x - colW * 0.35, y: up ? mid - hgt : mid, width: colW * 0.7, height: hgt, rx: 1.5, fill: up ? C.greenB : C.red }));
+      }
+      els.push(k.spd == null
+        ? React.createElement("circle", { key: "d" + k.n, cx: x, cy: H1 - 2, r: 4, fill: "none", stroke: col, strokeWidth: 1.6 })
+        : React.createElement("circle", { key: "d" + k.n, cx: x, cy: Y(k.spd), r: on ? 6.5 : 5, fill: col, stroke: on ? C.white : C.bg, strokeWidth: on ? 2 : 1 }));
+      // A tall, invisible column per restart makes it easy to tap.
+      els.push(React.createElement("rect", { key: "hit" + k.n, x: x - colW / 2, y: T, width: colW, height: H1 + GAP + SH - T, fill: "transparent", style: { cursor: "pointer" }, onClick: function() { setSel(sel === k.n ? null : k.n); } }));
     });
-    els.push(React.createElement("text", { key: "xl", x: (L + W) / 2, y: H - 4, textAnchor: "middle", fontSize: 10, fill: C.slateD, fontFamily: MONO }, RESTARTS().toUpperCase() + " IN ORDER · 1 TO " + ko.length));
-    // The one-line read: quick restarts against slow ones.
-    var sp = timed.map(function(k) { return k.spd; }).sort(function(a, b) { return a - b; }), med = sp.length ? sp[Math.floor((sp.length - 1) / 2)] : null;
+    els.push(React.createElement("text", { key: "xl", x: (L + W) / 2, y: H - 2, textAnchor: "middle", fontSize: 10, fill: C.slateD, fontFamily: MONO }, RESTARTS().toUpperCase() + " IN ORDER · 1 TO " + ko.length));
     var rate = function(l) { var w = l.filter(function(k) { return k.won === true; }).length, n = l.filter(function(k) { return k.won != null; }).length; return n ? w + " of " + n : "none"; };
     var fast = timed.filter(function(k) { return k.spd <= med; }), slow = timed.filter(function(k) { return k.spd > med; });
     var fScore = ko.filter(function(k) { return k.res === "for"; }).length, aScore = ko.filter(function(k) { return k.res === "against"; }).length;
     var s = sel ? ko[sel - 1] : null;
-    var key = function(shape, label) { return React.createElement("span", { style: { display: "inline-flex", alignItems: "center", gap: 5, marginRight: 12 } }, React.createElement("svg", { width: 12, height: 12, viewBox: "0 0 12 12" }, shape), label); };
+    var dot = function(c, hollow) { return React.createElement("svg", { width: 12, height: 12, viewBox: "0 0 12 12", style: { flexShrink: 0 } }, React.createElement("circle", { cx: 6, cy: 6, r: hollow ? 4 : 5, fill: hollow ? "none" : c, stroke: c, strokeWidth: hollow ? 1.6 : 0 })); };
+    var bar = function(c, up) { return React.createElement("svg", { width: 14, height: 18, viewBox: "0 0 14 18", style: { flexShrink: 0 } }, React.createElement("rect", { x: 4, y: up ? 1 : 9, width: 6, height: 8, rx: 1.5, fill: c }), React.createElement("line", { x1: 0, x2: 14, y1: 9, y2: 9, stroke: C.slate, strokeWidth: 1.2 })); };
+    var dash = React.createElement("svg", { width: 18, height: 12, viewBox: "0 0 18 12", style: { flexShrink: 0 } }, React.createElement("line", { x1: 0, x2: 18, y1: 6, y2: 6, stroke: C.gold, strokeWidth: 1.5, strokeDasharray: "4 3" }));
+    var item = function(icon, text) { return React.createElement("span", { style: { display: "inline-flex", alignItems: "center", gap: 6, marginRight: 14 } }, icon, text); };
     return React.createElement("div", null,
-      med != null && sp.length >= 4 ? React.createElement("div", { style: { fontSize: FS.sm, color: C.white, marginBottom: 8, lineHeight: 1.5 } }, "Typical " + R + " takes " + med + "s. Quicker ones won " + rate(fast) + ", slower ones " + rate(slow) + ". " + fScore + " led to a score for " + sideName + ", " + aScore + " to a score against.") : null,
+      med != null && sp.length >= 4 ? React.createElement("div", { style: { fontSize: FS.sm, color: C.white, marginBottom: 8, lineHeight: 1.5 } }, "Typical " + R + " takes " + med + "s. Quicker ones won " + rate(fast) + ", slower ones " + rate(slow) + ". " + fScore + " led to a score for " + sideName + ", " + aScore + " to a score for " + otherName + ".") : null,
       React.createElement("svg", { viewBox: "0 0 " + W + " " + H, style: { width: "100%", height: "auto", display: "block" } }, els),
-      React.createElement("div", { style: { fontSize: FS.xs, color: C.slate, fontFamily: MONO, marginTop: 6, lineHeight: 1.8 } },
-        key(React.createElement("rect", { x: 1, y: 1, width: 10, height: 10, rx: 1, fill: C.greenB }), "WON"),
-        key(React.createElement("rect", { x: 1, y: 1, width: 10, height: 10, rx: 1, fill: C.red }), "LOST"),
-        key(React.createElement("circle", { cx: 6, cy: 6, r: 5, fill: C.slate }), "SCORE FOR"),
-        key(React.createElement("polygon", { points: "6,0.5 11.5,11 0.5,11", fill: C.slate }), "SCORE AGAINST"),
-        key(React.createElement("rect", { x: 1, y: 1, width: 10, height: 10, rx: 1, fill: C.slate }), "NO SCORE")),
-      React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO, lineHeight: 1.5 } }, "BIGGER = 2 OR 3 POINTS · FADED = NO TIME (NO SCORE OR WIDE TAGGED BEFORE IT) · TAP ONE FOR DETAIL"),
+      React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 8, lineHeight: 1.9 } },
+        React.createElement("div", null, item(dot(C.greenB), "Won"), item(dot(C.red), "Lost"), med != null && sp.length >= 4 ? item(dash, "Typical " + med + "s") : null, item(dot(C.slate, true), "No time tagged")),
+        React.createElement("div", null, item(bar(C.greenB, true), "Then " + sideName + " scored"), item(bar(C.red, false), "Then " + otherName + " scored")),
+        React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD } }, "Height of a dot = seconds to take it. Each bar step is a point; a goal is three. Tap any restart for detail.")),
       s ? React.createElement("div", { style: { marginTop: 8, padding: "8px 10px", background: C.field, borderRadius: RAD.md, fontSize: FS.sm, color: C.white } },
-        "#" + s.n + (s.t ? " · " + String(s.t).replace(/^00:/, "") + (s.per === 2 ? " (2nd)" : "") : "") + " · " + (s.spd != null ? s.spd + "s to take" : "no time") + " · " + (s.oc || "no outcome") + (s.player ? " · " + s.player : "") + " · " + (s.res === "for" ? "led to a score for" : s.res === "against" ? "led to a score against" : "no score before the next " + R)) : null);
+        "#" + s.n + (s.t ? " · " + String(s.t).replace(/^00:/, "") + (s.per === 2 ? " (2nd)" : "") : "") + " · " + (s.spd != null ? s.spd + "s to take" : "no time") + " · " + (s.oc || "no outcome") + (s.player ? " · " + s.player : "") + " · " + (s.res === "for" ? sideName + " scored next" : s.res === "against" ? otherName + " scored next" : "no score before the next " + R)) : null);
   }
   // Turnovers that were punished: for each turnover we gave away, did they score before we won
   // the ball back? Shown as a rate against the team rate, only for players with enough turnovers,

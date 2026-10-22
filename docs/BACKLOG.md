@@ -97,10 +97,11 @@ won back instead of calling it unclear. 95% agreement with the 82 hand-tagged so
 St Jude's hurling, up from 44%. The panel notes how many scores were traced past a missing
 or misplaced tag.
 
-**Restart timeline.** Restarts tab, one match: every restart of the chosen side in order,
-height = time to take, green won / red lost, circle = score for / triangle = score against
-/ square = no score before the next restart, bigger for 2 or 3 points, half-time line, tap
-for detail, and a one-line read (typical time, quick v slow won, scores for and against).
+**Restart timeline.** Restarts tab, one match (also in the Live Stats Pad): every restart
+of the chosen side in order. Dots: height = seconds to take, green won / red lost, a dashed
+line for the typical time. A strip underneath shows what came before the next restart:
+green bar up when the side taking it scored, red bar down when the other side did, one
+step per point. Half-time line, tap any restart for detail, one-line read on top.
 
 **Turnovers that led to a score against.** On the Players tab (season and match), in the
 Live Stats Pad and in the live tagger stats (Detailed), always closed by default. Rate of
