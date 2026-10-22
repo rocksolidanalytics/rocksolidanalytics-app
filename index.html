@@ -10632,7 +10632,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   }
   function TurnoverCost({ evs, isMatch }) {
     const [open, setOpen] = useState(false);
-    var MIN = isMatch ? 3 : 8;
+    var MIN = isMatch ? 2 : 8;
     var tc = open ? turnoverCost(evs) : null;
     var avg = tc && tc.tot.n ? tc.tot.k / tc.tot.n : 0;
     var list = tc ? tc.rows.filter(function(r) { return r.n >= MIN; }).sort(function(a, b) { return b.k / b.n - a.k / a.n || b.n - a.n; }) : [];
