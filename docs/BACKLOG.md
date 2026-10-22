@@ -35,10 +35,12 @@ All-Ireland 2026 games first (football and hurling), then we gate and present th
   button points to it; strip broadcast video links; no individual player ratings on show.
   Rock Solid Gaels stays until the showcase is live.
 
-**Payments (Stripe)**, discussed 2026-10-21, waiting on a price decision.
-- Start manual: a Stripe Payment Link for a one-time club licence, reply with a club code.
-- Pricing section on the club page, terms of sale and privacy pages.
-- Later: Stripe webhook to a Supabase function that issues the club code and emails it.
+**Payments (Revolut Business)**, decided 2026-10-22 (Revolut over Stripe: already the
+business bank). Payment link requested, waiting on Revolut.
+- When the link arrives (and the price): Unlock lifetime button points to it; a "Need an
+  invoice? Pay by bank transfer" option by email; pricing section, terms of sale and privacy
+  pages; a ready-made SQL line to unlock a club after payment.
+- Later, if payments become regular: automatic unlock from a Revolut payment notification.
 
 **Analysis, later**
 - Expected scores: once a sport passes about 2,000 shots from play, replace zones with a
