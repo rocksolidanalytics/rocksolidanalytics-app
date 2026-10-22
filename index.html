@@ -9346,7 +9346,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         return /* @__PURE__ */ React.createElement("button", { key: hf[0], onClick: function() { setHalf(hf[0]); }, style: { minHeight: 44, margin: "-10px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement("span", { style: { padding: "6px 14px", borderRadius: RAD.md, fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, letterSpacing: 0.5, background: on ? C.greenB : "transparent", color: on ? C.bg : C.slateD } }, hf[1]));
       })),
     dtab === "overview" && !isMatch && (readNotes.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { padding: 16, borderRadius: RAD.xl, background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB + ALPHA.soft, marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 12 } }, isMatch ? "MATCH READ" : "SEASON READ"), readNotes.map(function(n, i) {
-      return /* @__PURE__ */ React.createElement("div", { key: i, style: { fontSize: FS.md, lineHeight: 1.6, color: C.white, marginBottom: i < readNotes.length - 1 ? 10 : 0 } }, n);
+      return React.createElement(ReadPoint, { key: i, p: n, first: i === 0, last: i === readNotes.length - 1 });
     }))),
     dtab === "overview" && isMatch && React.createElement(KcToggle, { mode: ovMode, setMode: setOvMode }),
     dtab === "overview" && isMatch && ovMode === "key" && match && match.status !== "final" && (d._events || []).length >= 30 && React.createElement(HalfTimeCard, { evs: (d._events || []).filter(function(e) { return !e.match_id || e.match_id === match.id; }), usName: club.name, oppName: oppName || match.opponent || "Opposition", title: (d._events || []).some(function(e) { return String(e.period) === "2"; }) ? "TALKING POINTS \u00B7 SO FAR" : "TALKING POINTS \u00B7 1ST HALF" }),
@@ -10676,20 +10676,24 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         }) : tc.tot.n ? React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD } }, "No player has " + MIN + "+ turnovers yet.") : null,
         list.length ? React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO, marginTop: 8 } }, "WHITE LINE = TEAM RATE · RED = CLEARLY ABOVE IT (10+ POINTS, 3+ PUNISHED)") : null));
   }
-  // Season Read: a few sentences that say what the numbers mean, not what they are. Each line
-  // is only written when there is enough behind it, and the order is: form, what decides
-  // games, who the scores depend on, how the scores are made, then restarts and finishing.
+  // Season Read: a few points that say what the numbers mean, not what they are. Each point is
+  // { tag, tone, head, body, form }: a short label, good / bad / neutral, a headline with the key
+  // numbers, a quieter line of detail, and for form the last five results. A point is only
+  // written when there is enough behind it.
   function seasonRead(d, nm) {
     var ms = (d.matches || []).filter(function(m) { return m.our_total != null && m.opp_total != null && !m.scouting; }).slice().sort(function(a, b) { return String(a.date || "").localeCompare(String(b.date || "")); });
     if (ms.length < 3) return null;
     var out = [], evs = d._events || [];
+    var sgn = function(v, dp) { var t = Math.abs(v).toFixed(dp == null ? 1 : dp); return (v > 0 ? "+" : v < 0 ? "−" : "") + t; };
     var res = function(m) { return m.our_total > m.opp_total ? "W" : m.our_total < m.opp_total ? "L" : "D"; };
     var w = ms.filter(function(m) { return res(m) === "W"; }).length, l = ms.filter(function(m) { return res(m) === "L"; }).length, dr = ms.length - w - l;
     var marg = function(list) { return list.reduce(function(a, m) { return a + m.our_total - m.opp_total; }, 0) / Math.max(1, list.length); };
     var all = marg(ms), last = ms.slice(-5), lm = marg(last);
-    var form = last.map(res).join("");
-    var trend = ms.length >= 8 && Math.abs(lm - all) >= 3 ? (lm > all ? " Form is up: the last five average " + (lm >= 0 ? "+" : "") + lm.toFixed(1) + " a game against " + (all >= 0 ? "+" : "") + all.toFixed(1) + " for the season." : " Form has dipped: the last five average " + (lm >= 0 ? "+" : "") + lm.toFixed(1) + " a game against " + (all >= 0 ? "+" : "") + all.toFixed(1) + " for the season.") : "";
-    out.push(nm + " are " + w + "-" + dr + "-" + l + " from " + ms.length + " games, winning by " + (all >= 0 ? all.toFixed(1) : "–") + (all >= 0 ? " a game on average" : "") + (all < 0 ? "losing by " + (-all).toFixed(1) + " a game on average" : "") + ". Last five: " + form.split("").join(" ") + "." + trend);
+    var trendUp = ms.length >= 8 && lm - all >= 3, trendDown = ms.length >= 8 && all - lm >= 3;
+    out.push({ tag: "FORM", tone: trendUp ? "good" : trendDown ? "bad" : all > 0 ? "good" : all < 0 ? "bad" : "flat",
+      head: w + "-" + dr + "-" + l + " from " + ms.length + " games · " + (Math.abs(all) < 0.05 ? "level on average" : (all > 0 ? "winning by " : "losing by ") + Math.abs(all).toFixed(1) + " a game"),
+      form: last.map(res),
+      body: trendUp ? "Form is up: the last five average " + sgn(lm) + " a game against " + sgn(all) + " for the season." : trendDown ? "Form has dipped: the last five average " + sgn(lm) + " a game against " + sgn(all) + " for the season." : "The last five average " + sgn(lm) + " a game, close to the season." });
     // What decides games: the measure that moves most between wins and the rest
     var wl = d.winLoss;
     if (wl && wl.nW >= 2 && wl.nL >= 2) {
@@ -10697,16 +10701,24 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var best = null;
       wl.rows.forEach(function(r) {
         if (r.w == null || r.l == null) return;
-        var gap = Math.abs(r.w - r.l), th = TH[r.label] || 5, sc = gap / th;
+        // Only a measure that is better in wins can be said to decide them.
+        if (r.better === "low" ? !(r.w < r.l) : !(r.w > r.l)) return;
+        var sc = Math.abs(r.w - r.l) / (TH[r.label] || 5);
         if (sc >= 1 && (!best || sc > best.sc)) best = { r: r, sc: sc };
       });
       if (best) {
-        var r = best.r, u = r.unit || "", f = function(v) { return (r.signed && v > 0 ? "+" : "") + v + u; };
-        var say = { "Opposition shots faced": "the opposition get " + f(r.l) + " shots in defeats and draws against " + f(r.w) + " in wins", "Own restart retention": "own restarts are kept " + f(r.w) + " of the time in wins but only " + f(r.l) + " in defeats and draws", "Turnovers won": "they win " + f(r.w) + " turnovers a game in wins and " + f(r.l) + " in defeats and draws", "Shooting accuracy": "shooting is " + f(r.w) + " in wins and " + f(r.l) + " in defeats and draws", "First 10 mins (pts margin)": "the first ten minutes go " + f(r.w) + " in wins and " + f(r.l) + " in defeats and draws" }[r.label];
-        if (say) out.push("What decides their games: " + say + ".");
+        var r = best.r, u = r.unit || "", f = function(v) { return (r.signed ? sgn(v, 0) : Math.round(v)) + u; };
+        var T = {
+          "Opposition shots faced": ["Shots faced: " + f(r.w) + " in wins, " + f(r.l) + " otherwise", "Holding the opposition to about " + f(r.w) + " shots is the clearest marker of a win."],
+          "Own restart retention": ["Own restarts kept: " + f(r.w) + " in wins, " + f(r.l) + " otherwise", "Winning their own restarts is the clearest marker of a win."],
+          "Turnovers won": ["Turnovers won: " + f(r.w) + " in wins, " + f(r.l) + " otherwise", "Winning the ball back is the clearest marker of a win."],
+          "Shooting accuracy": ["Accuracy: " + f(r.w) + " in wins, " + f(r.l) + " otherwise", "Shooting is the clearest marker of a win."],
+          "First 10 mins (pts margin)": ["First ten minutes: " + f(r.w) + " in wins, " + f(r.l) + " otherwise", "Fast starts are the clearest marker of a win."]
+        }[r.label];
+        if (T) out.push({ tag: "WHAT DECIDES GAMES", tone: "flat", head: T[0], body: T[1] + " Based on " + wl.nW + " wins and " + wl.nL + " other results." });
       }
     } else if (l + dr < 2) {
-      out.push("Only " + (l + dr) + (l + dr === 1 ? " game" : " games") + " not won so far, too few to say what goes wrong in them.");
+      out.push({ tag: "WHAT DECIDES GAMES", tone: "flat", head: "Too few games not won to say", body: "Only " + (l + dr) + (l + dr === 1 ? " game" : " games") + " not won so far." });
     }
     // Who the scores depend on, and how much comes from frees
     var pl = {}, tot = 0;
@@ -10720,10 +10732,14 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     if (tops.length && tot >= 20) {
       var t1 = tops[0], sh1 = Math.round(100 * t1.t / tot), frs = Math.round(100 * t1.fr / Math.max(1, t1.t));
       var two = tops.length > 1 ? Math.round(100 * (t1.t + tops[1].t) / tot) : sh1;
-      out.push(t1.n + " accounts for " + sh1 + "% of their scoring" + (frs >= 40 ? ", " + frs + "% of it from frees" : "") + (two >= 50 && tops.length > 1 ? "; with " + tops[1].n + " that is " + two + "%, so a lot rests on two players" : "") + ".");
+      var bits = [];
+      if (frs >= 40) bits.push(frs + "% of it from frees");
+      if (two >= 50 && tops.length > 1) bits.push("with " + tops[1].n + " that is " + two + "%, so a lot rests on two players");
+      else if (tops.length > 1) bits.push(tops[1].n + " is next with " + Math.round(100 * tops[1].t / tot) + "%");
+      out.push({ tag: "SCORING", tone: two >= 50 ? "bad" : "flat", head: t1.n + ": " + sh1 + "% of the scoring", body: bits.length ? bits[0].charAt(0).toUpperCase() + bits.join("; ").slice(1) + "." : "" });
     }
     // How the scores are made, and how they are conceded
-    var lab = { ownKO: "their own " + RESTARTS().toLowerCase(), oppKO: "the opposition " + RESTARTS().toLowerCase(), toKick: "turnovers", toHand: "turnovers", toContact: "turnovers", toOther: "turnovers", throwIn: "throw-ins" };
+    var lab = { ownKO: "own " + RESTARTS().toLowerCase(), oppKO: "opposition " + RESTARTS().toLowerCase(), toKick: "turnovers", toHand: "turnovers", toContact: "turnovers", toOther: "turnovers", throwIn: "throw-ins" };
     var srcTop = function(side) {
       var s = d.srcData && d.srcData[side], t = d.srcData && d.srcData.tot && d.srcData.tot[side];
       if (!s || !t || t < 15) return null;
@@ -10732,7 +10748,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return k ? { k: k, pct: Math.round(100 * g[k] / t) } : null;
     };
     var su = srcTop("us"), so = srcTop("opp");
-    if (su) out.push(su.pct + "% of their scores start from " + su.k + (so ? ", while " + so.pct + "% of what they concede starts from " + (so.k === "their own " + RESTARTS().toLowerCase() ? "the opposition winning their own restarts" : so.k === "the opposition " + RESTARTS().toLowerCase() ? "losing their own restarts" : so.k === "turnovers" ? "turnovers they give away" : so.k) : "") + ".");
+    if (su) {
+      var conc = so ? (so.k === "turnovers" ? "turnovers they give away" : so.k === "own " + RESTARTS().toLowerCase() ? "the opposition winning their own restarts" : so.k === "opposition " + RESTARTS().toLowerCase() ? "losing their own restarts" : so.k) : null;
+      out.push({ tag: "HOW SCORES COME", tone: "flat", head: su.pct + "% of scores start from " + su.k, body: conc ? so.pct + "% of what they concede starts from " + conc + "." : "" });
+    }
     // Restarts as a swing factor: the record when fewer than half are kept
     var low = [], hi = [];
     ms.forEach(function(m) {
@@ -10745,16 +10764,30 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     // Only worth saying when the record really differs (20+ points of win rate).
     if (low.length >= 2 && hi.length >= 2 && wr(hi) - wr(low) >= 0.2) {
       var rec = function(list) { var a = list.filter(function(m) { return res(m) === "W"; }).length, b = list.filter(function(m) { return res(m) === "L"; }).length; return a + "-" + (list.length - a - b) + "-" + b; };
-      out.push("When they keep under half their own " + RESTARTS().toLowerCase() + " the record is " + rec(low) + " (" + low.length + " games); otherwise " + rec(hi) + ".");
+      out.push({ tag: "RESTARTS", tone: "bad", head: "Under half of own " + RESTARTS().toLowerCase() + " kept: " + rec(low), body: "That happened in " + low.length + " games; in the other " + hi.length + " the record is " + rec(hi) + "." });
     }
     // Finishing from play against what those chances usually return
     var xs = matchXp(d.shots && d.shots.us);
     if (xs.n >= 40) {
-      var sd = Math.sqrt(xs.n * 0.25), gap = xs.diff;
-      if (Math.abs(gap) >= 1.5 * sd) out.push(gap > 0 ? "Finishing is a strength: " + xs.act + " scores from play where those chances usually bring " + xs.xs.toFixed(0) + "." : "Chances are being left behind: " + xs.act + " scores from play where those chances usually bring " + xs.xs.toFixed(0) + ".");
-      else out.push("Finishing from play is in line with what the chances are worth (" + xs.act + " from chances worth " + xs.xs.toFixed(0) + "), so more scores will come from more or better chances rather than sharper shooting.");
+      var sd = Math.sqrt(xs.n * 0.25), gap = xs.diff, clear = Math.abs(gap) >= 1.5 * sd;
+      out.push({ tag: "FINISHING", tone: clear ? (gap > 0 ? "good" : "bad") : "flat",
+        head: xs.act + " scores from play, chances worth " + xs.xs.toFixed(0),
+        body: !clear ? "In line with expected, so more scores will come from more or better chances rather than sharper shooting." : gap > 0 ? "Finishing is a strength: " + sgn(gap, 0) + " on what those chances usually bring." : "Chances are being left behind: " + sgn(gap, 0) + " on what those chances usually bring." });
     }
     return out;
+  }
+  // One point of the Season Read: a coloured label, a bold headline, a quieter detail line.
+  function ReadPoint({ p, first, last }) {
+    if (typeof p === "string") return React.createElement("div", { style: { fontSize: FS.md, lineHeight: 1.6, color: C.white, marginBottom: last ? 0 : 10 } }, p);
+    var tc = p.tone === "good" ? C.greenB : p.tone === "bad" ? C.red : C.slate;
+    var chip = function(r, i) { var c = r === "W" ? C.greenB : r === "L" ? C.red : C.gold; return React.createElement("span", { key: i, style: { display: "inline-flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: RAD.sm, background: c + ALPHA.soft, border: "1px solid " + c, color: c, fontSize: FS.xs, fontWeight: 800, fontFamily: MONO } }, r); };
+    return React.createElement("div", { style: { padding: first ? "0 0 12px" : "12px 0", paddingBottom: last ? 0 : 12, borderTop: first ? "none" : "1px solid " + C.greenB + ALPHA.soft } },
+      React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, marginBottom: 5 } },
+        React.createElement("span", { style: { width: 7, height: 7, borderRadius: "50%", background: tc } }),
+        React.createElement("span", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: tc, fontFamily: MONO, fontWeight: 700 } }, p.tag)),
+      React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, color: C.white, lineHeight: 1.35 } }, p.head),
+      p.form ? React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 4, marginTop: 7 } }, React.createElement("span", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO, marginRight: 4 } }, "LAST 5"), p.form.map(chip)) : null,
+      p.body ? React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, lineHeight: 1.5, marginTop: 5 } }, p.body) : null);
   }
   // Half-time talking points. Built from this match only, plus an optional season baseline
   // (first halves of recent games) used at half-time. Each point carries a weight so the

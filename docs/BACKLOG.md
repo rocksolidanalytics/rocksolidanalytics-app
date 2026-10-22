@@ -104,7 +104,9 @@ rest), who the scoring depends on (top scorer share, share from frees, top two t
 where scores come from and where conceded scores start, the record when under half of own
 restarts are kept (only when that clearly differs), and finishing from play against what the
 chances usually bring. Built outside the stats engine; fewer than three games keeps the
-short notes.
+short notes. Laid out as points: a coloured label (green strength, red worry, grey neutral),
+a bold headline with the key numbers, a quieter detail line, and W/D/L chips for the last
+five.
 
 **Restart timeline.** Restarts tab, one match (also in the Live Stats Pad): every restart
 of the chosen side in order. Dots: height = seconds to take, green won / red lost, a dashed
