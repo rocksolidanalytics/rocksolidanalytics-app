@@ -73,6 +73,20 @@ use the club kit colour against blue, with the tagger clash check.
 - Tag which play was called on a kickout and show how often it was won.
 - Export a play as a short video for the squad WhatsApp.
 
+## Restart timeline and simpler expected scores
+
+**Done 2026-10-22.**
+- Restarts tab, one match: every restart of the chosen side in order, height = time to
+  take, green won / red lost, circle = score for / triangle = score against / square = no
+  score before the next restart, bigger for 2 or 3 points, half-time line, tap for detail,
+  and a one-line read (typical time, quick v slow won, scores for and against).
+- Expected scores grid: scores/shots per zone only; green or red only where the gap is
+  clear and beyond chance; best and worst zones written out; frees use the free table.
+
+**Next, if wanted:** turnovers by player that led to a score against, as a rate against the
+team average with a minimum number of turnovers, so busy players are not flagged for
+having the ball most.
+
 ## Cards, score sources and other events
 
 **Done 2026-10-22.** New dashboard views, season and per match: Discipline (cards for us
