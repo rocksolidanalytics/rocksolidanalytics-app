@@ -64,6 +64,18 @@ matter. About a week of careful work, screen by screen, with the same checks thr
   not in its main turnover figures (2026-10-22).
 - **Score sources come from logic, not tags.** Score Source tags are not shown as a view.
 
+## iPad layout
+
+**Started 2026-10-22.** On screens 1000px and wider (iPad landscape, laptops) the app uses
+the width; phones and portrait iPads are unchanged. Done: Home in two columns (Match |
+Analysis and Tools); dashboard sections and the Overview comparison cards in two columns,
+season and match, also in the Live Stats Pad; tactical pad with the pitch on the left at
+full height and plays and controls on the right (landscape); Opposition list in two
+columns. Wide screens now go up to 1200px.
+
+**Still to look at:** the opposition team page, match lists, Game film list, the video
+tagger in landscape, and button sizes in the live tagger on a big screen.
+
 ## Done 2026-10-22
 
 **Half-time view.** Live tagger stats (Key Callouts) open with a half-time card from 25
