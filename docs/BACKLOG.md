@@ -97,6 +97,15 @@ won back instead of calling it unclear. 95% agreement with the 82 hand-tagged so
 St Jude's hurling, up from 44%. The panel notes how many scores were traced past a missing
 or misplaced tag.
 
+**Season Read rewritten.** Instead of restating the record and averages, it says what they
+mean (only lines with enough behind them): form (last five and whether the margin is up or
+down on the season), what decides games (the measure that moves most between wins and the
+rest), who the scoring depends on (top scorer share, share from frees, top two together),
+where scores come from and where conceded scores start, the record when under half of own
+restarts are kept (only when that clearly differs), and finishing from play against what the
+chances usually bring. Built outside the stats engine; fewer than three games keeps the
+short notes.
+
 **Restart timeline.** Restarts tab, one match (also in the Live Stats Pad): every restart
 of the chosen side in order. Dots: height = seconds to take, green won / red lost, a dashed
 line for the typical time. A strip underneath shows what came before the next restart:
