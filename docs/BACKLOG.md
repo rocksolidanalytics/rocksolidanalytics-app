@@ -4,24 +4,6 @@ Open items first, then decisions, then what has been done, newest first.
 
 ## Open
 
-**Next up**
-- **Write rules by role: done 2026-10-22, database rules applied and tested.**
-  supabase/migrations/20261022_write_rules_by_role.sql: reading stays club-wide; insert,
-  update and delete only for the owner and analysts (`can_edit_club`); club settings the same;
-  demo visitors can add and change their own new rows but not the demo data (before 22 Oct)
-  or the demo club settings; `live_match` (unused) no longer writable by anyone. App: players
-  no longer see New match or Import data; Game film playlists and Opposition team pages are
-  read-only for players with a message.
-- **Free plan: 10 matches per club, then lifetime access.** Done 2026-10-22, database
-  applied and tested (supabase/migrations/20261022_club_licence_and_cap.sql).
-  The licence sits on the club (`club_orgs`), shared by all its teams; a new team joins its
-  club by name and county. Every match counts, scouting included. At 10 a new match or import
-  is refused with a message; everything already tagged stays. Home shows owners and analysts
-  "X of 10 free matches used" with an Unlock lifetime email link; players see nothing.
-  Bray Emmets and St Jude's are lifetime. Kill GAA test is deleted.
-- ~~Pin library versions~~: done 2026-10-22. React and React DOM 18.3.1, supabase-js
-  2.118.0 (the versions users already ran), PapaParse 5.4.1.
-
 **All-Ireland 2026 showcase (replaces the demo)**, agreed 2026-10-22. Tadhg tags 3 or 4
 All-Ireland 2026 games first (football and hurling), then we gate and present them.
 - Setup: two showcase clubs, "All-Ireland 2026 - Football" and "All-Ireland 2026 - Hurling"
@@ -31,21 +13,13 @@ All-Ireland 2026 games first (football and hurling), then we gate and present th
   sheets, both counties set up under Opposition with kit and crest, same tagging detail for
   every game.
 - After tagging: read-only viewer mode enforced in the database (visitors can look, never
-  change); `?demo=1` opens a "pick a match" front door with match cards; club site demo
+  change; can build on `can_edit_club`); `?demo=1` opens a "pick a match" front door with match cards; club site demo
   button points to it; strip broadcast video links; no individual player ratings on show.
   Rock Solid Gaels stays until the showcase is live.
 
-**Payments (Revolut Business)**, decided 2026-10-22 (Revolut over Stripe: already the
-business bank). Price: EUR 850 one-time, lifetime access for the whole club (all its
-teams); not VAT registered. Done 2026-10-22: pricing section on the club page (Pay by card
-via the Revolut link, Request an invoice by email), terms.html and privacy.html, the app's
-Unlock lifetime button opens the pricing section.
-- To unlock a club after payment (Supabase SQL editor; check the name and county match
-  `clubs` first):
-  `update club_orgs set licence = 'lifetime' where id in (select org_id from clubs where name = 'CLUB NAME' and county = 'COUNTY');`
-- Terms to confirm: 14-day full refund; 3 months notice if the service ever closes. Seller
-  named as Rock Solid Analytics, run by Tadhg Dornan, A63 AW20, Ireland.
-- Later, if payments become regular: automatic unlock from a Revolut payment notification.
+**Payments**
+- Automatic unlock from a Revolut payment notification, if payments become regular. Until
+  then a club is unlocked by hand (see How to unlock a club under Decisions).
 
 **Analysis, later**
 - Expected scores: once a sport passes about 2,000 shots from play, replace zones with a
@@ -80,6 +54,18 @@ matter. About a week of careful work, screen by screen, with the same checks thr
   not in its main turnover figures (2026-10-22).
 - **Score sources come from logic, not tags.** Score Source tags are not shown as a view.
 
+- **Pricing (2026-10-22).** Free plan: 10 matches per club, shared by all its teams, every
+  match counted (scouted and imported included); nothing is taken away at the limit. Lifetime
+  access: EUR 850 once for the whole club, no subscription; not VAT registered. Paid through
+  Revolut Business (already the business bank; chosen over Stripe), by card through the
+  payment link or by bank transfer against an invoice. Terms: full refund within 14 days;
+  3 months notice and a copy of the data if the service ever closes; seller Rock Solid
+  Analytics, run by Tadhg Dornan, A63 AW20, Ireland.
+- **Early supporters.** Bray Emmets and St Jude's have lifetime access free.
+- **How to unlock a club** after payment (Supabase SQL editor; check the name and county
+  match `clubs` first):
+  `update club_orgs set licence = 'lifetime' where id in (select org_id from clubs where name = 'CLUB NAME' and county = 'COUNTY');`
+
 ## iPad layout
 
 **Started 2026-10-22.** On screens 1000px and wider (iPad landscape, laptops) the app uses
@@ -93,6 +79,36 @@ columns. Wide screens now go up to 1200px.
 tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-22
+
+**Free plan and lifetime access.** The licence sits on the club, not the team: new
+`club_orgs` table, each team linked by `clubs.org_id`; a new team joins the club with the
+same name and county, otherwise it starts a new free club; only the database side can move
+a team or change a licence. A trigger refuses an 11th match for a free club with a message
+pointing to the email; `club_usage` gives the app the count. Home shows owners and analysts
+on the free plan "X of 10 free matches used" with a bar and an Unlock lifetime button (opens
+the pricing section); players and lifetime clubs see nothing. Import checks the allowance
+before saving anything. Clubs grouped: Bray Emmets (3 teams, 22 matches, lifetime), St
+Jude's (2, 27, lifetime), Eadestown GAA (2 used), St Patrick's (1), Kill (0). Kill GAA test
+deleted. See supabase/migrations/20261022_club_licence_and_cap.sql; tested (cap refuses at
+the limit, scouting included; a new Bray team joins Bray as lifetime).
+
+**Pricing, terms and privacy.** Pricing section on the club page: free plan and lifetime
+(EUR 850), Pay by card (Revolut payment link), Request an invoice (email with club, county
+and invoice address), and a note to email the club name after paying. New terms.html and
+privacy.html, linked from the footer and the pricing section. Privacy lists where data
+goes: Supabase (EU, Stockholm), Anthropic (team sheet photos), GitHub Pages, YouTube,
+Revolut.
+
+**Write rules by role.** Reading stays club-wide; adding, changing and deleting matches,
+tags, line-ups, squads and playlists only for the owner and analysts (`can_edit_club`);
+club settings the same. Demo visitors can add and change their own new rows but not the
+demo data (before 22 Oct) or the demo club settings. `live_match` (unused) no longer
+writable. App: players no longer see New match or Import data; Game film playlists and
+Opposition team pages are read-only for players with a message. Tested as a Bray player,
+a Bray analyst and a demo visitor. See supabase/migrations/20261022_write_rules_by_role.sql.
+
+**Library versions pinned.** React and React DOM 18.3.1, supabase-js 2.118.0 (the versions
+users already ran), PapaParse 5.4.1, so an outside release can no longer change the app.
 
 **Half-time view.** Live tagger stats (Key Callouts) open with a half-time card from 25
 minutes, at half-time and in the second half: up to three talking points ranked by the
