@@ -43,9 +43,8 @@ Unlock lifetime button opens the pricing section.
 - To unlock a club after payment (Supabase SQL editor; check the name and county match
   `clubs` first):
   `update club_orgs set licence = 'lifetime' where id in (select org_id from clubs where name = 'CLUB NAME' and county = 'COUNTY');`
-- Terms to confirm: 14-day full refund; 3 months notice if the service ever closes. The
-  seller is named only as "Rock Solid Analytics, Ireland"; add a legal name and postal
-  address if wanted (Irish consumer law expects a trader's identity and address).
+- Terms to confirm: 14-day full refund; 3 months notice if the service ever closes. Seller
+  named as Rock Solid Analytics, run by Tadhg Dornan, A63 AW20, Ireland.
 - Later, if payments become regular: automatic unlock from a Revolut payment notification.
 
 **Analysis, later**
