@@ -3301,43 +3301,57 @@
       }, 0) / a.length) / 10 : 0;
     }
     const koSpeed = { us: avgN(koSp.us), opp: avgN(koSp.opp) };
+    // How team X came to have the ball for the score at arr[i]. Walks back through the tags of
+    // the same half to the moment X won possession. When the walk meets a tag where X had lost
+    // the ball (a regain was never tagged, or a tag went on the wrong team), the score is
+    // put down to a turnover won back after that point instead of being left unclear.
+    // _srcInferred says whether the last answer came from that inference.
+    var _srcInferred = false;
     function scoreSourceOf(arr, i, X) {
-      var Y = X === "us" ? "opp" : "us";
-      var sawFree = false;
+      var Y = X === "us" ? "opp" : "us", sawFree = false, per = String(arr[i].period == null ? 1 : arr[i].period);
+      _srcInferred = false;
+      function toKind(oc) {
+        var lc = String(oc || "").toLowerCase();
+        return /kick pass|strike/.test(lc) ? "toKick" : /hand ?pass/.test(lc) ? "toHand" : /contact|tackle/.test(lc) ? "toContact" : "toOther";
+      }
+      function lost() { _srcInferred = true; return "toOther"; }
       for (var j = i - 1; j >= 0; j--) {
-        var e = arr[j], et = e.event_type, oc = e.outcome || "", tm = e.team, sc2 = e.score || 0;
+        var e = arr[j], et = e.event_type, oc = e.outcome || "", tm = e.team, lc = oc.toLowerCase();
+        if (String(e.period == null ? 1 : e.period) !== per) return "throwIn";
+        var toLost = et === "Turnover" && /^turnover lost/.test(lc), toWon = et === "Turnover" && !toLost && /won|interception|intercept|contact/.test(lc);
+        // X won the ball here
         if (et === "Kickout" && tm === X && (oc === "Won clean" || oc === "Break won")) return "ownKO";
         if (et === "Kickout" && tm === Y && (oc === "Lost clean" || oc === "Break lost")) return "oppKO";
-        if (et === "Possession lost" && tm === Y) {
-          var lc = oc.toLowerCase();
-          return lc === "kick pass" ? "toKick" : lc === "hand pass" ? "toHand" : lc === "in contact" ? "toContact" : "toOther";
-        }
-        if (et === "Free conceded" && tm === Y) {
-          sawFree = true;
-          continue;
-        }
-        if (et === "Scoreable free" && tm === X) {
-          sawFree = true;
-          continue;
-        }
-        if (et === "Possession lost" && tm === X) break;
-        if (et === "Free conceded" && tm === X) break;
-        if (et === "Kickout" && tm === X && (oc === "Lost clean" || oc === "Break lost")) break;
-        if (et === "Kickout" && tm === Y && (oc === "Won clean" || oc === "Break won")) break;
+        if (et === "Possession lost" && tm === Y) return toKind(oc);
+        if (toLost && tm === Y) return toKind(oc.replace(/^turnover lost\s*/i, ""));
+        if ((toWon || et === "Turnover won") && tm === X) return toKind(oc);
+        if (et === "Tackle" && tm === X && lc === "dispossession") return "toContact";
+        // A free on the way to the score: keep going back to how X had the ball
+        if ((et === "Free conceded" && tm === Y) || (et === "Scoreable free" && tm === X)) { sawFree = true; continue; }
         if ((et === "Shot from play" || et === "Scoreable free") && tm === Y) {
           if (_scDead(oc)) return "ownKO";
           if (_scLive(oc)) return "toOther";
-          break;
+          continue;
         }
+        // X shot dead and their restart went untagged: going by hand-tagged sources, X more
+        // often won the ball back in play than off that restart.
         if (et === "Shot from play" && tm === X) {
           if (_scLive(oc)) continue;
-          if (_scDead(oc)) return "oppKO";
-          break;
+          if (_scDead(oc)) return lost();
+          continue;
         }
+        // X had lost the ball here, so a regain after it was not tagged
+        if (et === "Possession lost" && tm === X) return lost();
+        if (toLost && tm === X) return lost();
+        if ((toWon || et === "Turnover won") && tm === Y) return lost();
+        if (et === "Free conceded" && tm === X) return lost();
+        if (et === "Kickout" && tm === X && (oc === "Lost clean" || oc === "Break lost")) return lost();
+        if (et === "Kickout" && tm === Y && (oc === "Won clean" || oc === "Break won")) return lost();
+        if (et === "Tackle" && tm === Y && lc === "dispossession") return lost();
       }
-      return sawFree ? "toOther" : (j < 0 ? "throwIn" : "unclear");
+      return sawFree ? "toOther" : "throwIn";
     }
-    var scoreSrc = { us: {}, opp: {} }, scoreTot = { us: 0, opp: 0 };
+    var scoreSrc = { us: {}, opp: {} }, scoreTot = { us: 0, opp: 0 }, scoreInf = { us: 0, opp: 0 };
     Object.keys(byMatch).forEach(function(mid) {
       var arr = byMatch[mid].slice().sort(function(a, b) {
         return (a.seq || 0) - (b.seq || 0);
@@ -3348,6 +3362,7 @@
           if (X !== "us" && X !== "opp") return;
           scoreTot[X]++;
           var src = scoreSourceOf(arr, i, X);
+          if (_srcInferred) scoreInf[X]++;
           var _b = scoreSrc[X][src] || (scoreSrc[X][src] = { g: 0, p: 0, n: 0 });
           var _sv = e.score || 0;
           _b.n++;
@@ -3359,7 +3374,7 @@
         }
       });
     });
-    var srcData = { us: scoreSrc.us, opp: scoreSrc.opp, tot: { us: scoreTot.us, opp: scoreTot.opp } };
+    var srcData = { us: scoreSrc.us, opp: scoreSrc.opp, tot: { us: scoreTot.us, opp: scoreTot.opp }, inf: scoreInf };
     function median(a) {
       if (!a.length) return 0;
       var b = a.slice().sort(function(x, y) {
@@ -3756,7 +3771,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         return /* @__PURE__ */ React.createElement("div", { key: m.k, style: { display: "flex", alignItems: "center", gap: 9 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 10, height: 10, borderRadius: RAD.sm, background: m.color, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, color: C.slate, fontSize: FS.sm } }, m.label), /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontFamily: MONO, fontWeight: 700, fontSize: FS.md } }, gp(o)), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontFamily: MONO, fontSize: FS.xs, width: 24, textAlign: "right" } }, "\u00b7", n));
       }), tot === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: C.slateD, fontSize: FS.sm, fontStyle: "italic" } }, "No scores tagged.")));
     }
-    return /* @__PURE__ */ React.createElement("div", { style: { padding: 16, borderRadius: RAD.xl, background: C.bgCard, border: "1px solid " + C.border } }, block("us", club.name, C.greenB), /* @__PURE__ */ React.createElement("div", { style: { height: 1, background: C.border, margin: "16px 0" } }), block("opp", oppName || "Opposition", C.blue));
+    // How many were traced past a tag that did not fit (a regain never tagged, or a tag on the wrong team).
+    var nInf = data.inf ? (data.inf.us || 0) + (data.inf.opp || 0) : 0, nAll = data.tot ? (data.tot.us || 0) + (data.tot.opp || 0) : 0;
+    var infNote = nInf ? React.createElement("div", { style: { marginTop: 12, fontSize: FS.xs, color: C.slateD, fontFamily: MONO, lineHeight: 1.5 } }, nInf + " OF " + nAll + " SCORES TRACED PAST A MISSING OR MISPLACED TAG, PUT DOWN AS A TURNOVER WON BACK") : null;
+    return /* @__PURE__ */ React.createElement("div", { style: { padding: 16, borderRadius: RAD.xl, background: C.bgCard, border: "1px solid " + C.border } }, block("us", club.name, C.greenB), /* @__PURE__ */ React.createElement("div", { style: { height: 1, background: C.border, margin: "16px 0" } }), block("opp", oppName || "Opposition", C.blue), infNote);
   }
   function KickoutMap({ pts }) {
     var W = 300, H = Math.round(W * 144 / GAA_W), cx = W / 2;
@@ -9421,7 +9439,6 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       };
       return /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: i < d.winLoss.rows.length - 1 ? "1px solid " + C.border : "none" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, fontWeight: 700, color: C.white } }, rw.label), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, rw.better === "low" ? "WIN BENCHMARK: KEEP UNDER " + fmt(rw.w) : "WIN BENCHMARK: " + fmt(rw.w) + " OR BETTER")), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", width: 64 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, color: C.greenB, fontFamily: MONO } }, fmt(rw.w)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO } }, "IN WINS")), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", width: 64 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, color: d.winLoss.nL ? C.red : C.slateD, fontFamily: MONO } }, d.winLoss.nL ? fmt(rw.l) : "\u2014"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO } }, "IN D/L")));
     }), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 11, fontSize: FS.sm, color: C.slate, lineHeight: 1.6, background: C.field, border: "1px solid " + C.border, borderRadius: RAD.md, padding: "10px 12px" } }, d.winLoss.nL ? /* @__PURE__ */ React.createElement("span", null, "In wins, ", club.name, " hold the opposition to ", /* @__PURE__ */ React.createElement("b", { style: { color: C.greenB } }, d.winLoss.rows[0].w, " shots"), " and force ", /* @__PURE__ */ React.createElement("b", { style: { color: C.greenB } }, d.winLoss.rows[2].w, " turnovers"), "; in defeats and draws that slips to ", d.winLoss.rows[0].l, " shots faced and ", d.winLoss.rows[2].l, " turnovers won.", d.winLoss.rows[4].w != null && d.winLoss.rows[4].l != null && d.winLoss.rows[4].w > d.winLoss.rows[4].l ? /* @__PURE__ */ React.createElement("span", null, " Wins also start faster: ", (d.winLoss.rows[4].w > 0 ? "+" : "") + d.winLoss.rows[4].w, " after 10 minutes vs ", (d.winLoss.rows[4].l > 0 ? "+" : "") + d.winLoss.rows[4].l, ".") : null) : /* @__PURE__ */ React.createElement("span", null, "All ", d.winLoss.nW, " tagged games are wins so far \u2014 these numbers are the winning baseline to protect.")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 7, fontSize: FS.xs, color: C.slateD, fontFamily: MONO } }, "AVERAGES ACROSS TAGGED GAMES \xB7 FOLLOWS THE COMPETITION FILTER")))),
-    dtab === "attack" && (d._events || []).some(function(e) { return synOf(e).g === "Score source"; }) && React.createElement(Section, { title: "TAGGED SCORE SOURCES" }, React.createElement(TaggedScoreSources, { evs: d._events, usName: club.name || "Us", oppName: ON })),
     dtab === "attack" && (/* @__PURE__ */ React.createElement(Section, { title: "SOURCE OF SCORES" }, /* @__PURE__ */ React.createElement(ScoreSourcePanel, { data: d.srcData, club, oppName: ON }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, marginTop: 6, lineHeight: 1.5 } }, "Each team\u2019s scores by where the passage began, as goals-points (count after the dot). Frees trace back to the kickout or turnover that won the ball."), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, fontFamily: MONO, marginTop: 5, lineHeight: 1.5 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.gold, fontWeight: 700 } }, "Turnover \xB7 other"), " = interceptions, handling & solo errors, short / dropped kicks won, and possession won straight from a free."))),
     dtab === "overview" && (!isMatch && /* @__PURE__ */ React.createElement(Section, { title: "MATCH RATINGS" },
           React.createElement("div", { style: { display: "flex", gap: 4, background: C.field, padding: 4, borderRadius: RAD.pill, marginBottom: 10 } }, [["us", "Us"], ["them", "Them"], ["diff", "+/\u2212"]].map(function(o) {
@@ -10427,36 +10444,6 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         return React.createElement("div", { key: p.nm, style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderTop: i ? "1px solid " + C.border : "none", fontSize: FS.sm } },
           React.createElement("span", { style: { flex: 1, color: C.white } }, p.nm), KINDS.filter(function(k) { return p[k]; }).map(function(k) { return cardChip(k, p[k], k); }));
       }));
-  }
-  // Score sources tagged by hand (Score Source events), side by side with the automatic breakdown.
-  function TaggedScoreSources({ evs, usName, oppName }) {
-    var tags = (evs || []).map(function(e) { var s = synOf(e); return s.g === "Score source" ? { team: e.team, src: s.o, raw: String(e.outcome || "") } : null; }).filter(Boolean);
-    if (!tags.length) return null;
-    var srcs = [], t = { us: {}, opp: {} }, n = { us: 0, opp: 0 };
-    tags.forEach(function(x) {
-      if (x.team !== "us" && x.team !== "opp") return;
-      if (srcs.indexOf(x.src) < 0) srcs.push(x.src);
-      var b = t[x.team][x.src] || (t[x.team][x.src] = { g: 0, p: 0, n: 0 });
-      b.n++; n[x.team]++;
-      if (/^goal/i.test(x.raw)) b.g++; else if (/^2/.test(x.raw)) b.p += 2; else b.p++;
-    });
-    var ORDER = ["Turnover", "Own restart", "Their restart", "Throw-in"];
-    srcs.sort(function(a, b) { var ia = ORDER.indexOf(a), ib = ORDER.indexOf(b); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
-    var cell = function(b, tot, col) {
-      return React.createElement("div", { style: { flex: 1, textAlign: "center" } },
-        React.createElement("div", { style: { fontFamily: MONO, fontWeight: 800, color: col, fontSize: FS.md } }, b ? b.g + "-" + (b.p < 10 ? "0" : "") + b.p : "–"),
-        React.createElement("div", { style: { fontFamily: MONO, fontSize: FS.xs, color: C.slateD } }, b ? Math.round(100 * b.n / Math.max(tot, 1)) + "% of scores" : ""));
-    };
-    return React.createElement("div", null,
-      React.createElement("div", { style: { display: "flex", fontSize: FS.xs, fontFamily: MONO, letterSpacing: 1, marginBottom: 6 } },
-        React.createElement("span", { style: { width: 110 } }),
-        React.createElement("span", { style: { flex: 1, textAlign: "center", color: C.greenB } }, String(usName).toUpperCase().slice(0, 14)),
-        React.createElement("span", { style: { flex: 1, textAlign: "center", color: C.blue } }, String(oppName).toUpperCase().slice(0, 14))),
-      srcs.map(function(s, i) {
-        return React.createElement("div", { key: s, style: { display: "flex", alignItems: "center", padding: "8px 0", borderTop: i ? "1px solid " + C.border : "none" } },
-          React.createElement("span", { style: { width: 110, fontSize: FS.sm, color: C.white } }, s), cell(t.us[s], n.us, C.greenB), cell(t.opp[s], n.opp, C.blue));
-      }),
-      React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO, marginTop: 6 } }, "FROM " + tags.length + " SCORE SOURCE TAGS · SEPARATE FROM THE AUTOMATIC BREAKDOWN"));
   }
   // Every event with no view of its own, grouped by the synonym list: counts, outcomes, top players.
   function OtherEventsView({ evs, matches, isMatch, usName }) {

@@ -77,7 +77,10 @@ use the club kit colour against blue, with the tagger clash check.
 
 **Done 2026-10-22.** New dashboard views, season and per match: Discipline (cards for us
 and them, in order for a match, game by game and by player for a season) on Defence;
-Tagged score sources (from Score Source tags, next to the automatic breakdown) on Attack;
+(Tagged score sources was removed on 2026-10-22: sources are worked out by logic, which
+now reads Turnover won/lost tags, stops at half-time and infers a missing regain instead of
+calling a score unclear; 95% agreement with the 82 hand-tagged sources at St Jude's
+hurling, up from 44%);
 an Other tab for every event with no view of its own (counts, outcomes, top players),
 shown only when there is something in it.
 Names that mean the same thing are grouped by `event-synonyms.json` (see the

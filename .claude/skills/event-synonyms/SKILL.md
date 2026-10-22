@@ -11,8 +11,9 @@ root groups them.
 
 ## Where it applies
 
-- Only the Cards (Defence tab), Tagged score sources (Attack tab) and Other events (Other
-  tab) views read it, through `synOf(e)` in `index.html`.
+- Only the Cards (Defence tab) and Other events (Other tab) views read it, through
+  `synOf(e)` in `index.html`. Score Source tags are kept out of Other events; sources of
+  scores are worked out by logic (`scoreSourceOf`), not from those tags.
 - The main stats (`computeStats`, ratings, half-time card, vs Others) do NOT read it. The
   user decided this on 2026-10-22. Do not wire synonyms into the main stats unless the user
   asks again, and warn them that club numbers would change.
