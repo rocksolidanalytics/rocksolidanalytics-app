@@ -29,7 +29,9 @@ Open items first, then decisions, then what has been done, newest first.
 to 5 playlists), EUR 150 Full breakdown (plus a playlist per player), and live tagging at
 EUR 150 in Dublin and Wicklow (price on request elsewhere), alongside the EUR 850 lifetime
 membership. One standard report: docs/REPORT-SPEC.md (version 1, tier switch on the report
-screen). Pricing and terms on the club page done 2026-10-23 (booking by email). Still to do:
+screen). Pricing and terms on the club page done 2026-10-23 (booking by email; reports back
+within 3 days of the video and team sheets; live tagging travel included in Dublin and
+Wicklow, full refund if the game is postponed; footage must be theirs to share). Still to do:
 deliver playlist links with the report; the open decisions in the spec (shared figures,
 player ratings).
 
