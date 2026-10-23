@@ -129,6 +129,15 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-23
 
+**Tagger button order.** The video tagger defaults to the phases of play: restart and
+contests (kickout or puckout, throw-in, ruck, breaking ball), on the ball (player
+possession, attack, shot, free), the ball changing hands (turnover, turnover won, tackle,
+duel, free won), the keeper, discipline, then any other custom events. The live tagger keeps
+its order. Each club can change either order with up and down arrows on the tagging
+template screen (BUTTON ORDER, Video tagger / Live tagger, Back to the default order),
+saved as `tag_settings.order`. Core and custom events now sit in one list, each keeping its
+own button style.
+
 **Scout team sheets editable.** Edit match information now lists scouting matches too; a
 scouting match opens the match editor, which has an Edit team sheets button: the same scout
 sheet screen (photo reader, subs to 30), loaded with the saved names. Saving writes the new
