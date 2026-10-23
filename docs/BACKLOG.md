@@ -17,7 +17,8 @@ Open items first, then decisions, then what has been done, newest first.
 - First game set up: Kerry v Mayo, Championship Final, 26 July 2026, Croke Park (Mayo won
   1-20 to 1-17; use it to check the tagging). Next: both team sheets (photo reader on the
   scout sheet screen), then tag from the full match video (the RTE highlights are 22
-  minutes, not enough).
+  minutes, not enough). Both containers have the detailed video events switched on
+  (goalkeeper action, player possession, attack, duel, breaking ball).
 - Plan (2026-10-23): tag the All-Ireland finals in painstaking detail and build the
   showcase reports (all three tiers) from them.
 - After tagging: read-only viewer mode enforced in the database (visitors can look, never
