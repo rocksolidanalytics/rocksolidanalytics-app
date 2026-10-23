@@ -13,9 +13,11 @@ Open items first, then decisions, then what has been done, newest first.
   with red band).
 - Football owner account linked 2026-10-23 (the +aifootball address). Hurling: sign up a
   second + address when needed and link it as owner from the database side (joining by
-  code would make it a player). Each game
-  is a scouting match ("Kerry v Mayo"), Championship, both team sheets, tagged from video.
-  First game: Kerry v Mayo.
+  code would make it a player).
+- First game set up: Kerry v Mayo, Championship Final, 26 July 2026, Croke Park (Mayo won
+  1-20 to 1-17; use it to check the tagging). Next: both team sheets (photo reader on the
+  scout sheet screen), then tag from the full match video (the RTE highlights are 22
+  minutes, not enough).
 - After tagging: read-only viewer mode enforced in the database (visitors can look, never
   change; can build on `can_edit_club`); `?demo=1` opens a "pick a match" front door with
   match cards; club site demo button points to it; strip broadcast video links; no
@@ -34,7 +36,8 @@ Open items first, then decisions, then what has been done, newest first.
 - Shortened squad names: "Caitriona Dev" (22 tags), "Sianne mcd" (1).
 
 **Match report and dashboard, next**
-- Same head-to-head bars on the dashboard Overview comparisons.
+- Same head-to-head bars in the live tagger stats screen (still the old green and blue
+  CompareBars).
 - Attacks (Performa: a possession reaching the opposition 45): an estimate from existing
   tags (shots, frees won and turnovers in the attacking third), clearly labelled, and an
   optional Attack tag for clubs that want the exact figure. Only one game has custom
@@ -100,6 +103,27 @@ columns. Wide screens now go up to 1200px.
 tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-23
+
+**Overview head-to-head bars.** The dashboard Overview (match Detailed view and season) uses
+the same groups as the match report, from one function (`h2hGroups`): thick main bar, its
+breakdown underneath, each card with its small icon. A match uses both kits; a season shows
+per-game averages in the club main colour against its second colour (green and blue when
+none are set; when the two are too close, the club keeps its colour and the opposition
+takes green or blue). Measures only the old view had (possession share, accuracy, breaking
+ball, defensive work rate, tackle foul rate, frees won, turnover to shot and score) sit in
+a More measures card.
+
+**All-Ireland showcase set up.** `clubs.showcase` (left out of the expected scores pool),
+football and hurling containers (Inter-county grade, lifetime, no join code), Kerry and Mayo
+under Opposition with kits, football owner account linked, Kerry v Mayo created and set to
+Championship Final, 26 July 2026, Croke Park. See
+supabase/migrations/20261023_showcase_clubs.sql.
+
+**Scouting matches.** The scout team sheet screen reads each team from a photo (same reader
+as the line-up screen; players go to their jersey number). Subs up to 30 (rows 21 to 30 open
+with + More subs or when a photo fills them). New scouting matches choose a competition and
+an optional round or stage. Scouted League and Championship games now count in vs Others,
+as designed (untagged competition had been leaving them out).
 
 **Match report refreshed** (learnings from an inter-county Performa report). Team colours
 from the kits throughout (score, tables, scorers, Match Stats; darker kit colours when
