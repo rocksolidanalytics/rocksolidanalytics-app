@@ -9183,6 +9183,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [selPlayer, setSelPlayer] = useState(null);
     const [rOpen, setROpen] = useState(false);
     const [reportHtml, setReportHtml] = useState(null);
+    const [reportTier, setReportTier] = useState(3);
     // inject print CSS to hide app chrome during print
     useEffect(function() { if (!reportHtml) return; var s = document.createElement("style"); s.textContent = "@media print { body > div > div:first-child { display: none !important; } }"; document.head.appendChild(s); return function() { document.head.removeChild(s); }; }, [reportHtml]);
     var _stick = club.sport === "camogie" || club.sport === "hurling";
@@ -9214,7 +9215,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       a.download = (cn + " v " + opp2 + " " + (match.date || "") + ".csv").replace(/[^a-zA-Z0-9 ._-]/g, "");
       a.click(); URL.revokeObjectURL(url);
     }
-    function exportMatchReport() { if (!d || !match) return;
+    // The match report has one fixed layout (docs/REPORT-SPEC.md). The tier decides how much
+    // of it is included: 1 Summary, 2 Analysis, 3 Full breakdown (the default from Export).
+    function exportMatchReport(tierArg) { if (!d || !match) return;
+    var tier = tierArg === 1 || tierArg === 2 ? tierArg : 3, TIERS = ["", "Summary", "Analysis", "Full breakdown"], REPORT_VERSION = "1";
+    setReportTier(tier);
     var evs=d._events||[]; var apps=d._apps||[];
     var usEvs=evs.filter(function(e){return e.team==="us";});
     var opEvs=evs.filter(function(e){return e.team==="opp";});
@@ -9345,7 +9350,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
 
     // Header
     h3.push('<h1>'+cn+' vs '+opp2+'</h1>');
-    h3.push('<p class="m">'+match.date+(match.competition?' \u00b7 '+match.competition:'')+(match.venue?' \u00b7 '+match.venue:'')+(match.referee?' \u00b7 Ref: '+match.referee:'')+'</p>');
+    h3.push('<p class="m">'+match.date+(match.competition?' \u00b7 '+match.competition:'')+(match.round?' \u00b7 '+match.round:'')+(match.venue?' \u00b7 '+match.venue:'')+(match.referee?' \u00b7 Ref: '+match.referee:'')+'</p>');
+    h3.push('<p class="m" style="margin-top:4px;letter-spacing:1.5px">MATCH REPORT \u00b7 '+TIERS[tier].toUpperCase()+'</p>');
 
     // Result with score table
     // A side with no kit set wears a stand-in: green with blue sleeves for us, the reverse for them.
@@ -9377,19 +9383,68 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     // Shot maps
     h3.push('<h2>SHOT MAPS</h2><div class="row"><div class="col card">'+repShotMap(d.shots&&d.shots.us,cn,cU)+'</div><div class="col card">'+repShotMap(d.shots&&d.shots.opp,opp2,cO)+'</div></div>');
 
-    // Conversion by zone
-    h3.push('<h2>CONVERSION BY ZONE</h2><div class="row"><div class="col card"><p style="font-size:11px;font-weight:700;color:var(--cu);margin-bottom:6px">'+cn.toUpperCase()+'</p>'+zoneTable(usEvs,"#34c967")+'</div><div class="col card"><p style="font-size:11px;font-weight:700;color:var(--co);margin-bottom:6px">'+opp2.toUpperCase()+'</p>'+zoneTable(opEvs,"#4a9eff")+'</div></div>');
+    if(tier>=2){
+    // Where scores came from (the same panel as the Attack tab)
+    h3.push('<h2>WHERE SCORES CAME FROM</h2><div class="card">'+appMarkup(React.createElement(ScoreSourcePanel,{data:d.srcData,club:club,oppName:opp2}))+'<p class="m" style="margin-top:8px;font-family:inherit">Each score put down to how the passage began: a restart or a turnover won.</p></div>');
 
     // Kickout maps
     h3.push('<h2>RESTART MAPS</h2><div class="row"><div class="col card">'+repKoMap(d.koPts&&d.koPts.us,cn+" restarts",cU)+'</div><div class="col card">'+repKoMap(d.koPts&&d.koPts.opp,opp2+" restarts",cO)+'</div></div>');
+
+    // Restart to shot, both sides
+    function rsTable(cs,label,cls){
+      if(!cs||!cs.all||!cs.all.n) return '<div class="col card"><p class="'+cls+'" style="font-size:11px;font-weight:700;margin-bottom:6px">'+label+'</p><p class="m">No restarts tagged.</p></div>';
+      var pc2=function(a,b){return b?Math.round(100*a/b)+'%':'\u2013';};
+      var t='<div class="col card"><p class="'+cls+'" style="font-size:11px;font-weight:700;margin-bottom:6px">'+label+'</p><table class="tbl"><tr><th></th><th>Restarts</th><th>Won</th><th>\u2192 Shot</th><th>\u2192 Score</th></tr>';
+      [["Short","short"],["Mid","mid"],["Long","long"],["All","all"]].forEach(function(r){var b=cs[r[1]]||{n:0};t+='<tr><td style="font-weight:700">'+r[0]+'</td><td>'+b.n+'</td><td>'+pc2(b.ret,b.n)+'</td><td style="font-weight:700">'+pc2(b.shot,b.n)+'</td><td style="font-weight:700">'+pc2(b.score,b.n)+'</td></tr>';});
+      return t+'</table></div>';
+    }
+    var kc=d.chains&&d.chains.ko||{};
+    h3.push('<h2>RESTART TO SHOT</h2><div class="row">'+rsTable(kc.us,cn+' restarts','gu')+rsTable(kc.opp,opp2+' restarts','go')+'</div><p class="m" style="margin:-4px 0 12px;font-family:inherit">Short under 45m, mid 45\u201365m, long over 65m. \u2192 Shot: won the restart and got a shot away before losing the ball.</p>');
 
     // Breaking ball
     var ko=d.ko||{};var oko=d.oko||{};
     h3.push('<h2>BREAKING BALL</h2><div class="card"><div class="row"><div class="col"><p class="m">'+cn+'</p><p style="font-size:22px;font-weight:800;color:var(--cu)">'+(ko.brkPct!=null?ko.brkPct+'%':'N/A')+'</p><p class="m">'+(ko.brkW||0)+' won / '+(ko.brkT||0)+' breaks</p></div><div class="col"><p class="m">'+opp2+'</p><p style="font-size:22px;font-weight:800;color:var(--co)">'+(oko.brkPct!=null?oko.brkPct+'%':'N/A')+'</p><p class="m">'+(oko.brkW||0)+' won / '+(oko.brkT||0)+' breaks</p></div></div></div>');
 
+
+    // Turnovers: how each side used the ball it won back, and our turnovers that cost a score
+    var tcAll=turnoverCost(evs);
+    var cmp=function(lbl){return (d.compare||[]).find(function(r){return r.label===lbl;})||{us:0,opp:0};};
+    var toS=cmp("Turnover \u2192 shot"),toSc=cmp("Turnover \u2192 score");
+    h3.push('<h2>TURNOVERS</h2><div class="card"><div class="row"><div class="col"><p class="m">'+cn+'</p><p style="font-size:14px;font-weight:800"><span class="gu">'+toS.us+'%</span> of turnovers won led to a shot, <span class="gu">'+toSc.us+'%</span> to a score</p></div><div class="col"><p class="m">'+opp2+'</p><p style="font-size:14px;font-weight:800"><span class="go">'+toS.opp+'%</span> of turnovers won led to a shot, <span class="go">'+toSc.opp+'%</span> to a score</p></div></div>'+
+      (tcAll.tot.n?'<p style="font-size:13px;margin-top:10px">'+cn+' lost the ball '+tcAll.tot.n+' times; '+tcAll.tot.k+' of those led to a score against before the ball was won back.</p>':'')+'</div>');
+    var toType={};usEvs.forEach(function(e){if(e.event_type==="Possession lost"&&String(e.outcome||"").toLowerCase().indexOf("shot")<0){var t2=e.outcome||"Other";toType[t2]=(toType[t2]||0)+1;}});
+    var toTy=Object.keys(toType).map(function(t2){return{type:t2,count:toType[t2]};}).sort(function(a,b){return b.count-a.count;});
+    var totTO=toTy.reduce(function(s2,t2){return s2+t2.count;},0);
+    if(totTO){h3.push('<div class="card"><p style="font-size:11px;font-weight:700;color:#e0584d;margin-bottom:6px">'+cn.toUpperCase()+' BALL LOST BY TYPE \u00b7 '+totTO+'</p>');
+    toTy.forEach(function(t2){h3.push('<div style="display:flex;align-items:center;gap:8px;margin:3px 0"><span style="min-width:100px;font-size:11px">'+t2.type+'</span><div class="bar2" style="width:'+Math.round(100*t2.count/Math.max(totTO,1))+'%;background:#e0584d"></div><span style="font-size:11px;font-weight:700;margin-left:4px">'+t2.count+'</span></div>');});
+    h3.push('</div>');}
+
+    // Conversion by zone
+    h3.push('<h2>CONVERSION BY ZONE</h2><div class="row"><div class="col card"><p style="font-size:11px;font-weight:700;color:var(--cu);margin-bottom:6px">'+cn.toUpperCase()+'</p>'+zoneTable(usEvs,"#34c967")+'</div><div class="col card"><p style="font-size:11px;font-weight:700;color:var(--co);margin-bottom:6px">'+opp2.toUpperCase()+'</p>'+zoneTable(opEvs,"#4a9eff")+'</div></div>');
+
     // xS
     var xU=matchXp(d.shots?d.shots.us:[]);var xO=matchXp(d.shots?d.shots.opp:[]);
     h3.push('<h2>EXPECTED SCORES FROM PLAY (xS)</h2><div class="card"><div class="row"><div class="col"><p class="m">'+cn+'</p><p style="font-size:14px;font-weight:800">Scores from play: <span class="gu">'+xU.act+' from '+xU.n+' shots</span> \u00b7 xS: '+xU.xs.toFixed(1)+' \u00b7 <span style="color:'+(xU.diff>=0?'#34c967':'#e0584d')+'">'+(xU.diff>=0?'+':'')+xU.diff.toFixed(1)+'</span></p></div><div class="col"><p class="m">'+opp2+'</p><p style="font-size:14px;font-weight:800">Scores from play: <span class="go">'+xO.act+' from '+xO.n+' shots</span> \u00b7 xS: '+xO.xs.toFixed(1)+' \u00b7 <span style="color:'+(xO.diff>=0?'#34c967':'#e0584d')+'">'+(xO.diff>=0?'+':'')+xO.diff.toFixed(1)+'</span></p></div></div></div>');
+
+    }
+
+    if(tier>=3){
+    // Player breakdown: every player tagged on our side
+    var pl={};function pr(n){return pl[n]||(pl[n]={nm:n,sh:0,g:0,p:0,lost:0,tk:0,rw:0,tw:0,ru:0});}
+    var named=function(e){var n=String(e.player||"").trim();return n&&!/^#\d+$/.test(n)?n:null;};
+    usEvs.forEach(function(e){var n=named(e);if(!n)return;var oc=String(e.outcome||"").toLowerCase(),r=pr(n);
+      if(e.event_type==="Shot from play"||e.event_type==="Scoreable free"){r.sh++;if((e.score||0)===3)r.g++;else r.p+=(e.score||0);}
+      else if(e.event_type==="Possession lost"&&oc.indexOf("shot")<0)r.lost++;
+      else if(e.event_type==="Tackle")r.tk++;
+      else if(e.event_type==="Kickout"&&KO_WON.has(e.outcome))r.rw++;
+      else if(e.event_type==="Turnover won"||(e.event_type==="Turnover"&&/won/.test(oc)))r.tw++;
+      else if(e.event_type==="Ruck"&&/won/.test(oc))r.ru++;});
+    opEvs.forEach(function(e){var n=named(e);if(n&&e.event_type==="Kickout"&&/lost/i.test(e.outcome||""))pr(n).rw++;});
+    var pun={};tcAll.rows.forEach(function(r){pun[r.nm]=r.k;});
+    var rows2=Object.keys(pl).map(function(k){var r=pl[k];r.poss=r.sh+r.lost+r.rw+r.tw+r.ru;return r;}).filter(function(r){return r.poss||r.tk;}).sort(function(a,b){return b.poss-a.poss||b.tk-a.tk;});
+    h3.push('<h2>PLAYERS</h2><div class="card" style="overflow-x:auto"><table class="tbl"><tr><th>Player</th><th>Poss</th><th>Shots</th><th>Scored</th><th>Lost</th><th>Lost \u2192 score</th><th>Restarts won</th><th>Tackles</th></tr>');
+    rows2.forEach(function(r){h3.push('<tr><td style="font-weight:700">'+r.nm+'</td><td style="font-weight:800" class="gu">'+r.poss+'</td><td>'+r.sh+'</td><td>'+(r.g||r.p?r.g+'-'+(r.p<10?'0':'')+r.p:'\u2013')+'</td><td>'+r.lost+'</td><td>'+(pun[r.nm]||0)+'</td><td>'+r.rw+'</td><td>'+r.tk+'</td></tr>');});
+    h3.push('</table><p class="m" style="margin-top:8px;font-family:inherit">Poss: times on the ball that were tagged (shots, ball lost, restarts won, turnovers and rucks won). Lost \u2192 score: ball lost that led to a score against before it was won back.</p></div>');
 
     // Tackles
     var tkMap={};usEvs.forEach(function(e){if(e.event_type==="Tackle"&&e.player)tkMap[e.player]=(tkMap[e.player]||0)+1;});var tks=Object.keys(tkMap).map(function(n){return{name:n,count:tkMap[n]};}).sort(function(a,b){return b.count-a.count;});var mxT=tks.length?tks[0].count:1;
@@ -9397,18 +9452,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     tks.slice(0,12).forEach(function(t2){h3.push('<div style="display:flex;align-items:center;gap:8px;margin:3px 0"><span style="min-width:120px;font-size:11px">'+t2.name+'</span><div class="bar2" style="width:'+Math.round(100*t2.count/mxT)+'%;background:var(--cu)"></div><span style="font-size:11px;font-weight:700;margin-left:4px">'+t2.count+'</span></div>');});
     h3.push('</div>');
 
-    // Possessions lost
-    var toMap={},toType={};usEvs.forEach(function(e){if(e.event_type==="Possession lost"){if(e.player)toMap[e.player]=(toMap[e.player]||0)+1;var t2=e.outcome||"Other";toType[t2]=(toType[t2]||0)+1;}});
-    var toPl=Object.keys(toMap).map(function(n){return{name:n,count:toMap[n]};}).sort(function(a,b){return b.count-a.count;});
-    var toTy=Object.keys(toType).map(function(t2){return{type:t2,count:toType[t2]};}).sort(function(a,b){return b.count-a.count;});
-    var totTO=toTy.reduce(function(s,t2){return s+t2.count;},0);
-    h3.push('<h2>POSSESSIONS LOST</h2><div class="row"><div class="col card"><p style="font-size:11px;font-weight:700;color:#e0584d;margin-bottom:6px">BY TYPE \u00b7 '+totTO+' TOTAL</p>');
-    toTy.forEach(function(t2){h3.push('<div style="display:flex;align-items:center;gap:8px;margin:3px 0"><span style="min-width:100px;font-size:11px">'+t2.type+'</span><div class="bar2" style="width:'+Math.round(100*t2.count/Math.max(totTO,1))+'%;background:#e0584d"></div><span style="font-size:11px;font-weight:700;margin-left:4px">'+t2.count+'</span></div>');});
-    h3.push('</div><div class="col card"><p style="font-size:11px;font-weight:700;color:#e0584d;margin-bottom:6px">BY PLAYER</p>');
-    toPl.slice(0,10).forEach(function(t2){h3.push('<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>'+t2.name+'</span><span style="font-weight:700">'+t2.count+'</span></div>');});
-    h3.push('</div></div>');
+    }
 
-    h3.push('<p style="text-align:center;margin-top:24px;color:#536176;font-size:10px">Rock Solid Analytics \u00b7 Match Report \u00b7 '+match.date+'</p></body></html>');
+    h3.push('<p style="text-align:center;margin-top:24px;color:#536176;font-size:10px">Rock Solid Analytics \u00b7 Match Report \u00b7 '+TIERS[tier]+' \u00b7 Report v'+REPORT_VERSION+' \u00b7 '+match.date+'</p></body></html>');
     setReportHtml(h3.join("")); }
     const d = useMemo(function() {
       if (!d0 || half === "all") return d0;
@@ -9439,6 +9485,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           a.download = (club.name || "Match") + " v " + (match ? match.opponent || "Opp" : "Opp") + " Report.html";
           a.click(); URL.revokeObjectURL(url);
         }, style: { minHeight: 44, margin: "-9px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement("span", { style: { background: C.greenB + ALPHA.soft, border: "1px solid " + C.greenB, color: C.greenB, borderRadius: RAD.md, padding: "6px 12px", fontSize: FS.sm, fontWeight: 800 } }, "\u2B07 Save")))),
+      React.createElement("div", { style: { display: "flex", gap: 4, background: C.field, padding: 4, borderRadius: RAD.pill, margin: "10px 14px 0" } }, [[1, "Summary"], [2, "Analysis"], [3, "Full"]].map(function(t) {
+        var on = reportTier === t[0];
+        return React.createElement("button", { key: t[0], onClick: function() { exportMatchReport(t[0]); }, style: { flex: 1, minHeight: 40, borderRadius: RAD.pill, border: "none", cursor: "pointer", background: on ? C.bgCard : "transparent", color: on ? C.greenB : C.slate, fontWeight: 800, fontSize: FS.sm, fontFamily: MONO, letterSpacing: 1 } }, t[1].toUpperCase());
+      })),
       React.createElement("div", { dangerouslySetInnerHTML: { __html: reportHtml }, style: { padding: 0 } }));
     var isMatch = scope === "match";
     var win = match ? (match.our_total || 0) > (match.opp_total || 0) : false;

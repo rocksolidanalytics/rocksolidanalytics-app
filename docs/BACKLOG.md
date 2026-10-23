@@ -23,6 +23,14 @@ Open items first, then decisions, then what has been done, newest first.
   match cards; club site demo button points to it; strip broadcast video links; no
   individual player ratings on show. Rock Solid Gaels stays until the showcase is live.
 
+**Per-game tagging service**, agreed 2026-10-23: EUR 50 Summary, EUR 75 Analysis (plus up
+to 5 playlists), EUR 150 Full breakdown (plus a playlist per player), alongside the EUR 850
+lifetime membership. One standard report: docs/REPORT-SPEC.md (version 1, tier switch on
+the report screen). Still to do: how a customer team is set up (our own container per
+customer team, not counted against the free plan), delivering playlist links with the
+report, a pricing section on the club page for the tiers, and the open decisions in the spec
+(shared figures, player ratings).
+
 **Payments**
 - Automatic unlock from a Revolut payment notification, if payments become regular. Until
   then a club is unlocked by hand (see How to unlock a club under Decisions).
