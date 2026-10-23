@@ -3731,12 +3731,6 @@
       return React.createElement("path", { key: m.k, d: m.d, fill: "none", stroke: st[m.w][0], strokeWidth: st[m.w][1] });
     });
   }
-  function gaaEndSvg(P, st) {
-    return gaaEndPaths(P).map(function(m) {
-      if (m.w === "dot") return '<circle cx="' + m.p[0].toFixed(1) + '" cy="' + m.p[1].toFixed(1) + '" r="1.4" fill="' + st.dot + '"/>';
-      return '<path d="' + m.d + '" fill="none" stroke="' + st[m.w][0] + '" stroke-width="' + st[m.w][1] + '"/>';
-    }).join("");
-  }
   function XpPanel({ shots, usShots, oppShots, noHeading }){ return React.createElement("div", {}, noHeading ? null : React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1.5, color: C.slateD, margin: "18px 0 8px" } }, "EXPECTED SCORES FROM PLAY · vs all clubs"), React.createElement("div", { dangerouslySetInnerHTML: { __html: xpPanelHtml(shots, usShots, oppShots) } })); }
   
 function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(function(s){ return s.player === pl; }) : (list || []); }
@@ -9146,91 +9140,21 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function bldSc(tevs){var mp={};tevs.forEach(function(e){if((e.event_type==="Shot from play"||e.event_type==="Scoreable free")&&(e.score||0)>0){var p=e.player||"Unknown";if(!mp[p])mp[p]={g:0,pts:0,fg:0,fp:0,t2:0};var isF=e.event_type==="Scoreable free";if(e.score===3){mp[p].g++;if(isF)mp[p].fg++;}else if(e.score===2){mp[p].t2++;mp[p].pts+=2;}else{mp[p].pts+=e.score;if(isF)mp[p].fp+=e.score;}}});return Object.keys(mp).map(function(n){var s=mp[n];var t=s.g*3+s.pts;var mn=s.g+"-"+(s.pts<10?"0":"")+s.pts;var fr=(s.fg||s.fp)?" ("+s.fg+"-"+(s.fp<10?"0":"")+s.fp+")":"";var p2=s.t2?" "+s.t2+"x2pt":"";return{name:n,total:t,text:mn+fr+p2};}).sort(function(a,b){return b.total-a.total;});}
     var usSc=bldSc(usEvs); var opSc=bldSc(opEvs);
 
-    // Shot map SVG — HALF PITCH with grass stripes, GAA lines, goal at top
-    function shotMapSvg(teamEvs, label, color) {
-      // Misses are red crosses, or light grey when the team colour itself is close to red.
-      var missC=_labDist(color,"#e0584d")<30?"#c9d1dc":"#e0584d";
-      var W=300,H=Math.round(W*72/GAA_W),cx=W/2;
-      var mD=function(d){return d/72*H;};
-      var svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;max-width:320px;display:block;margin:0 auto;border-radius:12px;border:1px solid #172238">';
-      // Grass stripes
-      var bands=9;
-      for(var b=0;b<bands;b++){
-        svg+='<rect x="0" y="'+(H/bands*b)+'" width="'+W+'" height="'+(H/bands)+'" fill="'+(b%2?'#0c4a22':'#0a3f1d')+'"/>';
-      }
-      // GAA end markings
-      svg+=gaaEndSvg(function(a,d){return [cx+a*W/GAA_W, mD(d)];},{main:['rgba(255,255,255,0.45)',1.2],soft:['rgba(255,255,255,0.3)',1],faint:['rgba(255,255,255,0.2)',0.8],dot:'rgba(255,255,255,0.45)'});
-      // Goal
-      svg+='<rect x="'+(cx-26)+'" y="0" width="52" height="8" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>';
-      // Endline
-      svg+='<line x1="0" y1="1" x2="'+W+'" y2="1" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>';
-      // Sidelines
-      svg+='<line x1="1" y1="0" x2="1" y2="'+H+'" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>';
-      svg+='<line x1="'+(W-1)+'" y1="0" x2="'+(W-1)+'" y2="'+H+'" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>';
-      // Shots
-      var scored=0,total=0;
-      teamEvs.forEach(function(e){
-        if((e.event_type==="Shot from play"||e.event_type==="Scoreable free")&&e.x!=null&&e.y!=null){
-          total++;
-          var x=e.x,y=e.y; if(x<0.5){x=1-x;y=1-y;}
-          var frac=(1-x)/0.5;
-          var px=y*W, py=frac*H;
-          var sc=(e.score||0)>0; if(sc)scored++;
-          if(sc){
-            var isFree=e.event_type==="Scoreable free";
-            if(isFree) { svg+='<rect x="'+(px-5).toFixed(1)+'" y="'+(py-5).toFixed(1)+'" width="10" height="10" rx="2" fill="'+color+'" fill-opacity="0.85" stroke="#fff" stroke-width="0.5"/>'; if(e.player) { var _pn = e.player.match(/#(\\d+)/); if(_pn) svg+='<text x="'+px.toFixed(1)+'" y="'+(py+3).toFixed(1)+'" text-anchor="middle" fill="#0A0A0D" font-size="7" font-weight="800" font-family="Barlow,sans-serif">'+_pn[1]+'</text>'; } } else { svg+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="6" fill="'+color+'" fill-opacity="0.85" stroke="#fff" stroke-width="0.5"/>'; if(e.player) { var _pn2 = e.player.match(/#(\\d+)/); if(_pn2) svg+='<text x="'+px.toFixed(1)+'" y="'+(py+3).toFixed(1)+'" text-anchor="middle" fill="#0A0A0D" font-size="7" font-weight="800" font-family="Barlow,sans-serif">'+_pn2[1]+'</text>'; } }
-          }else{
-            svg+='<g transform="translate('+px.toFixed(1)+','+py.toFixed(1)+')"><line x1="-5" y1="-5" x2="5" y2="5" stroke="'+missC+'" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="-5" x2="-5" y2="5" stroke="'+missC+'" stroke-width="2.5" stroke-linecap="round"/></g>';
-          }
-        }
-      });
-      // Legend
-      svg+='<circle cx="12" cy="'+(H-14)+'" r="5" fill="'+color+'" opacity="0.85"/><text x="22" y="'+(H-10)+'" fill="#FFFFFF" font-size="10" font-family="Barlow,sans-serif">Play</text>';
-      svg+='<rect x="57" y="'+(H-19)+'" width="10" height="10" rx="2" fill="'+color+'" opacity="0.85"/><text x="72" y="'+(H-10)+'" fill="#FFFFFF" font-size="10" font-family="Barlow,sans-serif">Free</text>';
-      svg+='<g transform="translate(112,'+(H-14)+')"><line x1="-4" y1="-4" x2="4" y2="4" stroke="'+missC+'" stroke-width="2"/><line x1="4" y1="-4" x2="-4" y2="4" stroke="'+missC+'" stroke-width="2"/></g><text x="122" y="'+(H-10)+'" fill="#FFFFFF" font-size="10" font-family="Barlow,sans-serif">Missed</text>';
-      svg+='</svg>';
-      var pct=total?Math.round(100*scored/total):0;
-      return '<div><p style="font-size:11px;font-weight:700;color:'+color+';margin-bottom:6px">'+label+'</p>'+svg+'<p class="m" style="margin-top:6px">'+scored+'/'+total+' scored ('+pct+'%)</p></div>';
+    // The shot and restart maps are the ones the app draws (PitchMap, KickoutMap and legends),
+    // drawn once off screen and copied into the report as finished SVG.
+    function appMarkup(el){
+      var box=document.createElement("div"), rt=ReactDOM.createRoot(box);
+      try { ReactDOM.flushSync(function(){ rt.render(el); }); return box.innerHTML; }
+      catch(e){ return '<p class="m">Map not available.</p>'; }
+      finally { try { rt.unmount(); } catch(e2){} }
     }
-
-    // Kickout map SVG — FULL PITCH with grass stripes, derived-direction normalisation
-    function koMapSvg(teamEvs, teamKey, label, color) {
-      var W=220,H=360,cx=W/2,L=4,T=4,R=W-4,B=H-4,PL=B-T;
-      var mD=function(d){return d/144*PL;};
-      var svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;max-width:240px;display:block;margin:0 auto;border-radius:12px;border:1px solid #172238">';
-      // Grass stripes
-      var bands=12;
-      for(var b=0;b<bands;b++){
-        svg+='<rect x="0" y="'+(H/bands*b)+'" width="'+W+'" height="'+(H/bands)+'" fill="'+(b%2?'#0c4a22':'#0a3f1d')+'"/>';
-      }
-      var MID=(T+B)/2;
-      // Midfield
-      svg+='<line x1="'+L+'" y1="'+MID+'" x2="'+R+'" y2="'+MID+'" stroke="rgba(255,255,255,0.45)" stroke-width="1.1" stroke-dasharray="6 4"/>';
-      // GAA end markings, both ends
-      var kst={main:['rgba(255,255,255,0.45)',1.1],soft:['rgba(255,255,255,0.3)',0.9],faint:['rgba(255,255,255,0.2)',0.8],dot:'rgba(255,255,255,0.45)'};
-      svg+=gaaEndSvg(function(a,d){return [cx+a*(R-L)/GAA_W, B-mD(d)];},kst);
-      svg+=gaaEndSvg(function(a,d){return [cx+a*(R-L)/GAA_W, T+mD(d)];},kst);
-      svg+='<rect x="'+(cx-40)+'" y="'+(B-6)+'" width="80" height="6" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>';
-      svg+='<rect x="'+(cx-40)+'" y="'+T+'" width="80" height="6" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>';
-      // Direction arrow
-      svg+='<polygon points="'+(cx-8)+','+MID+' '+(cx+8)+','+MID+' '+cx+','+(MID-18)+'" fill="rgba(255,255,255,0.12)"/>';
-      // Kickout dots
-      var won=0,lost=0;
-      teamEvs.forEach(function(e){
-        if(e.event_type==="Kickout"&&e.x!=null&&e.y!=null){
-          var pt=koNorm({x:e.x,y:e.y},koOwnGoal(koDir(evs),e.match_id,e.period,teamKey));
-          var px=L+(pt.y*(R-L));
-          var py=T+(pt.x*PL);
-          var w=KO_WON.has(e.outcome); if(w)won++;else lost++;
-          svg+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="6" fill="'+(w?"#34c967":"#e0584d")+'" fill-opacity="0.85" stroke="#fff" stroke-width="0.5"/>';
-        }
-      });
-      // Legend
-      svg+='<circle cx="12" cy="'+(H-30)+'" r="5" fill="#34c967" opacity="0.85"/><text x="22" y="'+(H-26)+'" fill="#FFFFFF" font-size="10" font-family="Barlow,sans-serif">Won</text>';
-      svg+='<circle cx="12" cy="'+(H-14)+'" r="5" fill="#e0584d" opacity="0.85"/><text x="22" y="'+(H-10)+'" fill="#FFFFFF" font-size="10" font-family="Barlow,sans-serif">Lost</text>';
-      svg+='</svg>';
-      var pct=(won+lost)?Math.round(100*won/(won+lost)):0;
-      return '<div><p style="font-size:11px;font-weight:700;color:'+color+';margin-bottom:6px">'+label+'</p>'+svg+'<p class="m" style="margin-top:6px">Won '+won+'/'+(won+lost)+' ('+pct+'%)</p></div>';
+    function repShotMap(list,label,col){
+      list=list||[]; var sc2=list.filter(function(sh){return (sh.score||0)>0;}).length;
+      return '<div><p style="font-size:11px;font-weight:700;color:'+col+';margin-bottom:6px">'+label+'</p>'+appMarkup(React.createElement(React.Fragment,null,React.createElement(PitchMap,{shots:list}),React.createElement(ShotLegend,null)))+'<p class="m" style="margin-top:6px">'+sc2+'/'+list.length+' scored ('+(list.length?Math.round(100*sc2/list.length):0)+'%)</p></div>';
+    }
+    function repKoMap(list,label,col){
+      list=list||[]; var w2=list.filter(function(p2){return p2.won;}).length;
+      return '<div><p style="font-size:11px;font-weight:700;color:'+col+';margin-bottom:6px">'+label+'</p>'+appMarkup(React.createElement(React.Fragment,null,React.createElement(KickoutMap,{pts:list}),React.createElement(KickoutLegend,null)))+'<p class="m" style="margin-top:6px">Won '+w2+'/'+list.length+' ('+(list.length?Math.round(100*w2/list.length):0)+'%)</p></div>';
     }
 
     // Conversion by zone — using real xpZoneKey
@@ -9379,13 +9303,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     h3.push(matchStatsHtml());
 
     // Shot maps
-    h3.push('<h2>SHOT MAPS</h2><div class="row"><div class="col card">'+shotMapSvg(usEvs,cn,cU)+'</div><div class="col card">'+shotMapSvg(opEvs,opp2,cO)+'</div></div>');
+    h3.push('<h2>SHOT MAPS</h2><div class="row"><div class="col card">'+repShotMap(d.shots&&d.shots.us,cn,cU)+'</div><div class="col card">'+repShotMap(d.shots&&d.shots.opp,opp2,cO)+'</div></div>');
 
     // Conversion by zone
     h3.push('<h2>CONVERSION BY ZONE</h2><div class="row"><div class="col card"><p style="font-size:11px;font-weight:700;color:var(--cu);margin-bottom:6px">'+cn.toUpperCase()+'</p>'+zoneTable(usEvs,"#34c967")+'</div><div class="col card"><p style="font-size:11px;font-weight:700;color:var(--co);margin-bottom:6px">'+opp2.toUpperCase()+'</p>'+zoneTable(opEvs,"#4a9eff")+'</div></div>');
 
     // Kickout maps
-    h3.push('<h2>RESTART MAPS</h2><div class="row"><div class="col card">'+koMapSvg(usEvs,"us",cn+" Restarts",cU)+'</div><div class="col card">'+koMapSvg(opEvs,"opp",opp2+" Restarts",cO)+'</div></div>');
+    h3.push('<h2>RESTART MAPS</h2><div class="row"><div class="col card">'+repKoMap(d.koPts&&d.koPts.us,cn+" restarts",cU)+'</div><div class="col card">'+repKoMap(d.koPts&&d.koPts.opp,opp2+" restarts",cO)+'</div></div>');
 
     // Breaking ball
     var ko=d.ko||{};var oko=d.oko||{};
