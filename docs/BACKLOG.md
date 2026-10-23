@@ -4,18 +4,21 @@ Open items first, then decisions, then what has been done, newest first.
 
 ## Open
 
-**All-Ireland 2026 showcase (replaces the demo)**, agreed 2026-10-22. Tadhg tags 3 or 4
-All-Ireland 2026 games first (football and hurling), then we gate and present them.
-- Setup: two showcase clubs, "All-Ireland 2026 - Football" and "All-Ireland 2026 - Hurling"
-  (one sport per club), each with its own analyst sign-in (Gmail plus addresses). Kept out
-  of vs Others and of the expected scores pool if wanted.
-- Tagging: each game as a scouting match ("County A v County B"), Championship, both team
-  sheets, both counties set up under Opposition with kit and crest, same tagging detail for
-  every game.
+**All-Ireland 2026 showcase (replaces the demo)**, agreed 2026-10-22, set up 2026-10-23.
+- Done: two containers, "All-Ireland 2026 - Football" and "All-Ireland 2026 - Hurling"
+  (`clubs.showcase`, grade Inter-county, lifetime, no join code; see
+  supabase/migrations/20261023_showcase_clubs.sql). Showcases are left out of the expected
+  scores pool; the Inter-county grade keeps them in a rankings field of their own. Kerry and
+  Mayo are under Opposition in the football container with kits (green with gold band, green
+  with red band).
+- Next: Tadhg signs up with a Gmail + address for each container and the account is linked
+  as owner from the database side (joining by code would make it a player). Then each game
+  is a scouting match ("Kerry v Mayo"), Championship, both team sheets, tagged from video.
+  First game: Kerry v Mayo.
 - After tagging: read-only viewer mode enforced in the database (visitors can look, never
-  change; can build on `can_edit_club`); `?demo=1` opens a "pick a match" front door with match cards; club site demo
-  button points to it; strip broadcast video links; no individual player ratings on show.
-  Rock Solid Gaels stays until the showcase is live.
+  change; can build on `can_edit_club`); `?demo=1` opens a "pick a match" front door with
+  match cards; club site demo button points to it; strip broadcast video links; no
+  individual player ratings on show. Rock Solid Gaels stays until the showcase is live.
 
 **Payments**
 - Automatic unlock from a Revolut payment notification, if payments become regular. Until
