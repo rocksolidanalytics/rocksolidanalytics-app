@@ -9202,6 +9202,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     // Team colours from the kits (the same choice the taggers make), with darker versions
     // of the kit colours for printing on white.
     var tcR=teamCols(club, null, cn, opp2, !!match.scouting, match.id), cU=tcR.us, cO=tcR.opp;
+    var noOwnKit=!(match.scouting||(club.tag_settings||{}).ourKit||club.colour_primary);
+    if(noOwnKit&&_labDist(C.greenB,cO)>=22) cU=C.greenB;
     function prTone(k,fb){ if(!k||tcR.fallback) return fb; var c=[k.a,k.b].filter(function(h){ return _hexRgb(h)&&1.05/(_hexLum(h)+0.05)>=3; })[0]; return c||fb; }
     var pU=prTone(tcR.usKit,"#1e7a3e"), pO=prTone(tcR.oppKit,"#2266bb");
 
@@ -9279,8 +9281,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     h3.push('<p class="m">'+match.date+(match.competition?' \u00b7 '+match.competition:'')+(match.venue?' \u00b7 '+match.venue:'')+(match.referee?' \u00b7 Ref: '+match.referee:'')+'</p>');
 
     // Result with score table
+    // A side with no kit set wears a stand-in: green with blue sleeves for us, the reverse for them.
     function repJersey(kit,name,cls){return '<div class="rj">'+(kit?appMarkup(React.createElement(KitJersey,{kit:kit,size:72})):'')+'<div class="rjn '+cls+'">'+name+'</div></div>';}
-    h3.push('<h2>RESULT</h2><div class="card"><div class="sbx">'+repJersey(tcR.usKit,cn,"gu")+'<div class="sb"><span class="gu">'+(match.our_score||"0-00")+'</span> \u2014 <span class="go">'+(match.opp_score||"0-00")+'</span></div>'+repJersey(tcR.oppKit,opp2,"go")+'</div>');
+    h3.push('<h2>RESULT</h2><div class="card"><div class="sbx">'+repJersey(!noOwnKit&&tcR.usKit||{p:"plain",a:C.greenB,b:C.blue},cn,"gu")+'<div class="sb"><span class="gu">'+(match.our_score||"0-00")+'</span> \u2014 <span class="go">'+(match.opp_score||"0-00")+'</span></div>'+repJersey(tcR.oppKit||{p:"plain",a:C.blue,b:C.greenB},opp2,"go")+'</div>');
     h3.push('<table class="tbl" style="max-width:400px;margin:0 auto"><tr><th></th><th>1st Half</th><th>2nd Half</th><th>Full Time</th></tr>');
     h3.push('<tr><td style="font-weight:700;color:var(--cu)">'+cn+'</td><td>'+nota(h1Us)+'</td><td>'+nota(h2Us)+'</td><td style="font-weight:700">'+(match.our_score||"0-00")+'</td></tr>');
     h3.push('<tr><td style="font-weight:700;color:var(--co)">'+opp2+'</td><td>'+nota(h1Op)+'</td><td>'+nota(h2Op)+'</td><td style="font-weight:700">'+(match.opp_score||"0-00")+'</td></tr></table>');
