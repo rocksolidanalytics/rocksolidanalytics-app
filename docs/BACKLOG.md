@@ -21,6 +21,15 @@ All-Ireland 2026 games first (football and hurling), then we gate and present th
 - Automatic unlock from a Revolut payment notification, if payments become regular. Until
   then a club is unlocked by hand (see How to unlock a club under Decisions).
 
+**St Jude's Camogie player names, parked 2026-10-23** (Tadhg checking the team sheets).
+- Number-only tags for our side in our own games: Dicksboro 10 Aug (#2, #6, #11, #12, #13,
+  #17 x5, #20, #21, #22 x2), Cuala 23 Aug (#3, #4, #5, #6, #7, #11, #15 x2), SOPER 6 Sep
+  (#1, #2, #8 x2, #25 x2), Kilmacud Crokes 14 Sep (#5, #25 x12), Faughs 21 Sep (#4, #22),
+  BBSE 10 Oct (#2, #3, #15, #18). Line-up slot gives a likely name for most; #17, #20, #21,
+  #22 (Dicksboro) and #25 (SOPER, Crokes) need the team sheet. Opposition and scouting
+  number tags are other teams and stay.
+- Shortened squad names: "Caitriona Dev" (22 tags), "Sianne mcd" (1).
+
 **Analysis, later**
 - Expected scores: once a sport passes about 2,000 shots from play, replace zones with a
   smooth distance-and-angle model so every shot gets its own expected value.
@@ -77,6 +86,14 @@ columns. Wide screens now go up to 1200px.
 
 **Still to look at:** the opposition team page, match lists, Game film list, the video
 tagger in landscape, and button sizes in the live tagger on a big screen.
+
+## Done 2026-10-23
+
+**St Jude's Camogie player duplicates merged** (data change, asked for by Tadhg). AMD into
+Anna Marie Durkan (2 tags; now 21) and Molly C into Molly Crowther (19 tags; now 20); the
+AMD and Molly C squad entries removed (squad now 36). Trailing spaces and curly apostrophes
+removed from names (25 tags, 8 line-up rows), so "Aoife Higgins " and "Emma O’Byrne" no
+longer show as separate players.
 
 ## Done 2026-10-22
 
