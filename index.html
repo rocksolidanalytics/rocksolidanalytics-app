@@ -6294,18 +6294,19 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState("a");
     const [sheetFor, setSheetFor] = useState(null);
+    const [moreSubs, setMoreSubs] = useState(false);
 
     // A team sheet read from a photo fills the active team. Each player goes to their jersey
-    // number when it is free (subs up to 26 on county sheets), otherwise to the next free
+    // number when it is free (subs up to 30 on county sheets), otherwise to the next free
     // starter or sub row.
     function applyScoutSheet(list) {
       var side = sheetFor;
       setSheetFor(null);
       var o = {}, used = {};
-      list.forEach(function(r) { var j = Number(r.n); if (j >= 1 && j <= 26 && !used[j]) { o[j] = r.name; used[j] = true; r._placed = true; } });
+      list.forEach(function(r) { var j = Number(r.n); if (j >= 1 && j <= 30 && !used[j]) { o[j] = r.name; used[j] = true; r._placed = true; } });
       list.forEach(function(r) {
         if (r._placed) return;
-        var a = r.start ? 1 : 16, b = r.start ? 15 : 26;
+        var a = r.start ? 1 : 16, b = r.start ? 15 : 30;
         for (var k = a; k <= b; k++) if (!used[k]) { o[k] = r.name; used[k] = true; return; }
       });
       (side === "a" ? setNamesA : setNamesB)(o);
@@ -6315,7 +6316,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setSaving(true);
       var rows = [];
       // A number with only a helmet colour is kept: it is often all a scout can see.
-      [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26].forEach(function(k) {
+      [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30].forEach(function(k) {
         if (namesA[k] || helA[k]) rows.push({ club_id: match.club_id, match_id: match.id, player_name: namesA[k] || "", position_slot: k, is_start: k <= 15, helmet: helA[k] || null });
         if (namesB[k] || helB[k]) rows.push({ club_id: match.club_id, match_id: match.id, player_name: namesB[k] || "", position_slot: k + 100, is_start: k <= 15, helmet: helB[k] || null });
       });
@@ -6325,8 +6326,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }
 
     function grid(names, setNames, hel, side) {
-      // Rows 21 to 26 appear when a county sheet fills them.
-      var nums = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].concat([21,22,23,24,25,26].filter(function(n) { return names[n] || hel[n]; }));
+      // Rows 21 to 30 appear on request, or when a county sheet fills them.
+      var nums = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].concat([21,22,23,24,25,26,27,28,29,30].filter(function(n) { return moreSubs || names[n] || hel[n]; }));
       return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } },
         nums.map(function(n) {
           return React.createElement("div", { key: n, style: { display: "flex", alignItems: "center", gap: 8 } },
@@ -6346,6 +6347,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         React.createElement("button", { onClick: function() { setActiveTab("b"); }, style: { flex: 1, minHeight: 44, padding: "10px", borderRadius: RAD.md, border: "1px solid " + (activeTab === "b" ? C.blue : C.border), background: activeTab === "b" ? C.blue + ALPHA.soft : "none", color: activeTab === "b" ? C.blue : C.slate, fontWeight: 800, fontSize: FS.md, cursor: "pointer" } }, teamB || "Away")),
       React.createElement("button", { onClick: function() { setSheetFor(activeTab); }, style: { width: "100%", minHeight: 44, marginBottom: 12, padding: "10px 12px", borderRadius: RAD.lg, border: "1px solid " + C.border, background: C.bgCard, color: C.white, fontWeight: 800, fontSize: FS.md, cursor: "pointer" } }, "\u{1F4F7} Read ", activeTab === "a" ? teamA : teamB, " team sheet from a photo"),
       activeTab === "a" ? grid(namesA, setNamesA, helA, "a") : grid(namesB, setNamesB, helB, "b"),
+      !moreSubs && React.createElement("button", { onClick: function() { setMoreSubs(true); }, style: { width: "100%", minHeight: 44, marginTop: 8, padding: "10px 12px", borderRadius: RAD.md, border: "1px dashed " + C.border, background: "none", color: C.slate, fontWeight: 700, fontSize: FS.md, cursor: "pointer" } }, "+ More subs (21\u201330)"),
       sheetFor && React.createElement(SheetImport, { side: "opp", session: session, players: [], teamName: sheetFor === "a" ? teamA : teamB, onApply: applyScoutSheet, onClose: function() { setSheetFor(null); } }),
       helPick && React.createElement(HelmetPick, { value: (helPick.side === "a" ? helA : helB)[helPick.n], title: (helPick.side === "a" ? teamA : teamB) + " #" + helPick.n, onClose: function() { setHelPick(null); }, onPick: function(h) {
         var hp = helPick;
@@ -6420,6 +6422,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           opponent: _opp,
           scouting: true,
           date,
+          competition,
+          round: round.trim() || null,
           status: "scheduled",
           source: "live"
         } : {
@@ -6478,7 +6482,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         React.createElement("input", { value: teamA, onChange: function(e) { setTeamA(e.target.value); }, placeholder: "e.g. Erins Isle", className: "rsa-field", style: fld })),
       React.createElement("div", { style: lab }, isScout ? "AWAY TEAM" : "OPPOSITION"), /* @__PURE__ */ React.createElement("input", { value: opponent, onChange: function(e) {
       setOpp(e.target.value);
-    }, placeholder: isScout ? "e.g. Na Fianna" : "e.g. Rathnew", className: "rsa-field", style: fld }), !isScout && React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: lab }, "COMPETITION"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, COMPS.map(function(c) {
+    }, placeholder: isScout ? "e.g. Na Fianna" : "e.g. Rathnew", className: "rsa-field", style: fld }), isScout && React.createElement(React.Fragment, null, React.createElement("div", { style: lab }, "COMPETITION"), React.createElement("div", { style: { display: "flex", gap: 8 } }, COMPS.map(function(c) {
+      return React.createElement("button", { key: c, onClick: function() { setComp(c); }, style: { flex: 1, minHeight: 44, padding: "10px 4px", borderRadius: RAD.md, cursor: "pointer", fontSize: FS.md, fontWeight: 700, border: "1px solid " + (competition === c ? C.gold : C.border), background: competition === c ? C.gold + ALPHA.soft : C.field, color: competition === c ? C.gold : C.slate } }, c);
+    })), React.createElement("div", { style: lab }, competition === "League" ? "ROUND (e.g. Round 3)" : competition === "Championship" ? "STAGE (e.g. Quarter-Final)" : "ROUND (optional)"), React.createElement("input", { value: round, onChange: function(e) { setRound(e.target.value); }, placeholder: "Optional", className: "rsa-field", style: fld })), !isScout && React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: lab }, "COMPETITION"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, COMPS.map(function(c) {
       return /* @__PURE__ */ React.createElement("button", { key: c, onClick: function() {
         setComp(c);
       }, style: { flex: 1, minHeight: 44, padding: "10px 4px", borderRadius: RAD.md, cursor: "pointer", fontSize: FS.md, fontWeight: 700, border: "1px solid " + (competition === c ? C.greenB : C.border), background: competition === c ? C.greenB + ALPHA.soft : C.field, color: competition === c ? C.greenB : C.slate } }, c);
