@@ -55,6 +55,13 @@ player ratings).
 - Pricing page line, maybe later: "less than one season of a single-team video
   subscription" (Hudl GAA packs about EUR 1,550 to 3,250 a year via an Irish reseller).
 
+**Detailed video events, next**
+- Views of their own once the finals are tagged: attacks the Performa way (attacks,
+  attack-to-shot %, attacks per score, how attacks ended, where they entered), goalkeeper
+  actions, possessions per player (touches by type), duels and breaking ball by player.
+- The event editor offers per-match events, but `matches` has no `custom_events` column, so
+  saving events for a single match fails; club-wide events work (found 2026-10-23).
+
 **Analysis, later**
 - Expected scores: once a sport passes about 2,000 shots from play, replace zones with a
   smooth distance-and-angle model so every shot gets its own expected value.
@@ -119,6 +126,17 @@ columns. Wide screens now go up to 1200px.
 tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-23
+
+**Detailed video events.** A ready-made pack added from the event editor in one tap (+ Add
+the detailed video events): Goalkeeper action (shot saved, shot parried, high ball caught,
+punched, dropped, sweeping clearance), Player possession (hand pass, kick or strike pass,
+solo or carry, shot from play, quick free taken, scoreable free taken, sideline taken, mark
+claimed in football), Attack (score, shot missed, scoreable free won, turnover, recycled
+out, 45 or 65 or sideline won), Duel (won, lost, free won, free conceded) and Breaking ball
+(won, lost). Marked video only (`videoOnly`), so the live tagger leaves them out; all score
+0 and are matched by exact name, so no existing stat moves (checked with 300 extra tags in
+a real game). They show in the Other events view for now. Switched on for both All-Ireland
+containers.
 
 **Live tagger stats bars.** The live tagger stats (Detailed) use the same head-to-head
 groups as Overview and the report, in the tagging colours, following the Full / 1st / 2nd
