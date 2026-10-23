@@ -6603,7 +6603,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       // (where it ended is read from the tags that follow).
       { id: "vp_attack", name: "Attack", location: true, videoOnly: true, outcomes: o(["Run left", "Run central", "Run right", (stick ? "Strike" : "Kick") + " pass left", (stick ? "Strike" : "Kick") + " pass central", (stick ? "Strike" : "Kick") + " pass right", "High ball to square"]) },
       { id: "vp_duel", name: "Duel", location: true, videoOnly: true, outcomes: o(["Won", "Lost", "Free won", "Free conceded"]) },
-      { id: "vp_break", name: "Breaking ball", location: true, videoOnly: true, outcomes: o(["Won", "Lost"]) }
+      { id: "vp_break", name: "Breaking ball", location: true, videoOnly: true, outcomes: o(["Won", "Lost"]) },
+      { id: "vp_throw", name: "Throw-in", location: false, videoOnly: true, outcomes: o(["Won clean", "Lost clean", "Break won", "Break lost"]) }
     ];
   }
   function newCE() {
