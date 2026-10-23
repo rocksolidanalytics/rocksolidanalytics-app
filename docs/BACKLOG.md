@@ -129,6 +129,10 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-23
 
+**Scouting team names on screen.** The video tagger scoreboard (portrait) and the scouting
+dashboard showed Team A and Team B for a scouting match set up without separate team
+details (Kerry v Mayo); both now take the names from the match name first.
+
 **Tagger button order.** The video tagger defaults to the phases of play: restart and
 contests (kickout or puckout, throw-in, ruck, breaking ball), on the ball (player
 possession, attack, shot, free), the ball changing hands (turnover, turnover won, tackle,
