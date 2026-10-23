@@ -48,8 +48,6 @@ player ratings).
 - Shortened squad names: "Caitriona Dev" (22 tags), "Sianne mcd" (1).
 
 **Match report and dashboard, next**
-- Same head-to-head bars in the live tagger stats screen (still the old green and blue
-  CompareBars).
 - Attacks (Performa: a possession reaching the opposition 45): an estimate from existing
   tags (shots, frees won and turnovers in the attacking third), clearly labelled, and an
   optional Attack tag for clubs that want the exact figure. Only one game has custom
@@ -121,6 +119,12 @@ columns. Wide screens now go up to 1200px.
 tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-23
+
+**Live tagger stats bars.** The live tagger stats (Detailed) use the same head-to-head
+groups as Overview and the report, in the tagging colours, following the Full / 1st / 2nd
+half switch. More measures there: possession share, accuracy, tackle foul rate, and short,
+mid and long restarts won. Overview and the tagger share one component (`H2HPanel`); the old
+`CompareBars` is removed. The video tagger has no stats screen, so it is unchanged.
 
 **Match report tiers (report v1).** One fixed layout written down in docs/REPORT-SPEC.md;
 the tier decides how much is included. Summary (EUR 50): result, score by period, scorers,
