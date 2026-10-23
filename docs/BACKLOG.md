@@ -56,7 +56,8 @@ player ratings).
 - Pricing page line, maybe later: "less than one season of a single-team video
   subscription" (Hudl GAA packs about EUR 1,550 to 3,250 a year via an Irish reseller).
 
-**Detailed video events, next**
+**Detailed video events, next** (parked until the All-Ireland finals are tagged; then the
+new views and the per-match events fix together)
 - Views of their own once the finals are tagged: attacks the Performa way (attacks,
   attack-to-shot %, attacks per score, how each entry type ends, read from the next shot,
   score or ball lost), goalkeeper
