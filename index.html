@@ -3887,6 +3887,17 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     if (uB.length || oB.length) g.push({ main: h2Cnt("Cards", uB.length, oB.length), subs: ["Yellow", "Black", "Red"].map(function(cd) { var r2 = new RegExp(cd, "i"), x = n(uB, function(e) { return r2.test(e.outcome || ""); }), y = n(oB, function(e) { return r2.test(e.outcome || ""); }); return x || y ? h2Cnt(cd, x, y) : null; }).filter(Boolean) });
     return g;
   }
+  // Season colours: the club main colour against its second colour, each made readable on the
+  // dark background. Green and blue when the club has no colours set. When the two are too
+  // close to tell apart, the club keeps its colour and the opposition takes green or blue.
+  function seasonCols(club) {
+    var ts = (club && club.tag_settings) || {};
+    if (!ts.ourKit && !(club && club.colour_primary)) return { us: C.greenB, opp: C.blue };
+    var k = clubKit(club), u = _readable(k.a), o = k.b && k.b !== k.a ? _readable(k.b) : null;
+    if (o && _labDist(u, o) >= 22) return { us: u, opp: o };
+    u = kitTone(k);
+    return { us: u, opp: _labDist(u, C.blue) >= _labDist(u, C.greenB) ? C.blue : C.greenB };
+  }
   function h2hFmt(v, r) { return (r.dp ? (Math.round(v * 10) / 10).toFixed(1) : String(Math.round(v))) + (r.pct ? "%" : ""); }
   // One head-to-head bar: the share of the two figures for each side, in its own colour.
   function H2HRow({ r, main, usCol, oppCol }) {
@@ -9512,7 +9523,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         var evs2 = (d._events || []).filter(function(e) { return !isMatch || !match || !e.match_id || e.match_id === match.id; });
         var us2 = evs2.filter(function(e) { return e.team === "us"; }), op2 = evs2.filter(function(e) { return e.team === "opp"; });
         var games = isMatch ? 1 : Object.keys(evs2.reduce(function(o, e) { o[e.match_id] = 1; return o; }, {})).length;
-        var tc2 = isMatch && match ? teamCols(club, null, club.name, match.opponent, !!match.scouting, match.id) : kitCols(clubKit(club), null);
+        var tc2 = isMatch && match ? teamCols(club, null, club.name, match.opponent, !!match.scouting, match.id) : seasonCols(club);
         var c2 = d.compare || [];
         var more = ["Possession", "Accuracy", "Breaking ball won", "Def. work rate", "Tackle foul % \u00B7 lower is better", "Frees won", "Turnover \u2192 shot", "Turnover \u2192 score"].map(function(k) { return c2.find(function(r) { return r.label === k && !(r.hideIfZero && !r.us && !r.opp); }); }).filter(Boolean);
         if (!us2.length && !op2.length) return null;
