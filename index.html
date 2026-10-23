@@ -6570,7 +6570,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     return [
       { id: "vp_gk", name: "Goalkeeper action", location: true, videoOnly: true, outcomes: o(["Shot saved", "Shot parried", "High ball caught", "High ball punched", "High ball dropped", "Sweeping clearance"]) },
       { id: "vp_poss", name: "Player possession", location: true, videoOnly: true, outcomes: o(["Hand pass", stick ? "Strike pass" : "Kick pass", "Solo or carry", "Shot from play", "Quick free taken", "Scoreable free taken", "Sideline taken"].concat(stick ? [] : ["Mark claimed"])) },
-      { id: "vp_attack", name: "Attack", location: true, videoOnly: true, outcomes: o(["Score", "Shot missed", "Scoreable free won", "Turnover", "Recycled out", stick ? "65 or sideline won" : "45 or sideline won"]) },
+      // An attack is a possession reaching the opposition 45; the outcome is how it got there
+      // (where it ended is read from the tags that follow).
+      { id: "vp_attack", name: "Attack", location: true, videoOnly: true, outcomes: o(["Run left", "Run central", "Run right", (stick ? "Strike" : "Kick") + " pass left", (stick ? "Strike" : "Kick") + " pass central", (stick ? "Strike" : "Kick") + " pass right", "High ball to square"]) },
       { id: "vp_duel", name: "Duel", location: true, videoOnly: true, outcomes: o(["Won", "Lost", "Free won", "Free conceded"]) },
       { id: "vp_break", name: "Breaking ball", location: true, videoOnly: true, outcomes: o(["Won", "Lost"]) }
     ];

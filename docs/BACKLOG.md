@@ -57,7 +57,8 @@ player ratings).
 
 **Detailed video events, next**
 - Views of their own once the finals are tagged: attacks the Performa way (attacks,
-  attack-to-shot %, attacks per score, how attacks ended, where they entered), goalkeeper
+  attack-to-shot %, attacks per score, how each entry type ends, read from the next shot,
+  score or ball lost), goalkeeper
   actions, possessions per player (touches by type), duels and breaking ball by player.
 - The event editor offers per-match events, but `matches` has no `custom_events` column, so
   saving events for a single match fails; club-wide events work (found 2026-10-23).
@@ -131,8 +132,9 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 the detailed video events): Goalkeeper action (shot saved, shot parried, high ball caught,
 punched, dropped, sweeping clearance), Player possession (hand pass, kick or strike pass,
 solo or carry, shot from play, quick free taken, scoreable free taken, sideline taken, mark
-claimed in football), Attack (score, shot missed, scoreable free won, turnover, recycled
-out, 45 or 65 or sideline won), Duel (won, lost, free won, free conceded) and Breaking ball
+claimed in football), Attack (how it reached the 45: run left, central or right, kick or
+strike pass left, central or right, high ball to square; where it ended is read from the
+tags that follow), Duel (won, lost, free won, free conceded) and Breaking ball
 (won, lost). Marked video only (`videoOnly`), so the live tagger leaves them out; all score
 0 and are matched by exact name, so no existing stat moves (checked with 300 extra tags in
 a real game). They show in the Other events view for now. Switched on for both All-Ireland
