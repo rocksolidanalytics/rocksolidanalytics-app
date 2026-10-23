@@ -130,6 +130,12 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-23
 
+**Scout team sheets editable.** Edit match information now lists scouting matches too; a
+scouting match opens the match editor, which has an Edit team sheets button: the same scout
+sheet screen (photo reader, subs to 30), loaded with the saved names. Saving writes the new
+rows first and only then removes the old ones. Kerry v Mayo team sheets loaded from the
+published teams (26 each, 1 to 15 starting).
+
 **Detailed video events.** A ready-made pack added from the event editor in one tap (+ Add
 the detailed video events): Goalkeeper action (shot saved, shot parried, high ball caught,
 punched, dropped, sweeping clearance), Player possession (hand pass, kick or strike pass,
