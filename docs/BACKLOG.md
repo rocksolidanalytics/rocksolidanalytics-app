@@ -11,8 +11,9 @@ Open items first, then decisions, then what has been done, newest first.
   scores pool; the Inter-county grade keeps them in a rankings field of their own. Kerry and
   Mayo are under Opposition in the football container with kits (green with gold band, green
   with red band).
-- Next: Tadhg signs up with a Gmail + address for each container and the account is linked
-  as owner from the database side (joining by code would make it a player). Then each game
+- Football owner account linked 2026-10-23 (the +aifootball address). Hurling: sign up a
+  second + address when needed and link it as owner from the database side (joining by
+  code would make it a player). Each game
   is a scouting match ("Kerry v Mayo"), Championship, both team sheets, tagged from video.
   First game: Kerry v Mayo.
 - After tagging: read-only viewer mode enforced in the database (visitors can look, never
