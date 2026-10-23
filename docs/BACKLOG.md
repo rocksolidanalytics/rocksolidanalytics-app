@@ -22,12 +22,11 @@ All-Ireland 2026 games first (football and hurling), then we gate and present th
   then a club is unlocked by hand (see How to unlock a club under Decisions).
 
 **St Jude's Camogie player names, parked 2026-10-23** (Tadhg checking the team sheets).
-- Number-only tags for our side in our own games: Dicksboro 10 Aug (#2, #6, #11, #12, #13,
-  #17 x5, #20, #21, #22 x2), Cuala 23 Aug (#3, #4, #5, #6, #7, #11, #15 x2), SOPER 6 Sep
-  (#1, #2, #8 x2, #25 x2), Kilmacud Crokes 14 Sep (#5, #25 x12), Faughs 21 Sep (#4, #22),
-  BBSE 10 Oct (#2, #3, #15, #18). Line-up slot gives a likely name for most; #17, #20, #21,
-  #22 (Dicksboro) and #25 (SOPER, Crokes) need the team sheet. Opposition and scouting
-  number tags are other teams and stay.
+- Number-only tags for our side: most are kickouts we lost, where the number is the
+  opposition player who won it (correct, leave). Genuinely unnamed St Jude's players, about
+  21 tags: Dicksboro 10 Aug #13, #17 (x4), #20, #21, #22 (x2); SOPER 6 Sep #25 (x2);
+  Kilmacud Crokes 14 Sep #25 (x12, incl. 2 kickout breaks won); Faughs 21 Sep #22. Need
+  the team sheets. Opposition and scouting number tags are other teams and stay.
 - Shortened squad names: "Caitriona Dev" (22 tags), "Sianne mcd" (1).
 
 **Analysis, later**
