@@ -122,6 +122,22 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-23
 
+**Match report tiers (report v1).** One fixed layout written down in docs/REPORT-SPEC.md;
+the tier decides how much is included. Summary (EUR 50): result, score by period, scorers,
+match stats with breakdowns, shot maps. Analysis (EUR 75): adds where scores came from,
+restart maps, restart to shot for both sides, breaking ball, turnovers, conversion by zone,
+expected scores. Full breakdown (EUR 150): adds a player table (possessions, shots, scored,
+ball lost, ball lost that led to a score against, restarts won, tackles) and tackles by
+player. Summary / Analysis / Full switch on the report screen; Export opens on Full; the
+footer names the tier and version. Shown with Bray Emmets v Carnew Emmets (29 Aug).
+
+**Per-game services on the club page and in the terms.** "Or we tag it for you": Summary
+EUR 50, Analysis EUR 75, Full breakdown EUR 150, live tagging EUR 150 in Dublin and Wicklow
+(travel included, price on request elsewhere), booking by email. Terms: reports within 3
+days of the video and team sheets, full refund if a live game is postponed or called off or
+a report cannot be delivered, footage must be the club's to share, games kept in the
+team's own space. Privacy: names entered from the club's team sheet on its behalf.
+
 **Overview head-to-head bars.** The dashboard Overview (match Detailed view and season) uses
 the same groups as the match report, from one function (`h2hGroups`): thick main bar, its
 breakdown underneath, each card with its small icon. A match uses both kits; a season shows
