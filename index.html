@@ -7373,7 +7373,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [d, setD] = useState(null);
     const [err, setErr] = useState("");
     var sc = m.scout || {};
-    var an = sc.a && sc.a.name || "Team A", bn = sc.b && sc.b.name || "Team B";
+    var scV = String(m.opponent || "").split(/\s+v\s+/);
+    var an = sc.a && sc.a.name || (scV.length > 1 && scV[0]) || "Team A", bn = sc.b && sc.b.name || (scV.length > 1 && scV[1]) || "Team B";
     useEffect(function() {
       (async function() {
         try {
@@ -8486,7 +8487,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }).length;
     var SC = !!match.scouting;
     var _sc = match.scout || {};
-    var scoutAName = _sc.a && _sc.a.name || "Team A", scoutBName = _sc.b && _sc.b.name || "Team B";
+    // Team names come from the scout details, else from the match name ("Kerry v Mayo").
+    var _scV = String(match.opponent || "").split(/\s+v\s+/);
+    var scoutAName = _sc.a && _sc.a.name || (_scV.length > 1 && _scV[0]) || "Team A", scoutBName = _sc.b && _sc.b.name || (_scV.length > 1 && _scV[1]) || "Team B";
     var scoutA = {}, scoutB = {};
     if (SC) {
       (_sc.a && _sc.a.squad || []).forEach(function(p) {
