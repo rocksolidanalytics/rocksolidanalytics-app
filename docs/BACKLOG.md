@@ -18,18 +18,20 @@ Open items first, then decisions, then what has been done, newest first.
   1-20 to 1-17; use it to check the tagging). Next: both team sheets (photo reader on the
   scout sheet screen), then tag from the full match video (the RTE highlights are 22
   minutes, not enough).
+- Plan (2026-10-23): tag the All-Ireland finals in painstaking detail and build the
+  showcase reports (all three tiers) from them.
 - After tagging: read-only viewer mode enforced in the database (visitors can look, never
   change; can build on `can_edit_club`); `?demo=1` opens a "pick a match" front door with
   match cards; club site demo button points to it; strip broadcast video links; no
   individual player ratings on show. Rock Solid Gaels stays until the showcase is live.
 
 **Per-game tagging service**, agreed 2026-10-23: EUR 50 Summary, EUR 75 Analysis (plus up
-to 5 playlists), EUR 150 Full breakdown (plus a playlist per player), alongside the EUR 850
-lifetime membership. One standard report: docs/REPORT-SPEC.md (version 1, tier switch on
-the report screen). Still to do: how a customer team is set up (our own container per
-customer team, not counted against the free plan), delivering playlist links with the
-report, a pricing section on the club page for the tiers, and the open decisions in the spec
-(shared figures, player ratings).
+to 5 playlists), EUR 150 Full breakdown (plus a playlist per player), and live tagging at
+EUR 150 in Dublin and Wicklow (price on request elsewhere), alongside the EUR 850 lifetime
+membership. One standard report: docs/REPORT-SPEC.md (version 1, tier switch on the report
+screen). Pricing and terms on the club page done 2026-10-23 (booking by email). Still to do:
+deliver playlist links with the report; the open decisions in the spec (shared figures,
+player ratings).
 
 **Payments**
 - Automatic unlock from a Revolut payment notification, if payments become regular. Until
@@ -97,6 +99,12 @@ matter. About a week of careful work, screen by screen, with the same checks thr
 - **How to unlock a club** after payment (Supabase SQL editor; check the name and county
   match `clubs` first):
   `update club_orgs set licence = 'lifetime' where id in (select org_id from clubs where name = 'CLUB NAME' and county = 'COUNTY');`
+
+- **One-off customers.** A team that pays for per-game reports or live tagging gets a
+  lifetime container (like the showcase ones: no join code, created from the database side)
+  with Tadhg as the only analyst; nobody else is added. Customers get the report page and
+  playlist links, not a login. If the club later buys lifetime access, the games come with
+  it (2026-10-23).
 
 ## iPad layout
 
