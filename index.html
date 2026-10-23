@@ -3835,6 +3835,79 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return /* @__PURE__ */ React.createElement("div", { key: r.label, style: { marginBottom: 13 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontWeight: 800, fontFamily: MONO, fontSize: FS.md, width: 48 } }, r.us, r.pct ? "%" : ""), /* @__PURE__ */ React.createElement("span", { style: { color: C.slate, fontSize: FS.xs, letterSpacing: 1, fontFamily: MONO } }, r.label.toUpperCase()), /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontWeight: 800, fontFamily: MONO, fontSize: FS.md, width: 48, textAlign: "right" } }, r.opp, r.pct ? "%" : "")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", height: 7, gap: 3 } }, /* @__PURE__ */ React.createElement("div", { style: { flexGrow: r.us + 0.01, flexBasis: 0, background: C.greenB, borderRadius: RAD.sm, minWidth: 3 } }), /* @__PURE__ */ React.createElement("div", { style: { flexGrow: r.opp + 0.01, flexBasis: 0, background: C.blue, borderRadius: RAD.sm, minWidth: 3 } })));
     }));
   }
+  // Head-to-head measures from tagged events, in groups: a main row and its breakdown. Used
+  // by the match report and the dashboard Overview. With games above 1, counts become per-game
+  // averages; percentages and rates stay as they are. A row is { label, u, o, pct, dp }.
+  function h2hGroups(us, op, games) {
+    var pg = games > 1 ? games : 1;
+    function h2Oc(e) { return String(e.outcome || "").toLowerCase(); }
+    function n(ev, f) { return ev.filter(f).length; }
+    function h2Pc(a, b) { return b ? 100 * a / b : 0; }
+    function h2Cnt(label, a, b) { return { label: label, u: a / pg, o: b / pg, dp: pg > 1 }; }
+    function h2Pct(label, a, b) { return { label: label, u: a, o: b, pct: true }; }
+    function h2Rate(label, a, b) { return { label: label, u: a, o: b, dp: true }; }
+    function re(r) { return function(e) { return r.test(h2Oc(e)); }; }
+    function shot(e) { return e.event_type === "Shot from play" || e.event_type === "Scoreable free"; }
+    function h2Lost(e) { return e.event_type === "Possession lost" && h2Oc(e).indexOf("shot") < 0; }
+    function scd(e) { return (e.score || 0) > 0; }
+    var g = [];
+    var uSh = n(us, shot), oSh = n(op, shot), uP = uSh + n(us, h2Lost), oP = oSh + n(op, h2Lost);
+    g.push({ main: h2Cnt("Possessions", uP, oP), subs: [h2Rate("Shots per 10 possessions", uP ? 10 * uSh / uP : 0, oP ? 10 * oSh / oP : 0), h2Rate("Scores per 10 possessions", uP ? 10 * n(us, function(e) { return shot(e) && scd(e); }) / uP : 0, oP ? 10 * n(op, function(e) { return shot(e) && scd(e); }) / oP : 0)] });
+    [["Shots from play", "Shot from play"], ["Scoreable frees", "Scoreable free"]].forEach(function(t) {
+      var a = us.filter(function(e) { return e.event_type === t[1]; }), b = op.filter(function(e) { return e.event_type === t[1]; });
+      var kinds = [["Goal", function(e) { return (e.score || 0) === 3; }, 1], ["Point", function(e) { return (e.score || 0) === 1; }, 1], ["2-pointer", function(e) { return (e.score || 0) === 2; }, 0], ["Wide", re(/wide/), 1], ["Saved", re(/sav/), 0], ["Dropped short", re(/short/), 0], ["Blocked", re(/block/), 0], ["Woodwork", re(/wood/), 0]];
+      var subs = kinds.map(function(k) { var x = n(a, k[1]), y = n(b, k[1]); return k[2] || x || y ? h2Cnt(k[0], x, y) : null; }).filter(Boolean);
+      subs.push(h2Pct("Conversion", h2Pc(n(a, scd), a.length), h2Pc(n(b, scd), b.length)));
+      g.push({ main: h2Cnt(t[0], a.length, b.length), subs: subs });
+    });
+    var RS = restarts_(), RSc = RS.charAt(0).toUpperCase() + RS.slice(1);
+    var uK = us.filter(function(e) { return e.event_type === "Kickout"; }), oK = op.filter(function(e) { return e.event_type === "Kickout"; });
+    var kw = function(e) { return KO_WON.has(e.outcome); }, kl = re(/lost/), is = function(t) { return function(e) { return h2Oc(e) === t; }; };
+    g.push({ main: h2Cnt(RSc + " won", n(uK, kw) + n(oK, kl), n(oK, kw) + n(uK, kl)), subs: [
+      h2Cnt("Own " + RS + " taken", uK.length, oK.length),
+      h2Pct("Own " + RS + " kept", h2Pc(n(uK, kw), uK.length), h2Pc(n(oK, kw), oK.length)),
+      h2Pct("Their " + RS + " won", h2Pc(n(oK, kl), oK.length), h2Pc(n(uK, kl), uK.length)),
+      h2Cnt("Won clean", n(uK, is("won clean")) + n(oK, is("lost clean")), n(oK, is("won clean")) + n(uK, is("lost clean"))),
+      h2Cnt("Won on the break", n(uK, is("break won")) + n(oK, is("break lost")), n(oK, is("break won")) + n(uK, is("break lost")))] });
+    var uT = us.filter(function(e) { return e.event_type === "Tackle"; }), oT = op.filter(function(e) { return e.event_type === "Tackle"; });
+    g.push({ main: h2Cnt("Tackles", uT.length, oT.length), subs: [
+      h2Cnt("Contact made", n(uT, re(/contact/)), n(oT, re(/contact/))),
+      h2Cnt("Blocks and hooks", n(uT, re(/block|hook/)), n(oT, re(/block|hook/))),
+      h2Cnt("Fouls", n(uT, re(/foul/)), n(oT, re(/foul/))),
+      h2Rate("Per 10 opposition possessions", oP ? 10 * uT.length / oP : 0, uP ? 10 * oT.length / uP : 0)] });
+    var uL = us.filter(h2Lost), oL = op.filter(h2Lost);
+    var how = [["Kick or strike", /strike|kick/], ["Hand pass", /hand ?pass/], ["Handling", /handl/], ["In contact", /contact/], ["Fouled the ball", /foul/], ["Intercepted", /intercept/]];
+    var lsub = how.map(function(h) { var x = n(uL, re(h[1])), y = n(oL, re(h[1])); return x || y ? h2Cnt(h[0], x, y) : null; }).filter(Boolean);
+    var tw = function(e) { return e.event_type === "Turnover won" || (e.event_type === "Turnover" && /won/.test(h2Oc(e))); };
+    if (n(us, tw) || n(op, tw)) lsub.push(h2Cnt("Turnovers won", n(us, tw), n(op, tw)));
+    g.push({ main: h2Cnt("Ball lost", uL.length, oL.length), subs: lsub });
+    var uR = us.filter(function(e) { return e.event_type === "Ruck"; }), oR = op.filter(function(e) { return e.event_type === "Ruck"; }), rw = re(/won/);
+    if (uR.length || oR.length) g.push({ main: h2Cnt("Rucks won", n(uR, rw), n(oR, rw)), subs: [h2Pct("Ruck win rate", h2Pc(n(uR, rw), uR.length), h2Pc(n(oR, rw), oR.length))] });
+    var uB = us.filter(function(e) { return e.event_type === "Bookings"; }), oB = op.filter(function(e) { return e.event_type === "Bookings"; });
+    if (uB.length || oB.length) g.push({ main: h2Cnt("Cards", uB.length, oB.length), subs: ["Yellow", "Black", "Red"].map(function(cd) { var r2 = new RegExp(cd, "i"), x = n(uB, function(e) { return r2.test(e.outcome || ""); }), y = n(oB, function(e) { return r2.test(e.outcome || ""); }); return x || y ? h2Cnt(cd, x, y) : null; }).filter(Boolean) });
+    return g;
+  }
+  function h2hFmt(v, r) { return (r.dp ? (Math.round(v * 10) / 10).toFixed(1) : String(Math.round(v))) + (r.pct ? "%" : ""); }
+  // One head-to-head bar: the share of the two figures for each side, in its own colour.
+  function H2HRow({ r, main, usCol, oppCol }) {
+    if (r.head) return React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800, color: C.white, textAlign: "center" } }, r.label);
+    var t = r.u + r.o, pu = t > 0 ? 100 * r.u / t : 50;
+    return React.createElement("div", { style: { marginBottom: main ? 0 : 9 } },
+      React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 4 } },
+        React.createElement("span", { style: { minWidth: 36, fontFamily: MONO, fontWeight: 800, fontSize: main ? FS.md : FS.sm, color: usCol } }, h2hFmt(r.u, r)),
+        React.createElement("span", { style: { flex: 1, textAlign: "center", fontSize: main ? FS.md : FS.sm, fontWeight: main ? 800 : 600, color: main ? C.white : C.slate } }, r.label),
+        React.createElement("span", { style: { minWidth: 36, textAlign: "right", fontFamily: MONO, fontWeight: 800, fontSize: main ? FS.md : FS.sm, color: oppCol } }, h2hFmt(r.o, r))),
+      React.createElement("div", { style: { display: "flex", gap: 2, height: main ? 12 : 6 } },
+        !t ? React.createElement("div", { style: { flex: 1, background: C.border, borderRadius: RAD.sm } }) : null,
+        t && r.u > 0 ? React.createElement("div", { style: { width: pu.toFixed(1) + "%", background: usCol, borderRadius: RAD.sm } }) : null,
+        t && r.o > 0 ? React.createElement("div", { style: { width: (100 - pu).toFixed(1) + "%", background: oppCol, borderRadius: RAD.sm } }) : null));
+  }
+  function H2HGroup({ grp, usCol, oppCol }) {
+    return React.createElement("div", { className: "rsa-sec", style: { padding: "14px 16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid } },
+      React.createElement(H2HRow, { r: grp.main, main: true, usCol: usCol, oppCol: oppCol }),
+      grp.subs.length ? React.createElement("div", { style: { background: C.field, borderRadius: RAD.md, padding: "10px 12px 1px", marginTop: 10, marginLeft: 10 } },
+        grp.subs.map(function(r, i) { return React.createElement(H2HRow, { key: i, r: r, usCol: usCol, oppCol: oppCol }); })) : null);
+  }
   function ScoreSourcePanel({ data, club, oppName }) {
     var META = [
       { k: "ownKO", label: "Own " + restart_(), color: C.greenB },
@@ -9209,11 +9282,6 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
 
     // Match stats: head-to-head bars in each side's colour. A main measure has a thick bar;
     // its breakdown sits underneath in thinner bars on a shaded panel.
-    function msOc(e){return String(e.outcome||"").toLowerCase();}
-    function msN(ev,f){return ev.filter(f).length;}
-    function msShot(e){return e.event_type==="Shot from play"||e.event_type==="Scoreable free";}
-    function msTO(e){return e.event_type==="Possession lost"&&msOc(e).indexOf("shot")<0;}
-    function msPct(a,b){return b?100*a/b:0;}
     function msFmt(v,pct,dp){return (dp?(Math.round(v*10)/10).toFixed(1):String(Math.round(v)))+(pct?"%":"");}
     function msRow(label,u,o,main,pct,dp){
       var t=u+o,pu=t>0?100*u/t:50,bar;
@@ -9222,48 +9290,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return '<div class="'+(main?'msm':'mss')+'"><div class="msl"><b class="gu">'+msFmt(u,pct,dp)+'</b><span>'+label+'</span><b class="go">'+msFmt(o,pct,dp)+'</b></div><div class="msb">'+bar+'</div></div>';
     }
     function msGroup(head,subs){var s2=(subs||[]).filter(Boolean);return '<div class="msg">'+head+(s2.length?'<div class="msp">'+s2.join("")+'</div>':'')+'</div>';}
-    function msShots(label,typ){
-      var a1=usEvs.filter(function(e){return e.event_type===typ;}),b1=opEvs.filter(function(e){return e.event_type===typ;});
-      var kinds=[["Goal",function(e){return (e.score||0)===3;},1],["Point",function(e){return (e.score||0)===1;},1],["2-pointer",function(e){return (e.score||0)===2;},0],["Wide",function(e){return msOc(e).indexOf("wide")>=0;},1],["Saved",function(e){return /sav/.test(msOc(e));},0],["Dropped short",function(e){return /short/.test(msOc(e));},0],["Blocked",function(e){return /block/.test(msOc(e));},0],["Woodwork",function(e){return /wood/.test(msOc(e));},0]];
-      var subs=kinds.map(function(k){var x=msN(a1,k[1]),y=msN(b1,k[1]);return (k[2]||x||y)?msRow(k[0],x,y):null;});
-      var sc1=function(e){return (e.score||0)>0;};
-      subs.push(msRow("Conversion",msPct(msN(a1,sc1),a1.length),msPct(msN(b1,sc1),b1.length),false,true));
-      return msGroup(msRow(label,a1.length,b1.length,true),subs);
-    }
     function matchStatsHtml(){
-      var uSh=msN(usEvs,msShot),oSh=msN(opEvs,msShot),uTO=msN(usEvs,msTO),oTO=msN(opEvs,msTO),uP=uSh+uTO,oP=oSh+oTO;
-      var scd=function(e){return msShot(e)&&(e.score||0)>0;},uSc=msN(usEvs,scd),oSc=msN(opEvs,scd);
-      var g=[];
-      g.push(msGroup(msRow("Possessions",uP,oP,true),[msRow("Shots per 10 possessions",uP?10*uSh/uP:0,oP?10*oSh/oP:0,false,false,true),msRow("Scores per 10 possessions",uP?10*uSc/uP:0,oP?10*oSc/oP:0,false,false,true)]));
-      g.push(msShots("Shots from play","Shot from play"));
-      g.push(msShots("Scoreable frees","Scoreable free"));
-      var RS=restarts_(),RSc=RS.charAt(0).toUpperCase()+RS.slice(1);
-      var isK=function(e){return e.event_type==="Kickout";},uK=usEvs.filter(isK),oK=opEvs.filter(isK);
-      var kw=function(e){return KO_WON.has(e.outcome);},kl=function(e){return /lost/.test(msOc(e));};
-      var clW=function(e){return msOc(e)==="won clean";},clL=function(e){return msOc(e)==="lost clean";},bkW=function(e){return msOc(e)==="break won";},bkL=function(e){return msOc(e)==="break lost";};
-      g.push(msGroup(msRow(RSc+" won",msN(uK,kw)+msN(oK,kl),msN(oK,kw)+msN(uK,kl),true),[
-        msRow("Own "+RS+" taken",uK.length,oK.length),
-        msRow("Own "+RS+" kept",msPct(msN(uK,kw),uK.length),msPct(msN(oK,kw),oK.length),false,true),
-        msRow("Their "+RS+" won",msPct(msN(oK,kl),oK.length),msPct(msN(uK,kl),uK.length),false,true),
-        msRow("Won clean",msN(uK,clW)+msN(oK,clL),msN(oK,clW)+msN(uK,clL)),
-        msRow("Won on the break",msN(uK,bkW)+msN(oK,bkL),msN(oK,bkW)+msN(uK,bkL))]));
-      var isT=function(e){return e.event_type==="Tackle";},uT=usEvs.filter(isT),oT=opEvs.filter(isT);
-      var tk=function(re){return function(e){return re.test(msOc(e));};};
-      g.push(msGroup(msRow("Tackles",uT.length,oT.length,true),[
-        msRow("Contact made",msN(uT,tk(/contact/)),msN(oT,tk(/contact/))),
-        msRow("Blocks and hooks",msN(uT,tk(/block|hook/)),msN(oT,tk(/block|hook/))),
-        msRow("Fouls",msN(uT,tk(/foul/)),msN(oT,tk(/foul/))),
-        msRow("Per 10 opposition possessions",oP?10*uT.length/oP:0,uP?10*oT.length/uP:0,false,false,true)]));
-      var uL=usEvs.filter(msTO),oL=opEvs.filter(msTO);
-      var how=[["Kick or strike",/strike|kick/],["Hand pass",/hand ?pass/],["Handling",/handl/],["In contact",/contact/],["Fouled the ball",/foul/],["Intercepted",/intercept/]];
-      var tw=function(e){return e.event_type==="Turnover won"||(e.event_type==="Turnover"&&/won/.test(msOc(e)));};
-      var lsub=how.map(function(h){var x=msN(uL,tk(h[1])),y=msN(oL,tk(h[1]));return x||y?msRow(h[0],x,y):null;});
-      var uW=msN(usEvs,tw),oW=msN(opEvs,tw); if(uW||oW) lsub.push(msRow("Turnovers won",uW,oW));
-      g.push(msGroup(msRow("Ball lost",uL.length,oL.length,true),lsub));
-      var isR=function(e){return e.event_type==="Ruck";},rw=function(e){return /won/.test(msOc(e));},uR=usEvs.filter(isR),oR=opEvs.filter(isR);
-      if(uR.length||oR.length) g.push(msGroup(msRow("Rucks won",msN(uR,rw),msN(oR,rw),true),[msRow("Ruck win rate",msPct(msN(uR,rw),uR.length),msPct(msN(oR,rw),oR.length),false,true)]));
-      var isB=function(e){return e.event_type==="Bookings";},uB=usEvs.filter(isB),oB=opEvs.filter(isB);
-      if(uB.length||oB.length) g.push(msGroup(msRow("Cards",uB.length,oB.length,true),["Yellow","Black","Red"].map(function(cd){var re=new RegExp(cd,"i"),x=msN(uB,function(e){return re.test(e.outcome||"");}),y=msN(oB,function(e){return re.test(e.outcome||"");});return x||y?msRow(cd,x,y):null;})));
+      var RSc=restarts_().charAt(0).toUpperCase()+restarts_().slice(1);
+      var g=h2hGroups(usEvs,opEvs,1).map(function(grp){return msGroup(msRow(grp.main.label,grp.main.u,grp.main.o,true,grp.main.pct,grp.main.dp),grp.subs.map(function(r){return msRow(r.label,r.u,r.o,false,r.pct,r.dp);}));});
       return '<h2>MATCH STATS</h2><div class="card"><div class="msk"><b class="gu">'+cn+'</b><b class="go">'+opp2+'</b></div><div class="msgrid">'+g.join("")+'</div>'+
         '<p class="m" style="margin-top:6px;line-height:1.6;font-family:inherit">Possessions are shots plus the times the ball was lost, so per 10 possessions shows how much each side made of the ball. '+RSc+' won counts every restart a side came away with, its own and the opposition\u2019s. Conversion is scores from all attempts of that kind. A bar shows each side\u2019s share of the two figures.</p></div>';
     }
@@ -9478,35 +9507,23 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             }())));
       }()),
       (function() {
+        // Head-to-head groups in team colours (the same as the match report). A season shows
+        // per-game averages against all opponents.
+        var evs2 = (d._events || []).filter(function(e) { return !isMatch || !match || !e.match_id || e.match_id === match.id; });
+        var us2 = evs2.filter(function(e) { return e.team === "us"; }), op2 = evs2.filter(function(e) { return e.team === "opp"; });
+        var games = isMatch ? 1 : Object.keys(evs2.reduce(function(o, e) { o[e.match_id] = 1; return o; }, {})).length;
+        var tc2 = isMatch && match ? teamCols(club, null, club.name, match.opponent, !!match.scouting, match.id) : kitCols(clubKit(club), null);
         var c2 = d.compare || [];
-        var groups = [
-          { icon: "\uD83C\uDFAF", label: "SHOOTING", keys: ["Score (pts)", "Shots", "Scores from play", "Accuracy", "Frees taken", "Frees scored", "Free accuracy", "Wides"] },
-          { icon: "\uD83C\uDFC3", label: "POSSESSION", keys: ["Shots / 10 Poss", "Possession"] },
-          { icon: "\uD83D\uDEE1\uFE0F", label: "DEFENCE", keys: ["Tackles", "Tackles / 10 opp poss", "Tackle foul % \u00B7 lower is better", "Def. work rate"] },
-          { icon: "\u21BB", label: "RESTARTS", keys: ["Restarts won", "Breaking ball won", "Rucks won", "Ruck win %"] },
-          { icon: "\u2194\uFE0F", label: "TURNOVERS", keys: ["Turnovers", "Turnovers won", "Frees won", "Turnover \u2192 shot", "Turnover \u2192 score"] }
-        ];
-        function barRow(r, idx) {
-          var mx = Math.max(r.us || 0, r.opp || 0, 1);
-          return React.createElement("div", { key: idx, style: { marginBottom: 8 } },
-            React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: FS.sm, marginBottom: 3 } },
-              React.createElement("span", { style: { fontWeight: 700, color: C.greenB, fontFamily: MONO } }, r.us + (r.pct ? "%" : "")),
-              React.createElement("span", { style: { color: C.slateD, fontSize: FS.sm } }, r.label),
-              React.createElement("span", { style: { fontWeight: 700, color: C.blue, fontFamily: MONO } }, r.opp + (r.pct ? "%" : ""))),
-            React.createElement("div", { style: { display: "flex", gap: 3, height: 6 } },
-              React.createElement("div", { style: { flex: 1, display: "flex", justifyContent: "flex-end" } },
-                React.createElement("div", { style: { width: Math.round(100 * (r.us || 0) / mx) + "%", height: 6, borderRadius: RAD.sm, background: C.greenB } })),
-              React.createElement("div", { style: { flex: 1 } },
-                React.createElement("div", { style: { width: Math.round(100 * (r.opp || 0) / mx) + "%", height: 6, borderRadius: RAD.sm, background: C.blue } }))));
-        }
+        var more = ["Possession", "Accuracy", "Breaking ball won", "Def. work rate", "Tackle foul % \u00B7 lower is better", "Frees won", "Turnover \u2192 shot", "Turnover \u2192 score"].map(function(k) { return c2.find(function(r) { return r.label === k && !(r.hideIfZero && !r.us && !r.opp); }); }).filter(Boolean);
+        if (!us2.length && !op2.length) return null;
         return React.createElement(React.Fragment, null,
-          groups.map(function(grp) {
-            var rows = grp.keys.map(function(k) { return c2.find(function(r) { return r.label === k; }); }).filter(Boolean);
-            if (!rows.length) return null;
-            return React.createElement("div", { key: grp.label, className: "rsa-sec", style: { padding: "14px 16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid } },
-              React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 10 } }, grp.icon + "  " + grp.label),
-              rows.map(function(r, idx) { return barRow(r, idx); }));
-          }));
+          React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, padding: "2px 4px 0" } },
+            React.createElement("span", { style: { fontWeight: 800, fontSize: FS.md, color: tc2.us } }, club.name || "Us"),
+            React.createElement("span", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO } }, isMatch ? "HEAD TO HEAD" : "PER GAME \u00B7 " + games + (games === 1 ? " GAME" : " GAMES")),
+            React.createElement("span", { style: { fontWeight: 800, fontSize: FS.md, color: tc2.opp, textAlign: "right" } }, isMatch ? (match && match.opponent) || ON : "Opposition")),
+          h2hGroups(us2, op2, games).map(function(grp, i) { return React.createElement(H2HGroup, { key: i, grp: grp, usCol: tc2.us, oppCol: tc2.opp }); }),
+          more.length ? React.createElement(H2HGroup, { grp: { main: { label: "More measures", u: 0, o: 0, head: true }, subs: more.map(function(r) { return { label: r.label, u: Number(r.us) || 0, o: Number(r.opp) || 0, pct: r.pct, dp: Math.round(Number(r.us) || 0) !== Number(r.us) || Math.round(Number(r.opp) || 0) !== Number(r.opp) }; }) }, usCol: tc2.us, oppCol: tc2.opp }) : null,
+          React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.6, padding: "0 4px" } }, "Possessions are shots plus the times the ball was lost. " + restarts_().charAt(0).toUpperCase() + restarts_().slice(1) + " won counts every restart a side came away with, its own and the opposition\u2019s. A bar shows each side\u2019s share of the two figures."));
       }()),
       d.ko && d.ko.total > 0 && React.createElement("div", { style: { padding: "14px 16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid } },
         React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 10 } }, "\u21BB RESTART OUTCOMES"),
