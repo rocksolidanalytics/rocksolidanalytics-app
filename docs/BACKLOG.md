@@ -29,6 +29,15 @@ All-Ireland 2026 games first (football and hurling), then we gate and present th
   the team sheets. Opposition and scouting number tags are other teams and stay.
 - Shortened squad names: "Caitriona Dev" (22 tags), "Sianne mcd" (1).
 
+**Match report and dashboard, next**
+- Same head-to-head bars on the dashboard Overview comparisons.
+- Attacks (Performa: a possession reaching the opposition 45): an estimate from existing
+  tags (shots, frees won and turnovers in the attacking third), clearly labelled, and an
+  optional Attack tag for clubs that want the exact figure. Only one game has custom
+  "Entry into Opp 45" tags today.
+- Pricing page line, maybe later: "less than one season of a single-team video
+  subscription" (Hudl GAA packs about EUR 1,550 to 3,250 a year via an Irish reseller).
+
 **Analysis, later**
 - Expected scores: once a sport passes about 2,000 shots from play, replace zones with a
   smooth distance-and-angle model so every shot gets its own expected value.
@@ -87,6 +96,16 @@ columns. Wide screens now go up to 1200px.
 tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-23
+
+**Match report refreshed** (learnings from an inter-county Performa report). Team colours
+from the kits throughout (score, tables, scorers, Match Stats; darker kit colours when
+printed). The Key Stats table is now Match Stats, after the scorers: head-to-head bars
+split in the two colours, a thick bar per main measure (possessions, shots from play,
+scoreable frees, restarts won, tackles, ball lost, rucks and cards when tagged) with its
+breakdown in thinner bars underneath, and a short note on the terms. Shot and restart maps
+are now the app's own (PitchMap, KickoutMap and legends drawn off screen and copied in),
+replacing the report's simpler copy. Each team's jersey sits beside the score; a side with
+no kit wears a stand-in (green with blue sleeves for us, the reverse for them).
 
 **St Jude's Camogie player duplicates merged** (data change, asked for by Tadhg). AMD into
 Anna Marie Durkan (2 tags; now 21) and Molly C into Molly Crowther (19 tags; now 20); the
