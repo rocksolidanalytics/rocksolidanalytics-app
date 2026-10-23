@@ -3901,12 +3901,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   function h2hFmt(v, r) { return (r.dp ? (Math.round(v * 10) / 10).toFixed(1) : String(Math.round(v))) + (r.pct ? "%" : ""); }
   // One head-to-head bar: the share of the two figures for each side, in its own colour.
   function H2HRow({ r, main, usCol, oppCol }) {
-    if (r.head) return React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800, color: C.white, textAlign: "center" } }, r.label);
+    var lab = r.icon ? r.icon + "  " + r.label : r.label;
+    if (r.head) return React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800, color: C.white, textAlign: "center" } }, lab);
     var t = r.u + r.o, pu = t > 0 ? 100 * r.u / t : 50;
     return React.createElement("div", { style: { marginBottom: main ? 0 : 9 } },
       React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 4 } },
         React.createElement("span", { style: { minWidth: 36, fontFamily: MONO, fontWeight: 800, fontSize: main ? FS.md : FS.sm, color: usCol } }, h2hFmt(r.u, r)),
-        React.createElement("span", { style: { flex: 1, textAlign: "center", fontSize: main ? FS.md : FS.sm, fontWeight: main ? 800 : 600, color: main ? C.white : C.slate } }, r.label),
+        React.createElement("span", { style: { flex: 1, textAlign: "center", fontSize: main ? FS.md : FS.sm, fontWeight: main ? 800 : 600, color: main ? C.white : C.slate } }, lab),
         React.createElement("span", { style: { minWidth: 36, textAlign: "right", fontFamily: MONO, fontWeight: 800, fontSize: main ? FS.md : FS.sm, color: oppCol } }, h2hFmt(r.o, r))),
       React.createElement("div", { style: { display: "flex", gap: 2, height: main ? 12 : 6 } },
         !t ? React.createElement("div", { style: { flex: 1, background: C.border, borderRadius: RAD.sm } }) : null,
@@ -9532,8 +9533,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             React.createElement("span", { style: { fontWeight: 800, fontSize: FS.md, color: tc2.us } }, club.name || "Us"),
             React.createElement("span", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO } }, isMatch ? "HEAD TO HEAD" : "PER GAME \u00B7 " + games + (games === 1 ? " GAME" : " GAMES")),
             React.createElement("span", { style: { fontWeight: 800, fontSize: FS.md, color: tc2.opp, textAlign: "right" } }, isMatch ? (match && match.opponent) || ON : "Opposition")),
-          h2hGroups(us2, op2, games).map(function(grp, i) { return React.createElement(H2HGroup, { key: i, grp: grp, usCol: tc2.us, oppCol: tc2.opp }); }),
-          more.length ? React.createElement(H2HGroup, { grp: { main: { label: "More measures", u: 0, o: 0, head: true }, subs: more.map(function(r) { return { label: r.label, u: Number(r.us) || 0, o: Number(r.opp) || 0, pct: r.pct, dp: Math.round(Number(r.us) || 0) !== Number(r.us) || Math.round(Number(r.opp) || 0) !== Number(r.opp) }; }) }, usCol: tc2.us, oppCol: tc2.opp }) : null,
+          h2hGroups(us2, op2, games).map(function(grp, i) {
+            var ic = { "Possessions": "\uD83C\uDFC3", "Shots from play": "\uD83C\uDFAF", "Scoreable frees": "\uD83C\uDFAF", "Tackles": "\uD83D\uDEE1\uFE0F", "Ball lost": "\u2194\uFE0F", "Rucks won": "\u270A", "Cards": "\uD83D\uDFE8" }[grp.main.label] || (/ won$/.test(grp.main.label) ? "\u21BB" : "");
+            return React.createElement(H2HGroup, { key: i, grp: { main: Object.assign({ icon: ic }, grp.main), subs: grp.subs }, usCol: tc2.us, oppCol: tc2.opp });
+          }),
+          more.length ? React.createElement(H2HGroup, { grp: { main: { label: "More measures", u: 0, o: 0, head: true, icon: "\uD83D\uDCCA" }, subs: more.map(function(r) { return { label: r.label, u: Number(r.us) || 0, o: Number(r.opp) || 0, pct: r.pct, dp: Math.round(Number(r.us) || 0) !== Number(r.us) || Math.round(Number(r.opp) || 0) !== Number(r.opp) }; }) }, usCol: tc2.us, oppCol: tc2.opp }) : null,
           React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.6, padding: "0 4px" } }, "Possessions are shots plus the times the ball was lost. " + restarts_().charAt(0).toUpperCase() + restarts_().slice(1) + " won counts every restart a side came away with, its own and the opposition\u2019s. A bar shows each side\u2019s share of the two figures."));
       }()),
       d.ko && d.ko.total > 0 && React.createElement("div", { style: { padding: "14px 16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid } },
