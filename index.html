@@ -6609,7 +6609,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var stick = sport === "hurling" || sport === "camogie";
     var o = function(list) { return list.map(function(l) { return { label: l, score: 0 }; }); };
     return [
-      { id: "vp_gk", name: "Goalkeeper action", location: true, videoOnly: true, outcomes: o(["Shot saved", "Shot parried", "High ball caught", "High ball punched", "High ball dropped", "Sweeping clearance"]) },
+      { id: "vp_gk", name: "Goalkeeper action", location: true, videoOnly: true, outcomes: o(["Shot saved", "Shot parried", "High ball caught", "High ball punched", "High ball dropped", "Sweeping clearance", "Goal conceded"]) },
       { id: "vp_poss", name: "Player possession", location: true, videoOnly: true, outcomes: o(["Hand pass", stick ? "Strike pass" : "Kick pass", "Solo or carry", "Shot from play", "Quick free taken", "Scoreable free taken", "Sideline taken"].concat(stick ? [] : ["Mark claimed"])) },
       // An attack is a possession reaching the opposition 45; the outcome is how it got there
       // (where it ended is read from the tags that follow).

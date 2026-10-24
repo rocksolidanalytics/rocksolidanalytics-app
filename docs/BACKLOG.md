@@ -140,6 +140,9 @@ Video only, scores nothing, sits after Attack in the default video order. In the
 set and switched on for both All-Ireland containers. Backlog: assists in the player
 breakdown, and the scouting report as a whole-match report (both after the finals).
 
+**Goalkeeper action: Goal conceded.** New outcome (scores nothing; the goal itself is still
+the shot). In the one-tap set and in both All-Ireland containers.
+
 ## Done 2026-10-23
 
 **Scouting team names on screen.** The video tagger scoreboard (portrait) and the scouting
