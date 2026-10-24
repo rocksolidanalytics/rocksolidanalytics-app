@@ -17,7 +17,8 @@ Open items first, then decisions, then what has been done, newest first.
 - First game set up: Kerry v Mayo, Championship Final, 26 July 2026, Croke Park (Mayo won
   1-20 to 1-17; use it to check the tagging). Both team sheets loaded 2026-10-23 (26 each).
   Next: tag from the full match video (the RTE highlights are 22 minutes, not enough). Both containers have the detailed video events switched on
-  (goalkeeper action, player possession, attack, duel, breaking ball, throw-in).
+  (goalkeeper action, player possession, attack, score assist, duel, breaking ball,
+  throw-in).
 - Plan (2026-10-23): tag the All-Ireland finals in painstaking detail and build the
   showcase reports (all three tiers) from them.
 - After tagging: read-only viewer mode enforced in the database (visitors can look, never
@@ -61,6 +62,10 @@ new views and the per-match events fix together)
   attack-to-shot %, attacks per score, how each entry type ends, read from the next shot,
   score or ball lost), goalkeeper
   actions, possessions per player (touches by type), duels and breaking ball by player.
+- Scouting match report as a whole-match report, not us against them (Tadhg 2026-10-24):
+  both teams treated alike, the story of the game, both teams' players. To do after the
+  All-Ireland finals are tagged, with the new views.
+- Score assists in the player breakdown (assists by player, who set up whom).
 - The event editor offers per-match events, but `matches` has no `custom_events` column, so
   saving events for a single match fails; club-wide events work (found 2026-10-23).
 
@@ -155,7 +160,9 @@ solo or carry, shot from play, quick free taken, scoreable free taken, sideline 
 claimed in football), Attack (how it reached the 45: run left, central or right, kick or
 strike pass left, central or right, high ball to square; where it ended is read from the
 tags that follow), Duel (won, lost, free won, free conceded), Breaking ball
-(won, lost) and Throw-in (won clean, lost clean, break won, break lost; no pitch spot). Marked video only (`videoOnly`), so the live tagger leaves them out; all score
+(won, lost), Throw-in (won clean, lost clean, break won, break lost; no pitch spot) and Score
+assist (goal, point, 2-pointer in football, free won, penalty won; added 2026-10-24, sits
+after Attack in the video order). Marked video only (`videoOnly`), so the live tagger leaves them out; all score
 0 and are matched by exact name, so no existing stat moves (checked with 300 extra tags in
 a real game). They show in the Other events view for now. Switched on for both All-Ireland
 containers.

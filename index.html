@@ -4034,7 +4034,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   // and .video, lists of event ids); events missing from a saved order keep their default
   // place after the listed ones. The video tagger defaults to the phases of play: restarts and
   // contests, on the ball, the ball changing hands, the keeper, discipline, then any others.
-  var VIDEO_ORDER = ["kickout", "vp_throw", "ruck", "vp_break", "vp_poss", "vp_attack", "shot", "free", "poss", "towon", "tackle", "vp_duel", "freewon", "vp_gk", "card"];
+  var VIDEO_ORDER = ["kickout", "vp_throw", "ruck", "vp_break", "vp_poss", "vp_attack", "vp_assist", "shot", "free", "poss", "towon", "tackle", "vp_duel", "freewon", "vp_gk", "card"];
   function orderEvents(list, ts, which) {
     var saved = ts && ts.order && Array.isArray(ts.order[which]) ? ts.order[which] : null;
     var rank = {};
@@ -6614,6 +6614,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       // An attack is a possession reaching the opposition 45; the outcome is how it got there
       // (where it ended is read from the tags that follow).
       { id: "vp_attack", name: "Attack", location: true, videoOnly: true, outcomes: o(["Run left", "Run central", "Run right", (stick ? "Strike" : "Kick") + " pass left", (stick ? "Strike" : "Kick") + " pass central", (stick ? "Strike" : "Kick") + " pass right", "High ball to square"]) },
+      { id: "vp_assist", name: "Score assist", location: true, videoOnly: true, outcomes: o(["Goal", "Point"].concat(stick ? [] : ["2-pointer"], ["Free won", "Penalty won"])) },
       { id: "vp_duel", name: "Duel", location: true, videoOnly: true, outcomes: o(["Won", "Lost", "Free won", "Free conceded"]) },
       { id: "vp_break", name: "Breaking ball", location: true, videoOnly: true, outcomes: o(["Won", "Lost"]) },
       { id: "vp_throw", name: "Throw-in", location: false, videoOnly: true, outcomes: o(["Won clean", "Lost clean", "Break won", "Break lost"]) }
