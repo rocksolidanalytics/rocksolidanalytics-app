@@ -140,6 +140,12 @@ Video only, scores nothing, sits after Attack in the default video order. In the
 set and switched on for both All-Ireland containers. Backlog: assists in the player
 breakdown, and the scouting report as a whole-match report (both after the finals).
 
+**Video tagger landscape: events down both sides.** In landscape (phone or iPad) the event
+buttons fill two columns either side of the video, first half of the button order on the
+left, the rest on the right, all on screen at once; the video sits between them. The bottom
+strip, between the columns, shows -10s, -5s, +5s, +10s and the tap hint when idle, then the
+outcome, pitch and player steps as before. Portrait is unchanged.
+
 **Goalkeeper action: Goal conceded.** New outcome (scores nothing; the goal itself is still
 the shot). In the one-tap set and in both All-Ireland containers.
 
