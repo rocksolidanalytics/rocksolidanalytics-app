@@ -144,7 +144,10 @@ breakdown, and the scouting report as a whole-match report (both after the final
 buttons fill two columns either side of the video, first half of the button order on the
 left, the rest on the right, all on screen at once; the video sits between them. The bottom
 strip, between the columns, shows -10s, -5s, +5s, +10s and the tap hint when idle, then the
-outcome, pitch and player steps as before. Portrait is unchanged.
+outcome, pitch and player steps as before. Portrait is unchanged. The video stays paused while a tag is
+in progress (trying to play shows "Finish or cancel the tag first"), the player step keeps
+-5s and +5s, and the columns and strip sit 16px off the bottom edge (plus the phone safe
+area).
 
 **Goalkeeper action: Goal conceded.** New outcome (scores nothing; the goal itself is still
 the shot). In the one-tap set and in both All-Ireland containers.
