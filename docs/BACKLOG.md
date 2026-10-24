@@ -132,11 +132,22 @@ columns. Wide screens now go up to 1200px.
 **Still to look at:** the opposition team page, match lists, Game film list, the video
 tagger in landscape, and button sizes in the live tagger on a big screen.
 
+## Done 2026-10-24
+
+**Score assist.** A seventh detailed video event: goal, point, 2-pointer (football only),
+free won, penalty won, with a pitch spot; tag the player who made the pass or won the free.
+Video only, scores nothing, sits after Attack in the default video order. In the one-tap
+set and switched on for both All-Ireland containers. Backlog: assists in the player
+breakdown, and the scouting report as a whole-match report (both after the finals).
+
 ## Done 2026-10-23
 
 **Scouting team names on screen.** The video tagger scoreboard (portrait) and the scouting
 dashboard showed Team A and Team B for a scouting match set up without separate team
-details (Kerry v Mayo); both now take the names from the match name first.
+details (Kerry v Mayo); both now take the names from the match name first. The edit sheets
+did the same (All-Ireland / Kerry v Mayo on the team buttons): the video tagger edit sheet
+and tap hint, and the live tagger edit sheet, attacking-direction label and tap hint, now
+use the two team names.
 
 **Tagger button order.** The video tagger defaults to the phases of play: restart and
 contests (kickout or puckout, throw-in, ruck, breaking ball), on the ball (player
@@ -160,9 +171,7 @@ solo or carry, shot from play, quick free taken, scoreable free taken, sideline 
 claimed in football), Attack (how it reached the 45: run left, central or right, kick or
 strike pass left, central or right, high ball to square; where it ended is read from the
 tags that follow), Duel (won, lost, free won, free conceded), Breaking ball
-(won, lost), Throw-in (won clean, lost clean, break won, break lost; no pitch spot) and Score
-assist (goal, point, 2-pointer in football, free won, penalty won; added 2026-10-24, sits
-after Attack in the video order). Marked video only (`videoOnly`), so the live tagger leaves them out; all score
+(won, lost) and Throw-in (won clean, lost clean, break won, break lost; no pitch spot). Marked video only (`videoOnly`), so the live tagger leaves them out; all score
 0 and are matched by exact name, so no existing stat moves (checked with 300 extra tags in
 a real game). They show in the Other events view for now. Switched on for both All-Ireland
 containers.
