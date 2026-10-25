@@ -23,8 +23,9 @@ Open items first, then decisions, then what has been done, newest first.
   Checked and tidied: keeper on Clifford's goal set to Jack Livingstone, two Kerry tackle
   names cleared (they named the Mayo ball carriers; fill in the tacklers from the video),
   David Clifford's assist on Paudie Clifford's point set to Point, Carney's 2-pointer and
-  O'Shea's point nudged to the right side of the 40m arc. Open: an Enda Hession assist at
-  38:40 (first half) with no Mayo score near it; whether Towey (Mayo) and Tom O'Sullivan and
+  O'Shea's point nudged to the right side of the 40m arc; Enda Hession's assist moved from
+  38:40 to 37:50, just after Tommy Conroy's point. Open: a second Hession assist at 37:46,
+  tagged 2-pointer, duplicates it (delete one); whether Towey (Mayo) and Tom O'Sullivan and
   Tadhg Morley (Kerry) started (tagged from the first minute; Stephen Coen never tagged).
 - Plan (2026-10-23): tag the All-Ireland finals in painstaking detail and build the
   showcase reports (all three tiers) from them.
