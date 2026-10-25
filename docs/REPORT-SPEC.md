@@ -47,7 +47,7 @@ Sections marked *video events* appear only when the detailed video events were t
 7. **Where scores came from.** Each score put down to how the passage began (own or their
    restart, turnover by type, throw-in).
 8. **Attacks** (*video events*). Each side: attacks, share that led to a shot and a score, and
-   the same by how the attack was made (run left, central or right, kick pass left, central or
+   the share recycled, and the same by how the attack was made (run left, central or right, kick pass left, central or
    right, high ball to the square).
 9. **Restart maps.** Both sides, numbered with who won or lost each restart.
 10. **Restart to shot.** Both sides, short (under 45m), mid (45 to 65m), long (over 65m):
@@ -86,7 +86,7 @@ Footer: Rock Solid Analytics, tier, report version, match date.
   losing it again; frees count as shots.
 - **Attack ending**: an attack ends with the next shot (a shot or a score if it was the same
   side's), the ball lost, a restart, the other side on the attack, or 90 seconds without a
-  shot. Two or more attacks tagged in one move share its ending.
+  shot. An attack followed by another attack of the same side before any shot was **recycled**.
 - **Assist to scorer**: each assist is matched to the nearest score by the same side, up to a
   minute either way (a free or penalty won to a free scored, up to two minutes after).
 - **Duels and breaking ball** count each side's own tags. A throw-in lost by one side is won by

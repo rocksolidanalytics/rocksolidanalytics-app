@@ -9513,11 +9513,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }
 
     // Attacks (detailed video tagging): each attack is put down to how it was made and ends with
-    // the next shot, the ball lost, a restart, the other side on the attack or 90 seconds. Attacks
-    // one after another in the same move share its ending.
+    // the next shot, the ball lost, a restart, the other side on the attack or 90 seconds. An attack
+    // followed by another attack of the same side, with no shot in between, was recycled.
     var ATT_ORDER=["Run left","Run central","Run right","Kick pass left","Kick pass central","Kick pass right","Strike pass left","Strike pass central","Strike pass right","High ball to square"];
     function attackStats(){
-      var A={us:{n:0,sh:0,sc:0,by:{}},opp:{n:0,sh:0,sc:0,by:{}}};
+      var A={us:{n:0,sh:0,sc:0,rc:0,by:{}},opp:{n:0,sh:0,sc:0,rc:0,by:{}}};
       tl.forEach(function(e,i){
         if(e.event_type!=="Attack"||!A[e.team]) return;
         var tm=e.team, t0=clockOf(e), per=String(e.period||1), res=0;
@@ -9525,11 +9525,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           var f=tl[j], fo=String(f.outcome||"").toLowerCase();
           if(String(f.period||1)!==per||clockOf(f)-t0>90) break;
           if(isShotE(f)){ if(f.team===tm) res=(f.score||0)>0?2:1; break; }
-          if(f.event_type==="Kickout"||(f.event_type==="Attack"&&f.team!==tm)) break;
+          if(f.event_type==="Attack"&&f.team===tm){ res=3; break; }
+          if(f.event_type==="Kickout"||f.event_type==="Attack") break;
           if((f.event_type==="Possession lost"&&f.team===tm&&fo.indexOf("shot")<0)||(f.event_type==="Turnover won"&&f.team!==tm)) break;
         }
-        var a=A[tm], k=e.outcome||"Other", b=a.by[k]||(a.by[k]={n:0,sh:0,sc:0});
-        a.n++; b.n++; if(res){a.sh++;b.sh++;} if(res===2){a.sc++;b.sc++;}
+        var a=A[tm], k=e.outcome||"Other", b=a.by[k]||(a.by[k]={n:0,sh:0,sc:0,rc:0});
+        a.n++; b.n++; if(res===1||res===2){a.sh++;b.sh++;} if(res===2){a.sc++;b.sc++;} if(res===3){a.rc++;b.rc++;}
       });
       return A;
     }
@@ -9538,8 +9539,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       if(!a.n) return '<div class="col card"><p class="'+cls+'" style="font-size:11px;font-weight:700;margin-bottom:6px">'+name.toUpperCase()+'</p><p class="m">No attacks tagged.</p></div>';
       var ks=Object.keys(a.by).sort(function(x,y){var ix=ATT_ORDER.indexOf(x),iy=ATT_ORDER.indexOf(y);return (ix<0?99:ix)-(iy<0?99:iy)||a.by[y].n-a.by[x].n;});
       var mx=Math.max.apply(null,ks.map(function(k){return a.by[k].n;}));
-      var t='<div class="col card"><p class="'+cls+'" style="font-size:11px;font-weight:700;margin-bottom:6px">'+name.toUpperCase()+'</p><p style="font-size:22px;font-weight:800" class="'+cls+'">'+a.n+' <span style="font-size:12px;font-weight:600;color:#9fb0c6">attacks · '+pcS(a.sh,a.n)+' to a shot · '+pcS(a.sc,a.n)+' to a score</span></p><table class="tbl" style="margin-top:6px"><tr><th>How</th><th>Attacks</th><th>→ Shot</th><th>→ Score</th></tr>';
-      ks.forEach(function(k){var b=a.by[k];t+='<tr><td style="font-weight:700">'+k+'<div class="msb" style="height:4px;margin-top:3px"><i style="width:'+Math.round(100*b.n/mx)+'%;background:var(--'+(cls==='gu'?'cu':'co')+')"></i></div></td><td>'+b.n+'</td><td>'+pcS(b.sh,b.n)+'</td><td style="font-weight:700">'+pcS(b.sc,b.n)+'</td></tr>';});
+      var t='<div class="col card"><p class="'+cls+'" style="font-size:11px;font-weight:700;margin-bottom:6px">'+name.toUpperCase()+'</p><p style="font-size:22px;font-weight:800" class="'+cls+'">'+a.n+' <span style="font-size:12px;font-weight:600;color:#9fb0c6">attacks · '+pcS(a.sh,a.n)+' to a shot · '+pcS(a.sc,a.n)+' to a score · '+pcS(a.rc,a.n)+' recycled</span></p><table class="tbl" style="margin-top:6px"><tr><th>How</th><th>Attacks</th><th>→ Shot</th><th>→ Score</th><th>Recycled</th></tr>';
+      ks.forEach(function(k){var b=a.by[k];t+='<tr><td style="font-weight:700">'+k+'<div class="msb" style="height:4px;margin-top:3px"><i style="width:'+Math.round(100*b.n/mx)+'%;background:var(--'+(cls==='gu'?'cu':'co')+')"></i></div></td><td>'+b.n+'</td><td>'+pcS(b.sh,b.n)+'</td><td style="font-weight:700">'+pcS(b.sc,b.n)+'</td><td>'+pcS(b.rc,b.n)+'</td></tr>';});
       return t+'</table></div>';
     }
 
@@ -9660,7 +9661,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     h3.push('<h2>WHERE SCORES CAME FROM</h2><div class="card">'+appMarkup(React.createElement(ScoreSourcePanel,{data:d.srcData,club:club,oppName:opp2}))+'<p class="m" style="margin-top:8px;font-family:inherit">Each score put down to how the passage began: a restart or a turnover won.</p></div>');
 
     if(evs.some(function(e){return e.event_type==="Attack";})){var ATS=attackStats();
-    h3.push('<h2>ATTACKS</h2><div class="row">'+attCard(ATS.us,cn,'gu')+attCard(ATS.opp,opp2,'go')+'</div><p class="m" style="margin:-4px 0 12px;font-family:inherit">How each attack was made, and how many ended in a shot and a score. An attack ends with the next shot, the ball lost, a restart, the other side on the attack or 90 seconds without a shot; two or more attacks in one move share its ending.</p>');}
+    h3.push('<h2>ATTACKS</h2><div class="row">'+attCard(ATS.us,cn,'gu')+attCard(ATS.opp,opp2,'go')+'</div><p class="m" style="margin:-4px 0 12px;font-family:inherit">How each attack was made, and how many ended in a shot, a score or the ball recycled. An attack ends with the next shot, the ball lost, a restart, the other side on the attack or 90 seconds without a shot. Recycled: the same side went again with a new attack before any shot.</p>');}
 
     // Kickout maps
     h3.push('<h2>RESTART MAPS</h2><div class="row"><div class="col card">'+repKoMap(d.koPts&&d.koPts.us,cn+" restarts",cU)+'</div><div class="col card">'+repKoMap(d.koPts&&d.koPts.opp,opp2+" restarts",cO)+'</div></div>');
