@@ -67,16 +67,14 @@ player ratings).
 - Pricing page line, maybe later: "less than one season of a single-team video
   subscription" (Hudl GAA packs about EUR 1,550 to 3,250 a year via an Irish reseller).
 
-**Detailed video events, next** (parked until the All-Ireland finals are tagged; then the
-new views and the per-match events fix together)
-- Views of their own once the finals are tagged: attacks the Performa way (attacks,
-  attack-to-shot %, attacks per score, how each entry type ends, read from the next shot,
-  score or ball lost), goalkeeper
-  actions, possessions per player (touches by type), duels and breaking ball by player.
-- Scouting match report as a whole-match report, not us against them (Tadhg 2026-10-24):
-  both teams treated alike, the story of the game, both teams' players. To do after the
-  All-Ireland finals are tagged, with the new views.
-- Score assists in the player breakdown (assists by player, who set up whom).
+**Detailed video events, next** (report v2 built 2026-10-25, see Done; still to do)
+- Check report v2 on Kerry v Mayo (Tadhg, morning of 2026-10-26), then deploy.
+- Score by period uses the raw clock, so on video-tagged games the 30-40 block mixes
+  first-half stoppage time with the start of the second half (Kerry v Mayo). Option: blocks
+  per half (1st half 0-10 ... 30+, 2nd half 0-10 ... 30+). Needs a yes, it changes every report.
+- Duels and breaking ball by player; goalkeeper restarts by keeper (the restart tag names the
+  winner, not the taker).
+- The app screens (Overview, Attack tab) do not show the video events yet; only the report does.
 - The event editor offers per-match events, but `matches` has no `custom_events` column, so
   saving events for a single match fails; club-wide events work (found 2026-10-23).
 
@@ -156,6 +154,18 @@ columns. Wide screens now go up to 1200px.
 
 **Still to look at:** the opposition team page, match lists, Game film list, the video
 tagger in landscape, and button sizes in the live tagger on a big screen.
+
+## Done 2026-10-25
+
+- Match report v2 (not deployed). A scouting match is reported for the match as a whole:
+  both team names (not the container name), both teams in Turnovers, Ball lost by type,
+  Players and Tackles. New sections: Match flow (running score of both sides, lead changes,
+  times level, biggest lead, best run), Attacks (by how the attack was made, to a shot and
+  a score), Goalkeepers, Score assists (by player, who set up whom, scores with an assist);
+  duels, breaking ball and throw-ins in Match stats; hand, kick and solo and assists in
+  Players. Video sections show only when those events are tagged. Spec in
+  docs/REPORT-SPEC.md (v2). Checked on Kerry v Mayo (92 attacks, 32 assists, 11 keeper
+  tags); a club game (Bray v Carnew) is the same as before apart from Match flow.
 
 ## Done 2026-10-24
 

@@ -9346,12 +9346,17 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     // The match report has one fixed layout (docs/REPORT-SPEC.md). The tier decides how much
     // of it is included: 1 Summary, 2 Analysis, 3 Full breakdown (the default from Export).
     function exportMatchReport(tierArg) { if (!d || !match) return;
-    var tier = tierArg === 1 || tierArg === 2 ? tierArg : 3, TIERS = ["", "Summary", "Analysis", "Full breakdown"], REPORT_VERSION = "1";
+    var tier = tierArg === 1 || tierArg === 2 ? tierArg : 3, TIERS = ["", "Summary", "Analysis", "Full breakdown"], REPORT_VERSION = "2";
     setReportTier(tier);
     var evs=d._events||[]; var apps=d._apps||[];
     var usEvs=evs.filter(function(e){return e.team==="us";});
     var opEvs=evs.filter(function(e){return e.team==="opp";});
     var cn=club.name||"Us"; var opp2=match.opponent||"Opposition";
+    // A scouting match is between two other teams, named in the match ("Kerry v Mayo"), and the
+    // report covers both sides alike.
+    // The scout dashboard passes the two names in already.
+    var SCT=!!match.scouting;
+    if(SCT){var rpSc=match.scout||{},rpSv=String(match.opponent||"").split(/\s+v\s+/);if(rpSv.length>1||(rpSc.a&&rpSc.a.name)){cn=(rpSc.a&&rpSc.a.name)||rpSv[0];opp2=(rpSc.b&&rpSc.b.name)||rpSv[1]||"Team B";}}
 
     // Parse time helper (same fallback as Periods tab)
     function parseSecs(e) {
@@ -9360,6 +9365,20 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var pp = String(e.time_text).split(":").map(Number);
       return pp.length === 3 ? pp[0]*3600+pp[1]*60+pp[2] : pp.length === 2 ? pp[0]*60+pp[1] : 0;
     }
+    // One timeline for the match. Where the second half clock starts before the first half
+    // ended (it restarts at the half length, so first-half stoppage time overlaps it), the second
+    // half is moved along to follow the first.
+    var rpP1End=0,rpP2Start=null;
+    evs.forEach(function(e){var s=parseSecs(e);if(String(e.period||1)==="1"){if(s>rpP1End)rpP1End=s;}else if(rpP2Start==null||s<rpP2Start)rpP2Start=s;});
+    var rpShift=rpP2Start!=null&&rpP2Start<rpP1End?rpP1End-rpP2Start:0;
+    function clockOf(e){return parseSecs(e)+(String(e.period||1)!=="1"?rpShift:0);}
+    var tl=evs.slice().sort(function(a,b){return clockOf(a)-clockOf(b)||(a.seq||0)-(b.seq||0);});
+    function isShotE(e){return e.event_type==="Shot from play"||e.event_type==="Scoreable free";}
+    function named(e){var n=String(e.player||"").trim();return n&&!/^#\d+$/.test(n)?n:null;}
+    // Minutes into the half, with the second half marked.
+    function minOf(e){var p1=String(e.period||1)==="1";return (p1?"":"2H ")+Math.max(0,Math.floor((parseSecs(e)-(p1?0:rpP2Start||0))/60))+"\u2032";}
+    function gpTxt(g,p){return g+"-"+(p<10?"0":"")+p;}
+    function cntOf(list,type,re){return list.filter(function(e){return e.event_type===type&&re.test(String(e.outcome||""));}).length;}
 
     // Half time + 2nd half scores
     var h1Us={g:0,p:0},h1Op={g:0,p:0},h2Us={g:0,p:0},h2Op={g:0,p:0};
@@ -9451,6 +9470,123 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function prTone(k,fb){ if(!k||tcR.fallback) return fb; var c=[k.a,k.b].filter(function(h){ return _hexRgb(h)&&1.05/(_hexLum(h)+0.05)>=3; })[0]; return c||fb; }
     var pU=prTone(tcR.usKit,"#1e7a3e"), pO=prTone(tcR.oppKit,"#2266bb");
 
+    // Match flow: the running score of both sides through the game, with the lead changes,
+    // the biggest lead and the best scoring run of each side.
+    function flowHtml(){
+      var sc=tl.filter(function(e){return isShotE(e)&&(e.score||0)>0&&(e.team==="us"||e.team==="opp");});
+      if(sc.length<2) return "";
+      var endT=Math.max(clockOf(tl[tl.length-1]),60), tot={us:0,opp:0}, pts=[], last=0, changes=0, level=0;
+      var big={us:{m:0,at:""},opp:{m:0,at:""}}, run=null, best={us:null,opp:null};
+      sc.forEach(function(e){
+        var tm=e.team, isG=e.score===3; tot[tm]+=e.score;
+        var mg=tot.us-tot.opp, nl=mg>0?1:mg<0?-1:0;
+        if(nl===0) level++; else { if(last&&nl!==last) changes++; last=nl; }
+        if(mg>big.us.m) big.us={m:mg,at:minOf(e)}; if(-mg>big.opp.m) big.opp={m:-mg,at:minOf(e)};
+        if(run&&run.tm===tm){ if(isG) run.g++; else run.p+=e.score; run.pts+=e.score; run.n++; run.to=minOf(e); }
+        else run={tm:tm,g:isG?1:0,p:isG?0:e.score,pts:e.score,n:1,from:minOf(e),to:minOf(e)};
+        if(run.n>=2&&(!best[tm]||run.pts>best[tm].pts)) best[tm]=Object.assign({},run);
+        pts.push({t:clockOf(e),tm:tm,v:tot[tm],g:isG});
+      });
+      var W=720,H=220,L=30,R=50,T=12,B=26,maxV=Math.max(5,Math.ceil(Math.max(tot.us,tot.opp)/5)*5);
+      var X=function(t){return (L+(W-L-R)*t/endT).toFixed(1);}, Y=function(v){return (H-B-(H-T-B)*v/maxV).toFixed(1);};
+      var g='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block" role="img" aria-label="Running score">';
+      for(var v=0;v<=maxV;v+=5) g+='<line class="fgl" x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'"/><text class="fax" x="'+(L-6)+'" y="'+(+Y(v)+3)+'" text-anchor="end">'+v+'</text>';
+      // Minute marks count from the start of each half.
+      var tk=[], h2x=rpP2Start!=null?rpP2Start+rpShift:null;
+      for(var m=10;m*60<=(h2x!=null?h2x-120:endT);m+=10) tk.push([m*60,m]);
+      if(h2x!=null) for(var m2=10;h2x+m2*60<=endT;m2+=10) tk.push([h2x+m2*60,m2]);
+      tk.forEach(function(k){g+='<text class="fax" x="'+X(k[0])+'" y="'+(H-8)+'" text-anchor="middle">'+k[1]+'\u2032</text>';});
+      if(h2x!=null) g+='<line class="fht" x1="'+X(h2x)+'" x2="'+X(h2x)+'" y1="'+T+'" y2="'+(H-B)+'"/><text class="fax" x="'+X(h2x/2)+'" y="'+(T+4)+'" text-anchor="middle">1st half</text><text class="fax" x="'+X((h2x+endT)/2)+'" y="'+(T+4)+'" text-anchor="middle">2nd half</text>';
+      [["us","var(--cu)"],["opp","var(--co)"]].forEach(function(sd){
+        var d2='M'+X(0)+' '+Y(0), dots='';
+        pts.forEach(function(p){ if(p.tm!==sd[0]) return; d2+=' H'+X(p.t)+' V'+Y(p.v); dots+='<circle cx="'+X(p.t)+'" cy="'+Y(p.v)+'" r="'+(p.g?5.5:3.5)+'" style="fill:'+sd[1]+'" class="fdot"/>'; });
+        d2+=' H'+X(endT);
+        g+='<path d="'+d2+'" style="fill:none;stroke:'+sd[1]+';stroke-width:2.5;stroke-linejoin:round"/>'+dots+'<text x="'+(W-R+6)+'" y="'+(+Y(tot[sd[0]])+4)+'" class="fend">'+tot[sd[0]]+'</text>';
+      });
+      g+='</svg>';
+      var nm={us:cn,opp:opp2}, fx=[['Lead changes',changes],['Times level',level]];
+      ['us','opp'].forEach(function(k){ fx.push(['Biggest lead, '+nm[k],big[k].m?'+'+big[k].m+' <span class="m">'+big[k].at+'</span>':'–']); });
+      ['us','opp'].forEach(function(k){ var b=best[k]; fx.push(['Best run, '+nm[k],b?gpTxt(b.g,b.p)+' unanswered <span class="m" style="white-space:nowrap">'+b.from+'–'+b.to+'</span>':'–']); });
+      return '<h2>MATCH FLOW</h2><div class="card"><div class="msk"><b class="gu">'+cn+'</b><b class="go">'+opp2+'</b></div>'+g+
+        '<div class="fxg">'+fx.map(function(f){return '<div class="fxb"><p class="m">'+f[0]+'</p><p class="fxv">'+f[1]+'</p></div>';}).join('')+'</div>'+
+        '<p class="m" style="margin-top:8px;font-family:inherit">The running score in points (a goal is 3), a dot for each score and a larger dot for a goal. Minutes count from the start of each half.</p></div>';
+    }
+
+    // Attacks (detailed video tagging): each attack is put down to how it was made and ends with
+    // the next shot, the ball lost, a restart, the other side on the attack or 90 seconds. Attacks
+    // one after another in the same move share its ending.
+    var ATT_ORDER=["Run left","Run central","Run right","Kick pass left","Kick pass central","Kick pass right","Strike pass left","Strike pass central","Strike pass right","High ball to square"];
+    function attackStats(){
+      var A={us:{n:0,sh:0,sc:0,by:{}},opp:{n:0,sh:0,sc:0,by:{}}};
+      tl.forEach(function(e,i){
+        if(e.event_type!=="Attack"||!A[e.team]) return;
+        var tm=e.team, t0=clockOf(e), per=String(e.period||1), res=0;
+        for(var j=i+1;j<tl.length;j++){
+          var f=tl[j], fo=String(f.outcome||"").toLowerCase();
+          if(String(f.period||1)!==per||clockOf(f)-t0>90) break;
+          if(isShotE(f)){ if(f.team===tm) res=(f.score||0)>0?2:1; break; }
+          if(f.event_type==="Kickout"||(f.event_type==="Attack"&&f.team!==tm)) break;
+          if((f.event_type==="Possession lost"&&f.team===tm&&fo.indexOf("shot")<0)||(f.event_type==="Turnover won"&&f.team!==tm)) break;
+        }
+        var a=A[tm], k=e.outcome||"Other", b=a.by[k]||(a.by[k]={n:0,sh:0,sc:0});
+        a.n++; b.n++; if(res){a.sh++;b.sh++;} if(res===2){a.sc++;b.sc++;}
+      });
+      return A;
+    }
+    function pcS(a,b){return b?Math.round(100*a/b)+'%':'–';}
+    function attCard(a,name,cls){
+      if(!a.n) return '<div class="col card"><p class="'+cls+'" style="font-size:11px;font-weight:700;margin-bottom:6px">'+name.toUpperCase()+'</p><p class="m">No attacks tagged.</p></div>';
+      var ks=Object.keys(a.by).sort(function(x,y){var ix=ATT_ORDER.indexOf(x),iy=ATT_ORDER.indexOf(y);return (ix<0?99:ix)-(iy<0?99:iy)||a.by[y].n-a.by[x].n;});
+      var mx=Math.max.apply(null,ks.map(function(k){return a.by[k].n;}));
+      var t='<div class="col card"><p class="'+cls+'" style="font-size:11px;font-weight:700;margin-bottom:6px">'+name.toUpperCase()+'</p><p style="font-size:22px;font-weight:800" class="'+cls+'">'+a.n+' <span style="font-size:12px;font-weight:600;color:#9fb0c6">attacks · '+pcS(a.sh,a.n)+' to a shot · '+pcS(a.sc,a.n)+' to a score</span></p><table class="tbl" style="margin-top:6px"><tr><th>How</th><th>Attacks</th><th>→ Shot</th><th>→ Score</th></tr>';
+      ks.forEach(function(k){var b=a.by[k];t+='<tr><td style="font-weight:700">'+k+'<div class="msb" style="height:4px;margin-top:3px"><i style="width:'+Math.round(100*b.n/mx)+'%;background:var(--'+(cls==='gu'?'cu':'co')+')"></i></div></td><td>'+b.n+'</td><td>'+pcS(b.sh,b.n)+'</td><td style="font-weight:700">'+pcS(b.sc,b.n)+'</td></tr>';});
+      return t+'</table></div>';
+    }
+
+    // Goalkeepers (detailed video tagging): what each keeper did, by outcome.
+    var GK_COLS=[["Shot saved","Saved"],["Shot parried","Parried"],["High ball caught","Caught"],["High ball punched","Punched"],["High ball dropped","Dropped"],["Sweeping clearance","Sweeps"],["Goal conceded","Goals conceded"]];
+    function gkHtml(){
+      var rows={}, ord=[];
+      evs.forEach(function(e){ if(e.event_type!=="Goalkeeper action"||(e.team!=="us"&&e.team!=="opp")) return; var k=e.team+"|"+(String(e.player||"").trim()||"Goalkeeper"); if(!rows[k]){rows[k]={tm:e.team,nm:k.split("|")[1],c:{}};ord.push(k);} rows[k].c[e.outcome]=(rows[k].c[e.outcome]||0)+1; });
+      if(!ord.length) return "";
+      ord.sort(function(a,b){return (rows[a].tm==="us"?0:1)-(rows[b].tm==="us"?0:1);});
+      var cols=GK_COLS.filter(function(c){return ord.some(function(k){return rows[k].c[c[0]];});});
+      var t='<h2>GOALKEEPERS</h2><div class="card" style="overflow-x:auto"><table class="tbl"><tr><th>Keeper</th>'+cols.map(function(c){return '<th>'+c[1]+'</th>';}).join('')+'</tr>';
+      ord.forEach(function(k){var r=rows[k];t+='<tr><td style="font-weight:700" class="'+(r.tm==="us"?"gu":"go")+'">'+r.nm+' <span class="m">'+(r.tm==="us"?cn:opp2)+'</span></td>'+cols.map(function(c){return '<td>'+(r.c[c[0]]||0)+'</td>';}).join('')+'</tr>';});
+      return t+'</table></div>';
+    }
+
+    // Turnover cost for the other side: the same count with the sides swapped.
+    function flipT(list){return list.map(function(e){return Object.assign({},e,{team:e.team==="us"?"opp":e.team==="opp"?"us":e.team});});}
+    function lostLine(tc,name){return tc&&tc.tot.n?'<p style="font-size:13px;margin-top:10px">'+name+' lost the ball '+tc.tot.n+' times; '+tc.tot.k+' of those led to a score against before the ball was won back.</p>':'';}
+    function lostCard(list,name,cls){
+      var toType={};list.forEach(function(e){if(e.event_type==="Possession lost"&&String(e.outcome||"").toLowerCase().indexOf("shot")<0){var t2=e.outcome||"Other";toType[t2]=(toType[t2]||0)+1;}});
+      var toTy=Object.keys(toType).map(function(t2){return{type:t2,count:toType[t2]};}).sort(function(a,b){return b.count-a.count;});
+      var totTO=toTy.reduce(function(s2,t2){return s2+t2.count;},0);
+      if(!totTO) return '';
+      var t='<div class="'+(SCT?'col card':'card')+'"><p style="font-size:11px;font-weight:700;color:#e0584d;margin-bottom:6px">'+name.toUpperCase()+' BALL LOST BY TYPE · '+totTO+'</p>';
+      toTy.forEach(function(t2){t+='<div style="display:flex;align-items:center;gap:8px;margin:3px 0"><span style="min-width:100px;font-size:11px">'+t2.type+'</span><div class="bar2" style="width:'+Math.round(100*t2.count/Math.max(totTO,1))+'%;background:#e0584d"></div><span style="font-size:11px;font-weight:700;margin-left:4px">'+t2.count+'</span></div>';});
+      return t+'</div>';
+    }
+
+    // Score assists (detailed video tagging): who set up the scores. Each assist is matched to the
+    // nearest score by the same side (a free won to a free scored), up to a minute either way.
+    function asWord(k,n){var w={"Goal":["goal","goals"],"Point":["point","points"],"2-pointer":["2-pointer","2-pointers"],"Free won":["free won","frees won"],"Penalty won":["penalty won","penalties won"]}[k]||[k.toLowerCase(),k.toLowerCase()];return n+' '+w[n>1?1:0];}
+    function assistCard(own,name,cls){
+      var as=tl.filter(function(e){return e.team===own&&e.event_type==="Score assist";});
+      if(!as.length) return '<div class="col card"><p class="'+cls+'" style="font-size:11px;font-weight:700;margin-bottom:6px">'+name.toUpperCase()+'</p><p class="m">No assists tagged.</p></div>';
+      var scs=tl.filter(function(e){return e.team===own&&isShotE(e)&&(e.score||0)>0;}), by={}, hit={};
+      as.forEach(function(e){
+        var n=named(e)||"Unnamed", r=by[n]||(by[n]={nm:n,n:0,ty:{},to:{}}), oc=e.outcome||"Other", wantFree=/free|penalty/i.test(oc), t0=clockOf(e), per=String(e.period||1), bestS=null, bd=1e9;
+        r.n++; r.ty[oc]=(r.ty[oc]||0)+1;
+        scs.forEach(function(f){ if(String(f.period||1)!==per||(wantFree&&f.event_type!=="Scoreable free")) return; var dt=clockOf(f)-t0; if(dt<-60||dt>(wantFree?120:60)) return; var ad=Math.abs(dt)+(dt<0?1:0); if(ad<bd){bd=ad;bestS=f;} });
+        if(bestS){ hit[scs.indexOf(bestS)]=1; var sn=named(bestS); if(sn) r.to[sn]=(r.to[sn]||0)+1; }
+      });
+      var rows=Object.keys(by).map(function(k){return by[k];}).sort(function(a,b){return b.n-a.n;});
+      var t='<div class="col card"><p class="'+cls+'" style="font-size:11px;font-weight:700;margin-bottom:6px">'+name.toUpperCase()+'</p><p class="m" style="font-family:inherit;margin-bottom:6px">'+as.length+' assists · '+Object.keys(hit).length+' of '+scs.length+' scores had one</p><table class="tbl"><tr><th>Player</th><th>Assists</th><th>Set up</th></tr>';
+      rows.forEach(function(r){t+='<tr><td style="font-weight:700">'+r.nm+'<div class="m" style="font-family:inherit">'+Object.keys(r.ty).map(function(k){return asWord(k,r.ty[k]);}).join(', ')+'</div></td><td style="font-weight:800" class="'+cls+'">'+r.n+'</td><td style="font-size:11px">'+(Object.keys(r.to).sort(function(a,b){return r.to[b]-r.to[a];}).map(function(k){return k+(r.to[k]>1?' ×'+r.to[k]:'');}).join(', ')||'–')+'</td></tr>';});
+      return t+'</table></div>';
+    }
     // Match stats: head-to-head bars in each side's colour. A main measure has a thick bar;
     // its breakdown sits underneath in thinner bars on a shaded panel.
     function msFmt(v,pct,dp){return (dp?(Math.round(v*10)/10).toFixed(1):String(Math.round(v)))+(pct?"%":"");}
@@ -9464,6 +9600,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function matchStatsHtml(){
       var RSc=restarts_().charAt(0).toUpperCase()+restarts_().slice(1);
       var g=h2hGroups(usEvs,opEvs,1).map(function(grp){return msGroup(msRow(grp.main.label,grp.main.u,grp.main.o,true,grp.main.pct,grp.main.dp),grp.subs.map(function(r){return msRow(r.label,r.u,r.o,false,r.pct,r.dp);}));});
+      // Contests from the detailed video events, when tagged. Duels and breaking ball count each
+      // side’s own tags; a throw-in lost by one side is won by the other.
+      var A0=/^/;
+      if(cntOf(evs,"Duel",A0)) g.push(msGroup(msRow("Duels won",cntOf(usEvs,"Duel",/^(won|free won)$/i),cntOf(opEvs,"Duel",/^(won|free won)$/i),true),[["Won",/^won$/i],["Free won",/^free won$/i],["Lost",/^lost$/i],["Free conceded",/^free conceded$/i]].map(function(r){return msRow(r[0],cntOf(usEvs,"Duel",r[1]),cntOf(opEvs,"Duel",r[1]));})));
+      if(cntOf(evs,"Breaking ball",A0)) g.push(msGroup(msRow("Breaking ball won",cntOf(usEvs,"Breaking ball",/^won$/i),cntOf(opEvs,"Breaking ball",/^won$/i),true),[msRow("Lost",cntOf(usEvs,"Breaking ball",/^lost$/i),cntOf(opEvs,"Breaking ball",/^lost$/i))]));
+      if(cntOf(evs,"Throw-in",A0)){var tw=function(a,b,ra,rb){return cntOf(a,"Throw-in",ra)+cntOf(b,"Throw-in",rb);};
+        g.push(msGroup(msRow("Throw-ins won",tw(usEvs,opEvs,/^(won clean|break won)$/i,/^(lost clean|break lost)$/i),tw(opEvs,usEvs,/^(won clean|break won)$/i,/^(lost clean|break lost)$/i),true),[msRow("Won clean",tw(usEvs,opEvs,/^won clean$/i,/^lost clean$/i),tw(opEvs,usEvs,/^won clean$/i,/^lost clean$/i)),msRow("Won on the break",tw(usEvs,opEvs,/^break won$/i,/^break lost$/i),tw(opEvs,usEvs,/^break won$/i,/^break lost$/i))]));}
       return '<h2>MATCH STATS</h2><div class="card"><div class="msk"><b class="gu">'+cn+'</b><b class="go">'+opp2+'</b></div><div class="msgrid">'+g.join("")+'</div>'+
         '<p class="m" style="margin-top:6px;line-height:1.6;font-family:inherit">Possessions are shots plus the times the ball was lost, so per 10 possessions shows how much each side made of the ball. '+RSc+' won counts every restart a side came away with, its own and the opposition\u2019s. Conversion is scores from all attempts of that kind. A bar shows each side\u2019s share of the two figures.</p></div>';
     }
@@ -9473,7 +9616,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     h3.push('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+cn+' v '+opp2+'</title>');
     h3.push('<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet">');
     h3.push('<style>.sbx{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:10px}.rj{width:120px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}.rj svg{display:block}.rjn{font-size:12px;font-weight:800;line-height:1.2}@media(max-width:620px){.sbx{gap:4px}.rj{width:76px}.rj svg{width:50px;height:50px}.sbx .sb{font-size:28px;padding:12px 0}}</style>');
-    h3.push('<style>:root{--cu:'+cU+';--co:'+cO+'}@media print{:root{--cu:'+pU+';--co:'+pO+'}}.msk{display:flex;justify-content:space-between;font-size:13px;font-weight:800;margin-bottom:12px}.msgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 26px}.msg{margin-bottom:14px}.msl{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px;font-size:11.5px}.msl b{min-width:34px;font-weight:800}.msl b.go{text-align:right}.msl span{flex:1;text-align:center;color:#9fb0c6;font-weight:600}.msm .msl{font-size:14px}.msm .msl span{color:#eef2f8;font-weight:800}.msb{display:flex;gap:2px;height:6px}.msb i{display:block;height:100%;border-radius:2px}.msm .msb{height:13px}.msm .msb i{border-radius:3px}.msp{background:#0a1220;border-radius:10px;padding:10px 12px 2px;margin:8px 0 0 12px}.mss{margin-bottom:9px}@media(max-width:620px){.msgrid{grid-template-columns:1fr}}@media print{.msp{background:#ececec}.msm .msl span{color:#111}.msl span{color:#444}}</style>');
+    h3.push('<style>:root{--cu:'+cU+';--co:'+cO+'}@media print{:root{--cu:'+pU+';--co:'+pO+'}}.msk{display:flex;justify-content:space-between;font-size:13px;font-weight:800;margin-bottom:12px}.msgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 26px}.msg{margin-bottom:14px}.msl{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px;font-size:11.5px}.msl b{min-width:34px;font-weight:800}.msl b.go{text-align:right}.msl span{flex:1;text-align:center;color:#9fb0c6;font-weight:600}.msm .msl{font-size:14px}.msm .msl span{color:#eef2f8;font-weight:800}.msb{display:flex;gap:2px;height:6px}.msb i{display:block;height:100%;border-radius:2px}.msm .msb{height:13px}.msm .msb i{border-radius:3px}.msp{background:#0a1220;border-radius:10px;padding:10px 12px 2px;margin:8px 0 0 12px}.mss{margin-bottom:9px}.fgl{stroke:#1a2437;stroke-width:1}.fht{stroke:#536176;stroke-width:1;stroke-dasharray:3 3}.fax{fill:#536176;font-size:10px;font-family:monospace}.fend{fill:#eef2f8;font-size:13px;font-weight:800}.fdot{stroke:#0d1525;stroke-width:1.5}.fxg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}.fxb{background:#0a1220;border-radius:8px;padding:8px 10px}.fxv{font-size:15px;font-weight:800;margin-top:2px}@media(max-width:620px){.msgrid{grid-template-columns:1fr}}@media print{.fgl{stroke:#ddd}.fend{fill:#111}.fdot{stroke:#f5f5f5}.fxb{background:#ececec}}@media print{.msp{background:#ececec}.msm .msl span{color:#111}.msl span{color:#444}}</style>');
     h3.push('<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Barlow,system-ui,sans-serif;background:#070c18;color:#eef2f8;padding:20px;max-width:800px;margin:0 auto}h1{font-size:24px;font-weight:900}h2{font-size:11px;letter-spacing:2px;color:#34c967;margin:24px 0 10px;font-weight:800}.card{background:#0d1525;border-radius:12px;padding:14px 16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.3)}.row{display:flex;gap:12px;flex-wrap:wrap}.col{flex:1;min-width:180px}.sb{font-size:36px;font-weight:900;text-align:center;padding:12px}.gu{color:var(--cu)}.go{color:var(--co)}.m{font-size:11px;color:#536176;font-family:monospace}.tbl{width:100%;border-collapse:collapse;font-size:12px}.tbl th{text-align:left;padding:6px 8px;border-bottom:2px solid #172238;color:#536176;font-size:10px;letter-spacing:1px}.tbl td{padding:5px 8px;border-bottom:1px solid #17223844}.bar2{height:14px;border-radius:3px;display:inline-block;vertical-align:middle}@media print{body{background:#fff;color:#111;padding:10px}.card{background:#f5f5f5;box-shadow:none;border:1px solid #ddd}h2{color:#1e7a3e}}</style></head><body>');
 
     // Header
@@ -9498,6 +9641,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     h3.push('</tr><tr><td style="font-weight:700;color:var(--co)">'+opp2+'</td>');
     pScOp.forEach(function(v){h3.push('<td style="text-align:center;font-weight:700;color:'+(v>0?'var(--co)':'#536176')+'">'+v+'</td>');});
     h3.push('</tr></table></div>');
+    h3.push(flowHtml());
 
     // Scorers
     h3.push('<h2>SCORERS</h2><div class="row"><div class="col card"><p style="font-size:11px;font-weight:700;color:var(--cu);margin-bottom:6px">'+cn.toUpperCase()+'</p>');
@@ -9514,6 +9658,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     if(tier>=2){
     // Where scores came from (the same panel as the Attack tab)
     h3.push('<h2>WHERE SCORES CAME FROM</h2><div class="card">'+appMarkup(React.createElement(ScoreSourcePanel,{data:d.srcData,club:club,oppName:opp2}))+'<p class="m" style="margin-top:8px;font-family:inherit">Each score put down to how the passage began: a restart or a turnover won.</p></div>');
+
+    if(evs.some(function(e){return e.event_type==="Attack";})){var ATS=attackStats();
+    h3.push('<h2>ATTACKS</h2><div class="row">'+attCard(ATS.us,cn,'gu')+attCard(ATS.opp,opp2,'go')+'</div><p class="m" style="margin:-4px 0 12px;font-family:inherit">How each attack was made, and how many ended in a shot and a score. An attack ends with the next shot, the ball lost, a restart, the other side on the attack or 90 seconds without a shot; two or more attacks in one move share its ending.</p>');}
 
     // Kickout maps
     h3.push('<h2>RESTART MAPS</h2><div class="row"><div class="col card">'+repKoMap(d.koPts&&d.koPts.us,cn+" restarts",cU)+'</div><div class="col card">'+repKoMap(d.koPts&&d.koPts.opp,opp2+" restarts",cO)+'</div></div>');
@@ -9534,18 +9681,15 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     h3.push('<h2>BREAKING BALL</h2><div class="card"><div class="row"><div class="col"><p class="m">'+cn+'</p><p style="font-size:22px;font-weight:800;color:var(--cu)">'+(ko.brkPct!=null?ko.brkPct+'%':'N/A')+'</p><p class="m">'+(ko.brkW||0)+' won / '+(ko.brkT||0)+' breaks</p></div><div class="col"><p class="m">'+opp2+'</p><p style="font-size:22px;font-weight:800;color:var(--co)">'+(oko.brkPct!=null?oko.brkPct+'%':'N/A')+'</p><p class="m">'+(oko.brkW||0)+' won / '+(oko.brkT||0)+' breaks</p></div></div></div>');
 
 
-    // Turnovers: how each side used the ball it won back, and our turnovers that cost a score
-    var tcAll=turnoverCost(evs);
+    h3.push(gkHtml());
+
+    // Turnovers: how each side used the ball it won back, and the turnovers that cost a score
+    var tcAll=turnoverCost(evs), tcOpp=SCT?turnoverCost(flipT(evs)):null;
     var cmp=function(lbl){return (d.compare||[]).find(function(r){return r.label===lbl;})||{us:0,opp:0};};
     var toS=cmp("Turnover \u2192 shot"),toSc=cmp("Turnover \u2192 score");
     h3.push('<h2>TURNOVERS</h2><div class="card"><div class="row"><div class="col"><p class="m">'+cn+'</p><p style="font-size:14px;font-weight:800"><span class="gu">'+toS.us+'%</span> of turnovers won led to a shot, <span class="gu">'+toSc.us+'%</span> to a score</p></div><div class="col"><p class="m">'+opp2+'</p><p style="font-size:14px;font-weight:800"><span class="go">'+toS.opp+'%</span> of turnovers won led to a shot, <span class="go">'+toSc.opp+'%</span> to a score</p></div></div>'+
-      (tcAll.tot.n?'<p style="font-size:13px;margin-top:10px">'+cn+' lost the ball '+tcAll.tot.n+' times; '+tcAll.tot.k+' of those led to a score against before the ball was won back.</p>':'')+'</div>');
-    var toType={};usEvs.forEach(function(e){if(e.event_type==="Possession lost"&&String(e.outcome||"").toLowerCase().indexOf("shot")<0){var t2=e.outcome||"Other";toType[t2]=(toType[t2]||0)+1;}});
-    var toTy=Object.keys(toType).map(function(t2){return{type:t2,count:toType[t2]};}).sort(function(a,b){return b.count-a.count;});
-    var totTO=toTy.reduce(function(s2,t2){return s2+t2.count;},0);
-    if(totTO){h3.push('<div class="card"><p style="font-size:11px;font-weight:700;color:#e0584d;margin-bottom:6px">'+cn.toUpperCase()+' BALL LOST BY TYPE \u00b7 '+totTO+'</p>');
-    toTy.forEach(function(t2){h3.push('<div style="display:flex;align-items:center;gap:8px;margin:3px 0"><span style="min-width:100px;font-size:11px">'+t2.type+'</span><div class="bar2" style="width:'+Math.round(100*t2.count/Math.max(totTO,1))+'%;background:#e0584d"></div><span style="font-size:11px;font-weight:700;margin-left:4px">'+t2.count+'</span></div>');});
-    h3.push('</div>');}
+      lostLine(tcAll,cn)+(SCT?lostLine(tcOpp,opp2):'')+'</div>');
+    h3.push(SCT?'<div class="row">'+lostCard(usEvs,cn)+lostCard(opEvs,opp2)+'</div>':lostCard(usEvs,cn));
 
     // Conversion by zone
     h3.push('<h2>CONVERSION BY ZONE</h2><div class="row"><div class="col card"><p style="font-size:11px;font-weight:700;color:var(--cu);margin-bottom:6px">'+cn.toUpperCase()+'</p>'+zoneTable(usEvs,"#34c967")+'</div><div class="col card"><p style="font-size:11px;font-weight:700;color:var(--co);margin-bottom:6px">'+opp2.toUpperCase()+'</p>'+zoneTable(opEvs,"#4a9eff")+'</div></div>');
@@ -9557,28 +9701,42 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }
 
     if(tier>=3){
-    // Player breakdown: every player tagged on our side
-    var pl={};function pr(n){return pl[n]||(pl[n]={nm:n,sh:0,g:0,p:0,lost:0,tk:0,rw:0,tw:0,ru:0});}
-    var named=function(e){var n=String(e.player||"").trim();return n&&!/^#\d+$/.test(n)?n:null;};
-    usEvs.forEach(function(e){var n=named(e);if(!n)return;var oc=String(e.outcome||"").toLowerCase(),r=pr(n);
-      if(e.event_type==="Shot from play"||e.event_type==="Scoreable free"){r.sh++;if((e.score||0)===3)r.g++;else r.p+=(e.score||0);}
-      else if(e.event_type==="Possession lost"&&oc.indexOf("shot")<0)r.lost++;
-      else if(e.event_type==="Tackle")r.tk++;
-      else if(e.event_type==="Kickout"&&KO_WON.has(e.outcome))r.rw++;
-      else if(e.event_type==="Turnover won"||(e.event_type==="Turnover"&&/won/.test(oc)))r.tw++;
-      else if(e.event_type==="Ruck"&&/won/.test(oc))r.ru++;});
-    opEvs.forEach(function(e){var n=named(e);if(n&&e.event_type==="Kickout"&&/lost/i.test(e.outcome||""))pr(n).rw++;});
-    var pun={};tcAll.rows.forEach(function(r){pun[r.nm]=r.k;});
-    var rows2=Object.keys(pl).map(function(k){var r=pl[k];r.poss=r.sh+r.lost+r.rw+r.tw+r.ru;return r;}).filter(function(r){return r.poss||r.tk;}).sort(function(a,b){return b.poss-a.poss||b.tk-a.tk;});
-    h3.push('<h2>PLAYERS</h2><div class="card" style="overflow-x:auto"><table class="tbl"><tr><th>Player</th><th>Poss</th><th>Shots</th><th>Scored</th><th>Lost</th><th>Lost \u2192 score</th><th>Restarts won</th><th>Tackles</th></tr>');
-    rows2.forEach(function(r){h3.push('<tr><td style="font-weight:700">'+r.nm+'</td><td style="font-weight:800" class="gu">'+r.poss+'</td><td>'+r.sh+'</td><td>'+(r.g||r.p?r.g+'-'+(r.p<10?'0':'')+r.p:'\u2013')+'</td><td>'+r.lost+'</td><td>'+(pun[r.nm]||0)+'</td><td>'+r.rw+'</td><td>'+r.tk+'</td></tr>');});
-    h3.push('</table><p class="m" style="margin-top:8px;font-family:inherit">Poss: times on the ball that were tagged (shots, ball lost, restarts won, turnovers and rucks won). Lost \u2192 score: ball lost that led to a score against before it was won back.</p></div>');
+    // Player breakdown: every player tagged (both sides in a scouting match). Where the detailed
+    // video events are tagged, possessions are the Player possession tags plus shots and frees taken.
+    var PACK=evs.some(function(e){return e.event_type==="Player possession";}), KW=/hurling|camogie/i.test(club.sport||"")?"Strike":"Kick";
+    function plRows(own,other,cost){
+      var pl={};function pr(n){return pl[n]||(pl[n]={nm:n,sh:0,g:0,p:0,lost:0,tk:0,rw:0,tw:0,ru:0,pp:0,hp:0,kp:0,so:0,as:0});}
+      own.forEach(function(e){var n=named(e);if(!n)return;var oc=String(e.outcome||"").toLowerCase(),r=pr(n);
+        if(isShotE(e)){r.sh++;if((e.score||0)===3)r.g++;else r.p+=(e.score||0);}
+        else if(e.event_type==="Possession lost"&&oc.indexOf("shot")<0)r.lost++;
+        else if(e.event_type==="Tackle")r.tk++;
+        else if(e.event_type==="Kickout"&&KO_WON.has(e.outcome))r.rw++;
+        else if(e.event_type==="Turnover won"||(e.event_type==="Turnover"&&/won/.test(oc)))r.tw++;
+        else if(e.event_type==="Ruck"&&/won/.test(oc))r.ru++;
+        else if(e.event_type==="Player possession"&&!/^(shot from play|scoreable free taken)$/.test(oc)){r.pp++;if(oc==="hand pass")r.hp++;else if(/^(kick|strike) pass$/.test(oc))r.kp++;else if(oc==="solo or carry")r.so++;}
+        else if(e.event_type==="Score assist")r.as++;});
+      other.forEach(function(e){var n=named(e);if(n&&e.event_type==="Kickout"&&/lost/i.test(e.outcome||""))pr(n).rw++;});
+      var pun={};(cost?cost.rows:[]).forEach(function(r){pun[r.nm]=r.k;});
+      return Object.keys(pl).map(function(k){var r=pl[k];r.poss=PACK?r.pp+r.sh:r.sh+r.lost+r.rw+r.tw+r.ru;r.pun=pun[r.nm]||0;return r;}).filter(function(r){return r.poss||r.tk||r.as;}).sort(function(a,b){return b.poss-a.poss||b.tk-a.tk;});
+    }
+    function plTable(rows,name,cls){
+      var hd=PACK?['Poss','Hand','Kick'.replace('Kick',KW),'Solo','Shots','Scored','Assists','Lost','Lost → score','Restarts won','Tackles']:['Poss','Shots','Scored','Lost','Lost → score','Restarts won','Tackles'];
+      var t='<div class="card" style="overflow-x:auto">'+(SCT?'<p class="'+cls+'" style="font-size:11px;font-weight:700;margin-bottom:6px">'+name.toUpperCase()+'</p>':'')+'<table class="tbl"><tr><th>Player</th>'+hd.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr>';
+      rows.forEach(function(r){var sc=r.g||r.p?r.g+'-'+(r.p<10?'0':'')+r.p:'–';var v=PACK?[r.hp,r.kp,r.so,r.sh,sc,r.as,r.lost,r.pun,r.rw,r.tk]:[r.sh,sc,r.lost,r.pun,r.rw,r.tk];t+='<tr><td style="font-weight:700">'+r.nm+'</td><td style="font-weight:800" class="'+cls+'">'+r.poss+'</td>'+v.map(function(x){return '<td>'+x+'</td>';}).join('')+'</tr>';});
+      return t+'</table></div>';
+    }
+    h3.push('<h2>PLAYERS</h2>'+plTable(plRows(usEvs,opEvs,tcAll),cn,'gu')+(SCT?plTable(plRows(opEvs,usEvs,tcOpp),opp2,'go'):'')+'<p class="m" style="margin:-4px 0 12px;font-family:inherit">'+(PACK?'Poss: times on the ball, from the player possession tags plus every shot and free taken. Hand, '+KW.toLowerCase()+' and solo: how the ball was moved on.':'Poss: times on the ball that were tagged (shots, ball lost, restarts won, turnovers and rucks won).')+' Lost → score: ball lost that led to a score against before it was won back.</p>');
 
-    // Tackles
-    var tkMap={};usEvs.forEach(function(e){if(e.event_type==="Tackle"&&e.player)tkMap[e.player]=(tkMap[e.player]||0)+1;});var tks=Object.keys(tkMap).map(function(n){return{name:n,count:tkMap[n]};}).sort(function(a,b){return b.count-a.count;});var mxT=tks.length?tks[0].count:1;
-    h3.push('<h2>TACKLES</h2><div class="card">');
-    tks.slice(0,12).forEach(function(t2){h3.push('<div style="display:flex;align-items:center;gap:8px;margin:3px 0"><span style="min-width:120px;font-size:11px">'+t2.name+'</span><div class="bar2" style="width:'+Math.round(100*t2.count/mxT)+'%;background:var(--cu)"></div><span style="font-size:11px;font-weight:700;margin-left:4px">'+t2.count+'</span></div>');});
-    h3.push('</div>');
+    if(evs.some(function(e){return e.event_type==="Score assist";})) h3.push('<h2>SCORE ASSISTS</h2><div class="row">'+assistCard("us",cn,'gu')+assistCard("opp",opp2,'go')+'</div>');
+
+    // Tackles by player (both sides in a scouting match)
+    function tkCard(list,name,colv,cls){
+      var tkMap={};list.forEach(function(e){if(e.event_type==="Tackle"&&e.player)tkMap[e.player]=(tkMap[e.player]||0)+1;});var tks=Object.keys(tkMap).map(function(n){return{name:n,count:tkMap[n]};}).sort(function(a,b){return b.count-a.count;});var mxT=tks.length?tks[0].count:1;
+      var t='<div class="'+(SCT?'col card':'card')+'">'+(SCT?'<p class="'+cls+'" style="font-size:11px;font-weight:700;margin-bottom:6px">'+name.toUpperCase()+'</p>':'');
+      tks.slice(0,12).forEach(function(t2){t+='<div style="display:flex;align-items:center;gap:8px;margin:3px 0"><span style="min-width:120px;font-size:11px">'+t2.name+'</span><div class="bar2" style="width:'+Math.round(100*t2.count/mxT)+'%;background:'+colv+'"></div><span style="font-size:11px;font-weight:700;margin-left:4px">'+t2.count+'</span></div>';});
+      return t+'</div>';
+    }
+    h3.push('<h2>TACKLES</h2>'+(SCT?'<div class="row">'+tkCard(usEvs,cn,'var(--cu)','gu')+tkCard(opEvs,opp2,'var(--co)','go')+'</div>':tkCard(usEvs,cn,'var(--cu)','gu')));
 
     }
 
