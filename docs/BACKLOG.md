@@ -24,9 +24,11 @@ Open items first, then decisions, then what has been done, newest first.
   names cleared (they named the Mayo ball carriers; fill in the tacklers from the video),
   David Clifford's assist on Paudie Clifford's point set to Point, Carney's 2-pointer and
   O'Shea's point nudged to the right side of the 40m arc; Enda Hession's assist moved from
-  38:40 to 37:50, just after Tommy Conroy's point. Open: a second Hession assist at 37:46,
-  tagged 2-pointer, duplicates it (delete one); whether Towey (Mayo) and Tom O'Sullivan and
-  Tadhg Morley (Kerry) started (tagged from the first minute; Stephen Coen never tagged).
+  38:40 to 37:50, just after Tommy Conroy's point (a duplicate 2-pointer assist deleted).
+  Line-up: Paul Towey started for Mayo in place of Conor Loftus (Towey now starting position
+  11 wearing 23, Loftus a sub wearing 11). Open: Kerry's Tom O'Sullivan (24 tags, first half
+  only) and Tadhg Morley (one tag, 1:22) look like starters but all 15 named Kerry starters
+  are tagged in the first minutes, so who they replaced is not known yet.
 - Plan (2026-10-23): tag the All-Ireland finals in painstaking detail and build the
   showcase reports (all three tiers) from them.
 - After tagging: read-only viewer mode enforced in the database (visitors can look, never
