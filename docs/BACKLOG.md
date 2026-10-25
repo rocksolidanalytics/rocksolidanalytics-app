@@ -80,6 +80,13 @@ new views and the per-match events fix together)
 - Kits: pitch map and dashboard dots in team colours.
 
 **App and tagging**
+- Desktop and wide-screen video tagger needs a proper layout (Tadhg 2026-10-25, screenshot
+  at about 1280 wide). With the dock open the right event column is hidden behind it, so only
+  half the events show; the left column stretches 4 events to huge buttons with tiny labels;
+  the bottom strip runs under the dock and Finish & save overlaps it; the video leaves a lot
+  of black space. Ideas: cap button height and grow the label, put the dock beside the right
+  column rather than over it (or move the right column next to the left when the dock is
+  open), keep the strip within the video width, and use the spare height for a bigger video.
 - Opposition starting order in the taggers' opposition grid (still 1 to 15 plus subs).
 - Help assistant: the `support-agent` function is not deployed, so Help always falls back.
 - Team sheet reader: optionally capture marks such as asterisks; optional stronger model for
