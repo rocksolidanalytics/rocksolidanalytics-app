@@ -56,7 +56,9 @@ Footer: Rock Solid Analytics, tier, report version, match date.
 - **Possessions** (team): shots plus the times the ball was lost (a shot that drops short
   counts once).
 - **Possessions** (player): times on the ball that were tagged: shots, ball lost, restarts
-  won, turnovers won, rucks won.
+  won, turnovers won, rucks won. Where Player possession tags exist (detailed video tagging),
+  each shot and free taken still counts as the shooter's possession, so the Player possession
+  outcomes Shot from play and Scoreable free taken are never needed on top of the shot.
 - **Restarts won**: every restart a side came away with, its own and the opposition's. On a
   restart the tagged player is whoever won the ball.
 - **Kept**: own restarts won clean or on the break.
