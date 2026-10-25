@@ -27,9 +27,9 @@ Open items first, then decisions, then what has been done, newest first.
   38:40 to 37:50, just after Tommy Conroy's point (a duplicate 2-pointer assist deleted).
   Line-up: Paul Towey started for Mayo in place of Conor Loftus (Towey now starting position
   11 wearing 23, Loftus a sub wearing 11). Tadhg Morley's one tag (1:22) was Mayo's Paul Towey,
-  fixed by Tadhg. Open: Kerry's Tom O'Sullivan (24 tags, first half only) looks like a
-  starter, but all 15 named Kerry starters are tagged in the first minutes, so who he
-  replaced is not known yet.
+  fixed by Tadhg. Kerry's line-up left as published (Tom O'Sullivan,
+  first half only, shows as a sub; it only affects starts and subs). Tagging checked and
+  done.
 - Plan (2026-10-23): tag the All-Ireland finals in painstaking detail and build the
   showcase reports (all three tiers) from them.
 - After tagging: read-only viewer mode enforced in the database (visitors can look, never
