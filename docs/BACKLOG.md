@@ -109,6 +109,13 @@ matter. About a week of careful work, screen by screen, with the same checks thr
   payment link or by bank transfer against an invoice. Terms: full refund within 14 days;
   3 months notice and a copy of the data if the service ever closes; seller Rock Solid
   Analytics, run by Tadhg Dornan, A63 AW20, Ireland.
+- **Reports for app users (2026-10-25).** Export opens on the full breakdown for every club
+  using the app (lifetime and free plan); the tiers only shape the per-game service. App
+  users build their own playlists; per-game customers get them made.
+- **Requests and bespoke work (2026-10-25).** A setting that already exists: show or set it
+  up. Good for every club: build it for all, free (report changes go into the next report
+  version). One club only: quote it as paid work, built as an option switched on for that
+  club, never a separate copy of the app. On the club page and in the terms.
 - **Early supporters.** Bray Emmets and St Jude's have lifetime access free.
 - **How to unlock a club** after payment (Supabase SQL editor; check the name and county
   match `clubs` first):
