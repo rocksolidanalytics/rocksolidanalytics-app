@@ -9781,7 +9781,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     h3.push('<h2>BREAKING BALL</h2><div class="card"><div class="row"><div class="col"><p class="m">'+cn+'</p><p style="font-size:22px;font-weight:800;color:var(--cu)">'+(ko.brkPct!=null?ko.brkPct+'%':'N/A')+'</p><p class="m">'+(ko.brkW||0)+' won / '+(ko.brkT||0)+' breaks</p></div><div class="col"><p class="m">'+opp2+'</p><p style="font-size:22px;font-weight:800;color:var(--co)">'+(oko.brkPct!=null?oko.brkPct+'%':'N/A')+'</p><p class="m">'+(oko.brkW||0)+' won / '+(oko.brkT||0)+' breaks</p></div></div></div>');
 
 
-    if(tier>=3) h3.push(gkHtml());
+    h3.push(gkHtml());
 
     // Turnovers: how each side used the ball it won back, and the turnovers that cost a score
     var tcAll=turnoverCost(evs), tcOpp=SCT?turnoverCost(flipT(evs)):null;

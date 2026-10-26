@@ -186,6 +186,10 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
   tagged for the team, full breakdown names every possession); an upgrade is a retag charged
   at the difference. Club page, terms and spec updated; "five full breakdowns cost more than
   lifetime".
+- Goalkeepers moved into Analysis (Tadhg 2026-10-26: kickout chains, xS and goalkeepers with
+  their own table are key selling points). Analysis tagging now includes the team-level video
+  events (attacks, goalkeeper actions, duels, breaking ball, throw-ins); the full breakdown
+  adds player possessions and assists. Club page leads the Analysis card with these three.
 
 ## Done 2026-10-24
 
