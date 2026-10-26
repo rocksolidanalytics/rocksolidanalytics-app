@@ -10,9 +10,9 @@ update this file and `REPORT_VERSION` together.
 
 | Tier | Name | Price (per game) | Includes |
 |---|---|---|---|
-| 1 | Summary | EUR 50 | Sections 1 to 6 |
-| 2 | Analysis | EUR 75 | Sections 1 to 15, plus up to 5 video playlists |
-| 3 | Full breakdown | EUR 150 | Sections 1 to 18, plus a clip playlist for every player |
+| 1 | Summary | EUR 50 | Sections 1 to 5 |
+| 2 | Analysis | EUR 75 | Sections 1 to 14, plus up to 5 video playlists |
+| 3 | Full breakdown | EUR 150 | Sections 1 to 17, plus a clip playlist for every player |
 
 Club members (lifetime access, EUR 850) get the full breakdown from Export. Every paid game
 is tagged to the full standard whatever tier is bought, so an upgrade is only a new report.
@@ -30,43 +30,47 @@ For a club's own game those sections cover the club only.
 Sections marked *video events* appear only when the detailed video events were tagged.
 
 1. **Result.** Both jerseys beside the score (stand-in jerseys when a side has no kit),
-   half-time and full-time table, scores from frees.
+   half-time and full-time table, scores from frees, and each side's scorers (goals-points,
+   frees in brackets) with a card beside any player booked (yellow, black or red); a booked
+   player who did not score is listed after the scorers.
 2. **Score by period.** Scores in 10-minute blocks.
 3. **Match flow.** The running score of both sides through the game (a dot per score, a larger
    dot for a goal, the half-time line), with lead changes, times level, each side's biggest
    lead and best scoring run.
-4. **Scorers.** Both sides, goals-points, frees in brackets.
-5. **Match stats.** Head-to-head bars in the two team colours, a main bar per measure with
+4. **Match stats.** Head-to-head bars in the two team colours, a main bar per measure with
    its breakdown underneath: possessions (shots and scores per 10 possessions), shots from
    play and scoreable frees (goal, point, 2-pointer, wide, saved, dropped short, blocked,
    woodwork, conversion), restarts won (own taken, own kept, theirs won, won clean, won on
    the break), tackles (contact, blocks and hooks, fouls, per 10 opposition possessions),
-   ball lost (by type, turnovers won), rucks and cards when tagged. *Video events:* duels won,
+   ball lost (by type, turnovers won), rucks when tagged. Above the bars, donuts of each side's
+   share of possessions, shots (from play and frees), restarts won and turnovers won. *Video events:* duels won,
    breaking ball won, throw-ins won (clean, on the break).
-6. **Shot maps.** Both sides, the app's own map: point, 2-pointer, goal, miss; frees as squares.
-7. **Where scores came from.** Each score put down to how the passage began (own or their
+5. **Shot maps.** Both sides, the app's own map: point, 2-pointer, goal, miss; frees as squares.
+6. **Where scores came from.** Each score put down to how the passage began (own or their
    restart, turnover by type, throw-in).
-8. **Attacks** (*video events*). Each side: attacks, share that led to a shot and a score, and
-   the share recycled, and the same by how the attack was made (run left, central or right, kick pass left, central or
+7. **Attacks** (*video events*). Each side: attacks, share that led to a shot and a score, and
+   the share recycled, a pitch map with an arrow per lane (left, central, right) for runs and
+   for kick or strike passes, longer for more attacks, and one into the square for high balls,
+   and the same figures by how the attack was made (run left, central or right, kick pass left, central or
    right, high ball to the square).
-9. **Restart maps.** Both sides, numbered with who won or lost each restart.
-10. **Restart to shot.** Both sides, short (under 45m), mid (45 to 65m), long (over 65m):
+8. **Restart maps.** Both sides, numbered with who won or lost each restart.
+9. **Restart to shot.** Both sides, short (under 45m), mid (45 to 65m), long (over 65m):
     restarts, won, led to a shot, led to a score.
-11. **Breaking ball.** Breaks won on each side's own restarts.
-12. **Goalkeepers** (*video events*). Each keeper: shots saved and parried, high balls caught,
+10. **Breaking ball.** Breaks won on each side's own restarts.
+11. **Goalkeepers** (*video events*). Each keeper: shots saved and parried, high balls caught,
     punched and dropped, sweeping clearances, goals conceded.
-13. **Turnovers.** Share of turnovers won that led to a shot and a score, each side; how many
+12. **Turnovers.** Share of turnovers won that led to a shot and a score, each side; how many
     times the ball was lost and how many of those led to a score against; ball lost by type
     (*both sides*).
-14. **Conversion by zone.** Shots from play by distance band and side of the pitch.
-15. **Expected scores from play.** Scores from play against what the chances usually bring
+13. **Conversion by zone.** Shots from play by distance band and side of the pitch.
+14. **Expected scores from play.** Scores from play against what the chances usually bring
     (pooled from every club's games at the sport).
-16. **Players** (*both sides*). Every player tagged: possessions, shots, scored, ball lost, ball
+15. **Players** (*both sides*). Every player tagged: possessions, shots, scored, ball lost, ball
     lost that led to a score against, restarts won, tackles. With video events also hand
     passes, kick (strike) passes, solos and assists.
-17. **Score assists** (*video events*). Each side: assists by player and type, who each player
+16. **Score assists** (*video events*). Each side: assists by player and type, who each player
     set up, and how many of the side's scores had an assist.
-18. **Tackles** (*both sides*). Tackles by player.
+17. **Tackles** (*both sides*). Tackles by player.
 
 Footer: Rock Solid Analytics, tier, report version, match date.
 

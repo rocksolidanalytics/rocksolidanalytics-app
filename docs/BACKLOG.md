@@ -155,7 +155,7 @@ columns. Wide screens now go up to 1200px.
 **Still to look at:** the opposition team page, match lists, Game film list, the video
 tagger in landscape, and button sizes in the live tagger on a big screen.
 
-## Done 2026-10-25
+## Done 2026-10-25 and 2026-10-26
 
 - Match report v2 (not deployed). A scouting match is reported for the match as a whole:
   both team names (not the container name), both teams in Turnovers, Ball lost by type,
@@ -166,6 +166,12 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
   Players. Video sections show only when those events are tagged. Spec in
   docs/REPORT-SPEC.md (v2). Checked on Kerry v Mayo (92 attacks, 32 assists, 11 keeper
   tags); a club game (Bray v Carnew) is the same as before apart from Match flow.
+- Report v2, after Tadhg's first look (2026-10-26): attacks followed by another attack of the
+  same side count as recycled; scorers and cards moved into the Result card (a card beside the
+  booked player; Cards left out of Match stats); donuts above the Match stats bars
+  (possessions, shots, restarts won, turnovers won); an attack pitch map per side with an
+  arrow per lane for runs and kick passes, longer for more, and one into the square for high
+  balls.
 
 ## Done 2026-10-24
 
