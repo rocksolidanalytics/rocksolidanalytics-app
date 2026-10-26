@@ -10,9 +10,9 @@ update this file and `REPORT_VERSION` together.
 
 | Tier | Name | Price (per game) | Includes |
 |---|---|---|---|
-| 1 | Summary | EUR 50 | Sections 1 to 6 |
-| 2 | Analysis | EUR 75 | Sections 1 to 15, plus up to 5 video playlists |
-| 3 | Full breakdown | EUR 150 | Sections 1 to 18, plus a clip playlist for every player |
+| 1 | Summary | EUR 50 | Sections 1, 3, 4, 5 and 6; in Match stats only shots and frees keep their breakdown |
+| 2 | Analysis | EUR 75 | Sections 1, 3 to 11 and 13 to 15, plus up to 5 video playlists; Attacks without its table |
+| 3 | Full breakdown | EUR 150 | All 18 sections, plus a clip playlist for every player |
 
 Club members (lifetime access, EUR 850) get the full breakdown from Export. Every paid game
 is tagged to the full standard whatever tier is bought, so an upgrade is only a new report.

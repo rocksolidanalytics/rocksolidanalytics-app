@@ -176,6 +176,11 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
   (leader per category for each side). A calculated player of the match was decided against:
   the tags favour forwards and a pick from figures invites argument. An analyst's own pick
   would need a new match field; not done.
+- Report tiers trimmed from the full breakdown: Summary is the result with scorers and
+  cards, match flow, key performers, match stats (breakdown under shots and frees only) and
+  shot maps; Analysis adds the full stats breakdown and the analysis sections, with the
+  attack map but not its table; score by period, goalkeepers, the attack table, players,
+  assists and tackles are full breakdown only. Pricing page lists updated to match.
 
 ## Done 2026-10-24
 
