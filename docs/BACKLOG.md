@@ -190,6 +190,12 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
   their own table are key selling points). Analysis tagging now includes the team-level video
   events (attacks, goalkeeper actions, duels, breaking ball, throw-ins); the full breakdown
   adds player possessions and assists. Club page leads the Analysis card with these three.
+- Hurling final prepared (2026-10-26): Galway v Limerick, Championship Final, 19 July 2026,
+  Croke Park, scouting match in the All-Ireland 2026 - Hurling container. Team sheets from
+  Wikipedia (Galway slots 1-26, Limerick 101-126), Galway maroon and Limerick green kits,
+  location off for keeper, possession, duel and breaking ball tags (as for the football).
+  Needs an owner account: sign up tadhgdornan+aihurling@gmail.com, then link it as owner.
+  Referee not set.
 
 ## Done 2026-10-24
 
