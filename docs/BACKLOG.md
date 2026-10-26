@@ -194,8 +194,7 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
   Croke Park, scouting match in the All-Ireland 2026 - Hurling container. Team sheets from
   Wikipedia (Galway slots 1-26, Limerick 101-126), Galway maroon and Limerick green kits,
   location off for keeper, possession, duel and breaking ball tags (as for the football).
-  Needs an owner account: sign up tadhgdornan+aihurling@gmail.com, then link it as owner.
-  Referee James Owens.
+  Owner account tadhgdornan+aihurling@gmail.com linked. Referee James Owens.
 - Usage log (2026-10-26, Tadhg asked for an email on how the whole app is doing): table
   usage_log (migration 20261026_usage_log.sql; insert only through the API, no reads), and the
   app logs opens, reports made, Fan Zone views, tagger opens and script errors. Privacy page
