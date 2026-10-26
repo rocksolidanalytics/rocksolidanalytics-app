@@ -12,10 +12,16 @@ update this file and `REPORT_VERSION` together.
 |---|---|---|---|
 | 1 | Summary | EUR 50 | Sections 1, 3, 4, 5 and 6; in Match stats only shots and frees keep their breakdown |
 | 2 | Analysis | EUR 75 | Sections 1, 3 to 11 and 13 to 15, plus up to 5 video playlists; Attacks without its table |
-| 3 | Full breakdown | EUR 150 | All 18 sections, plus a clip playlist for every player |
+| 3 | Full breakdown | EUR 200 | All 18 sections, plus a clip playlist for every player |
 
-Club members (lifetime access, EUR 850) get the full breakdown from Export. Every paid game
-is tagged to the full standard whatever tier is bought, so an upgrade is only a new report.
+Club members (lifetime access, EUR 850) get the full breakdown from Export.
+
+Tagging depth follows the tier bought. Summary and Analysis are tagged for the team (every
+event with its outcome and place, players named where the report needs them: scorers, cards,
+restart winners). The full breakdown names the player on every possession and adds the
+detailed video events (player possessions, attacks, assists, goalkeeper actions, duels). An
+upgrade to the full breakdown means tagging the game again, charged as the difference
+between the two prices.
 
 Tier 1 has no comparisons with other teams (no expected scores, no rankings).
 

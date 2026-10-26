@@ -181,6 +181,11 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
   shot maps; Analysis adds the full stats breakdown and the analysis sections, with the
   attack map but not its table; score by period, goalkeepers, the attack table, players,
   assists and tackles are full breakdown only. Pricing page lists updated to match.
+- Full breakdown price EUR 150 to EUR 200 (Tadhg 2026-10-26: Kerry v Mayo took hours even
+  from broadcast footage). Tagging depth now follows the tier bought (Summary and Analysis
+  tagged for the team, full breakdown names every possession); an upgrade is a retag charged
+  at the difference. Club page, terms and spec updated; "five full breakdowns cost more than
+  lifetime".
 
 ## Done 2026-10-24
 
