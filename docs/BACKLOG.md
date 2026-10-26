@@ -172,6 +172,10 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
   (possessions, shots, restarts won, turnovers won); an attack pitch map per side with an
   arrow per lane for runs and kick passes, longer for more, and one into the square for high
   balls.
+- Report: cleaner attack arrows (open chevron heads, count tags); Key performers in Summary
+  (leader per category for each side). A calculated player of the match was decided against:
+  the tags favour forwards and a pick from figures invites argument. An analyst's own pick
+  would need a new match field; not done.
 
 ## Done 2026-10-24
 

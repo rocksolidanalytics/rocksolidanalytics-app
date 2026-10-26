@@ -9666,12 +9666,30 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         '<p class="m" style="margin-top:6px;line-height:1.6;font-family:inherit">Possessions are shots plus the times the ball was lost, so per 10 possessions shows how much each side made of the ball. '+RSc+' won counts every restart a side came away with, its own and the opposition\u2019s. Conversion is scores from all attempts of that kind. A bar shows each side\u2019s share of the two figures.</p></div>';
     }
 
+    // Player breakdown: every player tagged (both sides in a scouting match). Where the detailed
+    // video events are tagged, possessions are the Player possession tags plus shots and frees taken.
+    var PACK=evs.some(function(e){return e.event_type==="Player possession";}), KW=/hurling|camogie/i.test(club.sport||"")?"Strike":"Kick";
+    function plRows(own,other,cost){
+      var pl={};function pr(n){return pl[n]||(pl[n]={nm:n,sh:0,g:0,p:0,lost:0,tk:0,rw:0,tw:0,ru:0,pp:0,hp:0,kp:0,so:0,as:0});}
+      own.forEach(function(e){var n=named(e);if(!n)return;var oc=String(e.outcome||"").toLowerCase(),r=pr(n);
+        if(isShotE(e)){r.sh++;if((e.score||0)===3)r.g++;else r.p+=(e.score||0);}
+        else if(e.event_type==="Possession lost"&&oc.indexOf("shot")<0)r.lost++;
+        else if(e.event_type==="Tackle")r.tk++;
+        else if(e.event_type==="Kickout"&&KO_WON.has(e.outcome))r.rw++;
+        else if(e.event_type==="Turnover won"||(e.event_type==="Turnover"&&/won/.test(oc)))r.tw++;
+        else if(e.event_type==="Ruck"&&/won/.test(oc))r.ru++;
+        else if(e.event_type==="Player possession"&&!/^(shot from play|scoreable free taken)$/.test(oc)){r.pp++;if(oc==="hand pass")r.hp++;else if(/^(kick|strike) pass$/.test(oc))r.kp++;else if(oc==="solo or carry")r.so++;}
+        else if(e.event_type==="Score assist")r.as++;});
+      other.forEach(function(e){var n=named(e);if(n&&e.event_type==="Kickout"&&/lost/i.test(e.outcome||""))pr(n).rw++;});
+      var pun={};(cost?cost.rows:[]).forEach(function(r){pun[r.nm]=r.k;});
+      return Object.keys(pl).map(function(k){var r=pl[k];r.poss=PACK?r.pp+r.sh:r.sh+r.lost+r.rw+r.tw+r.ru;r.pun=pun[r.nm]||0;return r;}).filter(function(r){return r.poss||r.tk||r.as;}).sort(function(a,b){return b.poss-a.poss||b.tk-a.tk;});
+    }
     // Build HTML
     var h3=[];
     h3.push('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+cn+' v '+opp2+'</title>');
     h3.push('<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet">');
     h3.push('<style>.sbx{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:10px}.rj{width:120px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}.rj svg{display:block}.rjn{font-size:12px;font-weight:800;line-height:1.2}@media(max-width:620px){.sbx{gap:4px}.rj{width:76px}.rj svg{width:50px;height:50px}.sbx .sb{font-size:28px;padding:12px 0}}</style>');
-    h3.push('<style>:root{--cu:'+cU+';--co:'+cO+'}@media print{:root{--cu:'+pU+';--co:'+pO+'}}.msk{display:flex;justify-content:space-between;font-size:13px;font-weight:800;margin-bottom:12px}.msgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 26px}.msg{margin-bottom:14px}.msl{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px;font-size:11.5px}.msl b{min-width:34px;font-weight:800}.msl b.go{text-align:right}.msl span{flex:1;text-align:center;color:#9fb0c6;font-weight:600}.msm .msl{font-size:14px}.msm .msl span{color:#eef2f8;font-weight:800}.msb{display:flex;gap:2px;height:6px}.msb i{display:block;height:100%;border-radius:2px}.msm .msb{height:13px}.msm .msb i{border-radius:3px}.msp{background:#0a1220;border-radius:10px;padding:10px 12px 2px;margin:8px 0 0 12px}.mss{margin-bottom:9px}.fgl{stroke:#1a2437;stroke-width:1}.fht{stroke:#536176;stroke-width:1;stroke-dasharray:3 3}.fax{fill:#536176;font-size:10px;font-family:monospace}.fend{fill:#eef2f8;font-size:13px;font-weight:800}.fdot{stroke:#0d1525;stroke-width:1.5}.fxg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}.fxb{background:#0a1220;border-radius:8px;padding:8px 10px}.fxv{font-size:15px;font-weight:800;margin-top:2px}.scl{min-width:200px}.scr{display:flex;justify-content:space-between;gap:8px;padding:3px 0;font-size:12px}.cdi{display:inline-block;width:8px;height:11px;border-radius:1.5px;vertical-align:-1px;margin-left:2px}.cdy{background:#f5c518}.cdr{background:#e0242b}.cdb{background:#111;box-shadow:0 0 0 1px #888}.dng{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:16px}.dnb{text-align:center}.dnb svg{display:block;margin:0 auto}.dnv{font-size:12px;font-weight:800}.dnv.gu{fill:var(--cu)}.dnv.go{fill:var(--co)}.dnl{font-size:12px;font-weight:800;margin-top:2px}.apm{display:block;width:100%;max-width:340px;height:auto;margin:8px auto 4px}.apk{display:flex;justify-content:center;gap:14px;font-size:10.5px;color:#9fb0c6;margin-bottom:6px}.apk svg{vertical-align:middle;margin-right:4px}.apf{fill:#163d27}.apl{fill:rgba(255,255,255,.55);font-size:9.5px;font-weight:700;letter-spacing:1.5px}.apt{fill:#0d1525;stroke-width:1.5}.apn{fill:#eef2f8;font-size:11px;font-weight:800}@media print{.apf{fill:#e6efe8}.apl{fill:#555}.apt{fill:#fff}.apn{fill:#111}}@media(max-width:620px){.msgrid{grid-template-columns:1fr}}@media print{.fgl{stroke:#ddd}.fend{fill:#111}.fdot{stroke:#f5f5f5}.fxb{background:#ececec}}@media print{.msp{background:#ececec}.msm .msl span{color:#111}.msl span{color:#444}}</style>');
+    h3.push('<style>:root{--cu:'+cU+';--co:'+cO+'}@media print{:root{--cu:'+pU+';--co:'+pO+'}}.msk{display:flex;justify-content:space-between;font-size:13px;font-weight:800;margin-bottom:12px}.msgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 26px}.msg{margin-bottom:14px}.msl{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px;font-size:11.5px}.msl b{min-width:34px;font-weight:800}.msl b.go{text-align:right}.msl span{flex:1;text-align:center;color:#9fb0c6;font-weight:600}.msm .msl{font-size:14px}.msm .msl span{color:#eef2f8;font-weight:800}.msb{display:flex;gap:2px;height:6px}.msb i{display:block;height:100%;border-radius:2px}.msm .msb{height:13px}.msm .msb i{border-radius:3px}.msp{background:#0a1220;border-radius:10px;padding:10px 12px 2px;margin:8px 0 0 12px}.mss{margin-bottom:9px}.fgl{stroke:#1a2437;stroke-width:1}.fht{stroke:#536176;stroke-width:1;stroke-dasharray:3 3}.fax{fill:#536176;font-size:10px;font-family:monospace}.fend{fill:#eef2f8;font-size:13px;font-weight:800}.fdot{stroke:#0d1525;stroke-width:1.5}.fxg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}.fxb{background:#0a1220;border-radius:8px;padding:8px 10px}.fxv{font-size:15px;font-weight:800;margin-top:2px}.scl{min-width:200px}.kpr{display:flex;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px solid #17223844;font-size:12.5px}.kpr:last-child{border-bottom:0}.kpc{min-width:118px;color:#9fb0c6;font-size:11px}.kpn{flex:1;font-weight:700}.kpv{font-weight:800;font-family:monospace}@media print{.kpc{color:#555}}.scr{display:flex;justify-content:space-between;gap:8px;padding:3px 0;font-size:12px}.cdi{display:inline-block;width:8px;height:11px;border-radius:1.5px;vertical-align:-1px;margin-left:2px}.cdy{background:#f5c518}.cdr{background:#e0242b}.cdb{background:#111;box-shadow:0 0 0 1px #888}.dng{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:16px}.dnb{text-align:center}.dnb svg{display:block;margin:0 auto}.dnv{font-size:12px;font-weight:800}.dnv.gu{fill:var(--cu)}.dnv.go{fill:var(--co)}.dnl{font-size:12px;font-weight:800;margin-top:2px}.apm{display:block;width:100%;max-width:340px;height:auto;margin:8px auto 4px}.apk{display:flex;justify-content:center;gap:14px;font-size:10.5px;color:#9fb0c6;margin-bottom:6px}.apk svg{vertical-align:middle;margin-right:4px}.apf{fill:#163d27}.apl{fill:rgba(255,255,255,.55);font-size:9.5px;font-weight:700;letter-spacing:1.5px}.apt{fill:#0d1525;stroke-width:1.5}.apn{fill:#eef2f8;font-size:11px;font-weight:800}@media print{.apf{fill:#e6efe8}.apl{fill:#555}.apt{fill:#fff}.apn{fill:#111}}@media(max-width:620px){.msgrid{grid-template-columns:1fr}}@media print{.fgl{stroke:#ddd}.fend{fill:#111}.fdot{stroke:#f5f5f5}.fxb{background:#ececec}}@media print{.msp{background:#ececec}.msm .msl span{color:#111}.msl span{color:#444}}</style>');
     h3.push('<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Barlow,system-ui,sans-serif;background:#070c18;color:#eef2f8;padding:20px;max-width:800px;margin:0 auto}h1{font-size:24px;font-weight:900}h2{font-size:11px;letter-spacing:2px;color:#34c967;margin:24px 0 10px;font-weight:800}.card{background:#0d1525;border-radius:12px;padding:14px 16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.3)}.row{display:flex;gap:12px;flex-wrap:wrap}.col{flex:1;min-width:180px}.sb{font-size:36px;font-weight:900;text-align:center;padding:12px}.gu{color:var(--cu)}.go{color:var(--co)}.m{font-size:11px;color:#536176;font-family:monospace}.tbl{width:100%;border-collapse:collapse;font-size:12px}.tbl th{text-align:left;padding:6px 8px;border-bottom:2px solid #172238;color:#536176;font-size:10px;letter-spacing:1px}.tbl td{padding:5px 8px;border-bottom:1px solid #17223844}.bar2{height:14px;border-radius:3px;display:inline-block;vertical-align:middle}@media print{body{background:#fff;color:#111;padding:10px}.card{background:#f5f5f5;box-shadow:none;border:1px solid #ddd}h2{color:#1e7a3e}}</style></head><body>');
 
     // Header
@@ -9706,6 +9724,23 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     pScOp.forEach(function(v){h3.push('<td style="text-align:center;font-weight:700;color:'+(v>0?'var(--co)':'#536176')+'">'+v+'</td>');});
     h3.push('</tr></table></div>');
     h3.push(flowHtml());
+    // Key performers: the leader of each side in each category, from the same counts as the
+    // Players table. Up to three leaders level are named; more than that are counted.
+    function keyPerf(rows,name,cls){
+      var cats=[["Top scorer",function(r){return r.g*3+r.p;},function(r){return gpTxt(r.g,r.p);}],["Most possessions",function(r){return r.poss;}],["Most assists",function(r){return r.as;}],["Most tackles",function(r){return r.tk;}],["Most turnovers won",function(r){return r.tw;}],["Most "+restarts_()+" won",function(r){return r.rw;}]];
+      var out=cats.map(function(c){
+        var v=Math.max.apply(null,[0].concat(rows.map(c[1])));
+        if(v<=0) return '';
+        var top=rows.filter(function(r){return c[1](r)===v;});
+        var nms=top.map(function(r){return r.nm;}), nm=top.length<=3?(nms.length>1?nms.slice(0,-1).join(', ')+' and '+nms[nms.length-1]:nms[0]):top.length+' players';
+        var fig=c[2]?(top.every(function(r){return c[2](r)===c[2](top[0]);})?c[2](top[0]):v+' pts'):v;
+        return '<div class="kpr"><span class="kpc">'+c[0]+'</span><b class="kpn">'+nm+'</b><span class="kpv '+cls+'">'+fig+'</span></div>';
+      }).join('');
+      if(!out) return '';
+      return '<div class="'+(SCT?'col card':'card')+'">'+(SCT?'<p class="'+cls+'" style="font-size:11px;font-weight:700;margin-bottom:6px">'+name.toUpperCase()+'</p>':'')+out+'</div>';
+    }
+    var kpU=keyPerf(plRows(usEvs,opEvs,null),cn,'gu'), kpO=SCT?keyPerf(plRows(opEvs,usEvs,null),opp2,'go'):'';
+    if(kpU||kpO) h3.push('<h2>KEY PERFORMERS</h2>'+(SCT?'<div class="row">'+kpU+kpO+'</div>':kpU)+'<p class="m" style="margin:-4px 0 12px;font-family:inherit">The leader in each category on the tagged figures'+(PACK?'; possessions count the player possession tags plus every shot and free taken':'')+'.</p>');
 
     // Scorers
 
@@ -9760,24 +9795,6 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }
 
     if(tier>=3){
-    // Player breakdown: every player tagged (both sides in a scouting match). Where the detailed
-    // video events are tagged, possessions are the Player possession tags plus shots and frees taken.
-    var PACK=evs.some(function(e){return e.event_type==="Player possession";}), KW=/hurling|camogie/i.test(club.sport||"")?"Strike":"Kick";
-    function plRows(own,other,cost){
-      var pl={};function pr(n){return pl[n]||(pl[n]={nm:n,sh:0,g:0,p:0,lost:0,tk:0,rw:0,tw:0,ru:0,pp:0,hp:0,kp:0,so:0,as:0});}
-      own.forEach(function(e){var n=named(e);if(!n)return;var oc=String(e.outcome||"").toLowerCase(),r=pr(n);
-        if(isShotE(e)){r.sh++;if((e.score||0)===3)r.g++;else r.p+=(e.score||0);}
-        else if(e.event_type==="Possession lost"&&oc.indexOf("shot")<0)r.lost++;
-        else if(e.event_type==="Tackle")r.tk++;
-        else if(e.event_type==="Kickout"&&KO_WON.has(e.outcome))r.rw++;
-        else if(e.event_type==="Turnover won"||(e.event_type==="Turnover"&&/won/.test(oc)))r.tw++;
-        else if(e.event_type==="Ruck"&&/won/.test(oc))r.ru++;
-        else if(e.event_type==="Player possession"&&!/^(shot from play|scoreable free taken)$/.test(oc)){r.pp++;if(oc==="hand pass")r.hp++;else if(/^(kick|strike) pass$/.test(oc))r.kp++;else if(oc==="solo or carry")r.so++;}
-        else if(e.event_type==="Score assist")r.as++;});
-      other.forEach(function(e){var n=named(e);if(n&&e.event_type==="Kickout"&&/lost/i.test(e.outcome||""))pr(n).rw++;});
-      var pun={};(cost?cost.rows:[]).forEach(function(r){pun[r.nm]=r.k;});
-      return Object.keys(pl).map(function(k){var r=pl[k];r.poss=PACK?r.pp+r.sh:r.sh+r.lost+r.rw+r.tw+r.ru;r.pun=pun[r.nm]||0;return r;}).filter(function(r){return r.poss||r.tk||r.as;}).sort(function(a,b){return b.poss-a.poss||b.tk-a.tk;});
-    }
     function plTable(rows,name,cls){
       var hd=PACK?['Poss','Hand','Kick'.replace('Kick',KW),'Solo','Shots','Scored','Assists','Lost','Lost → score','Restarts won','Tackles']:['Poss','Shots','Scored','Lost','Lost → score','Restarts won','Tackles'];
       var t='<div class="card" style="overflow-x:auto">'+(SCT?'<p class="'+cls+'" style="font-size:11px;font-weight:700;margin-bottom:6px">'+name.toUpperCase()+'</p>':'')+'<table class="tbl"><tr><th>Player</th>'+hd.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr>';
