@@ -6345,7 +6345,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         var a = {}, b = {}, ha = {}, hb = {}, ids = [], more = false;
         (r.data || []).forEach(function(x) {
           var sl = Number(x.position_slot);
-          ids.push(x.id);
+          ids.push({ id: x.id, slot: sl });
           if (!sl) return;
           var away = sl > 100, k = away ? sl - 100 : sl;
           if (k > 20) more = true;
@@ -6381,14 +6381,17 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         if (namesA[k] || helA[k]) rows.push({ club_id: match.club_id, match_id: match.id, player_name: namesA[k] || "", position_slot: k, is_start: k <= 15, helmet: helA[k] || null });
         if (namesB[k] || helB[k]) rows.push({ club_id: match.club_id, match_id: match.id, player_name: namesB[k] || "", position_slot: k + 100, is_start: k <= 15, helmet: helB[k] || null });
       });
-      // Editing writes the new rows first and only then removes the old ones, so a failed save
-      // never leaves the match without a line-up.
+      // Each row is written in place on its slot (a slot holds one row per match), which keeps
+      // anything else saved on it, such as the jersey number. Only then are rows for slots now
+      // left empty removed, so a failed save never leaves the match without a line-up.
       setSaveErr("");
       if (rows.length) {
-        var ins = await db.from("appearances").insert(rows);
+        var ins = await db.from("appearances").upsert(rows, { onConflict: "match_id,position_slot" });
         if (ins && ins.error) { setSaveErr("Could not save. Check your signal and try again."); setSaving(false); return; }
       }
-      if (edit && oldIds && oldIds.length) await db.from("appearances").delete().in("id", oldIds);
+      var keep = {}; rows.forEach(function(r) { keep[r.position_slot] = true; });
+      var gone = (edit && oldIds || []).filter(function(o) { return !keep[o.slot]; }).map(function(o) { return o.id; });
+      if (gone.length) await db.from("appearances").delete().in("id", gone);
       setSaving(false);
       onDone();
     }
