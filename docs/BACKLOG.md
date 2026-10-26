@@ -67,8 +67,7 @@ player ratings).
 - Pricing page line, maybe later: "less than one season of a single-team video
   subscription" (Hudl GAA packs about EUR 1,550 to 3,250 a year via an Irish reseller).
 
-**Detailed video events, next** (report v2 built 2026-10-25, see Done; still to do)
-- Check report v2 on Kerry v Mayo (Tadhg, morning of 2026-10-26), then deploy.
+**Detailed video events, next** (report v2 live since 2026-10-26, see Done; still to do)
 - Score by period uses the raw clock, so on video-tagged games the 30-40 block mixes
   first-half stoppage time with the start of the second half (Kerry v Mayo). Option: blocks
   per half (1st half 0-10 ... 30+, 2nd half 0-10 ... 30+). Needs a yes, it changes every report.
@@ -155,51 +154,73 @@ columns. Wide screens now go up to 1200px.
 **Still to look at:** the opposition team page, match lists, Game film list, the video
 tagger in landscape, and button sizes in the live tagger on a big screen.
 
-## Done 2026-10-25 and 2026-10-26
+## Done 2026-10-26
 
-- Match report v2 (not deployed). A scouting match is reported for the match as a whole:
-  both team names (not the container name), both teams in Turnovers, Ball lost by type,
-  Players and Tackles. New sections: Match flow (running score of both sides, lead changes,
-  times level, biggest lead, best run), Attacks (by how the attack was made, to a shot and
-  a score), Goalkeepers, Score assists (by player, who set up whom, scores with an assist);
-  duels, breaking ball and throw-ins in Match stats; hand, kick and solo and assists in
-  Players. Video sections show only when those events are tagged. Spec in
-  docs/REPORT-SPEC.md (v2). Checked on Kerry v Mayo (92 attacks, 32 assists, 11 keeper
-  tags); a club game (Bray v Carnew) is the same as before apart from Match flow.
-- Report v2, after Tadhg's first look (2026-10-26): attacks followed by another attack of the
-  same side count as recycled; scorers and cards moved into the Result card (a card beside the
-  booked player; Cards left out of Match stats); donuts above the Match stats bars
-  (possessions, shots, restarts won, turnovers won); an attack pitch map per side with an
-  arrow per lane for runs and kick passes, longer for more, and one into the square for high
-  balls.
-- Report: cleaner attack arrows (open chevron heads, count tags); Key performers in Summary
-  (leader per category for each side). A calculated player of the match was decided against:
-  the tags favour forwards and a pick from figures invites argument. An analyst's own pick
-  would need a new match field; not done.
-- Report tiers trimmed from the full breakdown: Summary is the result with scorers and
-  cards, match flow, key performers, match stats (breakdown under shots and frees only) and
-  shot maps; Analysis adds the full stats breakdown and the analysis sections, with the
-  attack map but not its table; score by period, goalkeepers, the attack table, players,
-  assists and tackles are full breakdown only. Pricing page lists updated to match.
-- Full breakdown price EUR 150 to EUR 200 (Tadhg 2026-10-26: Kerry v Mayo took hours even
-  from broadcast footage). Tagging depth now follows the tier bought (Summary and Analysis
-  tagged for the team, full breakdown names every possession); an upgrade is a retag charged
-  at the difference. Club page, terms and spec updated; "five full breakdowns cost more than
-  lifetime".
-- Goalkeepers moved into Analysis (Tadhg 2026-10-26: kickout chains, xS and goalkeepers with
-  their own table are key selling points). Analysis tagging now includes the team-level video
-  events (attacks, goalkeeper actions, duels, breaking ball, throw-ins); the full breakdown
-  adds player possessions and assists. Club page leads the Analysis card with these three.
-- Hurling final prepared (2026-10-26): Galway v Limerick, Championship Final, 19 July 2026,
-  Croke Park, scouting match in the All-Ireland 2026 - Hurling container. Team sheets from
-  Wikipedia (Galway slots 1-26, Limerick 101-126), Galway maroon and Limerick green kits,
-  location off for keeper, possession, duel and breaking ball tags (as for the football).
-  Owner account tadhgdornan+aihurling@gmail.com linked. Referee James Owens.
-- Usage log (2026-10-26, Tadhg asked for an email on how the whole app is doing): table
-  usage_log (migration 20261026_usage_log.sql; insert only through the API, no reads), and the
-  app logs opens, reports made, Fan Zone views, tagger opens and script errors. Privacy page
-  updated (kept 12 months; a clean-up job for older rows still to add). Feeds a daily email
-  (only when something happened) and a Monday weekly report to the staff inbox, 8am Irish time.
+**Match report v2 live** (deployed three times today; main at 683d0f5).
+- After Tadhg's first look: an attack followed by another attack of the same side counts as
+  recycled (shown beside to a shot and to a score). Scorers and cards moved into the Result
+  card, with a yellow, black or red card beside the booked player; Cards left out of Match
+  stats. Donuts above the Match stats bars (possessions, shots, restarts won, turnovers won).
+- Attack pitch map per side: an arrow per lane for runs (solid) and kick or strike passes
+  (dashed), longer for more attacks, and a dotted curve into the square for high balls;
+  open chevron heads, a start dot, the count in a tag at each head. The table by attack type
+  stays underneath (full breakdown only).
+- Key performers after Match flow: the leader of each side in top scorer, possessions,
+  assists, tackles, turnovers won and restarts won; up to three players level are named. A
+  calculated player of the match was decided against (the tags favour forwards and a pick
+  from figures invites argument); an analyst's own pick would need a new match field.
+
+**Report tiers.** Summary: result with scorers and cards, match flow, key performers, match
+stats (breakdown under shots and frees only, bars in flowing columns), shot maps. Analysis
+adds the full stats breakdown, where scores came from, attacks (map, no table), restart maps,
+restart to shot, breaking ball, goalkeepers, turnovers, conversion by zone, expected scores.
+Full breakdown adds score by period, the attack table, players, score assists, tackles.
+
+**Pricing and tagging depth.** Full breakdown EUR 150 to EUR 200 (Kerry v Mayo took hours even
+from broadcast footage). Tagging follows the tier bought: Summary for the team; Analysis adds
+attacks, goalkeeper actions, duels, breaking ball and throw-ins; the full breakdown names the
+player on every possession and adds assists. An upgrade is a retag charged at the difference.
+Club page (Analysis card leads with kickout chains, expected scores and goalkeepers; "five
+full breakdowns cost more than lifetime"), terms and report spec updated.
+
+**Instagram.** Slides for weeks 5 to 7 made in the week 1 to 4 style: week 5 Kerry v Mayo,
+what the numbers said (8 slides: cover, match flow facts, attack maps, kickout chains, xS,
+goalkeepers, key performers, call to book); week 6 match reports and the three levels; week
+7 live tagging. Plan spreadsheet updated: weeks 1 to 7 Ready; week 8 tag it back from the
+video; week 11 now the 10 free matches offer (founding clubs dropped); week 37 "free to
+start, no monthly subscription"; week 39 why I built it; week 48 three numbers to review from
+your season; week 51 lifetime access explained. Files in the session scratchpad (insta).
+
+**App reports by email.** Table usage_log (migration 20261026_usage_log.sql, run by Tadhg in
+the SQL editor): anyone can write, nobody can read through the API. The app logs opens,
+reports made, Fan Zone views, live and video tagger opens, and script errors (five per page
+load at most, network failures left out); writes are fire and forget. Privacy page says what
+is recorded and that it is kept 12 months (a clean-up job for older rows is still to add).
+Two scheduled tasks with the Supabase and Gmail connectors (added by Tadhg), emailing
+staff.rocksolidanalytics@gmail.com: Daily app report, 7:45am Irish time every day but Monday,
+only when something happened; Weekly app report, Mondays 7:44am, totals and week on week,
+most active and quiet clubs, sales signals, errors, Supabase advisors, site check. They run
+on the claude.ai plan, not the API credits used by the team sheet reader.
+
+**Hurling final ready to tag.** Galway v Limerick, Championship Final, 19 July 2026, Croke
+Park, referee James Owens, in the All-Ireland 2026 - Hurling container (owner account
+tadhgdornan+aihurling@gmail.com linked). Team sheets from Wikipedia (Galway slots 1-26,
+Limerick 101-126) with every helmet colour (Limerick 23 yellow and green); Galway maroon and
+Limerick green kits; location off for keeper, possession, duel and breaking ball tags.
+
+**Fix: saving an edited scout team sheet.** Editing a saved sheet inserted a second row on
+each slot, which the unique (match, slot) rule refused, so Save always failed. Rows are now
+written in place on their slot (keeping the jersey number and player link) and only slots
+left empty are removed. Tested against the database as the hurling owner, then rolled back.
+
+## Done 2026-10-25
+
+- Match report v2 built: a scouting match is reported for the match as a whole (both team
+  names, both teams in Turnovers, Ball lost by type, Players and Tackles). New sections: Match
+  flow, Attacks, Goalkeepers, Score assists; duels, breaking ball and throw-ins in Match stats;
+  hand, kick and solo and assists in Players. Video sections show only when those events are
+  tagged. Spec in docs/REPORT-SPEC.md (v2). Checked on Kerry v Mayo (92 attacks, 32 assists,
+  11 keeper tags); a club game (Bray v Carnew) the same as before apart from Match flow.
 
 ## Done 2026-10-24
 
