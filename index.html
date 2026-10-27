@@ -4120,6 +4120,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     if (p > f.periods) return p - f.periods === 1 ? "ET 1st half" : "ET 2nd half";
     return f.periods === 3 ? ["1st period", "2nd period", "3rd period"][p - 1] : (p === 1 ? "1st half" : "2nd half");
   }
+  function perShort(m, p) { var f = mFmt(m); p = Number(p) || 1; return p > f.periods ? "ET" + (p - f.periods) : (f.periods === 3 ? "P" : "H") + p; }
+  // "01:10:02" as "70:02": minutes keep counting past the hour.
+  function ttShort(tt) {
+    var p = String(tt || "").split(":").map(Number);
+    if (p.length !== 3 || p.some(isNaN)) return String(tt || "").slice(3);
+    return pad2(p[0] * 60 + p[1]) + ":" + pad2(p[2]);
+  }
   // { secs, scored }: playing seconds since a team last scored, for the tagger headers. Tags are
   // stamped on the match clock, offset by the start of their period. Tags later
   // than now are ignored, so the video tagger reads correctly after a rewind.
@@ -7710,6 +7717,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [urlInput, setUrlInput] = useState("");
     const [throwIn, setThrowIn] = useState(null);
     const [halfStart, setHalfStart] = useState(null);
+    // Video start of each period after the 2nd, as { 3: secs, 4: secs }.
+    const [pMarks, setPMarks] = useState({});
+    const [etOn, setEtOn] = useState(!!match.extra_time);
     const [curT, setCurT] = useState(0);
     const [playing, setPlaying] = useState(false);
     const [existing, setExisting] = useState(0);
@@ -7750,6 +7760,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         if (nxt.throwIn != null) dbp.video_throwin = nxt.throwIn;
         if (nxt.halfStart != null) dbp.video_halfstart = nxt.halfStart;
         if (Object.keys(dbp).length) db.from("matches").update(dbp).eq("id", match.id).then(function() {}, function() {});
+        if (patch.pMarks) db.from("matches").select("period_marks").eq("id", match.id).maybeSingle().then(function(r) {
+          var pm = Object.assign({}, r && r.data && r.data.period_marks || {});
+          Object.keys(patch.pMarks).forEach(function(k) { pm[k] = Object.assign({}, pm[k] || {}, { video_start: patch.pMarks[k] }); });
+          return db.from("matches").update({ period_marks: pm }).eq("id", match.id);
+        }).then(function() {}, function() {});
       } catch (e) {
       }
     }
@@ -7759,6 +7774,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         if (sv) {
           if (sv.throwIn != null) setThrowIn(sv.throwIn);
           if (sv.halfStart != null) setHalfStart(sv.halfStart);
+          if (sv.pMarks) setPMarks(sv.pMarks);
         }
       } catch (e) {
       }
@@ -7844,7 +7860,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             var pp = String(e.time_text || "").split(":").map(Number);
             var gs = pp.length === 3 ? pp[0] * 3600 + pp[1] * 60 + pp[2] : pp.length === 2 ? pp[0] * 60 + pp[1] : 0;
             var per2 = e.period == null ? 1 : Number(e.period);
-            if (per2 === 2 && sv2.halfStart != null) vt = sv2.halfStart + (gs - 1800);
+            var st2 = per2 === 1 ? sv2.throwIn : per2 === 2 ? sv2.halfStart : (sv2.pMarks || {})[per2];
+            if (st2 != null) vt = st2 + (gs - perStart(match, per2));
             else if (sv2.throwIn != null) vt = sv2.throwIn + gs;
           }
           return Object.assign({}, e, { _id: e.id, _vt: vt, _err: false, _saved: e.video_ts != null, period: e.period == null ? "1" : String(e.period) });
@@ -7974,10 +7991,31 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       if (v.paused) v.play();
       else v.pause();
     }
+    // The latest marked period start at or before vt decides the period.
     function vidToGame(vt) {
       if (throwIn == null || vt < throwIn) return null;
-      if (halfStart != null && vt >= halfStart) return { secs: 1800 + (vt - halfStart), period: 2 };
-      return { secs: vt - throwIn, period: 1 };
+      var p = 1, st = throwIn;
+      for (var k = 2; k <= 4; k++) { var a = markAt(k); if (a != null && vt >= a && a >= st) { p = k; st = a; } }
+      return { secs: perStart(match, p) + (vt - st), period: p };
+    }
+    var vF = mFmt(match), vLastP = etOn && vF.periods === 2 ? 4 : vF.periods;
+    function markAt(p) { return p === 1 ? throwIn : p === 2 ? halfStart : pMarks[p]; }
+    function nextMarkP() { for (var p = 1; p <= vLastP; p++) if (markAt(p) == null) return p; return null; }
+    function markLbl(p, cap) {
+      var b = p === 1 ? "throw-in" : p === vF.periods + 1 ? "extra time" : perName(match, p);
+      return cap ? b.charAt(0).toUpperCase() + b.slice(1) : b;
+    }
+    function markPer(p) {
+      if (p === 1) return markThrow();
+      if (p === 2) return markHalf();
+      var v = vRef.current;
+      if (!v) return;
+      v.pause();
+      var t2 = v.currentTime, nx = Object.assign({}, pMarks);
+      nx[p] = t2;
+      setPMarks(nx);
+      saveSync({ pMarks: nx });
+      say("\u2713 " + markLbl(p, true) + " @ " + fmtClip(t2));
     }
     function markThrow() {
       var v = vRef.current;
@@ -7995,7 +8033,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var t2 = v.currentTime;
       setHalfStart(t2);
       saveSync({ halfStart: t2 });
-      say("\u2713 2nd half @ " + fmtClip(t2));
+      say("\u2713 " + markLbl(2, true) + " @ " + fmtClip(t2));
     }
     function onEventTap(ev) {
       if (throwIn == null) {
@@ -8148,7 +8186,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         document.removeEventListener("visibilitychange", onHide);
       };
     }, []);
-    function stampVideoTimes(tIn, hStart) {
+    function stampVideoTimes(tIn, hStart, pm) {
       if (tIn == null) return;
       var rows = taggedRef.current || [];
       var changed = {};
@@ -8158,11 +8196,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         var gs = pp.length === 3 ? pp[0] * 3600 + pp[1] * 60 + pp[2] : pp.length === 2 ? pp[0] * 60 + pp[1] : 0;
         var per2 = r.period == null ? 1 : Number(r.period);
         var vt = null;
-        if (per2 === 2) {
-          if (hStart != null) vt = hStart + (gs - 1800);
-        } else {
-          vt = tIn + gs;
-        }
+        var st = per2 === 1 ? tIn : per2 === 2 ? hStart : (pm || {})[per2];
+        if (st != null) vt = st + (gs - perStart(match, per2));
         if (vt == null || vt < 0) return;
         changed[r._id] = vt;
         db.from("events").update({ video_ts: vt }).eq("id", r._id).then(function() {
@@ -8179,8 +8214,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }
     }
     useEffect(function() {
-      if (throwIn != null) stampVideoTimes(throwIn, halfStart);
-    }, [throwIn, halfStart, tagged.length]);
+      if (throwIn != null) stampVideoTimes(throwIn, halfStart, pMarks);
+    }, [throwIn, halfStart, pMarks, tagged.length]);
     function findDef(etype) {
       var d = _tevs.filter(function(e) {
         return EV_TYPE[e.id] === etype;
@@ -8770,7 +8805,15 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         return /* @__PURE__ */ React.createElement("button", { key: b[0], onClick: function() {
           seek(b[1]);
         }, style: { flex: 1, minHeight: 44, padding: "6px 0", borderRadius: RAD.md, background: C.bgCard, border: "1px solid " + C.border, color: C.slate, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: MONO } }, b[0]);
-      })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "6px 8px", borderBottom: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("button", { onClick: markThrow, style: { flex: 1, minHeight: 44, padding: "7px 4px", borderRadius: RAD.md, cursor: "pointer", fontSize: 10.5, fontWeight: 700, background: throwIn != null ? C.greenB + ALPHA.soft : C.bgCard, border: "1px solid " + (throwIn != null ? C.greenB : C.border), color: throwIn != null ? C.greenB : C.slate } }, throwIn != null ? "\u2713 Throw-in " + fmtClip(throwIn) : "\u2691 Mark throw-in"), /* @__PURE__ */ React.createElement("button", { onClick: markHalf, disabled: throwIn == null, style: { flex: 1, minHeight: 44, padding: "7px 4px", borderRadius: RAD.md, cursor: throwIn == null ? "default" : "pointer", fontSize: 10.5, fontWeight: 700, opacity: throwIn == null ? 0.4 : 1, background: halfStart != null ? C.gold + ALPHA.soft : C.bgCard, border: "1px solid " + (halfStart != null ? C.gold : C.border), color: halfStart != null ? C.gold : C.slate } }, halfStart != null ? "\u2713 2nd half " + fmtClip(halfStart) : "\u2691 Mark 2nd half")), throwIn != null && halfStart != null && halfStart - throwIn < 1800 && /* @__PURE__ */ React.createElement("div", { style: { margin: "0 8px 6px", padding: "7px 10px", borderRadius: RAD.md, background: C.red + ALPHA.faint, border: "1px solid " + C.red + ALPHA.mid, color: C.red, fontSize: 10.5, lineHeight: 1.45 } }, "\u26A0 2nd half is only " + Math.round((halfStart - throwIn) / 60) + " min after the throw-in \u2014 shorter than a 30-min half. Double-check you marked the right moment (you can still carry on)."));
+      })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6, padding: "6px 8px", borderBottom: "1px solid " + C.border } }, Array.from({ length: vLastP }, function(_, i) { return i + 1; }).map(function(p) {
+        var at = markAt(p), can = p === 1 || markAt(p - 1) != null, col = p === 1 ? C.greenB : C.gold;
+        return React.createElement("button", { key: p, onClick: function() { markPer(p); }, disabled: !can, style: { flex: "1 1 30%", minHeight: 44, padding: "7px 4px", borderRadius: RAD.md, cursor: can ? "pointer" : "default", fontSize: 10.5, fontWeight: 700, opacity: can ? 1 : 0.4, background: at != null ? col + ALPHA.soft : C.bgCard, border: "1px solid " + (at != null ? col : C.border), color: at != null ? col : C.slate } }, at != null ? "\u2713 " + markLbl(p, true) + " " + fmtClip(at) : "\u2691 Mark " + markLbl(p));
+      }), vF.periods === 2 && !etOn && halfStart != null && React.createElement("button", { onClick: function() {
+        if (!window.confirm("Did this match go to extra time? Two more marks appear: the start of each extra-time half.")) return;
+        setEtOn(true);
+        match.extra_time = true;
+        db.from("matches").update({ extra_time: true }).eq("id", match.id).then(function() {}, function() {});
+      }, style: { flex: "0 0 auto", minHeight: 44, padding: "7px 10px", borderRadius: RAD.md, cursor: "pointer", fontSize: 10.5, fontWeight: 700, background: "none", border: "1px dashed " + C.border, color: C.slateD } }, "+ Extra time")), throwIn != null && halfStart != null && halfStart - throwIn < vF.half && /* @__PURE__ */ React.createElement("div", { style: { margin: "0 8px 6px", padding: "7px 10px", borderRadius: RAD.md, background: C.red + ALPHA.faint, border: "1px solid " + C.red + ALPHA.mid, color: C.red, fontSize: 10.5, lineHeight: 1.45 } }, "\u26A0 " + markLbl(2, true) + " is only " + Math.round((halfStart - throwIn) / 60) + " min after the throw-in \u2014 shorter than a " + vF.half / 60 + "-min " + (vF.periods === 3 ? "period" : "half") + ". Double-check you marked the right moment (you can still carry on)."));
     }
     var dockX = !land || dockOpen;
     // Landscape: the event buttons run down both sides of the video (first half on the left,
@@ -8787,7 +8830,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }
       return [col(evs.slice(0, half), "l"), col(evs.slice(half), "r")];
     }
-    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb rsa-vt", style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", overflow: "hidden" } }, !land && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", padding: "8px 10px", borderBottom: "1px solid " + C.border, gap: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, title: "Back", style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-12px -7px", borderRadius: RAD.lg } }, /* @__PURE__ */ React.createElement(Back, { s: 18 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, letterSpacing: 1, color: TC.us, fontFamily: MONO } }, teamMark(TC.usCrest, TC.usKit), nmH.toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 19, fontWeight: 800, lineHeight: 1.1 } }, nota(us), " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slateD } }, "(", us.g * 3 + us.p, ")"), _ssV("us"))), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", minWidth: 78 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: curGame ? C.greenB : C.slateD, fontFamily: MONO, lineHeight: 1.1 } }, curGame ? fmtClip(curGame.secs) : "--:--"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 1, color: C.slateD, fontFamily: MONO } }, curGame ? curGame.period === 1 ? "1ST HALF" : "2ND HALF" : "BEFORE " + RST(), " \xB7 ", fmtClip(curT))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, letterSpacing: 1, color: TC.opp, fontFamily: MONO, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, teamMark(TC.oppCrest, TC.oppKit), nmA.toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 19, fontWeight: 800, lineHeight: 1.1 } }, nota(op), " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slateD } }, "(", op.g * 3 + op.p, ")"), _ssV("opp"))))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: land ? "row" : "column", overflow: "hidden", position: "relative" } }, land && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 8, left: 8, zIndex: 6, display: "flex", alignItems: "center", gap: 7 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, title: "Back", style: { background: "none", border: "none", boxShadow: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, margin: -8.5 } }, React.createElement("span", { style: { background: LED.glass, border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slate, display: "flex", padding: 5 } }, /* @__PURE__ */ React.createElement(Back, { s: 15 }))), /* @__PURE__ */ React.createElement("div", { style: { background: LED.glass, border: "1px solid " + C.border, borderRadius: RAD.md, padding: "5px 11px", fontFamily: MONO, fontSize: 12, fontWeight: 800, display: "flex", gap: 8, alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.gold } }, curGame ? "H" + curGame.period + " " + fmtClip(curGame.secs) : "--:--"), /* @__PURE__ */ React.createElement("span", { style: { color: TC.us } }, teamTag(nmH, nmA), " ", nota(us)), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, ":"), /* @__PURE__ */ React.createElement("span", { style: { color: TC.opp } }, nota(op), " ", teamTag(nmA, nmH)))), land && !dockOpen && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 8, right: 8, zIndex: 6, display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
+    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb rsa-vt", style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", overflow: "hidden" } }, !land && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", padding: "8px 10px", borderBottom: "1px solid " + C.border, gap: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, title: "Back", style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-12px -7px", borderRadius: RAD.lg } }, /* @__PURE__ */ React.createElement(Back, { s: 18 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, letterSpacing: 1, color: TC.us, fontFamily: MONO } }, teamMark(TC.usCrest, TC.usKit), nmH.toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 19, fontWeight: 800, lineHeight: 1.1 } }, nota(us), " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slateD } }, "(", us.g * 3 + us.p, ")"), _ssV("us"))), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", minWidth: 78 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: curGame ? C.greenB : C.slateD, fontFamily: MONO, lineHeight: 1.1 } }, curGame ? fmtClip(curGame.secs) : "--:--"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, letterSpacing: 1, color: C.slateD, fontFamily: MONO } }, curGame ? perName(match, curGame.period).toUpperCase() : "BEFORE " + RST(), " \xB7 ", fmtClip(curT))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, letterSpacing: 1, color: TC.opp, fontFamily: MONO, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, teamMark(TC.oppCrest, TC.oppKit), nmA.toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 19, fontWeight: 800, lineHeight: 1.1 } }, nota(op), " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slateD } }, "(", op.g * 3 + op.p, ")"), _ssV("opp"))))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: land ? "row" : "column", overflow: "hidden", position: "relative" } }, land && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 8, left: 8, zIndex: 6, display: "flex", alignItems: "center", gap: 7 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, title: "Back", style: { background: "none", border: "none", boxShadow: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, margin: -8.5 } }, React.createElement("span", { style: { background: LED.glass, border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slate, display: "flex", padding: 5 } }, /* @__PURE__ */ React.createElement(Back, { s: 15 }))), /* @__PURE__ */ React.createElement("div", { style: { background: LED.glass, border: "1px solid " + C.border, borderRadius: RAD.md, padding: "5px 11px", fontFamily: MONO, fontSize: 12, fontWeight: 800, display: "flex", gap: 8, alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.gold } }, curGame ? perShort(match, curGame.period) + " " + fmtClip(curGame.secs) : "--:--"), /* @__PURE__ */ React.createElement("span", { style: { color: TC.us } }, teamTag(nmH, nmA), " ", nota(us)), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, ":"), /* @__PURE__ */ React.createElement("span", { style: { color: TC.opp } }, nota(op), " ", teamTag(nmA, nmH)))), land && !dockOpen && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 8, right: 8, zIndex: 6, display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
       var d2 = document;
       if (d2.fullscreenElement) {
         d2.exitFullscreen && d2.exitFullscreen();
@@ -8810,7 +8853,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         // Landscape keeps the halves and saving in reach without opening the side menu: the next
         // half to mark (gold until the throw-in is marked), then Save.
         land && React.createElement("div", { style: { width: 1, alignSelf: "stretch", background: C.border, margin: "2px 3px" } }),
-        land && (throwIn == null || halfStart == null) && React.createElement("button", { onClick: throwIn == null ? markThrow : markHalf, style: { flexShrink: 0, minHeight: 40, padding: "8px 10px", borderRadius: RAD.md, cursor: "pointer", fontSize: 11, fontWeight: 800, whiteSpace: "nowrap", background: throwIn == null ? C.gold + ALPHA.soft : C.bgCard, border: "1px solid " + (throwIn == null ? C.gold : C.border), color: throwIn == null ? C.gold : C.slate } }, throwIn == null ? "\u2691 Mark throw-in" : "\u2691 Mark 2nd half"),
+        land && nextMarkP() != null && React.createElement("button", { onClick: function() { markPer(nextMarkP()); }, style: { flexShrink: 0, minHeight: 40, padding: "8px 10px", borderRadius: RAD.md, cursor: "pointer", fontSize: 11, fontWeight: 800, whiteSpace: "nowrap", background: throwIn == null ? C.gold + ALPHA.soft : C.bgCard, border: "1px solid " + (throwIn == null ? C.gold : C.border), color: throwIn == null ? C.gold : C.slate } }, "\u2691 Mark " + markLbl(nextMarkP())),
         land && React.createElement("button", { onClick: finish, style: { flexShrink: 0, minHeight: 40, padding: "8px 12px", borderRadius: RAD.md, cursor: "pointer", fontSize: 11, fontWeight: 800, whiteSpace: "nowrap", background: C.greenB, border: "none", color: C.bg } }, "\u2713 Save"));
       if (t.ev && t.ev.pitch && !t.loc && !t.outcome && !t.skip) return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: tc2, fontWeight: 800 } }, t.ev.l, " \xB7 TAP THE PITCH \u2191"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
         tx.current.skip = true;
@@ -9037,7 +9080,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           },
           style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 6px", borderBottom: "1px solid " + C.border, cursor: "pointer", opacity: r._err ? 0.6 : 1 }
         },
-        /* @__PURE__ */ _plCb, React.createElement("span", { style: { fontFamily: MONO, fontSize: 11, fontWeight: 700, color: C.slateD, minWidth: 38 } }, (r.time_text || "").slice(3)),
+        /* @__PURE__ */ _plCb, React.createElement("span", { style: { fontFamily: MONO, fontSize: 11, fontWeight: 700, color: C.slateD, minWidth: 38 } }, ttShort(r.time_text)),
         /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9.5, fontWeight: 700, fontFamily: MONO, color: r.period === "1" ? C.greenB : C.gold, border: "1px solid " + (r.period === "1" ? C.greenB : C.gold) + ALPHA.mid, borderRadius: RAD.md, padding: "1px 5px" } }, r.period === "1" ? "H1" : "H2"),
         /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { color: r.team === "us" ? TC.us : TC.opp, fontWeight: 700 } }, evLabel(r.event_type)), " ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, "\xB7 ", r.outcome), r.player ? /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, " \xB7 ", r.player) : null, r.x == null ? /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 10 } }, " \xB7 no loc") : null),
         r._err ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.red, fontFamily: MONO } }, "not saved") : null
@@ -9272,8 +9315,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     elements.push(React.createElement("line", { key: "mid", x1: pad.l, y1: mid, x2: pad.l+cw, y2: mid, stroke: C.borderB, strokeWidth: 0.5 }));
     
     // Half-time line
-    elements.push(React.createElement("line", { key: "ht", x1: mx(1800), y1: pad.t, x2: mx(1800), y2: pad.t+ch, stroke: C.borderB, strokeWidth: 0.5, strokeDasharray: "3,2" }));
-    elements.push(React.createElement("text", { key: "htl", x: mx(1800), y: pad.t+ch+12, textAnchor: "middle", fill: C.slateD, fontSize: 7, fontFamily: "Barlow,system-ui,sans-serif" }, "HT"));
+    var _htS = perStart(match, 2);
+    elements.push(React.createElement("line", { key: "ht", x1: mx(_htS), y1: pad.t, x2: mx(_htS), y2: pad.t+ch, stroke: C.borderB, strokeWidth: 0.5, strokeDasharray: "3,2" }));
+    elements.push(React.createElement("text", { key: "htl", x: mx(_htS), y: pad.t+ch+12, textAnchor: "middle", fill: C.slateD, fontSize: 7, fontFamily: "Barlow,system-ui,sans-serif" }, "HT"));
     
     // Time labels
     [0,10,20,30,40,50,60].forEach(function(m2, i) {
