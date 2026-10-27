@@ -77,6 +77,20 @@ player ratings).
 - The event editor offers per-match events, but `matches` has no `custom_events` column, so
   saving events for a single match fails; club-wide events work (found 2026-10-23).
 
+**Match format: half length, extra time, penalties, three-period games** (Tadhg 2026-10-27).
+- Today every half is taken as 30 minutes (1800 seconds is written into the live tagger clock,
+  the video tagger, Game film, the half-time card, the restart timeline, minutes left in win
+  probability and the 10-minute blocks). Inter-county halves are 35 minutes, so the second half
+  clock restarts at 30:00 while first-half time runs to 35+ (seen in Kerry v Mayo).
+- No extra time: only periods 1 and 2 exist. No penalty shootout. No three-period training game.
+- Plan: a match format chosen when the match is set up (30 or 35 minute halves, default by
+  grade, Inter-county 35; three periods of 20 for training), periods 3 and 4 for extra time
+  (2 x 10, clock running on), and a penalty shootout as its own tagging step that decides the
+  winner without adding to the score. Every place that assumes 1800 reads the half length
+  instead; reports and stats show extra time as its own periods.
+- Needs a decision on where the format is stored (a new matches column, or the match entry in
+  tag_settings) before building.
+
 **Analysis, later**
 - Expected scores: once a sport passes about 2,000 shots from play, replace zones with a
   smooth distance-and-angle model so every shot gets its own expected value.
