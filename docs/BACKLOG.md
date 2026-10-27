@@ -163,6 +163,12 @@ to the top of Match and spans the width, so New match, Import data, Edit match i
 Squad pair up; the player join code line sits under Fan Zone. Phones are unchanged apart from
 Resume coming first. Deployed (main at d49219f, with the club page wording fix below).
 
+**Video tagger landscape: halves and Save in reach.** In landscape the Mark throw-in, Mark
+2nd half and Finish & save controls only lived in the side menu (the three-line button), so
+a first-time user saw no way to start or save. The bottom strip now shows the next half to
+mark (Mark throw-in in gold until it is set, then Mark 2nd half, then nothing) and a green
+Save, beside the seek buttons. Portrait is unchanged.
+
 **Club page: per-game intro fixed** (committed 2026-10-26, live today). The "Or we tag it for
 you" intro still said every game is tagged in full whatever level is booked; it now says games
 are tagged to the depth of the level chosen, matching the terms.
