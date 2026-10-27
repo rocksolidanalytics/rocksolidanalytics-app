@@ -167,7 +167,7 @@ Resume coming first. Deployed (main at d49219f, with the club page wording fix b
 2nd half and Finish & save controls only lived in the side menu (the three-line button), so
 a first-time user saw no way to start or save. The bottom strip now shows the next half to
 mark (Mark throw-in in gold until it is set, then Mark 2nd half, then nothing) and a green
-Save, beside the seek buttons. Portrait is unchanged.
+Save, beside the seek buttons. Portrait is unchanged. Deployed (8e42cb6).
 
 **Video tagger takes YouTube links.** The link box (now "YouTube / Dropbox / URL") accepts a
 YouTube link and plays it in a YouTube player; a small stand-in gives the tagger the same
@@ -177,14 +177,24 @@ crash, and a reload only needs the link again. The link is saved on the match wh
 YouTube link yet (Game film can then use it). Clip export says it needs a file. Checked with a
 stand-in YouTube player (the test machine cannot reach YouTube): loads, tags, sends seeks.
 Still to check on the iPad with a real YouTube video: seek accuracy and tagging timestamps.
+Deployed (main at f31042c).
 
 **Video tagger: saving the video on load, tried and reverted.** Saving a picked video to the
 device as soon as it loaded (with an IndexedDB fallback) went live at a9be286. Tadhg then
 picked a match video from Photos on the iPad and Safari crashed ("A problem repeatedly
 occurred"), most likely from copying a very large file into browser storage while it was
 also playing. Reverted (main back to the earlier behaviour: the video is only kept at Finish
-& save). Open: find a way to keep the video across an iPad tab reload without copying the
-whole file in the page, or tell the analyst on iPad to finish and save before leaving the tab.
+& save; revert deployed at 548a40f). Tadhg then got repeated crashes picking from Photos even
+after the revert: picking from Photos makes the iPad copy (and sometimes convert) the whole
+file first, which can run Safari out of memory on its own. Advice for the iPad: save the video
+to Files and pick it from there, or use a YouTube or Dropbox link (YouTube added below). Open:
+find a way to keep a local video across an iPad tab reload without copying the whole file in
+the page.
+
+**iPad wallpaper.** 2732 x 2732 PNG (works in both orientations): the goalposts logo on the
+app's dark background with a green glow, ROCK SOLID ANALYTICS (Analytics in green) and GAA
+STATS & VIDEO underneath, a faint pitch outline behind. Made from the 512px app icon, so a
+larger logo file would make it sharper. Sent to Tadhg; not in the repository.
 
 **Club page: per-game intro fixed** (committed 2026-10-26, live today). The "Or we tag it for
 you" intro still said every game is tagged in full whatever level is booked; it now says games
