@@ -32,3 +32,15 @@ Screens behind sign-in
   (eq filters, single/maybeSingle), writes that succeed, and `INITIAL_SESSION` fired on subscribe.
 - Example, an analyst with no club lands on Onboarding:
   `openApp('../index.html', { fixtures: { session: { user: { id: 'u1' } }, tables: { profiles: [{ id: 'u1', club_id: null }] } } })`
+
+Browser tests (`e2e/`)
+- `node e2e/run.js` runs every `e2e/test_*.js` in Chromium against the real `index.html` and prints PASS or FAIL
+  per test with each failed check; it exits 1 on any failure. `node e2e/run.js youtube` runs the tests whose
+  file name contains `youtube`. All seven take about 90 seconds.
+- Covered: match format helpers, live tagger timing and extra time, new match length, penalty shootout,
+  video tagger period marks (35 minutes with extra time, 3 x 20, marks read from the match on another device),
+  the landscape strip, and YouTube in the video tagger and Game film through a stand-in player.
+- Everything is synthetic: a made-up club, the seeded players from `fixtures.js` and `e2e/footage.webm`,
+  a generated one-minute test clip. Never put real club data or exports in this folder.
+- Screenshots go to `e2e/out/`, which is not committed. A new test exports `async function(t)` and records checks
+  with `t.eq(label, got, want)` or `t.ok(label, condition)`; `e2e/lib.js` has the shared steps.
