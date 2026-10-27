@@ -77,19 +77,15 @@ player ratings).
 - The event editor offers per-match events, but `matches` has no `custom_events` column, so
   saving events for a single match fails; club-wide events work (found 2026-10-23).
 
-**Match format: half length, extra time, penalties, three-period games** (Tadhg 2026-10-27).
-- Today every half is taken as 30 minutes (1800 seconds is written into the live tagger clock,
-  the video tagger, Game film, the half-time card, the restart timeline, minutes left in win
-  probability and the 10-minute blocks). Inter-county halves are 35 minutes, so the second half
-  clock restarts at 30:00 while first-half time runs to 35+ (seen in Kerry v Mayo).
-- No extra time: only periods 1 and 2 exist. No penalty shootout. No three-period training game.
-- Plan: a match format chosen when the match is set up (30 or 35 minute halves, default by
-  grade, Inter-county 35; three periods of 20 for training), periods 3 and 4 for extra time
-  (2 x 10, clock running on), and a penalty shootout as its own tagging step that decides the
-  winner without adding to the score. Every place that assumes 1800 reads the half length
-  instead; reports and stats show extra time as its own periods.
-- Needs a decision on where the format is stored (a new matches column, or the match entry in
-  tag_settings) before building.
+**Match format, still open** (built 2026-10-27, see Done).
+- Edit match does not offer the match length. Changing it on a match already tagged would move
+  its second-half times, so it should only be allowed before tagging starts.
+- The stats half filter (1st / 2nd) leaves extra-time and 3rd-period events in All only, and
+  the report score-by-half table has no extra-time rows yet.
+- Club grades are Senior / Intermediate / Junior, with no Inter-county, so 35 minutes can't
+  default from grade. The last choice is remembered per club instead.
+- Penalty kicks are kept on the match (matches.penalties), not as events, so they are not in
+  player stats or the timeline.
 
 **Analysis, later**
 - Expected scores: once a sport passes about 2,000 shots from play, replace zones with a
@@ -198,6 +194,22 @@ controls, keyboard and full-screen button off, and the tagger draws its own bar 
 video: play/pause, a scrub bar and the time (top of the video in landscape, so it clears the
 scoreboard; bottom in portrait). YouTube still shows its logo and, while paused, can show a
 title or end screen; that cannot be turned off. Not yet deployed.
+
+**Match format: 35-minute halves, extra time, penalties, 3 x 20.** New matches table columns
+(half_mins, periods, extra_time, et_mins, period_marks, penalties), all empty for existing
+matches, which keeps their old meaning (two 30-minute halves), so nothing already tagged
+moves. New match asks for the length: 2 x 30, 2 x 35 or 3 x 20 (last choice kept per club).
+Live tagger: the clock, period labels, half-time card, time since score and win probability
+read the match length. In the last 5 minutes of a 2-half game, level or in the championship,
+EXTRA TIME ends normal time and runs ET 1st and 2nd halves (periods 3 and 4, 10 minutes, clock
+running on to 70:00 on a 35-minute match). Level after ET, PENALTIES opens the shootout, then
+the match ends. The clock now reads past 60 minutes (it showed 10:02 for 70:02 before, which
+also hit long stoppage time on 30-minute games). Video tagger: one mark per period, + Extra time
+adds two ET marks, and Penalty shootout appears once the ET 2nd half is marked. Shootout: shirt
+number (optional), Scored or Missed per kick, undo, saved on the phone as you go; Finish saves
+the winner and kicks and leaves the score alone. The dashboard and report show "won 4-3 on
+penalties". Game film seeks and the timeline half-time line use the match length. Not yet
+deployed.
 
 **Video tagger: saving the video on load, tried and reverted.** Saving a picked video to the
 device as soon as it loaded (with an IndexedDB fallback) went live at a9be286. Tadhg then
