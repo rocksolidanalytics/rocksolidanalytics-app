@@ -154,6 +154,15 @@ columns. Wide screens now go up to 1200px.
 **Still to look at:** the opposition team page, match lists, Game film list, the video
 tagger in landscape, and button sizes in the live tagger on a big screen.
 
+## Done 2026-10-27
+
+**Home screen in even rows on iPad landscape and desktop.** The two uneven columns (Match on
+the left, Analysis and Tools on the right) are replaced by one two-column grid: each section
+label spans the width and its tiles sit two to a row at the same height. Resume Tagging moves
+to the top of Match and spans the width, so New match, Import data, Edit match information and
+Squad pair up; the player join code line sits under Fan Zone. Phones are unchanged apart from
+Resume coming first.
+
 ## Done 2026-10-26
 
 **Match report v2 live** (deployed three times today; main at 683d0f5).

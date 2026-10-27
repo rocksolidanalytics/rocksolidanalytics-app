@@ -30,7 +30,9 @@
   /* Tablet landscape and wider: use the width, two columns where a screen has them. */
   @media (min-width: 1000px){
     #root > div.rs-wide { max-width: 1200px; }
-    .rsa-home-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; align-items: start; }
+    /* Home: every tile in a two-column grid, so each row holds two tiles of the same height; section labels and notes span both columns. */
+    .rsa-home-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 14px; align-items: stretch; }
+    .rsa-home-grid > .rsa-home-span { grid-column: 1 / -1; }
     /* Dashboard: sections side by side; everything else (tabs, reads, panels) stays full width. */
     .rsa-dash { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 24px; align-items: start; }
     .rsa-dash > * { grid-column: 1 / -1; }
@@ -1417,7 +1419,7 @@
       return React.createElement("span", { style: { display: "inline-block", padding: "3px 9px", borderRadius: RAD.pill, background: tint + ALPHA.faint, border: "1px solid " + tint + ALPHA.mid, color: tint, fontSize: FS.xs, fontWeight: 800, letterSpacing: 1, fontFamily: MONO, textTransform: "uppercase", whiteSpace: "nowrap" } }, text);
     }
     function Label(text) {
-      return React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 2, color: C.slateD, fontFamily: MONO, fontWeight: 700, margin: "26px 0 2px" } }, text);
+      return React.createElement("div", { className: "rsa-home-span", style: { fontSize: FS.xs, letterSpacing: 2, color: C.slateD, fontFamily: MONO, fontWeight: 700, margin: "26px 0 2px" } }, text);
     }
     function Row(onClick, glyph, tint, title, sub, titleColor, gs) {
       return React.createElement("button", { onClick: onClick, style: TILE },
@@ -1452,38 +1454,25 @@
           React.createElement("div", { style: { height: 6, background: C.field, borderRadius: RAD.sm, marginTop: 9, overflow: "hidden" } }, React.createElement("div", { style: { width: Math.min(100, Math.round(100 * usage.used / Math.max(1, usage.limit))) + "%", height: 6, background: col } })),
           full ? React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 8, lineHeight: 1.5 } }, "Everything already tagged stays and keeps working. To add more matches, unlock lifetime access for the whole club: \u20ac850, paid once.") : null);
       })(),
-      // On a wide screen (iPad landscape) the sections sit in two columns; on a phone they stack.
-      React.createElement("div", { className: "rsa-home-cols" }, React.createElement("div", { className: "rsa-home-col" },
+      // On a wide screen (iPad landscape, desktop) the tiles sit two to a row under each section label; on a phone they stack.
+      React.createElement("div", { className: "rsa-home-grid" },
       !isPlayer && Label("MATCH"),
-      !isPlayer && Row(onNewMatch, "+", C.greenB, "New match", "Set up a game & squad, ready to tag", null, 20),
-      !isPlayer && resumeMatch && club && resumeMatch.club_id === club.id && React.createElement("button", { onClick: function() { onResume(resumeMatch); }, style: { width: "100%", marginTop: 12, padding: 14, borderRadius: RAD.xl, background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB + ALPHA.mid, boxShadow: "0 0 20px " + C.greenB + ALPHA.faint, cursor: "pointer", display: "flex", alignItems: "center", gap: 12 } },
+      !isPlayer && resumeMatch && club && resumeMatch.club_id === club.id && React.createElement("button", { onClick: function() { onResume(resumeMatch); }, className: "rsa-home-span", style: { width: "100%", marginTop: 12, padding: 14, borderRadius: RAD.xl, background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB + ALPHA.mid, boxShadow: "0 0 20px " + C.greenB + ALPHA.faint, cursor: "pointer", display: "flex", alignItems: "center", gap: 12 } },
         Badge("\u25B6", C.greenB, 12),
         React.createElement("div", { style: { textAlign: "left", flex: 1, minWidth: 0 } },
           React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800, color: C.greenB, letterSpacing: -0.2 } }, "Resume Tagging"),
           React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 500, color: C.slate, marginTop: 2, fontFamily: MONO } }, resumeMatch.opponent || "TBC")),
         Pill("Resume", C.greenB)),
+      !isPlayer && Row(onNewMatch, "+", C.greenB, "New match", "Set up a game & squad, ready to tag", null, 20),
       !isPlayer && Row(onImport, "\u2191", C.greenB, "Import data", "Upload match CSVs to build your history", null, 17),
       !isPlayer && Row(onLineups, "\u2630", C.greenB, "Edit match information", "Line-ups, details, referee, venue and weather", null, 14),
       !isPlayer && Row(onSquad, "\u25C9", C.greenB, "Squad", "Add players \xB7 set preferred positions", null, 19),
-      ), React.createElement("div", { className: "rsa-home-col" },
       Label("ANALYSIS"),
       isPlayer ? null : Row(onLivePad, "\u25C9", C.gold, "Live Stats Pad", "Follow a match in real time", null, 19),
       Row(onGameFilm, "\u25B6", C.greenB, "Game film", "Watch your games \xB7 jump to any event", C.greenB, 13),
       Row(onPitchMap, "\u25CE", C.greenB, "Pitch map", "Where events happen \xB7 filter by match, event & player", null, 17),
       Row(onOpposition, "vs", C.greenB, "Opposition", "Past results, scorers, line-ups & notes on every team", null, 13),
       !isPlayer && Row(onVideoHub, "\u25C6", C.greenB, "Video tagger", "Tag a match back from footage into your dashboards", C.greenB, 13),
-      !isPlayer && club.join_code && React.createElement("div", { style: { marginTop: 12, display: "flex", alignItems: "center", gap: 9 } },
-        React.createElement("span", { style: { fontSize: FS.sm, letterSpacing: 1, color: C.slateD, fontFamily: MONO } }, "PLAYER JOIN CODE"),
-        Pill(club.join_code, C.gold)),
-      !isPlayer && hact && (function() {
-      var pls = hact.filter(function(a) { return a.role === "player"; });
-      if (!pls.length) return null;
-      var wk = pls.filter(function(a) { return a.last_seen && (Date.now() - new Date(a.last_seen + "T00:00:00").getTime()) / 864e5 <= 7; }).length;
-      return React.createElement("button", { onClick: onSquad, style: { minHeight: 44, marginTop: -6, marginBottom: -16, background: "none", border: "none", boxShadow: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", gap: 7, fontFamily: MONO } },
-        React.createElement("span", { style: { width: 7, height: 7, borderRadius: "50%", background: wk ? C.greenB : C.slateD } }),
-        React.createElement("span", { style: { fontSize: FS.sm, color: C.slate, letterSpacing: 0.5 } }, React.createElement("b", { style: { color: C.white } }, String(pls.length)), pls.length === 1 ? " player" : " players", " \u00b7 ", React.createElement("b", { style: { color: wk ? C.greenB : C.slateD } }, String(wk)), " active this week"),
-        React.createElement("span", { style: { fontSize: FS.sm, color: C.slateD } }, "\u203a"));
-    })(),
       !isPlayer && React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 12 } },
         React.createElement("button", { onClick: onLive, style: { flex: 1, minWidth: 0, padding: "16px 14px", borderRadius: RAD.xl, cursor: "pointer", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 12 } },
           Badge("\u2605", C.gold, 15),
@@ -1502,14 +1491,26 @@
         prompt("Copy this link:", u);
       }
     }, style: { width: 76, flexShrink: 0, borderRadius: RAD.xl, cursor: "pointer", background: C.gold + ALPHA.faint, border: "1px solid " + C.gold + ALPHA.strong, color: C.gold, fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, letterSpacing: 1 } }, "SHARE", React.createElement("br", null), "LINK")),
+      !isPlayer && club.join_code && React.createElement("div", { className: "rsa-home-span", style: { marginTop: 12, display: "flex", alignItems: "center", gap: 9 } },
+        React.createElement("span", { style: { fontSize: FS.sm, letterSpacing: 1, color: C.slateD, fontFamily: MONO } }, "PLAYER JOIN CODE"),
+        Pill(club.join_code, C.gold)),
+      !isPlayer && hact && (function() {
+      var pls = hact.filter(function(a) { return a.role === "player"; });
+      if (!pls.length) return null;
+      var wk = pls.filter(function(a) { return a.last_seen && (Date.now() - new Date(a.last_seen + "T00:00:00").getTime()) / 864e5 <= 7; }).length;
+      return React.createElement("button", { onClick: onSquad, className: "rsa-home-span", style: { minHeight: 44, marginTop: -6, marginBottom: -16, background: "none", border: "none", boxShadow: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", gap: 7, fontFamily: MONO } },
+        React.createElement("span", { style: { width: 7, height: 7, borderRadius: "50%", background: wk ? C.greenB : C.slateD } }),
+        React.createElement("span", { style: { fontSize: FS.sm, color: C.slate, letterSpacing: 0.5 } }, React.createElement("b", { style: { color: C.white } }, String(pls.length)), pls.length === 1 ? " player" : " players", " \u00b7 ", React.createElement("b", { style: { color: wk ? C.greenB : C.slateD } }, String(wk)), " active this week"),
+        React.createElement("span", { style: { fontSize: FS.sm, color: C.slateD } }, "\u203a"));
+    })(),
       Label("TOOLS"),
       Row(onHelp, "?", C.greenB, "Help & support", "Ask the assistant \xB7 answers in seconds", null, 17),
       Row(onTactic, "\u26CA", C.greenB, "Tactical pad", "Drag jerseys on a pitch to explain a setup", null, 17),
       Row(onTemplate, "\u2699", C.greenB, "Tagging template", "Add your own bespoke events & outcomes", null, 16),
-      React.createElement("div", { style: { marginTop: 16, padding: 16, borderRadius: RAD.xl, background: C.bgCard, border: "1px solid " + C.border } },
+      React.createElement("div", { style: { marginTop: 12, padding: 16, borderRadius: RAD.xl, background: C.bgCard, border: "1px solid " + C.border } },
         React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 2, color: C.slateD, fontFamily: MONO, fontWeight: 700, marginBottom: 8 } }, "YOUR DATA"),
         React.createElement("div", { style: { fontSize: FS.md, fontWeight: 500, color: C.white, lineHeight: 1.55 } }, matchCount > 0 ? matchCount + " match" + (matchCount === 1 ? "" : "es") + " stored under your club." : "No matches yet \u2014 import your Performa history to begin.")),
-      )),
+      ),
       React.createElement("div", { style: { marginTop: 24, textAlign: "center", fontSize: FS.sm, color: C.slateD, fontFamily: MONO } }, "Signed in \xB7 data secured by row-level security"));
   }
 
