@@ -169,12 +169,13 @@ a first-time user saw no way to start or save. The bottom strip now shows the ne
 mark (Mark throw-in in gold until it is set, then Mark 2nd half, then nothing) and a green
 Save, beside the seek buttons. Portrait is unchanged.
 
-**Video tagger keeps the video through a reload.** A video file picked for tagging was only
-saved on the device at Finish & save, so when iPad Safari dropped the tab in the background
-(or the page reloaded) the video had to be picked again. It is now saved on the device as soon
-as it is loaded (when there is room, quietly; if it fails, Finish & save still offers it), and
-reopening the match brings it back. Browsers that cannot write to the device folder (older
-iPad Safari) save it in IndexedDB instead. Tested with both: load, reload, video back.
+**Video tagger: saving the video on load, tried and reverted.** Saving a picked video to the
+device as soon as it loaded (with an IndexedDB fallback) went live at a9be286. Tadhg then
+picked a match video from Photos on the iPad and Safari crashed ("A problem repeatedly
+occurred"), most likely from copying a very large file into browser storage while it was
+also playing. Reverted (main back to the earlier behaviour: the video is only kept at Finish
+& save). Open: find a way to keep the video across an iPad tab reload without copying the
+whole file in the page, or tell the analyst on iPad to finish and save before leaving the tab.
 
 **Club page: per-game intro fixed** (committed 2026-10-26, live today). The "Or we tag it for
 you" intro still said every game is tagged in full whatever level is booked; it now says games
