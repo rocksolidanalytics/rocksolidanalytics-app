@@ -161,7 +161,27 @@ the left, Analysis and Tools on the right) are replaced by one two-column grid: 
 label spans the width and its tiles sit two to a row at the same height. Resume Tagging moves
 to the top of Match and spans the width, so New match, Import data, Edit match information and
 Squad pair up; the player join code line sits under Fan Zone. Phones are unchanged apart from
-Resume coming first.
+Resume coming first. Deployed (main at d49219f, with the club page wording fix below).
+
+**Club page: per-game intro fixed** (committed 2026-10-26, live today). The "Or we tag it for
+you" intro still said every game is tagged in full whatever level is booked; it now says games
+are tagged to the depth of the level chosen, matching the terms.
+
+**Monthly record in Google Drive.** Folder Rock Solid App (staff account, shared with Tadhg's
+personal account) with a READ ME and a folder per month. 2026-10 October holds: a project
+background doc; copies of BACKLOG.md, REPORT-SPEC.md and RSA-SPEC-time-metrics.md; the
+event-synonyms skill and JSON plus the UI redesign skill doc; the business plan, terms,
+privacy notice and pricing page as live; the Instagram plan (Google Sheet) and captions.
+Tadhg to drop in the Kerry v Mayo report pages and the week 1 to 7 slides (zips sent).
+Each month: ask Claude to "make this month's record in the Rock Solid App folder".
+
+**Business plan** (claude.ai doc, copy in Drive). Low spend; likely case two new lifetime
+clubs plus some reports and live tagging, about EUR 3,500 for about 115 hours a year; gates at
+the end of January, July and October. Bray Emmets and St Jude's have lifetime free as early
+supporters, so no paying customer yet.
+
+**Instagram wording.** "Parish" changed to "club" everywhere (week 1 slide 5, week 2 cover and
+headline, weeks 33 and 50); week 11 is the 10 free matches offer.
 
 ## Done 2026-10-26
 
