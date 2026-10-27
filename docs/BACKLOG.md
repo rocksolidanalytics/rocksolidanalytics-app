@@ -193,6 +193,12 @@ stand-in YouTube player (the test machine cannot reach YouTube): loads, tags, se
 Still to check on the iPad with a real YouTube video: seek accuracy and tagging timestamps.
 Deployed (main at f31042c).
 
+**YouTube controls hidden in the tagger.** The YouTube player now starts with its own
+controls, keyboard and full-screen button off, and the tagger draws its own bar over the
+video: play/pause, a scrub bar and the time (top of the video in landscape, so it clears the
+scoreboard; bottom in portrait). YouTube still shows its logo and, while paused, can show a
+title or end screen; that cannot be turned off. Not yet deployed.
+
 **Video tagger: saving the video on load, tried and reverted.** Saving a picked video to the
 device as soon as it loaded (with an IndexedDB fallback) went live at a9be286. Tadhg then
 picked a match video from Photos on the iPad and Safari crashed ("A problem repeatedly
