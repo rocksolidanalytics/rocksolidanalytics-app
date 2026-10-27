@@ -194,6 +194,12 @@ controls, keyboard and full-screen button off, and the tagger draws its own bar 
 video: play/pause, a scrub bar and the time (top of the video in landscape, so it clears the
 scoreboard; bottom in portrait). YouTube still shows its logo and, while paused, can show a
 title or end screen; that cannot be turned off. Not yet deployed.
+Follow-up after a screen recording on Android (Game film): with controls off YouTube still
+shows its title, share, watch-later and pause overlay whenever the video is tapped. Once the
+video has played, a clear layer now sits over the player in Game film and the video tagger:
+a tap plays or pauses through the app and never reaches YouTube, so the overlay no longer
+appears. Before the first play taps still go to YouTube (its cover with the big play button
+and Watch on YouTube stays until then; the iPad can refuse to start a video any other way).
 
 **Match format: 35-minute halves, extra time, penalties, 3 x 20.** New matches table columns
 (half_mins, periods, extra_time, et_mins, period_marks, penalties), all empty for existing
