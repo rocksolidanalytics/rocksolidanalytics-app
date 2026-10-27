@@ -247,6 +247,16 @@ with a generated one-minute test clip (310 KB); no real club data in the reposit
 deliberate break (Game film start back to 5 seconds) was caught. Run before every commit
 alongside validate.sh.
 
+**Game film on a phone in landscape.** Tadhg found the watch screen stuck on an Android phone
+held sideways: below 760px wide it stacked a full-width video over the clip list, and in
+landscape a 16:9 video is taller than the screen, so it covered everything and swipes landed
+on the YouTube player (nothing scrolled). A landscape phone (height up to 560px) now gets the
+side-by-side layout, and the video column is capped so the video and its buttons fit the
+screen height (also on tablets and desktop, where an 800 x 360 screen ran 15px off the
+bottom). Portrait unchanged. At 740 x 360 the video now ends at 331px (was 544px). New browser
+test test_gamefilm_layout.js (eight tests now, all pass). Deployed (main at 36555de); not yet
+tried on a real phone.
+
 **Video tagger design review** (Tadhg asked what we would do differently from scratch).
 Keep: one tap for us and two for them, pause on tag, outcome then pitch spot then player, the
 throw-in and half-time mapping, saving tags with no signal. Change gradually, no rewrite:
