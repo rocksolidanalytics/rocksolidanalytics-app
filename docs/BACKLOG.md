@@ -200,6 +200,10 @@ video has played, a clear layer now sits over the player in Game film and the vi
 a tap plays or pauses through the app and never reaches YouTube, so the overlay no longer
 appears. Before the first play taps still go to YouTube (its cover with the big play button
 and Watch on YouTube stays until then; the iPad can refuse to start a video any other way).
+The recording also showed YouTube putting the same overlay up by itself for about 4 seconds
+every time a clip starts or jumps (not only on a tap), and that cannot be shortened. Game film
+clips now start 8 seconds before the tagged moment (was 5), so the overlay covers the build-up
+and is gone by the moment itself.
 
 **Match format: 35-minute halves, extra time, penalties, 3 x 20.** New matches table columns
 (half_mins, periods, extra_time, et_mins, period_marks, penalties), all empty for existing

@@ -1216,7 +1216,9 @@
     const [ytGo, setYtGo] = useState(false);
     const ytRef = useRef(null);
     const hostRef = useRef(null);
-    const LEAD = 5;
+    // Clips start 8s early: YouTube covers the first few seconds after a jump with its title and
+    // pause overlay, so the tagged moment lands after it has gone.
+    const LEAD = 8;
     const [, bump] = useState(0);
     const isAnalyst = role !== "player";
     const [showScoutStats, setShowScoutStats] = useState(false);
@@ -1318,7 +1320,7 @@
       return React.createElement("div", { className: "rsa-screen rs-wide rsa-fb", style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { className: "rsa-gf-detail", style: { flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" } }, React.createElement("div", { className: "rsa-gf-video", style: { position: "sticky", top: 0, zIndex: 5, background: C.bg, padding: "12px 14px 8px", borderBottom: "1px solid " + C.border } }, player, React.createElement("div", { style: { display: "flex", gap: 6, paddingTop: 8, alignItems: "stretch" } }, [[-10, "\u00ab 10"], [-5, "\u2039 5"], [0, "PP"], [5, "5 \u203a"], [10, "10 \u00bb"]].map(function(b) {
         if (b[0] === 0) return React.createElement("button", { key: "pp", onClick: toggle, style: { flex: 1.1, minHeight: 44, padding: "9px 0", borderRadius: RAD.md, border: "1px solid " + C.greenB, background: C.greenB + ALPHA.soft, color: C.greenB, fontWeight: 800, fontSize: FS.md, cursor: "pointer" } }, playing ? "\u23F8" : "\u25B6");
         return React.createElement("button", { key: b[0], onClick: function() { nudge(b[0]); }, style: { flex: 1, minHeight: 44, padding: "9px 0", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bgCard, color: C.slate, fontWeight: 800, fontSize: FS.md, fontFamily: MONO, cursor: "pointer" } }, b[1]);
-      })), React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, paddingTop: 8, fontFamily: MONO } }, "TAP AN EVENT \u00b7 STARTS 5s BEFORE")), React.createElement("div", { className: "rsa-gf-events", style: { padding: "0 14px 28px" } }, React.createElement(PlaylistPanel, { match: sel, readOnly: role === "player" }), chips, gchips, body2)));
+      })), React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, paddingTop: 8, fontFamily: MONO } }, "TAP AN EVENT \u00b7 STARTS " + LEAD + "s BEFORE")), React.createElement("div", { className: "rsa-gf-events", style: { padding: "0 14px 28px" } }, React.createElement(PlaylistPanel, { match: sel, readOnly: role === "player" }), chips, gchips, body2)));
     }
     var visible = (matches || []).filter(function(m) { return manage ? true : (m.video_enabled && ytId(m.video_url)); });
     var body = matches === null ? React.createElement("div", { style: { paddingTop: 4 } }, React.createElement(SkelRows, { n: 2, h: 92 })) : visible.length === 0 ? React.createElement("div", { style: { padding: 24, textAlign: "center", color: C.slateD, fontSize: FS.md } }, manage ? "No video-tagged games yet." : isAnalyst ? "No games switched on yet. Tap Manage to add a link and enable one." : "No game film available yet.") : visible.map(function(m, i) {
