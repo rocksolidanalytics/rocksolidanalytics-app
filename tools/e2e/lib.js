@@ -23,7 +23,7 @@ function fixtures(extra) {
   extra = extra || {};
   const g = gen(20261027);
   const ms = [], evs = [], apps = [];
-  ['Rathnew', 'Kiltegan', 'Annacurra'].forEach((opp, k) => { const r = g.mkMatch('f' + (k + 1), opp, 'football', 60, C); ms.push(r.m); evs.push(...r.evs); apps.push(...r.apps); });
+  ['Rathnew', 'Kiltegan', 'Annacurra'].forEach((opp, k) => { const r = g.mkMatch('f' + (k + 1), opp, 'football', 60, C); r.m.our_score = '0-' + String(r.m.our_total).padStart(2, '0'); r.m.opp_score = '0-' + String(r.m.opp_total).padStart(2, '0'); ms.push(r.m); evs.push(...r.evs); apps.push(...r.apps); });
   const club = Object.assign({ id: C, name: 'Ballyvale Gaels', county: 'Wicklow', sport: 'football', colour_primary: '#0a6b3d', colour_secondary: '#f2c230', verified: true, join_code: 'TEST01' }, extra.club || {});
   if (extra.videoPack) club.custom_events = videoPack('football');
   return { session: { user: { id: 'u1', email: 'coach@example.com' }, access_token: 't' },

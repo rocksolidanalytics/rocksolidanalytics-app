@@ -9605,6 +9605,170 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     return { g: g, p: p, n: n };
   }
   function fmtScoreGP(o) { return o.g + "-" + (o.p < 10 ? "0" : "") + o.p; }
+  // Player scorecard for the season view. One row per player with 3 or more games: effort
+  // columns (how often) and technique columns (how well), each ticked or crossed against a
+  // target. A target starts at the squad average and a coach can set their own, kept in
+  // clubs.tag_settings.targets. Players who mostly started in goal get the keeper card.
+  var SC_MIN_GAMES = 3;
+  function scCols(stick) {
+    return {
+      out: [
+        { k: "tkg", g: "TACKLING", l: "Tkl/g", t: "Tackles per game", up: true, effort: true },
+        { k: "tkf", g: "TACKLING", l: "Foul %", t: "Tackles that gave away a foul", up: false, pct: true },
+        { k: "kpl", g: "BALL LOST PER GAME", l: stick ? "Strike" : "Kick", t: "Possession lost from a " + (stick ? "strike" : "kick") + " pass, per game", up: false },
+        { k: "hpl", g: "BALL LOST PER GAME", l: "Hand", t: "Possession lost from a hand pass, per game", up: false },
+        { k: "icl", g: "BALL LOST PER GAME", l: "Contact", t: "Possession lost in contact, per game", up: false },
+        { k: "hdl", g: "BALL LOST PER GAME", l: "Handling", t: "Possession lost from handling errors, per game", up: false },
+        { k: "shg", g: "SHOOTING", l: "Sh/g", t: "Shots per game (only marked from 5 shots)", up: true, effort: true },
+        { k: "acc", g: "SHOOTING", l: "Acc %", t: "Shots scored (from 5 shots)", up: true, pct: true }],
+      gk: [
+        { k: "kor", g: "KICKOUTS", l: "Won %", t: "Own kickouts won, clean or on the break, in their games", up: true, pct: true },
+        { k: "koc", g: "KICKOUTS", l: "Clean %", t: "Distribution: own kickouts won clean", up: true, pct: true },
+        { k: "svg", g: "SHOT STOPPING", l: "Saves/g", t: "Saves per game", up: true, effort: true },
+        { k: "svp", g: "SHOT STOPPING", l: "Save %", t: "Saves against saves plus goals (from 5)", up: true, pct: true },
+        { k: "hbr", g: "HIGH BALL", l: "Kept %", t: "High balls caught or punched clear (from 5 tagged)", up: true, pct: true }]
+    };
+  }
+  function scorecardData(matches, evs, apps) {
+    var mids = {};
+    (matches || []).forEach(function(m) { if (!m.scouting) mids[m.id] = 1; });
+    var P = {}, M = {};
+    function pp(n) { return P[n] || (P[n] = { name: n, games: {}, gk: {}, tk: 0, tkf: 0, kp: 0, hp: 0, ic: 0, hd: 0, sh: 0, scr: 0 }); }
+    function mm(id) { return M[id] || (M[id] = { ko: 0, kow: 0, koc: 0, sv: 0, gl: 0, hbn: 0, hbw: 0 }); }
+    (apps || []).forEach(function(a) {
+      var s = Number(a.position_slot);
+      if (!mids[a.match_id] || !a.player_name || !(s >= 1 && s <= 15)) return;
+      var p = pp(a.player_name); p.games[a.match_id] = 1; if (s === 1) p.gk[a.match_id] = 1;
+    });
+    (evs || []).forEach(function(e) {
+      if (!mids[e.match_id]) return;
+      var et = e.event_type, oc = canonOutcome(e.outcome).toLowerCase(), x = mm(e.match_id);
+      var shot = et === "Shot from play" || et === "Scoreable free";
+      if (e.team === "opp") { if (shot) { if (oc === "saved") x.sv++; else if (oc === "goal") x.gl++; } return; }
+      if (e.team !== "us" && e.team !== "h") return;
+      if (et === "Kickout") { x.ko++; if (KO_WON.has(canonOutcome(e.outcome))) x.kow++; if (oc === "won clean") x.koc++; }
+      if (et === "Goalkeeper action" && /^high ball/.test(oc)) { x.hbn++; if (oc !== "high ball dropped") x.hbw++; }
+      if (!e.player) return;
+      var p = pp(e.player); p.games[e.match_id] = 1;
+      if (et === "Tackle") { p.tk++; if (oc === "foul") p.tkf++; }
+      else if (et === "Possession lost") { if (/^(kick pass|strike|strike pass)$/.test(oc)) p.kp++; else if (oc === "hand pass") p.hp++; else if (oc === "in contact") p.ic++; else if (oc === "handling") p.hd++; }
+      else if (shot) { p.sh++; if ((e.score || 0) > 0) p.scr++; }
+    });
+    var r1 = function(v) { return Math.round(v * 10) / 10; }, pc = function(a, b, min) { return b >= min ? Math.round(100 * a / b) : null; };
+    var out = [], gk = [], few = [];
+    Object.keys(P).forEach(function(n) {
+      var p = P[n], g = Object.keys(p.games).length, gks = Object.keys(p.gk), gg = gks.length;
+      if (gg >= SC_MIN_GAMES && gg * 2 >= g) {
+        var s = { ko: 0, kow: 0, koc: 0, sv: 0, gl: 0, hbn: 0, hbw: 0 };
+        gks.forEach(function(id) { var x = M[id]; if (x) Object.keys(s).forEach(function(k) { s[k] += x[k]; }); });
+        gk.push({ name: n, games: gg, v: { kor: pc(s.kow, s.ko, 10), koc: pc(s.koc, s.ko, 10), svg: r1(s.sv / gg), svp: pc(s.sv, s.sv + s.gl, 5), hbr: pc(s.hbw, s.hbn, 5) } });
+      } else if (g >= SC_MIN_GAMES) {
+        out.push({ name: n, games: g, v: { tkg: r1(p.tk / g), tkf: pc(p.tkf, p.tk, 5), kpl: r1(p.kp / g), hpl: r1(p.hp / g), icl: r1(p.ic / g), hdl: r1(p.hd / g), shg: p.sh >= 5 ? r1(p.sh / g) : null, acc: pc(p.scr, p.sh, 5) } });
+      } else if (g > 0) few.push({ name: n, games: g });
+    });
+    var byGames = function(a, b) { return b.games - a.games || (a.name > b.name ? 1 : -1); };
+    return { out: out.sort(byGames), gk: gk.sort(byGames), few: few.sort(byGames) };
+  }
+  // Squad average of a column over the players who have a value; none below 3 players.
+  function scAvg(rows, k, pct) {
+    var vs = rows.map(function(r) { return r.v[k]; }).filter(function(v) { return v != null; });
+    if (vs.length < 3) return null;
+    var a = vs.reduce(function(s, v) { return s + v; }, 0) / vs.length;
+    return pct ? Math.round(a) : Math.round(a * 10) / 10;
+  }
+  function PlayerScorecard({ d, club, onPlayer }) {
+    const [mode, setMode] = useState("card");
+    const [open, setOpen] = useState(null);
+    const [tgts, setTgts] = useState(function() { return Object.assign({}, (club.tag_settings && club.tag_settings.targets) || {}); });
+    const [draft, setDraft] = useState({});
+    const [msg, setMsg] = useState("");
+    var stick = club.sport === "camogie" || club.sport === "hurling";
+    var cols = scCols(stick);
+    var data = useMemo(function() { return scorecardData(d.matches, d._events, d._apps); }, [d]);
+    function tgtOf(c, rows) { var t = tgts[c.k]; return t != null && t !== "" ? Number(t) : scAvg(rows, c.k, c.pct); }
+    function scFmt(c, v) { return v == null ? "\u2013" : c.pct ? v + "%" : String(v); }
+    function mark(c, v, t) { return v == null || t == null ? null : (c.up ? v >= t : v <= t); }
+    function coachLine(r, cs, rows) {
+      var effBad = [], effOk = 0, techBad = [];
+      cs.forEach(function(c) { var m = mark(c, r.v[c.k], tgtOf(c, rows)); if (m == null) return; if (c.effort) { if (m) effOk++; else effBad.push(c.t.toLowerCase()); } else if (!m) techBad.push(c.t.toLowerCase()); });
+      if (!effBad.length && !techBad.length) return "On target across the board.";
+      if (!effBad.length && effOk) return "Effort is good, technique needs work: " + techBad.join("; ") + ".";
+      if (!techBad.length) return "Clean technique, needs more involvement: " + effBad.join("; ") + ".";
+      return "Work on effort (" + effBad.join("; ") + ") and technique (" + techBad.join("; ") + ").";
+    }
+    var th = { padding: "6px 4px", fontSize: 10, fontFamily: MONO, color: C.slateD, fontWeight: 700, textAlign: "center", whiteSpace: "nowrap" };
+    function table(rows, cs, title) {
+      if (!rows.length) return null;
+      var groups = [];
+      cs.forEach(function(c) { var last = groups[groups.length - 1]; if (last && last.g === c.g) last.n++; else groups.push({ g: c.g, n: 1 }); });
+      var sticky = { position: "sticky", left: 0, background: C.bgCard, zIndex: 1 };
+      return React.createElement("div", { style: { marginBottom: 16 } },
+        title && React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.gold, fontFamily: MONO, fontWeight: 700, margin: "4px 0 8px" } }, title),
+        React.createElement("div", { style: { overflowX: "auto", background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.lg } },
+          React.createElement("table", { style: { borderCollapse: "collapse", width: "100%", fontSize: FS.sm } },
+            React.createElement("thead", null,
+              React.createElement("tr", null, React.createElement("th", { style: Object.assign({}, th, sticky) }), groups.map(function(gp) { return React.createElement("th", { key: gp.g, colSpan: gp.n, style: Object.assign({}, th, { color: C.slate, borderBottom: "1px solid " + C.border }) }, gp.g); })),
+              React.createElement("tr", null, React.createElement("th", { style: Object.assign({}, th, sticky, { textAlign: "left" }) }, "PLAYER \u00B7 GAMES"), cs.map(function(c) { var t = tgtOf(c, rows); return React.createElement("th", { key: c.k, title: c.t, style: th }, c.l, React.createElement("div", { style: { fontSize: 9, color: C.slateD, fontWeight: 400 } }, t == null ? "no target" : (c.up ? "\u2265 " : "\u2264 ") + scFmt(c, t))); }))),
+            React.createElement("tbody", null, rows.map(function(r) {
+              var isOpen = open === title + r.name;
+              return React.createElement(React.Fragment, { key: r.name },
+                React.createElement("tr", { onClick: function() { setOpen(isOpen ? null : title + r.name); }, style: { cursor: "pointer", borderTop: "1px solid " + C.border } },
+                  React.createElement("td", { style: Object.assign({ padding: "9px 8px", fontWeight: 700, whiteSpace: "nowrap" }, sticky) }, r.name, React.createElement("span", { style: { color: C.slateD, fontWeight: 400, fontFamily: MONO, fontSize: 11 } }, " \u00B7 " + r.games)),
+                  cs.map(function(c) {
+                    var v = r.v[c.k], m = mark(c, v, tgtOf(c, rows));
+                    return React.createElement("td", { key: c.k, style: { padding: "9px 4px", textAlign: "center", fontFamily: MONO, whiteSpace: "nowrap", color: m == null ? C.slateD : C.white } }, scFmt(c, v), m != null && React.createElement("span", { "aria-label": m ? "on target" : "off target", style: { marginLeft: 4, fontWeight: 900, color: m ? C.greenB : C.red } }, m ? "\u2713" : "\u2717"));
+                  })),
+                isOpen && React.createElement("tr", null, React.createElement("td", { colSpan: cs.length + 1, style: { padding: "0 10px 10px", fontSize: FS.sm, color: C.slate, lineHeight: 1.5 } },
+                  React.createElement("div", { style: { position: "sticky", left: 10, maxWidth: 320 } }, coachLine(r, cs, rows),
+                    onPlayer && React.createElement("button", { onClick: function(ev) { ev.stopPropagation(); onPlayer(r.name); }, style: { display: "block", marginTop: 6, minHeight: 40, padding: "0 12px", background: "none", border: "1px solid " + C.border, borderRadius: RAD.md, color: C.greenB, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" } }, "Open player profile")))));
+            })))));
+    }
+    function saveTargets() {
+      var next = {};
+      Object.keys(Object.assign({}, tgts, draft)).forEach(function(k) { var v = k in draft ? draft[k] : tgts[k]; if (v !== "" && v != null && !isNaN(Number(v))) next[k] = Number(v); });
+      setMsg("Saving\u2026");
+      db.from("clubs").select("tag_settings").eq("id", club.id).maybeSingle().then(function(r) {
+        var ts = Object.assign({}, r && r.data && r.data.tag_settings || {}, { targets: next });
+        return db.from("clubs").update({ tag_settings: ts }).eq("id", club.id).select("id").then(function(u) {
+          // No error but no row changed means the account may not edit the club.
+          var rows = u.data == null ? null : [].concat(u.data);
+          if (u.error || (rows && !rows.length)) { setMsg("Not saved: only the club analyst can change targets."); return; }
+          club.tag_settings = ts; setTgts(next); setDraft({}); setMsg("\u2713 Targets saved");
+        });
+      }, function() { setMsg("Not saved: check your signal and try again."); });
+    }
+    function targetsView() {
+      function rowsFor(cs, rows, title) {
+        return React.createElement("div", { style: { marginBottom: 14 } },
+          React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.gold, fontFamily: MONO, fontWeight: 700, margin: "4px 0 8px" } }, title),
+          cs.map(function(c) {
+            var avg = scAvg(rows, c.k, c.pct), v = c.k in draft ? draft[c.k] : (tgts[c.k] != null ? String(tgts[c.k]) : "");
+            return React.createElement("div", { key: c.k, style: { display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid " + C.border } },
+              React.createElement("div", { style: { flex: 1, minWidth: 0 } }, React.createElement("div", { style: { fontWeight: 700, fontSize: FS.md } }, c.t), React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD } }, (c.effort ? "Effort" : "Technique") + " \u00B7 squad average " + scFmt(c, avg) + " \u00B7 " + (c.up ? "higher is better" : "lower is better"))),
+              React.createElement("span", { style: { fontFamily: MONO, color: C.slateD } }, c.up ? "\u2265" : "\u2264"),
+              React.createElement("input", { value: v, inputMode: "decimal", placeholder: avg == null ? "\u2013" : String(avg), onChange: function(e) { var nx = Object.assign({}, draft); nx[c.k] = e.target.value.replace(/[^0-9.]/g, "").slice(0, 5); setDraft(nx); }, className: "rsa-field", "aria-label": c.t + " target", style: { width: 64, minHeight: 44, padding: "8px", borderRadius: RAD.md, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: FS.md, fontFamily: MONO, textAlign: "center" } }));
+          }));
+      }
+      return React.createElement("div", null,
+        React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, lineHeight: 1.5, marginBottom: 10 } }, "Leave a box empty to use the squad average (shown greyed). A tick means the player meets the target."),
+        rowsFor(cols.out, data.out, "OUTFIELD"), data.gk.length > 0 && rowsFor(cols.gk, data.gk, "GOALKEEPERS"),
+        React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" } },
+          React.createElement("button", { onClick: saveTargets, style: { minHeight: 44, padding: "0 18px", background: C.greenB, border: "none", borderRadius: RAD.md, color: C.bg, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" } }, "Save targets"),
+          React.createElement("button", { onClick: function() { var nx = {}; Object.keys(tgts).forEach(function(k) { nx[k] = ""; }); setDraft(nx); }, style: { minHeight: 44, padding: "0 14px", background: "none", border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slate, cursor: "pointer", fontFamily: "inherit" } }, "All to squad average"),
+          msg && React.createElement("span", { style: { fontSize: FS.sm, color: msg.charAt(0) === "\u2713" ? C.greenB : C.slate } }, msg)));
+    }
+    var toggle = React.createElement("div", { style: { display: "flex", gap: 2, padding: 3, borderRadius: RAD.lg, background: C.field, border: "1px solid " + C.border, marginBottom: 12 } },
+      [["card", "SCORECARD"], ["targets", "TARGETS"]].map(function(o) {
+        var on = mode === o[0];
+        return React.createElement("button", { key: o[0], onClick: function() { setMode(o[0]); setMsg(""); }, style: { flex: 1, minHeight: 40, borderRadius: RAD.md, border: "none", cursor: "pointer", fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, letterSpacing: 0.8, background: on ? C.bgCard : "none", color: on ? C.white : C.slateD } }, o[1]);
+      }));
+    if (!data.out.length && !data.gk.length) return React.createElement("div", { style: { fontSize: FS.md, color: C.slateD, padding: "4px 2px", lineHeight: 1.5 } }, "The scorecard starts once a player has " + SC_MIN_GAMES + " games with tagged events or a starting place." + (data.few.length ? " " + data.few.length + " players so far, most on " + data.few[0].games + "." : ""));
+    return React.createElement("div", null, toggle,
+      mode === "targets" ? targetsView() : React.createElement(React.Fragment, null,
+        React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.5, marginBottom: 10 } }, "\u2713 meets the target, \u2717 misses it. Tap a player for the coaching point."),
+        table(data.out, cols.out, data.gk.length ? "OUTFIELD" : null), table(data.gk, cols.gk, "GOALKEEPERS"),
+        data.few.length > 0 && React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.6 } }, "Under " + SC_MIN_GAMES + " games: " + data.few.map(function(f) { return f.name + " (" + f.games + ")"; }).join(", "))));
+  }
   function DashView({ d: d0, club, scope, match, onBack, oppName, wide }) {
     var ON = oppName || "Opposition";
     useSynonyms();
@@ -10466,6 +10630,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     dtab === "other" && React.createElement(Section, { title: "OTHER EVENTS" }, React.createElement(OtherEventsView, { evs: d._events, matches: d.matches, isMatch: scope === "match", usName: club.name || "Us" }), React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO, marginTop: 4, lineHeight: 1.5 } }, "EVENTS WITH NO VIEW OF THEIR OWN \u00b7 SAME NAMES GROUPED TOGETHER \u00b7 GREEN BAR AND FIRST NUMBER ARE YOURS")),
     dtab === "defence" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Section, { title: "DEFENSIVE WORK RATE" }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } }, [["Tackles / 10 opp poss", d.defence.tkRate, C.greenB], ["Possession", d.defence.possession + "%", C.blue], ["Turnovers won", d.defence.turnoversWon, C.blue], ["Tackles (total)", d.defence.tackles, C.slate]].map(function(s, si) { return /* @__PURE__ */ React.createElement("div", { key: si, style: { background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.lg, padding: "14px 14px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.h2, fontWeight: 800, color: s[2], fontFamily: MONO } }, String(s[1])), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 3, fontFamily: MONO, letterSpacing: 0.5 } }, s[0])); })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, lineHeight: 1.55, marginTop: 10 } }, "Tackle rate = tackles per 10 opposition possessions \u2014 it asks \u201cwhen they have the ball, do we engage?\u201d, which a raw total can\u2019t (you tackle more simply because they have it more). Turnovers conceded: ", /* @__PURE__ */ React.createElement("b", { style: { color: C.white } }, String(d.defence.turnoversLost)), " \u00b7 frees conceded: ", /* @__PURE__ */ React.createElement("b", { style: { color: C.white } }, String(d.defence.frees)), ".")), scope === "season" && d.defence.wl && /* @__PURE__ */ React.createElement(Section, { title: "WHAT WINS LOOK LIKE \u00b7 DEFENCE" }, (function() { var wl = d.defence.wl; var rows = [["Opposition shots faced", wl.osh[0], wl.osh[1], "FEWER IS BETTER", true], ["Turnovers won", wl.tow[0], wl.tow[1], "MORE IS BETTER", false], ["Forward press steals", wl.steals[0], wl.steals[1], "OPP. RESTARTS STOLEN BY FORWARDS", false], ["Tackles / 10 opp poss", wl.tkRate[0], wl.tkRate[1], "DO WE ENGAGE WHEN THEY HAVE IT?", false], ["Possession", wl.poss[0], wl.poss[1], "SHARE OF POSSESSIONS", false], ["Tackles (raw total)", wl.tk[0], wl.tk[1], "TOTALS FOLLOW HOW LONG THEY HELD THE BALL", false]]; return /* @__PURE__ */ React.createElement("div", null, rows.map(function(r, ri) { var better = r[4] ? r[1] < r[2] : r[1] > r[2]; return /* @__PURE__ */ React.createElement("div", { key: ri, style: { display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, fontWeight: 700, color: C.white } }, r[0]), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO, marginTop: 2, letterSpacing: 0.5 } }, r[3])), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", width: 58 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xl, fontWeight: 800, color: better ? C.greenB : C.slate, fontFamily: MONO } }, String(r[1])), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO } }, "IN WINS")), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", width: 58 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xl, fontWeight: 800, color: better ? C.red : C.slate, fontFamily: MONO } }, String(r[2])), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO } }, "IN D/L"))); }), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12, fontSize: FS.md, color: C.slate, lineHeight: 1.6, background: C.field, border: "1px solid " + C.border, borderRadius: RAD.md, padding: "10px 12px" } }, "Across ", /* @__PURE__ */ React.createElement("b", { style: { color: C.white } }, wl.nW + " wins"), " and ", /* @__PURE__ */ React.createElement("b", { style: { color: C.white } }, wl.nL + " draws/defeats"), ": wins come with ", /* @__PURE__ */ React.createElement("b", { style: { color: C.greenB } }, String(wl.osh[0])), " opposition shots faced (vs ", String(wl.osh[1]), ") and ", /* @__PURE__ */ React.createElement("b", { style: { color: C.greenB } }, String(wl.tow[0])), " turnovers won (vs ", String(wl.tow[1]), ")." + (wl.steals[0] > wl.steals[1] ? " The forward press is a real tell \u2014 " + wl.steals[0] + " steals in wins vs " + wl.steals[1] + " in defeats." : ""))); })()), /* @__PURE__ */ React.createElement(Section, { title: "DEFENSIVE ACTIONS BY LINE" }, (function() { var L = d.defence.byLine; var keys = [["BACKS", "Backs (2\u20137)"], ["MID", "Midfield (8\u20139)"], ["FWD", "Forwards (10\u201315)"]]; var mx = Math.max(1, L.BACKS.tk, L.MID.tk, L.FWD.tk); var any = (L.BACKS.tk + L.MID.tk + L.FWD.tk + L.BACKS.kow + L.MID.kow + L.FWD.kow + L.FWD.steals) > 0; if (!any) return /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, color: C.slateD } }, "Needs teamsheet positions to break down by line."); return /* @__PURE__ */ React.createElement("div", null, keys.map(function(kk) { var v = L[kk[0]]; return /* @__PURE__ */ React.createElement("div", { key: kk[0], style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: FS.md, marginBottom: 5 } }, /* @__PURE__ */ React.createElement("b", { style: { color: C.white } }, kk[1]), /* @__PURE__ */ React.createElement("span", { style: { color: C.slate, fontFamily: MONO, fontSize: FS.sm } }, v.tk + " tackles \u00b7 " + v.kow + " own " + RST() + " \u00b7 " + v.steals + " steals")), /* @__PURE__ */ React.createElement("div", { style: { height: 7, background: C.field, borderRadius: RAD.sm, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { width: Math.round(100 * v.tk / mx) + "%", height: "100%", background: C.greenB, borderRadius: RAD.sm } }))); }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, lineHeight: 1.55, marginTop: 4 } }, "\u201cSteals\u201d = opposition " + restarts_() + " won by that line \u2014 the clearest measure of whether your press is working.")); })())),
     dtab === "players" && /* @__PURE__ */ selPlayer && d.players && React.createElement(PlayerDNA, { player: selPlayer, allPlayers: d.players || [], club: club, onClose: function() { setSelPlayer(null); }, scope: scope }),
+      dtab === "players" && scope !== "match" && React.createElement(Section, { title: "PLAYER SCORECARD" }, React.createElement(PlayerScorecard, { d: d, club: club, onPlayer: function(n) { var p = (d.players || []).filter(function(x) { return x.name === n; })[0]; if (p) { setSelPlayer(p); try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {} } } })),
       dtab === "players" && React.createElement(Section, { title: "PLAYER BREAKDOWN" }, (function() { var cols = [["name","Player"],["score","Scr"],["sh","Sh"],["tk","Tk"],["kow",RST()],["tol","TO"],["xsd","xS±"]]; var rows = (d.players || []).slice(); rows.sort(function(a, b) { if (psort === "name") return (a.name > b.name ? 1 : -1); if (psort === "score") return (b.g * 3 + b.p) - (a.g * 3 + a.p); return (b[psort] || 0) - (a[psort] || 0); }); if (!rows.length) return /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, color: C.slateD, padding: "8px 2px" } }, "No player events tagged yet."); return /* @__PURE__ */ React.createElement("div", { style: { overflowX: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "2.3fr 0.72fr 0.46fr 0.46fr 0.46fr 0.46fr 0.68fr", gap: 2, minWidth: 320, alignItems: "center" } }, cols.map(function(c) { var on = psort === c[0]; return /* @__PURE__ */ React.createElement("button", { key: c[0], onClick: function() { setPsort(c[0]); }, style: { textAlign: c[0] === "name" ? "left" : "center", background: "none", border: "none", cursor: "pointer", color: on ? C.greenB : C.slateD, fontSize: FS.xs, fontWeight: 800, fontFamily: MONO, letterSpacing: 0.5, padding: "17px 4px", margin: "-11px 0" } }, c[1]); }), rows.map(function(r, ri) { return /* @__PURE__ */ React.createElement(React.Fragment, { key: ri }, /* @__PURE__ */ React.createElement("div", { style: { gridColumn: "1 / -1", height: 1, background: C.border } }), /* @__PURE__ */ React.createElement("div", { onClick: function() { setSelPlayer(r); }, style: { fontSize: FS.md, fontWeight: 700, color: C.white, padding: "9px 4px", lineHeight: 1.25, cursor: "pointer" } }, r.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, textAlign: "center", color: C.greenB, fontFamily: MONO, fontWeight: 800, padding: "9px 4px" } }, r.g + "-" + String(r.p).padStart(2, "0")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, textAlign: "center", color: C.slate, fontFamily: MONO, padding: "9px 4px" } }, String(r.sh)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, textAlign: "center", color: C.slate, fontFamily: MONO, padding: "9px 4px" } }, String(r.tk)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, textAlign: "center", color: C.slate, fontFamily: MONO, padding: "9px 4px" } }, String(r.kow)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, textAlign: "center", color: C.slate, fontFamily: MONO, padding: "9px 4px" } }, String(r.tol)), React.createElement("div", { style: { fontSize: FS.md, textAlign: "center", fontFamily: MONO, fontWeight: 800, padding: "9px 4px", color: (r.xsd >= 0 ? C.greenB : C.red) } }, (r.sh ? ((r.xsd >= 0 ? "+" : "") + r.xsd.toFixed(1)) : "–"))); }))); })())
   ,
     dtab === "players" && React.createElement("div", { style: { marginTop: 4, marginBottom: 16 } }, React.createElement(TurnoverCost, { evs: d._events, isMatch: scope === "match" })),
