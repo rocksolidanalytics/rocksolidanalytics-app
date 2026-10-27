@@ -169,6 +169,15 @@ a first-time user saw no way to start or save. The bottom strip now shows the ne
 mark (Mark throw-in in gold until it is set, then Mark 2nd half, then nothing) and a green
 Save, beside the seek buttons. Portrait is unchanged.
 
+**Video tagger takes YouTube links.** The link box (now "YouTube / Dropbox / URL") accepts a
+YouTube link and plays it in a YouTube player; a small stand-in gives the tagger the same
+time, seek, play and pause it uses on a file, so tagging, the seek buttons, mark halves and
+resume all work unchanged. Nothing is copied to the device, so it avoids the iPad memory
+crash, and a reload only needs the link again. The link is saved on the match when it has no
+YouTube link yet (Game film can then use it). Clip export says it needs a file. Checked with a
+stand-in YouTube player (the test machine cannot reach YouTube): loads, tags, sends seeks.
+Still to check on the iPad with a real YouTube video: seek accuracy and tagging timestamps.
+
 **Video tagger: saving the video on load, tried and reverted.** Saving a picked video to the
 device as soon as it loaded (with an IndexedDB fallback) went live at a9be286. Tadhg then
 picked a match video from Photos on the iPad and Safari crashed ("A problem repeatedly

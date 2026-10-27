@@ -7576,6 +7576,39 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       if (p.length) window.localStorage.setItem(vtKey(mid), JSON.stringify(p)); else window.localStorage.removeItem(vtKey(mid));
     } catch (e) {}
   }
+  // YouTube in the video tagger. vtYtId reads the video id from a link; makeYtShim gives the
+  // tagger a stand-in for the video element (time, seek, play, pause and the same events), so
+  // every part of the tagger works on a YouTube player as it does on a file.
+  function vtYtId(u) { if (!u) return null; var m = String(u).match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|live\/|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/); return m ? m[1] : null; }
+  function ytApiLoad(ok, fail) {
+    if (window.YT && window.YT.Player) { ok(); return; }
+    var prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = function() { if (typeof prev === "function") { try { prev(); } catch (e) {} } ok(); };
+    if (!document.getElementById("rsa-yt-api")) { var sc = document.createElement("script"); sc.id = "rsa-yt-api"; sc.src = "https://www.youtube.com/iframe_api"; sc.onerror = fail; document.head.appendChild(sc); }
+    setTimeout(function() { if (!(window.YT && window.YT.Player)) fail(); }, 8000);
+  }
+  function makeYtShim() {
+    var lis = {}, p = null, st = -1, rate = 1, iv = null;
+    function fire(k) { (lis[k] || []).slice().forEach(function(f) { try { f(); } catch (e) {} }); }
+    var sh = {
+      readyState: 0, videoWidth: 1280, videoHeight: 720, muted: false, isYouTube: true,
+      _attach: function(pl) { p = pl; },
+      _ready: function() { sh.readyState = 4; clearInterval(iv); iv = setInterval(function() { if (p && st === 1) fire("timeupdate"); }, 250); fire("loadeddata"); },
+      _state: function(x) { var was = st; st = x; if (x === 1) fire("play"); if ((x === 2 || x === 0) && was === 1) fire("pause"); },
+      _error: function() { fire("error"); },
+      _destroy: function() { clearInterval(iv); try { if (p && p.destroy) p.destroy(); } catch (e) {} p = null; },
+      addEventListener: function(k, f) { (lis[k] = lis[k] || []).push(f); },
+      removeEventListener: function(k, f) { lis[k] = (lis[k] || []).filter(function(g) { return g !== f; }); },
+      play: function() { if (p && p.playVideo) p.playVideo(); return Promise.resolve(); },
+      pause: function() { if (p && p.pauseVideo) p.pauseVideo(); }
+    };
+    Object.defineProperty(sh, "currentTime", { get: function() { return p && p.getCurrentTime ? p.getCurrentTime() || 0 : 0; }, set: function(t) { if (p && p.seekTo) { p.seekTo(Math.max(0, t), true); setTimeout(function() { fire("timeupdate"); }, 60); } } });
+    Object.defineProperty(sh, "paused", { get: function() { return st !== 1; } });
+    Object.defineProperty(sh, "ended", { get: function() { return st === 0; } });
+    Object.defineProperty(sh, "duration", { get: function() { return p && p.getDuration ? p.getDuration() : NaN; } });
+    Object.defineProperty(sh, "playbackRate", { get: function() { return rate; }, set: function(r) { rate = r; if (p && p.setPlaybackRate) p.setPlaybackRate(r); } });
+    return sh;
+  }
   function VideoTagger({ club, session, match, back }) {
     // Tagging colours from the club and opposition kits, read fresh so kit edits show at once.
     const [kitTs, setKitTs] = useState((club && club.tag_settings) || {});
@@ -7677,6 +7710,28 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [customEvents, setCustomEvents] = useState([]);
     const tx = useRef({ ev: null, team: "h", loc: null, outcome: null, vt: 0, gt: null, skip: false });
     const lastTap = useRef(0), seqRef = useRef(1), vRef = useRef(null), fileRef = useRef(null);
+    // A YouTube video plays in its own player; the stand-in takes the place of the video element in vRef.
+    const ytBoxRef = useRef(null);
+    var ytVid = String(videoSrc || "").indexOf("yt:") === 0 ? String(videoSrc).slice(3) : null;
+    const ytShim = useMemo(function() { return ytVid ? makeYtShim() : null; }, [ytVid]);
+    if (ytShim) vRef.current = ytShim;
+    useEffect(function() {
+      if (!ytVid || !ytShim) return;
+      var dead = false;
+      function mkYt() {
+        if (dead || !ytBoxRef.current || !window.YT || !window.YT.Player) return;
+        ytBoxRef.current.innerHTML = "";
+        var host = document.createElement("div");
+        host.style.width = "100%"; host.style.height = "100%";
+        ytBoxRef.current.appendChild(host);
+        try {
+          var pl = new window.YT.Player(host, { videoId: ytVid, width: "100%", height: "100%", playerVars: { rel: 0, playsinline: 1, controls: 1, iv_load_policy: 3 }, events: { onReady: function() { ytShim._attach(pl); ytShim._ready(); }, onStateChange: function(ev) { ytShim._state(ev.data); }, onError: function() { ytShim._error(); } } });
+          ytShim._attach(pl);
+        } catch (e) { ytShim._error(); }
+      }
+      ytApiLoad(mkYt, function() { if (!dead) ytShim._error(); });
+      return function() { dead = true; ytShim._destroy(); if (ytBoxRef.current) ytBoxRef.current.innerHTML = ""; };
+    }, [ytVid]);
     function sync() {
       bump(function(x) {
         return x + 1;
@@ -7820,6 +7875,15 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function loadUrl() {
       var u = (urlInput || "").trim();
       if (!u) return;
+      var yid = vtYtId(u);
+      if (yid) {
+        setVideoError(false);
+        setVideoLoaded(false);
+        setVideoSrc("yt:" + yid);
+        // Kept on the match, so Game film can use it and the tagger offers it next time.
+        if (!vtYtId(match.video_url)) db.from("matches").update({ video_url: u }).eq("id", match.id).then(function() {}, function() {});
+        return;
+      }
       u = u.replace("?dl=0", "?dl=1");
       setVideoError(false);
       setVideoLoaded(false);
@@ -8194,6 +8258,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     async function plExport(pl) {
       var v = vRef.current;
       if (!v || !pl || !pl.events || !pl.events.length) return;
+      if (v.isYouTube) { setPlExp({ err: "Clips can't be exported from a YouTube video. Load the match from a file to export." }); return; }
       if (!window.MediaRecorder || !(v.captureStream || v.mozCaptureStream)) {
         setPlExp({ err: "This browser can't export clips. Chrome on Android or a desktop browser will." }); return;
       }
@@ -8544,7 +8609,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       } })));
     }
     var curGame = vidToGame(curT);
-    if (!videoSrc) return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, title: "Back", style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 12, letterSpacing: 1, color: C.slate } }, "VIDEO TAGGER")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 22, display: "flex", flexDirection: "column", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800, marginTop: 8 } }, nmH, " v ", nmA), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slate, fontFamily: MONO, marginBottom: 4 } }, match.date || ""), existing > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10, padding: "9px 13px", borderRadius: RAD.md, background: C.gold + ALPHA.faint, border: "1px solid " + C.gold + ALPHA.mid, color: C.gold, fontSize: 11.5, maxWidth: 330, textAlign: "center" } }, "This match already has ", existing, " tagged event", existing === 1 ? "" : "s", " \u2014 anything you tag here is added on top."), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 20, width: "100%", maxWidth: 360 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 14 } }, [["file", "Local file"], ["url", "Dropbox / URL"]].map(function(o) {
+    if (!videoSrc) return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, title: "Back", style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 12, letterSpacing: 1, color: C.slate } }, "VIDEO TAGGER")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 22, display: "flex", flexDirection: "column", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800, marginTop: 8 } }, nmH, " v ", nmA), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.slate, fontFamily: MONO, marginBottom: 4 } }, match.date || ""), existing > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10, padding: "9px 13px", borderRadius: RAD.md, background: C.gold + ALPHA.faint, border: "1px solid " + C.gold + ALPHA.mid, color: C.gold, fontSize: 11.5, maxWidth: 330, textAlign: "center" } }, "This match already has ", existing, " tagged event", existing === 1 ? "" : "s", " \u2014 anything you tag here is added on top."), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 20, width: "100%", maxWidth: 360 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 14 } }, [["file", "Local file"], ["url", "YouTube / Dropbox / URL"]].map(function(o) {
       var on = loadMode === o[0];
       return /* @__PURE__ */ React.createElement("button", { key: o[0], onClick: function() {
         setLoadMode(o[0]);
@@ -8553,7 +8618,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       if (fileRef.current) fileRef.current.click();
     }, style: { padding: "30px 16px", borderRadius: RAD.lg, border: "1.5px dashed " + C.border, background: C.bgCard, textAlign: "center", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 30, marginBottom: 6 } }, "\u25B6"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13.5, fontWeight: 700 } }, "Tap to choose match footage"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slateD, marginTop: 5 } }, "Plays from your phone \u2014 nothing is uploaded."), /* @__PURE__ */ React.createElement("input", { ref: fileRef, type: "file", accept: "video/*", onChange: loadFile, style: { display: "none" } })) : /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("input", { value: urlInput, onChange: function(e) {
       setUrlInput(e.target.value);
-    }, placeholder: "https://\u2026/match.mp4", style: { width: "100%", boxSizing: "border-box", padding: "12px 13px", borderRadius: RAD.lg, border: "1px solid " + C.border, background: C.bgCard, color: C.white, fontSize: 13 } }), /* @__PURE__ */ React.createElement("button", { onClick: loadUrl, style: { marginTop: 10, width: "100%", minHeight: 44, padding: "12px", borderRadius: RAD.lg, border: "none", cursor: "pointer", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 13.5 } }, "Load video"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slateD, marginTop: 8, lineHeight: 1.5 } }, "Use a direct MP4 link. For Dropbox, paste the share link \u2014 it\u2019ll switch ", /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO } }, "?dl=0"), " to ", /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO } }, "?dl=1"), " for you.")))));
+    }, placeholder: "YouTube link or https://\u2026/match.mp4", style: { width: "100%", boxSizing: "border-box", padding: "12px 13px", borderRadius: RAD.lg, border: "1px solid " + C.border, background: C.bgCard, color: C.white, fontSize: 13 } }), /* @__PURE__ */ React.createElement("button", { onClick: loadUrl, style: { marginTop: 10, width: "100%", minHeight: 44, padding: "12px", borderRadius: RAD.lg, border: "none", cursor: "pointer", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 13.5 } }, "Load video"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.slateD, marginTop: 8, lineHeight: 1.5 } }, "Paste a YouTube link, or a direct MP4 link. For Dropbox, paste the share link \u2014 it\u2019ll switch ", /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO } }, "?dl=0"), " to ", /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO } }, "?dl=1"), " for you.")))));
     function bfClip(r) {
       var v = vRef.current;
       if (!v || !r) return;
@@ -8699,7 +8764,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }, style: { flexShrink: 0, minWidth: 48, padding: "9px 3px", borderRadius: RAD.md, cursor: "pointer", background: subsOpen ? tc2 + ALPHA.soft : C.field, border: "1px solid " + (subsOpen ? tc2 : C.border), color: subsOpen ? tc2 : C.slate, fontSize: 9.5, fontWeight: 800 } }, subsOpen ? "1\u201315" : "SUBS"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
         commit(null);
       }, style: { flexShrink: 0, minWidth: 48, padding: "9px 3px", borderRadius: RAD.md, cursor: "pointer", background: C.field, border: "1px solid " + C.border, color: C.slate, fontSize: 9.5, fontWeight: 800 } }, "NONE"));
-    })()), /* @__PURE__ */ React.createElement("div", { style: land ? { background: C.black, position: "absolute", top: 0, bottom: 0, left: LCOL, right: LCOL, zIndex: 0, display: "flex", flexDirection: "column" } : { background: C.black, position: "relative", flex: "none", minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, position: "relative", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("video", { ref: vRef, src: videoSrc, controls: true, playsInline: true, preload: "metadata", style: { width: land ? "auto" : "100%", height: land ? "100%" : "auto", maxWidth: "100%", maxHeight: land ? "100%" : big ? "30vh" : showPitch ? "20vh" : "32vh", display: "block", objectFit: "contain", background: C.black } }), videoError && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "#000c", color: C.red, fontSize: 12, textAlign: "center", padding: 16 } }, "Couldn\u2019t load this video. For Dropbox use a ", /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO } }, "\xA0?dl=1\xA0"), " link, or pick a local file.")), false), /* @__PURE__ */ React.createElement("div", { style: land ? { position: "absolute", top: 0, right: 0, bottom: 0, width: dockX ? "min(46vw, 400px)" : "0px", transition: "width 0.18s ease", overflow: "hidden", zIndex: 3, display: "flex", flexDirection: "column", background: LED.glass, borderLeft: dockX ? "1px solid " + C.border : "none", backdropFilter: "blur(2px)" } : { flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" } }, renderTransport(), dockX && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 12px 4px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO } }, /* @__PURE__ */ React.createElement("span", { style: { color: TC.us } }, "\u25CF"), " TAP = ", teamWord(nmH).toUpperCase(), "  ", /* @__PURE__ */ React.createElement("span", { style: { color: TC.opp } }, "\u25CF\u25CF"), " DBL = ", teamWord(nmA).toUpperCase()), /* @__PURE__ */ React.createElement("button", { onClick: undo, style: { background: "none", border: "none", boxShadow: "none", color: tagged.length ? C.slate : C.slateD, cursor: "pointer", fontSize: 10, fontFamily: MONO, fontWeight: 700, padding: "17px 6px", margin: "-16px 0" } }, "\u21A9 UNDO"), land && !t.ev && /* @__PURE__ */ React.createElement("button", { onClick: function() {
+    })()), /* @__PURE__ */ React.createElement("div", { style: land ? { background: C.black, position: "absolute", top: 0, bottom: 0, left: LCOL, right: LCOL, zIndex: 0, display: "flex", flexDirection: "column" } : { background: C.black, position: "relative", flex: "none", minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, position: "relative", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ (ytVid ? React.createElement("div", { ref: ytBoxRef, style: land ? { width: "100%", height: "100%", background: C.black } : { width: "100%", aspectRatio: "16 / 9", maxHeight: big ? "30vh" : showPitch ? "20vh" : "32vh", background: C.black } }) : React.createElement("video", { ref: vRef, src: videoSrc, controls: true, playsInline: true, preload: "metadata", style: { width: land ? "auto" : "100%", height: land ? "100%" : "auto", maxWidth: "100%", maxHeight: land ? "100%" : big ? "30vh" : showPitch ? "20vh" : "32vh", display: "block", objectFit: "contain", background: C.black } })), videoError && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "#000c", color: C.red, fontSize: 12, textAlign: "center", padding: 16 } }, "Couldn\u2019t load this video. For Dropbox use a ", /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO } }, "\xA0?dl=1\xA0"), " link, or pick a local file.")), false), /* @__PURE__ */ React.createElement("div", { style: land ? { position: "absolute", top: 0, right: 0, bottom: 0, width: dockX ? "min(46vw, 400px)" : "0px", transition: "width 0.18s ease", overflow: "hidden", zIndex: 3, display: "flex", flexDirection: "column", background: LED.glass, borderLeft: dockX ? "1px solid " + C.border : "none", backdropFilter: "blur(2px)" } : { flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" } }, renderTransport(), dockX && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 12px 4px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.slateD, fontFamily: MONO } }, /* @__PURE__ */ React.createElement("span", { style: { color: TC.us } }, "\u25CF"), " TAP = ", teamWord(nmH).toUpperCase(), "  ", /* @__PURE__ */ React.createElement("span", { style: { color: TC.opp } }, "\u25CF\u25CF"), " DBL = ", teamWord(nmA).toUpperCase()), /* @__PURE__ */ React.createElement("button", { onClick: undo, style: { background: "none", border: "none", boxShadow: "none", color: tagged.length ? C.slate : C.slateD, cursor: "pointer", fontSize: 10, fontFamily: MONO, fontWeight: 700, padding: "17px 6px", margin: "-16px 0" } }, "\u21A9 UNDO"), land && !t.ev && /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setDockOpen(false);
     }, style: { marginLeft: 6, background: "none", border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slateD, fontSize: 10, fontWeight: 800, padding: "3px 9px", cursor: "pointer" } }, "\xBB")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", gap: 6, padding: "0 6px 6px" } }, !land && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5, width: 94, flexShrink: 0, overflowY: "auto" } }, land && !dockX && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4 } }, /* @__PURE__ */ React.createElement("button", { onClick: undo, disabled: tagged.length === 0, style: { flex: 1, padding: "7px 2px", borderRadius: RAD.md, background: C.bgCard, border: "1px solid " + C.border, color: C.slate, fontSize: 11, cursor: "pointer" } }, "\u21A9"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
       setDockOpen(true);
