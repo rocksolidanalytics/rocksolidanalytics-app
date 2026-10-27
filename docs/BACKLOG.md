@@ -87,6 +87,11 @@ player ratings).
 - Penalty kicks are kept on the match (matches.penalties), not as events, so they are not in
   player stats or the timeline.
 
+**Video tagger design follow-ups** (from the 2026-10-27 review, see Done).
+- Bring the live and video taggers onto one shared tagging core, next time a feature touches
+  both (score, end match, offline queue and period logic exist twice).
+- Store new tags by video position and derive the match clock from the period marks.
+
 **Analysis, later**
 - Expected scores: once a sport passes about 2,000 shots from play, replace zones with a
   smooth distance-and-angle model so every shot gets its own expected value.
@@ -193,7 +198,7 @@ Deployed (main at f31042c).
 controls, keyboard and full-screen button off, and the tagger draws its own bar over the
 video: play/pause, a scrub bar and the time (top of the video in landscape, so it clears the
 scoreboard; bottom in portrait). YouTube still shows its logo and, while paused, can show a
-title or end screen; that cannot be turned off. Not yet deployed.
+title or end screen; that cannot be turned off. Deployed (main at 8d8618f).
 Follow-up after a screen recording on Android (Game film): with controls off YouTube still
 shows its title, share, watch-later and pause overlay whenever the video is tapped. Once the
 video has played, a clear layer now sits over the player in Game film and the video tagger:
@@ -203,7 +208,7 @@ and Watch on YouTube stays until then; the iPad can refuse to start a video any 
 The recording also showed YouTube putting the same overlay up by itself for about 4 seconds
 every time a clip starts or jumps (not only on a tap), and that cannot be shortened. Game film
 clips now start 8 seconds before the tagged moment (was 5), so the overlay covers the build-up
-and is gone by the moment itself.
+and is gone by the moment itself. Tap layer deployed at 8d8618f, 8-second start at 14039ed.
 
 **Match format: 35-minute halves, extra time, penalties, 3 x 20.** New matches table columns
 (half_mins, periods, extra_time, et_mins, period_marks, penalties), all empty for existing
@@ -218,8 +223,40 @@ also hit long stoppage time on 30-minute games). Video tagger: one mark per peri
 adds two ET marks, and Penalty shootout appears once the ET 2nd half is marked. Shootout: shirt
 number (optional), Scored or Missed per kick, undo, saved on the phone as you go; Finish saves
 the winner and kicks and leaves the score alone. The dashboard and report show "won 4-3 on
-penalties". Game film seeks and the timeline half-time line use the match length. Not yet
-deployed.
+penalties". Game film seeks and the timeline half-time line use the match length. Deployed
+(main at 8d8618f). Tested in the browser only so far; first real 35-minute or extra-time match
+on the iPad still to check.
+
+**Video tagger: match length and period marks read from the match.** Found while reviewing
+the tagger design: the Video tagger match list loaded only a few columns, so a match opened
+from it had no half length and a 35-minute match was timed as 30 (live from 8d8618f to
+e9ea14a; no 35-minute match was tagged on video in between, as far as we know). The list now
+loads the format and mark columns, and the tagger reads the full match row when it opens.
+Period marks (throw-in, 2nd half, ET) were written to the match but only read back from the
+device that made them; a phone or iPad with no marks of its own now uses the ones saved on the
+match, so tagging carries on across devices. Marks made on the device still win. Deployed
+(main at e9ea14a).
+
+**Browser tests in the repository (tools/e2e).** The Playwright tests had only lived in a
+scratch folder and were lost with each session. Seven now sit in tools/e2e and run with
+`node e2e/run.js` from tools/ (about 90 seconds, PASS or FAIL per test, 74 checks): match
+format helpers, live tagger timing and extra time, new match length, penalty shootout, video
+tagger marks (35 minutes with ET, 3 x 20, marks from another device), the landscape strip,
+and YouTube in the tagger and Game film through a stand-in player. All data is synthetic,
+with a generated one-minute test clip (310 KB); no real club data in the repository. A
+deliberate break (Game film start back to 5 seconds) was caught. Run before every commit
+alongside validate.sh.
+
+**Video tagger design review** (Tadhg asked what we would do differently from scratch).
+Keep: one tap for us and two for them, pause on tag, outcome then pitch spot then player, the
+throw-in and half-time mapping, saving tags with no signal. Change gradually, no rewrite:
+(1) store each tag by video position and work the match clock out from it, instead of clock
+text plus period (the 30-minute assumption sat in about 12 places); (2) period marks on the
+match (done today); (3) one player interface for file, link and YouTube, streaming first,
+never copying a whole match into browser storage; (4) one tagging core shared by the live and
+video taggers, which are separate copies today; (5) design for iPad landscape first, with
+keyboard shortcuts on desktop; (6) browser tests in the repository (done today), later
+modules and type checking.
 
 **Video tagger: saving the video on load, tried and reverted.** Saving a picked video to the
 device as soon as it loaded (with an IndexedDB fallback) went live at a9be286. Tadhg then
