@@ -9687,14 +9687,27 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var data = useMemo(function() { return scorecardData(d.matches, d._events, d._apps); }, [d]);
     function tgtOf(c, rows) { var t = tgts[c.k]; return t != null && t !== "" ? Number(t) : scAvg(rows, c.k, c.pct); }
     function scFmt(c, v) { return v == null ? "\u2013" : c.pct ? v + "%" : String(v); }
-    function mark(c, v, t) { return v == null || t == null ? null : (c.up ? v >= t : v <= t); }
+    // 1 meets the target, 0 a near miss (within 5 points on a percentage, else within 10% of
+    // the target and at least 0.1), -1 misses it.
+    function mark(c, v, t) {
+      if (v == null || t == null) return null;
+      if (c.up ? v >= t : v <= t) return 1;
+      return Math.abs(v - t) <= (c.pct ? 5 : Math.max(0.1, Math.abs(t) * 0.1)) + 1e-9 ? 0 : -1;
+    }
     function coachLine(r, cs, rows) {
-      var effBad = [], effOk = 0, techBad = [];
-      cs.forEach(function(c) { var m = mark(c, r.v[c.k], tgtOf(c, rows)); if (m == null) return; if (c.effort) { if (m) effOk++; else effBad.push(c.t.toLowerCase()); } else if (!m) techBad.push(c.t.toLowerCase()); });
-      if (!effBad.length && !techBad.length) return "On target across the board.";
-      if (!effBad.length && effOk) return "Effort is good, technique needs work: " + techBad.join("; ") + ".";
-      if (!techBad.length) return "Clean technique, needs more involvement: " + effBad.join("; ") + ".";
-      return "Work on effort (" + effBad.join("; ") + ") and technique (" + techBad.join("; ") + ").";
+      var effBad = [], effOk = 0, techBad = [], near = [];
+      cs.forEach(function(c) {
+        var t = tgtOf(c, rows), m = mark(c, r.v[c.k], t);
+        if (m == null) return;
+        if (m === 0) near.push(c.t.toLowerCase() + " (" + scFmt(c, r.v[c.k]) + " against " + scFmt(c, t) + ")");
+        else if (c.effort) { if (m > 0) effOk++; else effBad.push(c.t.toLowerCase()); }
+        else if (m < 0) techBad.push(c.t.toLowerCase());
+      });
+      var line = !effBad.length && !techBad.length ? (near.length ? "Nearly there across the board." : "On target across the board.")
+        : !effBad.length && effOk ? "Effort is good, technique needs work: " + techBad.join("; ") + "."
+        : !techBad.length ? "Clean technique, needs more involvement: " + effBad.join("; ") + "."
+        : "Work on effort (" + effBad.join("; ") + ") and technique (" + techBad.join("; ") + ").";
+      return near.length ? line + " Close on " + near.join("; ") + "." : line;
     }
     var th = { padding: "6px 4px", fontSize: 10, fontFamily: MONO, color: C.slateD, fontWeight: 700, textAlign: "center", whiteSpace: "nowrap" };
     function table(rows, cs, title) {
@@ -9716,7 +9729,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                   React.createElement("td", { style: Object.assign({ padding: "9px 8px", fontWeight: 700, whiteSpace: "nowrap" }, sticky) }, r.name, React.createElement("span", { style: { color: C.slateD, fontWeight: 400, fontFamily: MONO, fontSize: 11 } }, " \u00B7 " + r.games)),
                   cs.map(function(c) {
                     var v = r.v[c.k], m = mark(c, v, tgtOf(c, rows));
-                    return React.createElement("td", { key: c.k, style: { padding: "9px 4px", textAlign: "center", fontFamily: MONO, whiteSpace: "nowrap", color: m == null ? C.slateD : C.white } }, scFmt(c, v), m != null && React.createElement("span", { "aria-label": m ? "on target" : "off target", style: { marginLeft: 4, fontWeight: 900, color: m ? C.greenB : C.red } }, m ? "\u2713" : "\u2717"));
+                    return React.createElement("td", { key: c.k, style: { padding: "9px 4px", textAlign: "center", fontFamily: MONO, whiteSpace: "nowrap", color: m == null ? C.slateD : C.white } }, scFmt(c, v), m != null && React.createElement("span", { "aria-label": m > 0 ? "on target" : m === 0 ? "near miss" : "off target", style: { marginLeft: 4, fontWeight: 900, color: m > 0 ? C.greenB : m === 0 ? C.gold : C.red } }, m > 0 ? "\u2713" : m === 0 ? "\u2248" : "\u2717"));
                   })),
                 isOpen && React.createElement("tr", null, React.createElement("td", { colSpan: cs.length + 1, style: { padding: "0 10px 10px", fontSize: FS.sm, color: C.slate, lineHeight: 1.5 } },
                   React.createElement("div", { style: { position: "sticky", left: 10, maxWidth: 320 } }, coachLine(r, cs, rows),
@@ -9765,7 +9778,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     if (!data.out.length && !data.gk.length) return React.createElement("div", { style: { fontSize: FS.md, color: C.slateD, padding: "4px 2px", lineHeight: 1.5 } }, "The scorecard starts once a player has " + SC_MIN_GAMES + " games with tagged events or a starting place." + (data.few.length ? " " + data.few.length + " players so far, most on " + data.few[0].games + "." : ""));
     return React.createElement("div", null, toggle,
       mode === "targets" ? targetsView() : React.createElement(React.Fragment, null,
-        React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.5, marginBottom: 10 } }, "\u2713 meets the target, \u2717 misses it. Tap a player for the coaching point."),
+        React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.5, marginBottom: 10 } }, "\u2713 meets the target, \u2248 near miss, \u2717 misses it. Tap a player for the coaching point."),
         table(data.out, cols.out, data.gk.length ? "OUTFIELD" : null), table(data.gk, cols.gk, "GOALKEEPERS"),
         data.few.length > 0 && React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.6 } }, "Under " + SC_MIN_GAMES + " games: " + data.few.map(function(f) { return f.name + " (" + f.games + ")"; }).join(", "))));
   }

@@ -21,6 +21,16 @@ module.exports = async function(t) {
   tx = await L.text(p);
   t.ok('the new target shows in the column header', /Tkl\/g\n≥ 4/.test(tx));
   t.eq('every player now misses the tackle target', await p.evaluate(() => [...document.querySelector('.rsa-sec table tbody').querySelectorAll('tr')].filter(tr => tr.children.length > 2).map(tr => tr.children[1].innerText.indexOf('✗') >= 0).every(Boolean)), true);
+  await L.clickTxt(p, '^TARGETS$'); await L.wait(p, 300);
+  await (await p.$('input[aria-label="Tackles per game target"]')).fill('0.4');
+  await L.clickTxt(p, '^Save targets$'); await L.wait(p, 800);
+  await L.clickTxt(p, '^SCORECARD$'); await L.wait(p, 300);
+  const marks = await p.evaluate(() => [...document.querySelector('.rsa-sec table tbody').querySelectorAll('tr')].filter(tr => tr.children.length > 2).map(tr => tr.children[1].innerText.replace(/\s+/g, '')));
+  t.ok('0.3 against a target of 0.4 is a near miss', marks.some(x => x === '0.3\u2248'), marks.join(' | '));
+  t.ok('0 against 0.4 is still a miss', marks.some(x => x === '0\u2717'), marks.join(' | '));
+  const nearRow = await p.evaluate(() => [...document.querySelector('.rsa-sec table tbody').querySelectorAll('tr')].findLastIndex(tr => tr.children.length > 2 && tr.children[1].innerText.indexOf('\u2248') >= 0));
+  await p.evaluate(i => document.querySelector('.rsa-sec table tbody').querySelectorAll('tr')[i].click(), nearRow); await L.wait(p, 300);
+  t.ok('the coaching point names the near miss', /Close on tackles per game \(0\.3 against 0\.4\)/.test(await L.text(p)));
   t.eq('no page errors', r.errors, []);
   await r.browser.close();
 };
