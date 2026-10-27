@@ -7643,7 +7643,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     useEffect(function() {
       (async function() {
         try {
-          const m = await db.from("matches").select("id,date,opponent,status,our_score,video_tagged,scouting,scout").eq("club_id", club.id).order("date");
+          const m = await db.from("matches").select("id,date,opponent,status,our_score,video_tagged,scouting,scout,half_mins,periods,et_mins,extra_time,penalties,period_marks,video_throwin,video_halfstart").eq("club_id", club.id).order("date");
           const a = await db.from("appearances").select("match_id").eq("club_id", club.id);
           const cnt = {};
           (a.data || []).forEach(function(r) {
@@ -7809,6 +7809,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [pMarks, setPMarks] = useState({});
     const [etOn, setEtOn] = useState(!!match.extra_time);
     const [pensOpen, setPensOpen] = useState(false);
+    // Bumped when the full match row arrives, so the format it carries is redrawn.
+    const [marksRev, setMarksRev] = useState(0);
     const [curT, setCurT] = useState(0);
     const [playing, setPlaying] = useState(false);
     const [ytGo, setYtGo] = useState(false);
@@ -7978,10 +7980,29 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       db.from("matches").select("*").eq("id", match.id).single().then(function(r) {
         var mce = r.data ? r.data.custom_events : null;
         setCustomEvents(Array.isArray(mce) ? mce : clubList);
+        if (r.data) loadMatchMarks(r.data);
       }).catch(function() {
         setCustomEvents(clubList);
       });
     }, []);
+    // The full row may hold the match format and period marks that the list
+    // leaves out. Marks saved on this device win; otherwise the marks saved on
+    // the match are used, so tagging carries on from another phone or iPad.
+    function loadMatchMarks(row) {
+      ["half_mins", "periods", "et_mins", "extra_time", "penalties", "period_marks", "video_throwin", "video_halfstart"].forEach(function(k) { match[k] = row[k]; });
+      setMarksRev(function(x) { return x + 1; });
+      if (row.extra_time) setEtOn(true);
+      var sv = null;
+      try { sv = JSON.parse(window.localStorage.getItem("rsa_vsync_" + match.id) || "null"); } catch (e) {}
+      if (sv && sv.throwIn != null) return;
+      var pm = {};
+      Object.keys(row.period_marks || {}).forEach(function(k) { var v = row.period_marks[k] && row.period_marks[k].video_start; if (v != null) pm[k] = v; });
+      if (row.video_throwin == null) return;
+      setThrowIn(row.video_throwin);
+      if (row.video_halfstart != null) setHalfStart(row.video_halfstart);
+      setPMarks(pm);
+      try { window.localStorage.setItem("rsa_vsync_" + match.id, JSON.stringify(Object.assign(sv || {}, { throwIn: row.video_throwin, halfStart: row.video_halfstart, pMarks: pm }))); } catch (e) {}
+    }
     useEffect(function() {
       var v = vRef.current;
       if (!v) return;
