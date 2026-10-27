@@ -7046,7 +7046,26 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }, style: { marginTop: 18, width: "100%", minHeight: 44, padding: 13, borderRadius: RAD.lg, border: "1px solid " + C.border, cursor: "pointer", background: C.bgCard, color: C.white, fontWeight: 700, fontSize: FS.md, display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", null, "Custom events for this match"), /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, "\u203A")), /* @__PURE__ */ React.createElement("button", { onClick: save, disabled: busy, style: { marginTop: 14, width: "100%", padding: 15, borderRadius: RAD.lg, border: "none", cursor: busy ? "default" : "pointer", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: FS.lg, opacity: busy ? 0.6 : 1 } }, busy ? "Saving\u2026" : "Save details")));
   }
   function lockerOK() {
-    return typeof navigator !== "undefined" && navigator.storage && typeof navigator.storage.getDirectory === "function";
+    return typeof navigator !== "undefined" && (navigator.storage && typeof navigator.storage.getDirectory === "function" || typeof indexedDB !== "undefined");
+  }
+  // Second home for saved videos: IndexedDB, for browsers that cannot write files to the
+  // device folder (older iPad Safari has no createWritable).
+  function vidDB() {
+    return new Promise(function(res, rej) {
+      var r = indexedDB.open("rsa_videos", 1);
+      r.onupgradeneeded = function() { r.result.createObjectStore("v"); };
+      r.onsuccess = function() { res(r.result); };
+      r.onerror = function() { rej(r.error); };
+    });
+  }
+  function vidIdb(mode, fn) {
+    return vidDB().then(function(dbx) {
+      return new Promise(function(res, rej) {
+        var txn = dbx.transaction("v", mode), q = fn(txn.objectStore("v"));
+        txn.oncomplete = function() { res(q && q.result); dbx.close(); };
+        txn.onerror = txn.onabort = function() { rej(txn.error); dbx.close(); };
+      });
+    });
   }
   function lockerIndex() {
     try {
@@ -7098,17 +7117,21 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }
   }
   async function lockerSave(id, file, meta) {
-    var dir = await lockerDir();
+    var done = false, dir = null;
     try {
+      dir = await lockerDir();
       var fh = await dir.getFileHandle("vid_" + id, { create: true });
+      if (typeof fh.createWritable !== "function") throw new Error("no_writable");
       var w = await fh.createWritable();
       await w.write(file);
       await w.close();
+      done = true;
     } catch (e) {
       // A half written file would hold space and never show in the list.
-      try { await dir.removeEntry("vid_" + id); } catch (e2) {}
-      throw e;
+      if (dir) { try { await dir.removeEntry("vid_" + id); } catch (e2) {} }
+      if (e && e.name === "QuotaExceededError" || typeof indexedDB === "undefined") throw e;
     }
+    if (!done) await vidIdb("readwrite", function(st) { return st.put(file, "vid_" + id); });
     var idx = lockerIndex().filter(function(x) {
       return x.matchId !== id;
     });
@@ -7116,10 +7139,16 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     saveLockerIndex(idx);
   }
   async function lockerURL(id) {
-    var dir = await lockerDir();
-    var fh = await dir.getFileHandle("vid_" + id);
-    var f = await fh.getFile();
-    return URL.createObjectURL(f);
+    try {
+      var dir = await lockerDir();
+      var fh = await dir.getFileHandle("vid_" + id);
+      var f = await fh.getFile();
+      return URL.createObjectURL(f);
+    } catch (e) {
+      var b = await vidIdb("readonly", function(st) { return st.get("vid_" + id); });
+      if (!b) throw e;
+      return URL.createObjectURL(b);
+    }
   }
   async function lockerRemove(id) {
     try {
@@ -7127,6 +7156,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       await dir.removeEntry("vid_" + id);
     } catch (e) {
     }
+    try { await vidIdb("readwrite", function(st) { return st.delete("vid_" + id); }); } catch (e3) {}
     saveLockerIndex(lockerIndex().filter(function(x) {
       return x.matchId !== id;
     }));
@@ -7816,6 +7846,16 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setVideoError(false);
       setVideoLoaded(false);
       setVideoSrc(URL.createObjectURL(f));
+      // Keep the video on this device straight away, so a reload or a dropped tab (iPad Safari
+      // closes tabs in the background) brings it back; only when there is room, and quietly:
+      // if it fails, Finish and save still offers to keep it.
+      if (lockerOK()) (async function() {
+        try {
+          var sp = await lockerSpace();
+          if (sp && f.size + LOCKER_SPARE > sp.free) return;
+          await lockerSave(match.id, f, { opponent: match.opponent || "", date: match.date || "", scouting: !!match.scouting });
+        } catch (e) {}
+      })();
     }
     function loadUrl() {
       var u = (urlInput || "").trim();
