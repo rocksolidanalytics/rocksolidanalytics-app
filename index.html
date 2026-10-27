@@ -8936,10 +8936,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function evCols() {
       var evs = orderEvents(_tevs.concat(customEvts), tagSet, "video"), half = Math.ceil(evs.length / 2);
       var tcE = t.team === "h" ? TC.us : TC.opp;
+      // Buttons stretch to fill the column. On a short phone they go down to 28px so eight fit,
+      // and the column scrolls if a club has more events than that.
       function col(list, side) {
-        return React.createElement("div", { key: side, style: Object.assign({ position: "absolute", top: 58, bottom: "calc(16px + env(safe-area-inset-bottom, 0px))", width: LCOL, zIndex: 2, display: "flex", flexDirection: "column", gap: 5, padding: "0 6px", boxSizing: "border-box" }, side === "l" ? { left: 0 } : { right: 0 }) }, list.map(function(ev) {
+        return React.createElement("div", { key: side, style: Object.assign({ position: "absolute", top: 58, bottom: "calc(16px + env(safe-area-inset-bottom, 0px))", width: LCOL, zIndex: 2, display: "flex", flexDirection: "column", gap: 4, padding: "0 6px", boxSizing: "border-box", overflowY: "auto" }, side === "l" ? { left: 0 } : { right: 0 }) }, list.map(function(ev) {
           var on2 = t.ev && t.ev.id === ev.id;
-          return React.createElement("button", { key: ev.id, onClick: function() { onEventTap(ev); }, style: { flex: 1, minHeight: 34, padding: "4px 4px", borderRadius: RAD.md, cursor: "pointer", fontSize: 10.5, fontWeight: 800, lineHeight: 1.15, background: on2 ? tcE : C.bgCard, border: "1px " + (ev.custom ? "dashed" : "solid") + " " + (on2 ? tcE : C.border), color: on2 ? C.bg : C.white } }, ev.l, on2 && React.createElement("div", { style: { fontSize: 8, marginTop: 2 } }, t.team === "h" ? teamTag(nmH, nmA) : teamTag(nmA, nmH), " \u00b7 TAP AGAIN = SWITCH"));
+          return React.createElement("button", { key: ev.id, onClick: function() { onEventTap(ev); }, style: { flex: "1 0 auto", minHeight: 28, padding: "2px 4px", borderRadius: RAD.md, cursor: "pointer", fontSize: 10.5, fontWeight: 800, lineHeight: 1.15, background: on2 ? tcE : C.bgCard, border: "1px " + (ev.custom ? "dashed" : "solid") + " " + (on2 ? tcE : C.border), color: on2 ? C.bg : C.white } }, ev.l, on2 && React.createElement("div", { style: { fontSize: 8, marginTop: 2 } }, t.team === "h" ? teamTag(nmH, nmA) : teamTag(nmA, nmH), " \u00b7 TAP AGAIN = SWITCH"));
         }));
       }
       return [col(evs.slice(0, half), "l"), col(evs.slice(half), "r")];
