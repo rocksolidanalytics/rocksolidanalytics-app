@@ -9696,10 +9696,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var byGames = function(a, b) { return b.games - a.games || (a.name > b.name ? 1 : -1); };
     return { out: out.sort(byGames), gk: gk.sort(byGames), few: few.sort(byGames) };
   }
-  // Squad average of a column over the players who have a value; none below 3 players.
-  function scAvg(rows, k, pct) {
+  // Average of a column over the players who have a value; none below min players (3).
+  function scAvg(rows, k, pct, min) {
     var vs = rows.map(function(r) { return r.v[k]; }).filter(function(v) { return v != null; });
-    if (vs.length < 3) return null;
+    if (vs.length < (min || 3)) return null;
     var a = vs.reduce(function(s, v) { return s + v; }, 0) / vs.length;
     return pct ? Math.round(a) : Math.round(a * 10) / 10;
   }
@@ -9720,24 +9720,37 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var cols = scCols(stick);
     var data = useMemo(function() { return scorecardData(d.matches, d._events, d._apps); }, [d]);
     var last3 = view === "last3";
-    function sqT(c, rows) { var t = scNum(saved.targets[c.k]); return t != null ? t : scAvg(rows, c.k, c.pct); }
-    function lineT(c, r) { return r.line && saved.lineTargets[r.line] ? scNum(saved.lineTargets[r.line][c.k]) : null; }
+    // Automatic targets are whole numbers for one game: the average rounded (1.7 tackles a game
+    // gives 2). A line uses the average of its own players (2 or more), otherwise the squad.
+    function sqAuto(c, rows) { var a = scAvg(rows, c.k, c.pct); return a == null ? null : Math.round(a); }
+    function sqT(c, rows) { var t = scNum(saved.targets[c.k]); return t != null ? t : sqAuto(c, rows); }
+    function lineRows(line) { return data.out.filter(function(r) { return r.line === line; }); }
+    function lineAuto(c, line) { var a = scAvg(lineRows(line), c.k, c.pct, 2); return a == null ? null : Math.round(a); }
+    // Season target for a row: a line target set by the coach, then a squad target set by the
+    // coach, then the automatic line target, then the automatic squad target.
+    function seasonT(c, r, rows) {
+      var ls = r.line && saved.lineTargets[r.line] ? scNum(saved.lineTargets[r.line][c.k]) : null;
+      if (ls != null) return { t: ls, line: true };
+      if (scNum(saved.targets[c.k]) != null || r.gk || !r.line) return { t: sqT(c, rows), line: false };
+      var la = lineAuto(c, r.line);
+      return la != null ? { t: la, line: true } : { t: sqT(c, rows), line: false };
+    }
     function ownT(c, r) { var pt = saved.playerTargets[r.name] ? scNum(saved.playerTargets[r.name][c.k]) : null; return pt != null ? pt : scOwn(c, r.v[c.k]); }
     function scFmt(c, v) { return v == null ? "\u2013" : c.pct ? v + "%" : String(v); }
     var sym = function(c) { return c.up ? "\u2265 " : "\u2264 "; };
-    // 1 meets the target, 0 a near miss (within 5 points on a percentage, else within 10% of
-    // the target and at least 0.1), -1 misses it.
+    // 1 meets the target, 0 a near miss (an average that rounds to the whole-number target, or
+    // within 5 points on a percentage), -1 misses it.
     function mark(c, v, t) {
       if (v == null || t == null) return null;
       if (c.up ? v >= t : v <= t) return 1;
-      return Math.abs(v - t) <= (c.pct ? 5 : Math.max(0.1, Math.abs(t) * 0.1)) + 1e-9 ? 0 : -1;
+      return (c.pct ? Math.abs(v - t) <= 5 : Math.abs(v - t) < 0.5) ? 0 : -1;
     }
     // One cell: the number shown, its mark, the target it was measured against and whether that
     // target is the line or the own target of the player rather than the squad one in the heading.
     function scCell(c, r, rows) {
       if (!last3) {
-        var lt = lineT(c, r), t = lt != null ? lt : sqT(c, rows), v = r.v[c.k];
-        return { txt: scFmt(c, v), m: mark(c, v, t), t: t, sub: lt != null && v != null ? "line " + sym(c) + scFmt(c, lt) : null, near: scFmt(c, v) + " against " + scFmt(c, t) };
+        var st = seasonT(c, r, rows), t = st.t, v = r.v[c.k];
+        return { txt: scFmt(c, v), m: mark(c, v, t), t: t, sub: st.line && v != null && t != null ? sym(c) + scFmt(c, t) : null, near: scFmt(c, v) + " against " + scFmt(c, t) };
       }
       var ot = ownT(c, r);
       if (c.pct) { var pv = r.lastPct[c.k]; return { txt: scFmt(c, pv), m: mark(c, pv, ot), t: ot, sub: ot != null && pv != null ? sym(c) + scFmt(c, ot) : null, near: scFmt(c, pv) + " against " + scFmt(c, ot) }; }
@@ -9770,8 +9783,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var sticky = { position: "sticky", left: 0, background: C.bgCard, zIndex: 1 };
       function head(c) {
         if (last3) return "own target";
-        var t = sqT(c, rows), byLine = SC_LINES.some(function(l) { return saved.lineTargets[l[0]] && scNum(saved.lineTargets[l[0]][c.k]) != null; });
-        return (t == null ? "no target" : sym(c) + scFmt(c, t)) + (byLine ? " \u00B7 lines" : "");
+        var t = sqT(c, rows), byLine = rows.some(function(r) { return seasonT(c, r, rows).line; });
+        return byLine ? "by line" : t == null ? "no target" : sym(c) + scFmt(c, t);
       }
       return React.createElement("div", { style: { marginBottom: 16 } },
         title && React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.gold, fontFamily: MONO, fontWeight: 700, margin: "4px 0 8px" } }, title),
@@ -9823,7 +9836,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     // A target stepper: the target in use (AUTO until changed) with minus and plus to move it and
     // Reset to go back to the automatic value. No typing, so no keyboard on a phone.
     function box(c, val, auto, onCh, label, whole) {
-      var cur = scNum(val), shown = cur != null ? cur : auto, step = c.pct ? 5 : whole ? 1 : 0.1;
+      var cur = scNum(val), shown = cur != null ? cur : auto, step = c.pct ? 5 : 1;
       function stepBy(d) { var nv = Math.round(((shown == null ? 0 : shown) + d * step) * 10) / 10; onCh(String(Math.max(0, Math.min(c.pct ? 100 : 99, nv)))); }
       var b = { minWidth: 44, minHeight: 44, padding: 0, borderRadius: RAD.md, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: 20, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", lineHeight: 1 };
       return React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, flexShrink: 0 } },
@@ -9851,13 +9864,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var all = data.out.concat(data.gk), pr = all.filter(function(r) { return r.name === plSel; })[0];
       var pcs = pr ? (pr.gk ? cols.gk : cols.out) : [];
       return React.createElement("div", null,
-        hd("SQUAD"), note("Every target is automatic (AUTO): the squad average. Change one with \u2212 or +; Reset puts it back. Used on the Season view."),
-        cols.out.map(function(c) { var avg = scAvg(data.out, c.k, c.pct); return tRow(c, (c.effort ? "Effort" : "Technique") + " \u00B7 squad average " + scFmt(c, avg), box(c, work.targets[c.k], avg, function(v) { setW("targets", null, c.k, v); }, c.t + " target")); }),
-        data.gk.length > 0 && cols.gk.map(function(c) { var avg = scAvg(data.gk, c.k, c.pct); return tRow(c, "Goalkeepers \u00B7 average " + scFmt(c, avg), box(c, work.targets[c.k], avg, function(v) { setW("targets", null, c.k, v); }, c.t + " target")); }),
-        hd("BY LINE"), note("Replaces the squad target for players in that line (the line they started in most often). AUTO uses the squad target."),
+        hd("SQUAD"), note("Every target is automatic (AUTO): the squad average rounded to a whole number for one game. Change one with \u2212 or +; Reset puts it back."),
+        cols.out.map(function(c) { var avg = scAvg(data.out, c.k, c.pct); return tRow(c, (c.effort ? "Effort" : "Technique") + " \u00B7 squad average " + scFmt(c, avg), box(c, work.targets[c.k], avg == null ? null : Math.round(avg), function(v) { setW("targets", null, c.k, v); }, c.t + " target")); }),
+        data.gk.length > 0 && cols.gk.map(function(c) { var avg = scAvg(data.gk, c.k, c.pct); return tRow(c, "Goalkeepers \u00B7 average " + scFmt(c, avg), box(c, work.targets[c.k], avg == null ? null : Math.round(avg), function(v) { setW("targets", null, c.k, v); }, c.t + " target")); }),
+        hd("BY LINE"), note("For players in that line (the line they started in most often). AUTO is the average of that line rounded to a whole number, or the squad target when the line has under 2 players."),
         chips(SC_LINES.map(function(l) { return [l[0], l[1]]; }), lineSel, setLineSel),
         React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, marginBottom: 4 } }, "Shirts " + SC_LINES.filter(function(l) { return l[0] === lineSel; })[0][2] + " \u00B7 " + data.out.filter(function(r) { return r.line === lineSel; }).length + " players"),
-        cols.out.map(function(c) { var sq = sqT(c, data.out), lv = work.lineTargets[lineSel] ? work.lineTargets[lineSel][c.k] : null; return tRow(c, "Squad target " + scFmt(c, sq), box(c, lv, sq, function(v) { setW("lineTargets", lineSel, c.k, v); }, c.t + " target for " + lineSel)); }),
+        cols.out.map(function(c) { var sq = sqT(c, data.out), la = lineAuto(c, lineSel), lv = work.lineTargets[lineSel] ? work.lineTargets[lineSel][c.k] : null; return tRow(c, "Line average " + scFmt(c, scAvg(lineRows(lineSel), c.k, c.pct, 2)) + " \u00B7 squad target " + scFmt(c, sq), box(c, lv, la != null ? la : sq, function(v) { setW("lineTargets", lineSel, c.k, v); }, c.t + " target for " + lineSel)); }),
         hd("PLAYER MATCH TARGETS"), note("Whole numbers for one match, used on the Last 3 games view. AUTO is one better than their own average: one more tackle, one fewer lost ball, or 5 points on a percentage."),
         React.createElement("select", { value: plSel, onChange: function(e) { setPlSel(e.target.value); }, "aria-label": "Player", className: "rsa-field", style: { width: "100%", minHeight: 44, padding: "8px 10px", borderRadius: RAD.md, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: FS.md, fontFamily: "inherit", marginBottom: 4 } },
           React.createElement("option", { value: "" }, "Choose a player"), all.map(function(r) { return React.createElement("option", { key: r.name, value: r.name }, r.name + (r.gk ? " (keeper)" : "")); })),
@@ -9880,7 +9893,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         seg([["season", "SEASON"], ["last3", "LAST 3 GAMES"]], view, setView),
         React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.5, marginBottom: 10 } },
           React.createElement("span", { style: { color: C.greenB, fontWeight: 800 } }, "Green"), " meets the target, ", React.createElement("span", { style: { color: C.gold, fontWeight: 800 } }, "amber"), " is close, ", React.createElement("span", { style: { color: C.red, fontWeight: 800 } }, "red"), " misses it. ",
-          last3 ? "Counts show how many of their last 3 games hit their own match target; percentages are the 3 games together. " : "Season averages against the squad target, or their line target where one is set. ",
+          last3 ? "Counts show how many of their last 3 games hit their own match target; percentages are the 3 games together. " : "Season averages against whole-number targets for one game, by line (shown under the number) or for the squad. Amber means the average rounds to the target. ",
           "Tap a player for the coaching point."),
         table(data.out, cols.out, data.gk.length ? "OUTFIELD" : null), table(data.gk, cols.gk, "GOALKEEPERS"),
         data.few.length > 0 && React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.6 } }, "Under " + SC_MIN_GAMES + " games: " + data.few.map(function(f) { return f.name + " (" + f.games + ")"; }).join(", "))));
