@@ -222,6 +222,13 @@ work". Built outside computeStats, so no existing figure moved.
 - Targets are automatic, so the Scorecard / Targets switch is gone: the scorecard opens
   straight on Season / Last 3 games, with a small Adjust targets link under the table (and
   Back to the scorecard on the targets screen). Set match targets on a player still goes there.
+- Ball lost is one column now (possessions lost per game). The four kick pass, hand pass, in
+  contact and handling columns were too fine; the coaching point says how the ball is mostly
+  lost instead (Most lost balls are kick passes, 6 of 10), once a player has lost it 3 times.
+- Shirt-number players (#11 and so on) were on the list: mostly the opposition player who won
+  one of our kickouts, since a kickout is tagged with whoever received it (204 such tags in
+  37 matches). Only tackles, lost possessions, shots and a starting place now put a player on
+  the scorecard, and shirt numbers are left out whenever the club has named players.
 
 ## Done 2026-10-27
 

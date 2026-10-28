@@ -9617,10 +9617,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       out: [
         { k: "tkg", g: "TACKLING", l: "Tkl/g", t: "Tackles per game", up: true, effort: true },
         { k: "tkf", g: "TACKLING", l: "Foul %", t: "Tackles that gave away a foul", up: false, pct: true },
-        { k: "kpl", g: "BALL LOST PER GAME", l: stick ? "Strike" : "Kick", t: "Possession lost from a " + (stick ? "strike" : "kick") + " pass, per game", up: false },
-        { k: "hpl", g: "BALL LOST PER GAME", l: "Hand", t: "Possession lost from a hand pass, per game", up: false },
-        { k: "icl", g: "BALL LOST PER GAME", l: "Contact", t: "Possession lost in contact, per game", up: false },
-        { k: "hdl", g: "BALL LOST PER GAME", l: "Handling", t: "Possession lost from handling errors, per game", up: false },
+        { k: "pl", g: "BALL LOST", l: "Lost/g", t: "Possessions lost per game", up: false },
         { k: "shg", g: "SHOOTING", l: "Sh/g", t: "Shots per game (only marked from 5 shots)", up: true, effort: true },
         { k: "acc", g: "SHOOTING", l: "Acc %", t: "Shots scored (from 5 shots)", up: true, pct: true }],
       gk: [
@@ -9646,7 +9643,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     (matches || []).forEach(function(m) { if (!m.scouting) { mids[m.id] = 1; mdate[m.id] = (m.date || "") + "|" + (m.created_at || ""); } });
     var P = {}, M = {};
     function pp(n) { return P[n] || (P[n] = { name: n, games: {}, gk: {}, slots: {}, pm: {} }); }
-    function pg(p, id) { return p.pm[id] || (p.pm[id] = { tk: 0, tkf: 0, kp: 0, hp: 0, ic: 0, hd: 0, sh: 0, scr: 0 }); }
+    function pg(p, id) { return p.pm[id] || (p.pm[id] = { tk: 0, tkf: 0, pl: 0, kp: 0, hp: 0, ic: 0, hd: 0, sh: 0, scr: 0 }); }
     function mm(id) { return M[id] || (M[id] = { ko: 0, kow: 0, koc: 0, sv: 0, gl: 0, hbn: 0, hbw: 0 }); }
     (apps || []).forEach(function(a) {
       var s = Number(a.position_slot);
@@ -9661,18 +9658,24 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       if (e.team !== "us" && e.team !== "h") return;
       if (et === "Kickout") { x.ko++; if (KO_WON.has(canonOutcome(e.outcome))) x.kow++; if (oc === "won clean") x.koc++; }
       if (et === "Goalkeeper action" && /^high ball/.test(oc)) { x.hbn++; if (oc !== "high ball dropped") x.hbw++; }
-      if (!e.player) return;
+      // Only the events the scorecard measures put a player on it. A kickout is tagged with
+      // whoever received it, so on a lost kickout that is an opposition player.
+      if (!e.player || !(et === "Tackle" || et === "Possession lost" || shot)) return;
       var p = pp(e.player); p.games[e.match_id] = 1;
       var q = pg(p, e.match_id);
       if (et === "Tackle") { q.tk++; if (oc === "foul") q.tkf++; }
-      else if (et === "Possession lost") { if (/^(kick pass|strike|strike pass)$/.test(oc)) q.kp++; else if (oc === "hand pass") q.hp++; else if (oc === "in contact") q.ic++; else if (oc === "handling") q.hd++; }
+      else if (et === "Possession lost") { q.pl++; if (/^(kick pass|strike|strike pass)$/.test(oc)) q.kp++; else if (oc === "hand pass") q.hp++; else if (oc === "in contact") q.ic++; else if (oc === "handling") q.hd++; }
       else if (shot) { q.sh++; if ((e.score || 0) > 0) q.scr++; }
     });
     var r1 = function(v) { return Math.round(v * 10) / 10; }, pc = function(a, b, min) { return b >= min ? Math.round(100 * a / b) : null; };
     var sum = function(recs, k) { return recs.reduce(function(a, r) { return a + (r[k] || 0); }, 0); };
     var recent = function(a, b) { return mdate[b] > mdate[a] ? 1 : mdate[b] < mdate[a] ? -1 : 0; };
     var out = [], gk = [], few = [];
+    // Shirt numbers like #11 are unnamed players, most often the opposition player who won one
+    // of our kickouts. Leave them out whenever the club has named players.
+    var named = Object.keys(P).some(function(n) { return n.charAt(0) !== "#"; });
     Object.keys(P).forEach(function(n) {
+      if (named && n.charAt(0) === "#") return;
       var p = P[n], ids = Object.keys(p.games).sort(recent), g = ids.length, gks = Object.keys(p.gk).sort(recent), gg = gks.length;
       if (gg >= SC_MIN_GAMES && gg * 2 >= g) {
         var ms = gks.map(function(id) { return M[id] || mm(id); }), l3 = ms.slice(0, 3), s = {};
@@ -9682,14 +9685,14 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           per: l3.map(function(x) { return { svg: x.sv }; }),
           lastPct: { kor: pc(sum(l3, "kow"), sum(l3, "ko"), 5), koc: pc(sum(l3, "koc"), sum(l3, "ko"), 5), svp: pc(sum(l3, "sv"), sum(l3, "sv") + sum(l3, "gl"), 3), hbr: pc(sum(l3, "hbw"), sum(l3, "hbn"), 3) } });
       } else if (g >= SC_MIN_GAMES) {
-        var recs = ids.map(function(id) { return p.pm[id] || { tk: 0, tkf: 0, kp: 0, hp: 0, ic: 0, hd: 0, sh: 0, scr: 0 }; }), l = recs.slice(0, 3), t = {};
-        ["tk", "tkf", "kp", "hp", "ic", "hd", "sh", "scr"].forEach(function(k) { t[k] = sum(recs, k); });
+        var recs = ids.map(function(id) { return p.pm[id] || { tk: 0, tkf: 0, pl: 0, kp: 0, hp: 0, ic: 0, hd: 0, sh: 0, scr: 0 }; }), l = recs.slice(0, 3), t = {};
+        ["tk", "tkf", "pl", "kp", "hp", "ic", "hd", "sh", "scr"].forEach(function(k) { t[k] = sum(recs, k); });
         var cnt = {};
         Object.keys(p.slots).forEach(function(id) { var ln = scLine(p.slots[id]); if (ln) cnt[ln] = (cnt[ln] || 0) + 1; });
         var line = Object.keys(cnt).sort(function(a, b) { return cnt[b] - cnt[a]; })[0] || null;
-        out.push({ name: n, games: g, line: line, shotsOk: t.sh >= 5,
-          v: { tkg: r1(t.tk / g), tkf: pc(t.tkf, t.tk, 5), kpl: r1(t.kp / g), hpl: r1(t.hp / g), icl: r1(t.ic / g), hdl: r1(t.hd / g), shg: t.sh >= 5 ? r1(t.sh / g) : null, acc: pc(t.scr, t.sh, 5) },
-          per: l.map(function(x) { return { tkg: x.tk, kpl: x.kp, hpl: x.hp, icl: x.ic, hdl: x.hd, shg: x.sh }; }),
+        out.push({ name: n, games: g, line: line, shotsOk: t.sh >= 5, lostBy: { kick: t.kp, hand: t.hp, contact: t.ic, handling: t.hd, all: t.pl },
+          v: { tkg: r1(t.tk / g), tkf: pc(t.tkf, t.tk, 5), pl: r1(t.pl / g), shg: t.sh >= 5 ? r1(t.sh / g) : null, acc: pc(t.scr, t.sh, 5) },
+          per: l.map(function(x) { return { tkg: x.tk, pl: x.pl, shg: x.sh }; }),
           lastPct: { tkf: pc(sum(l, "tkf"), sum(l, "tk"), 3), acc: pc(sum(l, "scr"), sum(l, "sh"), 3) } });
       } else if (g > 0) few.push({ name: n, games: g });
     });
@@ -9771,7 +9774,16 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         : !effBad.length && effOk ? "Effort is good, technique needs work: " + techBad.join("; ") + "."
         : !techBad.length ? "Clean technique, needs more involvement: " + effBad.join("; ") + "."
         : "Work on effort (" + effBad.join("; ") + ") and technique (" + techBad.join("; ") + ").";
-      return (last3 ? "Last 3 games against their own match targets. " : "") + (near.length ? line + " Close on " + near.join("; ") + "." : line);
+      return (last3 ? "Last 3 games against their own match targets. " : "") + (near.length ? line + " Close on " + near.join("; ") + "." : line) + lostHow(r);
+    }
+    // How a player mostly loses the ball, once they have lost it 3 times or more.
+    function lostHow(r) {
+      var lb = r.lostBy;
+      if (!lb || lb.all < 3) return "";
+      var kinds = [[lb.kick, stick ? "strike passes" : "kick passes"], [lb.hand, "hand passes"], [lb.contact, "in contact"], [lb.handling, "handling errors"]].sort(function(a, b) { return b[0] - a[0]; });
+      if (!kinds[0][0]) return "";
+      if (kinds[0][0] * 2 >= lb.all) return " Most lost balls are " + kinds[0][1] + " (" + kinds[0][0] + " of " + lb.all + ")" + (kinds[1][0] ? ", then " + kinds[1][1] + " (" + kinds[1][0] + ")" : "") + ".";
+      return " Lost balls are spread: " + kinds.filter(function(k) { return k[0]; }).map(function(k) { return k[1] + " " + k[0]; }).join(", ") + " of " + lb.all + ".";
     }
     var th = { padding: "6px 4px", fontSize: 10, fontFamily: MONO, color: C.slateD, fontWeight: 700, textAlign: "center", whiteSpace: "nowrap" };
     function table(rows, cs, title) {
