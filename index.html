@@ -9713,15 +9713,18 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function table(rows, cs, title) {
       if (!rows.length) return null;
       var groups = [];
-      cs.forEach(function(c) { var last = groups[groups.length - 1]; if (last && last.g === c.g) last.n++; else groups.push({ g: c.g, n: 1 }); });
+      var gStart = {};
+      cs.forEach(function(c) { var last = groups[groups.length - 1]; if (last && last.g === c.g) last.n++; else { groups.push({ g: c.g, n: 1 }); gStart[c.k] = 1; } });
+      // A faint line before each group (tackling, ball lost, shooting) keeps the columns apart.
+      var gLine = function(k) { return gStart[k] ? { borderLeft: "1px solid " + C.border } : {}; };
       var sticky = { position: "sticky", left: 0, background: C.bgCard, zIndex: 1 };
       return React.createElement("div", { style: { marginBottom: 16 } },
         title && React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.gold, fontFamily: MONO, fontWeight: 700, margin: "4px 0 8px" } }, title),
         React.createElement("div", { style: { overflowX: "auto", background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.lg } },
           React.createElement("table", { style: { borderCollapse: "collapse", width: "100%", fontSize: FS.sm } },
             React.createElement("thead", null,
-              React.createElement("tr", null, React.createElement("th", { style: Object.assign({}, th, sticky) }), groups.map(function(gp) { return React.createElement("th", { key: gp.g, colSpan: gp.n, style: Object.assign({}, th, { color: C.slate, borderBottom: "1px solid " + C.border }) }, gp.g); })),
-              React.createElement("tr", null, React.createElement("th", { style: Object.assign({}, th, sticky, { textAlign: "left" }) }, "PLAYER \u00B7 GAMES"), cs.map(function(c) { var t = tgtOf(c, rows); return React.createElement("th", { key: c.k, title: c.t, style: th }, c.l, React.createElement("div", { style: { fontSize: 9, color: C.slateD, fontWeight: 400 } }, t == null ? "no target" : (c.up ? "\u2265 " : "\u2264 ") + scFmt(c, t))); }))),
+              React.createElement("tr", null, React.createElement("th", { style: Object.assign({}, th, sticky) }), groups.map(function(gp) { return React.createElement("th", { key: gp.g, colSpan: gp.n, style: Object.assign({}, th, { color: C.slate, borderBottom: "1px solid " + C.border, borderLeft: "1px solid " + C.border }) }, gp.g); })),
+              React.createElement("tr", null, React.createElement("th", { style: Object.assign({}, th, sticky, { textAlign: "left" }) }, "PLAYER \u00B7 GAMES"), cs.map(function(c) { var t = tgtOf(c, rows); return React.createElement("th", { key: c.k, title: c.t, style: Object.assign({}, th, gLine(c.k)) }, c.l, React.createElement("div", { style: { fontSize: 9, color: C.slateD, fontWeight: 400 } }, t == null ? "no target" : (c.up ? "\u2265 " : "\u2264 ") + scFmt(c, t))); }))),
             React.createElement("tbody", null, rows.map(function(r) {
               var isOpen = open === title + r.name;
               return React.createElement(React.Fragment, { key: r.name },
@@ -9729,7 +9732,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                   React.createElement("td", { style: Object.assign({ padding: "9px 8px", fontWeight: 700, whiteSpace: "nowrap" }, sticky) }, r.name, React.createElement("span", { style: { color: C.slateD, fontWeight: 400, fontFamily: MONO, fontSize: 11 } }, " \u00B7 " + r.games)),
                   cs.map(function(c) {
                     var v = r.v[c.k], m = mark(c, v, tgtOf(c, rows));
-                    return React.createElement("td", { key: c.k, style: { padding: "9px 4px", textAlign: "center", fontFamily: MONO, whiteSpace: "nowrap", color: m == null ? C.slateD : C.white } }, scFmt(c, v), m != null && React.createElement("span", { "aria-label": m > 0 ? "on target" : m === 0 ? "near miss" : "off target", style: { marginLeft: 4, fontWeight: 900, color: m > 0 ? C.greenB : m === 0 ? C.gold : C.red } }, m > 0 ? "\u2713" : m === 0 ? "\u2248" : "\u2717"));
+                    // The colour carries the mark: green meets the target, amber is close, red misses.
+                    var mc = m == null ? null : m > 0 ? C.greenB : m === 0 ? C.gold : C.red;
+                    return React.createElement("td", { key: c.k, "aria-label": scFmt(c, v) + (m == null ? "" : m > 0 ? ", on target" : m === 0 ? ", near miss" : ", off target"), style: Object.assign({ padding: "9px 6px", textAlign: "center", fontFamily: MONO, fontWeight: mc ? 800 : 400, whiteSpace: "nowrap", color: mc || C.slateD, background: mc ? mc + ALPHA.faint : "none" }, gLine(c.k)) }, scFmt(c, v));
                   })),
                 isOpen && React.createElement("tr", null, React.createElement("td", { colSpan: cs.length + 1, style: { padding: "0 10px 10px", fontSize: FS.sm, color: C.slate, lineHeight: 1.5 } },
                   React.createElement("div", { style: { position: "sticky", left: 10, maxWidth: 320 } }, coachLine(r, cs, rows),
@@ -9778,7 +9783,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     if (!data.out.length && !data.gk.length) return React.createElement("div", { style: { fontSize: FS.md, color: C.slateD, padding: "4px 2px", lineHeight: 1.5 } }, "The scorecard starts once a player has " + SC_MIN_GAMES + " games with tagged events or a starting place." + (data.few.length ? " " + data.few.length + " players so far, most on " + data.few[0].games + "." : ""));
     return React.createElement("div", null, toggle,
       mode === "targets" ? targetsView() : React.createElement(React.Fragment, null,
-        React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.5, marginBottom: 10 } }, "\u2713 meets the target, \u2248 near miss, \u2717 misses it. Tap a player for the coaching point."),
+        React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.5, marginBottom: 10 } }, React.createElement("span", { style: { color: C.greenB, fontWeight: 800 } }, "Green"), " meets the target, ", React.createElement("span", { style: { color: C.gold, fontWeight: 800 } }, "amber"), " is close, ", React.createElement("span", { style: { color: C.red, fontWeight: 800 } }, "red"), " misses it. Tap a player for the coaching point."),
         table(data.out, cols.out, data.gk.length ? "OUTFIELD" : null), table(data.gk, cols.gk, "GOALKEEPERS"),
         data.few.length > 0 && React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.6 } }, "Under " + SC_MIN_GAMES + " games: " + data.few.map(function(f) { return f.name + " (" + f.games + ")"; }).join(", "))));
   }
