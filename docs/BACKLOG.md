@@ -87,6 +87,14 @@ player ratings).
 - Penalty kicks are kept on the match (matches.penalties), not as events, so they are not in
   player stats or the timeline.
 
+**Player scorecard, still open** (built 2026-10-28, see Done).
+- Ball lost is per game, not per possession: busy players lose the ball more. Player
+  possessions are only tagged in the video tagger; once enough are tagged, show a loss rate.
+- Keeper high-ball column waits on Goalkeeper action tags (8 so far).
+- Colour only: red and green cells are hard to tell apart for some colour-blind coaches. If
+  one says so, add a small symbol back on red cells.
+- Last 3 games are the three most recent games each player played, not the team last three.
+
 **Video tagger design follow-ups** (from the 2026-10-27 review, see Done).
 - Bring the live and video taggers onto one shared tagging core, next time a feature touches
   both (score, end match, offline queue and period logic exist twice).
@@ -168,6 +176,34 @@ columns. Wide screens now go up to 1200px.
 
 **Still to look at:** the opposition team page, match lists, Game film list, the video
 tagger in landscape, and button sizes in the live tagger on a big screen.
+
+## Done 2026-10-28
+
+**Player scorecard** (Players tab, season view; started late on 2026-10-27). Tadhg's idea: a
+scorecard for every player with 3 or more games, effort columns against technique columns,
+each judged against a target, so coaching points read like "effort is good, technique needs
+work". Built outside computeStats, so no existing figure moved.
+- Columns: tackles per game and tackle foul %; possession lost per game from a kick (strike)
+  pass, hand pass, in contact and handling; shots per game and accuracy. Percentages only from
+  5 attempts; shots per game only marked from 5 shots, so defenders are not marked down.
+- Goalkeepers (mostly started in shirt 1) get their own card: kickouts won and won clean in
+  their games (kickouts are tagged to the receiver, so this is the team figure), saves per
+  game and save % from the opposition shots, high balls kept from 5 tagged (8 tagged so far).
+- Marks: green meets the target, amber is a near miss (within 10% of the target and at least
+  0.1, or 5 points on a percentage), red misses. First built with tick, approx and cross
+  symbols; after Tadhg saw it on his phone the symbols went and the number and a faint tint
+  of the cell carry the colour, with faint lines between the Tackling, Ball lost and Shooting
+  groups. Screen readers still hear on target, near miss or off target.
+- Targets, in three levels on the Targets screen, saved in clubs.tag_settings (targets,
+  lineTargets, playerTargets), no schema change: squad (squad average unless set); by line
+  (backs 2 to 7, midfield 8 and 9, forwards 10 to 15, by the line a player started in most);
+  and personal whole-number match targets, by default one better than the player's own
+  average (3.6 tackles a game gives 4). Season view uses line, then squad. A new Last 3 games
+  view colours each player against their own match targets: games hit out of 3 (3/3 green,
+  2/3 amber) and percentages over the 3 games together.
+- Tapping a player gives the coaching point, Open player profile (the burst graphs) and Set
+  match targets. Browser tests test_player_scorecard.js and test_scorecard_targets.js.
+- Deployed (main at 903b516). Tadhg has it on real data (screenshot 01:56).
 
 ## Done 2026-10-27
 
@@ -256,6 +292,13 @@ screen height (also on tablets and desktop, where an 800 x 360 screen ran 15px o
 bottom). Portrait unchanged. At 740 x 360 the video now ends at 331px (was 544px). New browser
 test test_gamefilm_layout.js (eight tests now, all pass). Deployed (main at 36555de); not yet
 tried on a real phone.
+
+**Video tagger landscape: every event button fits on small phones.** Checked while looking at
+feedback Gemini gave Tadhg on the landscape tagger (Tadhg chose to leave the rest as it is).
+On a phone about 740 x 360 the last button in each side column (Shot and Card for hurling)
+ran off the screen. Buttons now go down to 28px with 4px gaps, still filling the column on
+larger screens, and a column scrolls if a club has more events. The landscape test covers a
+small phone and fails on the old layout. Deployed (main at bff8639).
 
 **Video tagger design review** (Tadhg asked what we would do differently from scratch).
 Keep: one tap for us and two for them, pause on tag, outcome then pitch spot then player, the
