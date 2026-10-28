@@ -94,6 +94,9 @@ player ratings).
 - Colour only: red and green cells are hard to tell apart for some colour-blind coaches. If
   one says so, add a small symbol back on red cells.
 - Last 3 games are the three most recent games each player played, not the team last three.
+- Tadhg wondered if the Targets screen is needed at all now that targets are automatic.
+  Suggested: drop the Scorecard / Targets switch and leave a small Adjust targets link under
+  the table. Not decided.
 
 **Video tagger design follow-ups** (from the 2026-10-27 review, see Done).
 - Bring the live and video taggers onto one shared tagging core, next time a feature touches
@@ -204,6 +207,21 @@ work". Built outside computeStats, so no existing figure moved.
 - Tapping a player gives the coaching point, Open player profile (the burst graphs) and Set
   match targets. Browser tests test_player_scorecard.js and test_scorecard_targets.js.
 - Deployed (main at 903b516). Tadhg has it on real data (screenshot 01:56).
+
+**Scorecard targets, after Tadhg tried them** (screen recording 08:24).
+- The Targets screen had text boxes with the automatic value greyed as a hint, which read as
+  something to fill in. Each target now shows the value in use, labelled AUTO until a coach
+  changes it, with minus and plus buttons and Reset; no typing, so no phone keyboard.
+- Line targets showed the same numbers for every line, because a line fell back to the squad
+  target until a coach set one. A line now gets its own automatic target from the average of
+  its players (2 or more). Order: line target set by a coach, squad target set by a coach,
+  automatic line target, automatic squad target. Each cell shows the target it is measured
+  against; the heading reads by line.
+- Targets are whole numbers for one game (nobody can aim to lose 0.3 balls a match):
+  automatic ones are the average rounded (1.7 tackles gives 2), steps of 1 (5 on a
+  percentage). Amber now means the season average rounds to the target.
+- Browser tests cover all of it, including backs with a higher line target than forwards.
+  Deployed (main at 89e5a8d).
 
 ## Done 2026-10-27
 
