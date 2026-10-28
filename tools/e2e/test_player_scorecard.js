@@ -3,6 +3,7 @@
 const L = require('./lib.js');
 module.exports = async function(t) {
   const r = await L.open({ w: 390, h: 844 }), p = r.page;
+  const press = async (label, dir, n) => { for (let i = 0; i < n; i++) { await p.click('button[aria-label="' + label + ' ' + dir + '"]'); await L.wait(p, 60); } };
   await p.getByText('Dashboard', { exact: true }).first().click(); await L.wait(p, 1500);
   await L.clickTxt(p, '^Players$'); await L.wait(p, 1000);
   let tx = await L.text(p);
@@ -17,15 +18,18 @@ module.exports = async function(t) {
   await p.evaluate(() => document.querySelector('.rsa-sec table tbody tr').click()); await L.wait(p, 300);
   t.ok('tapping a player shows a coaching point and the profile button', /(On target across the board|Effort is good|Clean technique|Work on effort)/.test(await L.text(p)) && /Open player profile/.test(await L.text(p)));
   await L.clickTxt(p, '^TARGETS$'); await L.wait(p, 300);
-  await (await p.$('input[aria-label="Tackles per game target"]')).fill('4');
+  const stepText = () => p.evaluate(() => document.querySelector('div[aria-label="Tackles per game target"]').innerText.replace(/\s+/g, ' ').trim());
+  t.ok('targets are automatic until changed', /^0\.\d AUTO$/.test(await stepText()), await stepText());
+  await press('Tackles per game target', 'higher', 3);
+  t.ok('plus moves the target and marks it set', /^0\.5 SET$/.test(await stepText()), await stepText());
   await L.clickTxt(p, '^Save targets$'); await L.wait(p, 800);
   t.ok('targets save', /✓ Targets saved/.test(await L.text(p)));
   await L.clickTxt(p, '^SCORECARD$'); await L.wait(p, 300);
   tx = await L.text(p);
-  t.ok('the new target shows in the column header', /Tkl\/g\n≥ 4/.test(tx));
+  t.ok('the new target shows in the column header', /Tkl\/g\n≥ 0\.5/.test(tx));
   t.eq('every player now misses the tackle target', (await lab()).every(x => /off target$/.test(x)), true);
   await L.clickTxt(p, '^TARGETS$'); await L.wait(p, 300);
-  await (await p.$('input[aria-label="Tackles per game target"]')).fill('0.4');
+  await press('Tackles per game target', 'lower', 1);
   await L.clickTxt(p, '^Save targets$'); await L.wait(p, 800);
   await L.clickTxt(p, '^SCORECARD$'); await L.wait(p, 300);
   const marks = await lab();

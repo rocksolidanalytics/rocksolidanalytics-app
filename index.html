@@ -9820,8 +9820,19 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       if (key == null) nx[group][k] = v; else { nx[group][key] = nx[group][key] || {}; nx[group][key][k] = v; }
       setWork(nx);
     }
-    function box(val, ph, onCh, label, whole) {
-      return React.createElement("input", { value: val == null ? "" : String(val), inputMode: whole ? "numeric" : "decimal", placeholder: ph == null ? "\u2013" : String(ph), onChange: function(e) { onCh(e.target.value.replace(whole ? /[^0-9]/g : /[^0-9.]/g, "").slice(0, 5)); }, className: "rsa-field", "aria-label": label, style: { width: 64, minHeight: 44, padding: "8px", borderRadius: RAD.md, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: FS.md, fontFamily: MONO, textAlign: "center" } });
+    // A target stepper: the target in use (AUTO until changed) with minus and plus to move it and
+    // Reset to go back to the automatic value. No typing, so no keyboard on a phone.
+    function box(c, val, auto, onCh, label, whole) {
+      var cur = scNum(val), shown = cur != null ? cur : auto, step = c.pct ? 5 : whole ? 1 : 0.1;
+      function stepBy(d) { var nv = Math.round(((shown == null ? 0 : shown) + d * step) * 10) / 10; onCh(String(Math.max(0, Math.min(c.pct ? 100 : 99, nv)))); }
+      var b = { minWidth: 44, minHeight: 44, padding: 0, borderRadius: RAD.md, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: 20, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", lineHeight: 1 };
+      return React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, flexShrink: 0 } },
+        React.createElement("button", { onClick: function() { stepBy(-1); }, "aria-label": label + " lower", style: b }, "\u2212"),
+        React.createElement("div", { "aria-label": label, style: { minWidth: 46, textAlign: "center" } },
+          React.createElement("div", { style: { fontFamily: MONO, fontSize: FS.lg, fontWeight: 800, color: cur != null ? C.white : C.slate } }, shown == null ? "\u2013" : scFmt(c, shown)),
+          React.createElement("div", { style: { fontSize: 9, fontFamily: MONO, letterSpacing: 0.5, color: cur != null ? C.gold : C.slateD } }, cur != null ? "SET" : "AUTO")),
+        React.createElement("button", { onClick: function() { stepBy(1); }, "aria-label": label + " higher", style: b }, "+"),
+        cur != null ? React.createElement("button", { onClick: function() { onCh(""); }, "aria-label": label + " reset", style: { minWidth: 40, minHeight: 44, padding: 0, background: "none", border: "none", color: C.slateD, fontSize: FS.xs, cursor: "pointer", textDecoration: "underline", fontFamily: "inherit" } }, "Reset") : React.createElement("span", { style: { width: 40 } }));
     }
     function tRow(c, sub, input) {
       return React.createElement("div", { key: c.k, style: { display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid " + C.border } },
@@ -9840,17 +9851,17 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var all = data.out.concat(data.gk), pr = all.filter(function(r) { return r.name === plSel; })[0];
       var pcs = pr ? (pr.gk ? cols.gk : cols.out) : [];
       return React.createElement("div", null,
-        hd("SQUAD"), note("Leave a box empty to use the squad average (shown greyed). Used on the Season view."),
-        cols.out.map(function(c) { var avg = scAvg(data.out, c.k, c.pct); return tRow(c, (c.effort ? "Effort" : "Technique") + " \u00B7 squad average " + scFmt(c, avg), box(work.targets[c.k], avg, function(v) { setW("targets", null, c.k, v); }, c.t + " target")); }),
-        data.gk.length > 0 && cols.gk.map(function(c) { var avg = scAvg(data.gk, c.k, c.pct); return tRow(c, "Goalkeepers \u00B7 average " + scFmt(c, avg), box(work.targets[c.k], avg, function(v) { setW("targets", null, c.k, v); }, c.t + " target")); }),
-        hd("BY LINE"), note("Replaces the squad target for players in that line (the line they started in most often). Empty uses the squad target."),
+        hd("SQUAD"), note("Every target is automatic (AUTO): the squad average. Change one with \u2212 or +; Reset puts it back. Used on the Season view."),
+        cols.out.map(function(c) { var avg = scAvg(data.out, c.k, c.pct); return tRow(c, (c.effort ? "Effort" : "Technique") + " \u00B7 squad average " + scFmt(c, avg), box(c, work.targets[c.k], avg, function(v) { setW("targets", null, c.k, v); }, c.t + " target")); }),
+        data.gk.length > 0 && cols.gk.map(function(c) { var avg = scAvg(data.gk, c.k, c.pct); return tRow(c, "Goalkeepers \u00B7 average " + scFmt(c, avg), box(c, work.targets[c.k], avg, function(v) { setW("targets", null, c.k, v); }, c.t + " target")); }),
+        hd("BY LINE"), note("Replaces the squad target for players in that line (the line they started in most often). AUTO uses the squad target."),
         chips(SC_LINES.map(function(l) { return [l[0], l[1]]; }), lineSel, setLineSel),
         React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, marginBottom: 4 } }, "Shirts " + SC_LINES.filter(function(l) { return l[0] === lineSel; })[0][2] + " \u00B7 " + data.out.filter(function(r) { return r.line === lineSel; }).length + " players"),
-        cols.out.map(function(c) { var sq = sqT(c, data.out), lv = work.lineTargets[lineSel] ? work.lineTargets[lineSel][c.k] : null; return tRow(c, "Squad target " + scFmt(c, sq), box(lv, sq, function(v) { setW("lineTargets", lineSel, c.k, v); }, c.t + " target for " + lineSel)); }),
-        hd("PLAYER MATCH TARGETS"), note("Whole numbers for one match, used on the Last 3 games view. Empty means one better than their own average: one more tackle, one fewer lost ball, or 5 points on a percentage."),
+        cols.out.map(function(c) { var sq = sqT(c, data.out), lv = work.lineTargets[lineSel] ? work.lineTargets[lineSel][c.k] : null; return tRow(c, "Squad target " + scFmt(c, sq), box(c, lv, sq, function(v) { setW("lineTargets", lineSel, c.k, v); }, c.t + " target for " + lineSel)); }),
+        hd("PLAYER MATCH TARGETS"), note("Whole numbers for one match, used on the Last 3 games view. AUTO is one better than their own average: one more tackle, one fewer lost ball, or 5 points on a percentage."),
         React.createElement("select", { value: plSel, onChange: function(e) { setPlSel(e.target.value); }, "aria-label": "Player", className: "rsa-field", style: { width: "100%", minHeight: 44, padding: "8px 10px", borderRadius: RAD.md, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: FS.md, fontFamily: "inherit", marginBottom: 4 } },
           React.createElement("option", { value: "" }, "Choose a player"), all.map(function(r) { return React.createElement("option", { key: r.name, value: r.name }, r.name + (r.gk ? " (keeper)" : "")); })),
-        pr && pcs.map(function(c) { var own = scOwn(c, pr.v[c.k]), pv = work.playerTargets[pr.name] ? work.playerTargets[pr.name][c.k] : null; return tRow(c, "Their average " + scFmt(c, pr.v[c.k]) + (c.pct ? "" : " a game"), box(pv, own, function(v) { setW("playerTargets", pr.name, c.k, v); }, c.t + " match target for " + pr.name, true)); }),
+        pr && pcs.map(function(c) { var own = scOwn(c, pr.v[c.k]), pv = work.playerTargets[pr.name] ? work.playerTargets[pr.name][c.k] : null; return tRow(c, "Their average " + scFmt(c, pr.v[c.k]) + (c.pct ? "" : " a game"), box(c, pv, own, function(v) { setW("playerTargets", pr.name, c.k, v); }, c.t + " match target for " + pr.name, true)); }),
         React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 14 } },
           React.createElement("button", { onClick: saveTargets, style: { minHeight: 44, padding: "0 18px", background: C.greenB, border: "none", borderRadius: RAD.md, color: C.bg, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" } }, "Save targets"),
           React.createElement("button", { onClick: function() { setWork(scTargets({})); }, style: { minHeight: 44, padding: "0 14px", background: "none", border: "1px solid " + C.border, borderRadius: RAD.md, color: C.slate, cursor: "pointer", fontFamily: "inherit" } }, "Clear all to defaults"),
