@@ -13,6 +13,7 @@ module.exports = async function(t) {
   t.ok('keepers on their own card', /GOALKEEPERS/.test(tx));
   const rows = await p.evaluate(() => [...document.querySelectorAll('.rsa-sec table')].map(tb => tb.querySelectorAll('tbody tr').length));
   t.eq('14 outfield players and 1 keeper with 3 games', rows.slice(0, 2), [14, 1]);
+  t.eq('no Scorecard / Targets switch, a small Adjust targets link instead', await L.buttons(p, '^(SCORECARD|TARGETS|Adjust targets)$'), 'Adjust targets');
   t.ok('no tick or cross symbols', !/[✓✗≈]/.test(await p.evaluate(() => document.querySelector('.rsa-sec table tbody').innerText)));
   // Handling: automatic target 0 a game, so 0.3 rounds to it (amber) and 0 meets it (green)
   const hd = await col(6);
@@ -23,17 +24,17 @@ module.exports = async function(t) {
   t.ok('the coaching point names the near miss', /Close on possession lost from handling errors, per game \(0\.3 against 0\)/.test(tx), (tx.match(/(On target|Nearly|Effort|Clean|Work on)[^\n]*/) || [''])[0]);
   t.ok('and offers the player profile', /Open player profile/.test(tx));
   // Targets: whole numbers, automatic until changed
-  await L.clickTxt(p, '^TARGETS$'); await L.wait(p, 300);
+  await L.clickTxt(p, '^Adjust targets$'); await L.wait(p, 300);
   const stepText = () => p.evaluate(() => document.querySelector('div[aria-label="Tackles per game target"]').innerText.replace(/\s+/g, ' ').trim());
   t.eq('squad tackle target is automatic and a whole number', await stepText(), '0 AUTO');
   await press('Tackles per game target', 'higher', 3);
   t.eq('plus steps by one and marks it set', await stepText(), '3 SET');
   await L.clickTxt(p, '^Save targets$'); await L.wait(p, 800);
   t.ok('targets save', /✓ Targets saved/.test(await L.text(p)));
-  await L.clickTxt(p, '^SCORECARD$'); await L.wait(p, 300);
+  await L.clickTxt(p, 'Back to the scorecard$'); await L.wait(p, 300);
   t.ok('a squad target set by the coach shows in the heading', /Tkl\/g\n≥ 3/.test(await L.text(p)));
   t.eq('every player now misses it', (await col(1)).every(x => /off target$/.test(x)), true);
-  await L.clickTxt(p, '^TARGETS$'); await L.wait(p, 300);
+  await L.clickTxt(p, '^Adjust targets$'); await L.wait(p, 300);
   await p.click('button[aria-label="Tackles per game target reset"]'); await L.wait(p, 100);
   t.eq('Reset goes back to automatic', await stepText(), '0 AUTO');
   t.eq('no page errors', r.errors, []);

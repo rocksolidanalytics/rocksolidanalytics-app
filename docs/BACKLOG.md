@@ -94,9 +94,6 @@ player ratings).
 - Colour only: red and green cells are hard to tell apart for some colour-blind coaches. If
   one says so, add a small symbol back on red cells.
 - Last 3 games are the three most recent games each player played, not the team last three.
-- Tadhg wondered if the Targets screen is needed at all now that targets are automatic.
-  Suggested: drop the Scorecard / Targets switch and leave a small Adjust targets link under
-  the table. Not decided.
 
 **Video tagger design follow-ups** (from the 2026-10-27 review, see Done).
 - Bring the live and video taggers onto one shared tagging core, next time a feature touches
@@ -222,6 +219,9 @@ work". Built outside computeStats, so no existing figure moved.
   percentage). Amber now means the season average rounds to the target.
 - Browser tests cover all of it, including backs with a higher line target than forwards.
   Deployed (main at 89e5a8d).
+- Targets are automatic, so the Scorecard / Targets switch is gone: the scorecard opens
+  straight on Season / Last 3 games, with a small Adjust targets link under the table (and
+  Back to the scorecard on the targets screen). Set match targets on a player still goes there.
 
 ## Done 2026-10-27
 

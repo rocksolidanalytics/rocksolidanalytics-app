@@ -9888,15 +9888,18 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         }));
     };
     if (!data.out.length && !data.gk.length) return React.createElement("div", { style: { fontSize: FS.md, color: C.slateD, padding: "4px 2px", lineHeight: 1.5 } }, "The scorecard starts once a player has " + SC_MIN_GAMES + " games with tagged events or a starting place." + (data.few.length ? " " + data.few.length + " players so far, most on " + data.few[0].games + "." : ""));
-    return React.createElement("div", null, seg([["card", "SCORECARD"], ["targets", "TARGETS"]], mode, setMode),
-      mode === "targets" ? targetsView() : React.createElement(React.Fragment, null,
+    // Targets are automatic, so the screen to change them is a small link, not a main switch.
+    var link = function(label, to) { return React.createElement("button", { onClick: function() { setMode(to); setMsg(""); try { window.scrollTo({ top: 0 }); } catch (e) {} }, style: { minHeight: 44, padding: "0 2px", background: "none", border: "none", color: C.greenB, fontSize: FS.sm, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", textDecoration: "underline" } }, label); };
+    return React.createElement("div", null,
+      mode === "targets" ? React.createElement(React.Fragment, null, link("\u2190 Back to the scorecard", "card"), targetsView()) : React.createElement(React.Fragment, null,
         seg([["season", "SEASON"], ["last3", "LAST 3 GAMES"]], view, setView),
         React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.5, marginBottom: 10 } },
           React.createElement("span", { style: { color: C.greenB, fontWeight: 800 } }, "Green"), " meets the target, ", React.createElement("span", { style: { color: C.gold, fontWeight: 800 } }, "amber"), " is close, ", React.createElement("span", { style: { color: C.red, fontWeight: 800 } }, "red"), " misses it. ",
           last3 ? "Counts show how many of their last 3 games hit their own match target; percentages are the 3 games together. " : "Season averages against whole-number targets for one game, by line (shown under the number) or for the squad. Amber means the average rounds to the target. ",
           "Tap a player for the coaching point."),
         table(data.out, cols.out, data.gk.length ? "OUTFIELD" : null), table(data.gk, cols.gk, "GOALKEEPERS"),
-        data.few.length > 0 && React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.6 } }, "Under " + SC_MIN_GAMES + " games: " + data.few.map(function(f) { return f.name + " (" + f.games + ")"; }).join(", "))));
+        data.few.length > 0 && React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.6 } }, "Under " + SC_MIN_GAMES + " games: " + data.few.map(function(f) { return f.name + " (" + f.games + ")"; }).join(", ")),
+        link("Adjust targets", "targets")));
   }
   function DashView({ d: d0, club, scope, match, onBack, oppName, wide }) {
     var ON = oppName || "Opposition";
