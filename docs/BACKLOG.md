@@ -184,8 +184,11 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 three clubs already on the free licence keep the 10 they joined with (0, 2 and 1 used). The
 club page and the terms say 5, and the terms add that clubs joined before 29 October 2026
 keep 10 (terms last updated 29 October). The app reads the number from the database, so its
-"X of 5 free matches used" bar and the limit message follow on their own. Still says 10: the
-Instagram plan (week 11 offer) and the business plan.
+"X of 5 free matches used" bar and the limit message follow on their own. Later the same day:
+the business plan (Claude doc) and the Instagram plan source and spreadsheet (week 11 offer)
+say 5 too. Still saying 10, waiting on the Google Docs and Sheets connectors: the Drive copies
+in Rock Solid App/2026-10 October (Instagram plan Sheet, business plan, project background,
+terms and pricing page copies).
 
 Also made (not in the repository): four Instagram reels with covers and post captions (live
 tagging, kickouts, clips for players, player scorecard), recorded from the app with the
