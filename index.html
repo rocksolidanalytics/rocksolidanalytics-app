@@ -4220,7 +4220,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     return { secs: secs + Math.max(0, halfClock), scored: !!last };
   }
   // Time since a team last scored, or last shot: tapping it switches both teams' lines, and the
-  // choice is kept on this device. a: the secsSinceScore arguments. Whole seconds only: the
+  // choice is kept on this device. Before the first one it runs with the match clock. a: the secsSinceScore arguments. Whole seconds only: the
   // video tagger clock is fractional.
   function sinceKind() { try { return window.localStorage.getItem("rsa_since") === "shot" ? "shot" : "score"; } catch (e) { return "score"; } }
   function SinceScore({ a }) {
@@ -4237,7 +4237,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       try { window.localStorage.setItem("rsa_since", shot ? "score" : "shot"); } catch (e) {}
       window.dispatchEvent(new Event("rsa-since"));
     }
-    return React.createElement("button", { onClick: flip, "aria-label": (shot ? "Time since last shot" : "Time since last score") + ". Tap to show time since last " + (shot ? "score" : "shot") + ".", style: { display: "block", margin: "-14px auto -14px", padding: "14px 6px", minHeight: 44, background: "none", border: "none", boxShadow: "none", cursor: "pointer", fontSize: 9, fontWeight: 600, fontFamily: MONO, letterSpacing: 0.5, color: shot ? C.gold : C.slateD, whiteSpace: "nowrap" } }, Math.floor(t / 60) + ":" + pad2(t % 60), r.scored ? (shot ? " SINCE SHOT" : " SINCE SCORE") : (shot ? " NO SHOT" : " NO SCORE"));
+    return React.createElement("button", { onClick: flip, "aria-label": (shot ? "Time since last shot" : "Time since last score") + ". Tap to show time since last " + (shot ? "score" : "shot") + ".", style: { display: "block", margin: "-14px auto -14px", padding: "14px 6px", minHeight: 44, background: "none", border: "none", boxShadow: "none", cursor: "pointer", fontSize: 9, fontWeight: 600, fontFamily: MONO, letterSpacing: 0.5, color: shot ? C.gold : C.slateD, whiteSpace: "nowrap" } }, Math.floor(t / 60) + ":" + pad2(t % 60), shot ? " SINCE SHOT" : " SINCE SCORE");
   }
   function fmtFull(sec) {
     return pad2(Math.floor(sec / 3600)) + ":" + pad2(Math.floor(sec % 3600 / 60)) + ":" + pad2(sec % 60);

@@ -240,7 +240,8 @@ test_kickout_taps.js.
 video tagger headers, the "since score" line under each team's score is now a button: tapping
 it switches both teams to the time since their last shot (shots from play and scoreable
 frees, any outcome), shown in gold, and tapping again switches back. The choice is kept on
-the device. New browser test test_since_shot.js, and test_format_helpers checks the shot
+the device. Before a team's first score (or shot) the line runs with the match clock
+instead of saying "NO SCORE". New browser test test_since_shot.js, and test_format_helpers checks the shot
 count.
 
 **Founding-club offer.** Lifetime access at EUR 850 becomes a

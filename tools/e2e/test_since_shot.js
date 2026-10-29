@@ -1,5 +1,5 @@
 // Live tagger header: the time since a team last scored can be switched to time since their last
-// shot by tapping it; both teams switch together and the choice is kept after a reload.
+// shot by tapping it; both teams switch together, a team yet to score runs with the match clock, and the choice is kept after a reload.
 const L = require('./lib.js');
 module.exports = async function(t) {
   const id = 'ms';
@@ -13,15 +13,16 @@ module.exports = async function(t) {
   const r = await L.open({ fixtures: f, init }), p = r.page;
   const lines = () => p.evaluate(() => [...document.querySelectorAll('#root button[aria-label^="Time since last"]')].map(b => b.innerText.trim()));
   const before = await lines();
-  t.eq('two lines, both since score', before.map(x => x.replace(/^[\d:]+ /, '')), ['SINCE SCORE', 'NO SCORE']);
+  t.eq('two lines, both since score', before.map(x => x.replace(/^[\d:]+ /, '')), ['SINCE SCORE', 'SINCE SCORE']);
   t.ok('ours counts from the point at 5:00', /^15:00 /.test(before[0]), before.join(' | '));
+  t.ok('theirs runs with the match clock before they score', /^20:00 /.test(before[1]), before.join(' | '));
   await p.click('#root button[aria-label^="Time since last score"]'); await L.wait(p, 300);
   const after = await lines();
   t.eq('both switch to since shot', after, ['5:00 SINCE SHOT', '12:00 SINCE SHOT']);
   await p.reload(); await L.wait(p, 2000);
   t.eq('the choice is kept after a reload', (await lines()).map(x => x.replace(/^[\d:]+ /, '')), ['SINCE SHOT', 'SINCE SHOT']);
   await p.click('#root button[aria-label^="Time since last shot"]'); await L.wait(p, 300);
-  t.eq('tapping again goes back to since score', (await lines()).map(x => x.replace(/^[\d:]+ /, '')), ['SINCE SCORE', 'NO SCORE']);
+  t.eq('tapping again goes back to since score', (await lines()).map(x => x.replace(/^[\d:]+ /, '')), ['SINCE SCORE', 'SINCE SCORE']);
   t.eq('no page errors', r.errors, []);
   await r.browser.close();
 };
