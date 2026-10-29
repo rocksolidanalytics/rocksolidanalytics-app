@@ -236,6 +236,13 @@ hint now also says taps lead to watching or the pitch map. The event ids ride on
 hidden properties, so the stats output (and its snapshot gate) is unchanged. New browser test
 test_kickout_taps.js.
 
+**Time since last shot.** Asked for by the analyst Tadhg showed the app to. In the live and
+video tagger headers, the "since score" line under each team's score is now a button: tapping
+it switches both teams to the time since their last shot (shots from play and scoreable
+frees, any outcome), shown in gold, and tapping again switches back. The choice is kept on
+the device. New browser test test_since_shot.js, and test_format_helpers checks the shot
+count.
+
 **Founding-club offer.** Lifetime access at EUR 850 becomes a
 founding offer: the first 20 clubs to buy it, or until 31 December 2027, whichever comes
 first (Bray Emmets and St Jude's, given lifetime free as early supporters, do not use a
