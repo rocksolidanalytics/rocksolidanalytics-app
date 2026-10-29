@@ -180,10 +180,10 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 ## Done 2026-10-29
 
 **Free matches back to 5 for new sign-ups.** club_orgs.match_limit now defaults to 5
-(database changed, migration 20261029_free_matches_5.sql); checked that a new club gets 5. The
-three clubs already on the free licence keep the 10 they joined with (0, 2 and 1 used). The
-club page and the terms say 5, and the terms add that clubs joined before 29 October 2026
-keep 10 (terms last updated 29 October). The app reads the number from the database, so its
+(database changed, migration 20261029_free_matches_5.sql); checked that a new club gets 5.
+The three clubs already on the free licence were then dropped to 5 as well, at Tadhg's call
+(0, 2 and 1 used, so none is at the limit). The club page and the terms say 5 (terms last
+updated 29 October). The app reads the number from the database, so its
 "X of 5 free matches used" bar and the limit message follow on their own. Later the same day:
 the business plan (Claude doc) and the Instagram plan source and spreadsheet (week 11 offer)
 say 5 too. Still saying 10, waiting on the Google Docs and Sheets connectors: the Drive copies
