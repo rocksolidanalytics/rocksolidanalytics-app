@@ -95,6 +95,13 @@ player ratings).
   one says so, add a small symbol back on red cells.
 - Last 3 games are the three most recent games each player played, not the team last three.
 
+**Founding offer, still open** (drafted 2026-10-29).
+- The app knows only free and lifetime clubs. The EUR 350 annual plan needs a licence with an
+  end date (and what happens when it lapses) before the founding offer closes; the terms
+  promise its renewal and cancelling terms before then.
+- Founding places are not counted anywhere: keep a tally of founding sales (club_orgs could
+  carry a founding flag), and optionally show places left on the club page.
+
 **Video tagger design follow-ups** (from the 2026-10-27 review, see Done).
 - Bring the live and video taggers onto one shared tagging core, next time a feature touches
   both (score, end match, offline queue and period logic exist twice).
@@ -189,6 +196,13 @@ the business plan (Claude doc) and the Instagram plan source and spreadsheet (we
 say 5 too. Still saying 10, waiting on the Google Docs and Sheets connectors: the Drive copies
 in Rock Solid App/2026-10 October (Instagram plan Sheet, business plan, project background,
 terms and pricing page copies).
+
+**Founding-club offer (drafted, not yet deployed).** Lifetime access at EUR 850 becomes a
+founding offer: the first 20 clubs to buy it, or until 31 December 2027, whichever comes
+first (Bray Emmets and St Jude's, given lifetime free as early supporters, do not use a
+place). After it: EUR 1,500 lifetime or EUR 350 a year. Match reports and live tagging are
+stated as extra to any plan. No fair-use limit on the team-sheet reader (Tadhg's call).
+Club page, terms and the business plan (products table and line) updated.
 
 Also made (not in the repository): four Instagram reels with covers and post captions (live
 tagging, kickouts, clips for players, player scorecard), recorded from the app with the
