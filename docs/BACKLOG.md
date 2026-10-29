@@ -130,6 +130,12 @@ player ratings).
 - Team sheet reader: optionally capture marks such as asterisks; optional stronger model for
   messy handwritten sheets.
 
+**Stats journey, still open** (stages 1 to 3 done 2026-10-29)
+- Try it with the analyst who found it jumpy, and fix what still feels like jumping around.
+- More tappable numbers: so far only the match head-to-head counts. Next candidates are the
+  kickout panels and Source of scores, then the Players tab (a player's own events).
+- Season figures could open their events per match (pick a match, then watch), if wanted.
+
 **How the app is built**, discussed 2026-10-22. The app is one file (`index.html`, about
 1 MB, no build step). Split into a built codebase only when one of these happens: a second
 developer, a second app sharing code, or past roughly 50 clubs where smaller updates
@@ -205,9 +211,7 @@ match tile on home opens that match's stats directly; the match view has Watch t
 the match instead of home. Fixed on the way: the dashboard loaded matches without their
 format and penalties, so the timeline half-time line sat at 30:00 on 35-minute games and the
 won on penalties note never showed (now shown at the top of the match view). New browser
-test test_match_journey.js. Next: stage 2 (one slim filter bar; Benchmark, Conditions and vs
-Others under one Compare tab), stage 3 (tap any number to see its events, watch them or see
-them on the pitch).
+test test_match_journey.js.
 
 **Stats journey, stage 2 of 3.** The stats tabs are Season, Matches and Compare; Benchmark,
 Conditions and vs Others are a switch inside Compare, which opens on the last one used. On a
@@ -220,7 +224,8 @@ shots and their outcomes, restarts, tackles, ball lost, rucks, cards) is a butto
 it lists those events with their time and player, with Watch these (Game film showing just
 those clips, in order, with Show all) and Show on pitch (the pitch map with just those
 events, filters hidden until Show all). Season averages are not tappable (too many games
-behind them). New browser test test_stat_events.js.
+behind them). New browser test test_stat_events.js. All three stages deployed (main at
+410e216; rollback dd35450).
 
 **Founding-club offer.** Lifetime access at EUR 850 becomes a
 founding offer: the first 20 clubs to buy it, or until 31 December 2027, whichever comes
