@@ -209,6 +209,19 @@ test test_match_journey.js. Next: stage 2 (one slim filter bar; Benchmark, Condi
 Others under one Compare tab), stage 3 (tap any number to see its events, watch them or see
 them on the pitch).
 
+**Stats journey, stage 2 of 3.** The stats tabs are Season, Matches and Compare; Benchmark,
+Conditions and vs Others are a switch inside Compare, which opens on the last one used. On a
+match the half switch and Key / Detail share one slim row. Half, Key / Detail, the ratings
+Us / Them view, the competition and the Compare view are remembered on the device. New
+browser test test_stats_filters.js.
+
+**Stats journey, stage 3 of 3.** On a match, every count in the head-to-head (possessions,
+shots and their outcomes, restarts, tackles, ball lost, rucks, cards) is a button: tapping
+it lists those events with their time and player, with Watch these (Game film showing just
+those clips, in order, with Show all) and Show on pitch (the pitch map with just those
+events, filters hidden until Show all). Season averages are not tappable (too many games
+behind them). New browser test test_stat_events.js.
+
 **Founding-club offer.** Lifetime access at EUR 850 becomes a
 founding offer: the first 20 clubs to buy it, or until 31 December 2027, whichever comes
 first (Bray Emmets and St Jude's, given lifetime free as early supporters, do not use a

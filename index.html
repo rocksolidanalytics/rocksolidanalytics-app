@@ -1199,7 +1199,7 @@
         })));
   }
 
-  function GameFilm({ club, role, back, matchId }) {
+  function GameFilm({ club, role, back, matchId, evIds, pickLabel }) {
     const [matches, setMatches] = useState(null);
     const [sel, setSel] = useState(null);
     const [events, setEvents] = useState(null);
@@ -1219,6 +1219,8 @@
     // Clips start 8s early: YouTube covers the first few seconds after a jump with its title and
     // pause overlay, so the tagged moment lands after it has gone.
     const LEAD = 8;
+    // The events picked from a tapped stat, shown on their own until Show all.
+    const [only, setOnly] = useState(evIds && evIds.length ? evIds : null);
     const [, bump] = useState(0);
     const isAnalyst = role !== "player";
     const [showScoutStats, setShowScoutStats] = useState(false);
@@ -1292,6 +1294,8 @@
       var noSync = sel.video_throwin == null && sel.video_halfstart == null;
       var player = vid ? React.createElement("div", { style: { position: "relative", paddingTop: "56.25%", background: C.black, borderRadius: RAD.lg, overflow: "hidden" } }, apiFail ? React.createElement("iframe", { key: Math.floor(ts), src: "https://www.youtube.com/embed/" + vid + "?start=" + Math.floor(ts) + "&autoplay=1&rel=0&controls=0", style: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }, allow: "autoplay; encrypted-media; fullscreen", allowFullScreen: true }) : React.createElement("div", { ref: hostRef, style: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" } }), !apiFail && ytGo && React.createElement("div", { onClick: toggle, style: { position: "absolute", inset: 0, zIndex: 2, cursor: "pointer" } })) : React.createElement("div", { style: { color: C.slateD, fontSize: FS.md, padding: 16, textAlign: "center" } }, "No valid YouTube link on this match.");
       var rows = (events || []).map(function(e) { return { e: e, t: seekOf(e, sel) }; }).filter(function(r) { return r.t != null && r.t >= 0; });
+      var picked = only && sel.id === matchId;
+      if (picked) rows = rows.filter(function(r) { return only.indexOf(r.e.id) >= 0; });
       var usN = (club && club.name) ? club.name : "Us";
       var oppN = (sel && sel.opponent) ? sel.opponent : "Opp";
       var usS = teamWord(usN), oppS = teamWord(oppN);
@@ -1313,7 +1317,10 @@
         var col = (e.score || 0) > 0 ? C.greenB : (e.event_type === "Shot from play" || e.event_type === "Scoreable free") ? C.red : C.slate;
         return React.createElement("button", { key: e.id || i, onClick: function() { jump(r.t); }, style: { width: "100%", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, borderLeft: "3px solid " + col, borderRadius: RAD.md, minHeight: 44, padding: "8px 10px", marginBottom: 5, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" } }, React.createElement("div", null, React.createElement("span", { style: { fontSize: FS.md, fontWeight: 700, color: C.white } }, byPl ? ((e.event_type || "") + (e.outcome ? (" \u00b7 " + e.outcome) : "")) : (e.outcome || e.event_type)), React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, marginTop: 1 } }, byPl ? (e.team === "us" ? usN : oppN) : ((e.player || "\u2014") + " \u00b7 " + (e.team === "us" ? usN : oppN)))), React.createElement("span", { style: { fontSize: FS.sm, color: C.slate, fontFamily: MONO } }, e.time_text || ""));
       }
-      var body2 = events === null ? React.createElement(SkelRows, { n: 6, h: 44 }) : rows.length === 0 ? React.createElement("div", { style: { color: C.slateD, fontSize: FS.md, padding: 12, textAlign: "center" } }, noSync ? "This match has no video sync yet. Open it in the video tagger and set the throw-in / second-half start." : "No timestamped events on this match.") : keys.length === 0 ? React.createElement("div", { style: { color: C.slateD, fontSize: FS.md, padding: 12, textAlign: "center" } }, "No events for this filter.") : keys.map(function(k) {
+      var pickBar = picked && React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", marginBottom: 10, borderRadius: RAD.md, background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB + ALPHA.soft } },
+        React.createElement("div", { style: { flex: 1, fontSize: FS.sm, color: C.white, lineHeight: 1.4 } }, React.createElement("b", null, pickLabel || "Picked events"), React.createElement("div", { style: { color: C.slate } }, rows.length + " of " + only.length + " with video" + (rows.length ? " \u00B7 tap one to watch" : ""))),
+        React.createElement("button", { onClick: function() { setOnly(null); }, style: { minHeight: 44, margin: "-9px 0", padding: "0 4px", background: "none", border: "none", color: C.greenB, fontWeight: 800, fontSize: FS.sm, cursor: "pointer", fontFamily: "inherit" } }, "Show all"));
+      var body2 = picked && events !== null ? React.createElement("div", null, pickBar, shown.map(evBtn)) : events === null ? React.createElement(SkelRows, { n: 6, h: 44 }) : rows.length === 0 ? React.createElement("div", { style: { color: C.slateD, fontSize: FS.md, padding: 12, textAlign: "center" } }, noSync ? "This match has no video sync yet. Open it in the video tagger and set the throw-in / second-half start." : "No timestamped events on this match.") : keys.length === 0 ? React.createElement("div", { style: { color: C.slateD, fontSize: FS.md, padding: 12, textAlign: "center" } }, "No events for this filter.") : keys.map(function(k) {
         var arr = groups[k], isOpen = !!openF[k];
         return React.createElement("div", { key: k, style: { marginBottom: 8 } }, React.createElement("button", { onClick: function() { setOpenF(function(p) { var n = Object.assign({}, p); n[k] = !n[k]; return n; }); }, style: { width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.md, minHeight: 44, padding: "11px 12px", cursor: "pointer" } }, React.createElement("span", { style: { fontSize: FS.md, fontWeight: 800, color: C.white } }, (isOpen ? "\u25BE  " : "\u25B8  ") + k), React.createElement("span", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO } }, String(arr.length))), isOpen ? React.createElement("div", { style: { paddingTop: 6 } }, arr.map(evBtn)) : null);
       });
@@ -3867,51 +3874,56 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function h2Cnt(label, a, b) { return { label: label, u: a / pg, o: b / pg, dp: pg > 1 }; }
     function h2Pct(label, a, b) { return { label: label, u: a, o: b, pct: true }; }
     function h2Rate(label, a, b) { return { label: label, u: a, o: b, dp: true }; }
+    // A count row that keeps its events, for the tap-a-number events list.
+    function h2E(label, ae, be) { return Object.assign(h2Cnt(label, ae.length, be.length), { ue: ae, oe: be }); }
     function re(r) { return function(e) { return r.test(h2Oc(e)); }; }
     function shot(e) { return e.event_type === "Shot from play" || e.event_type === "Scoreable free"; }
     function h2Lost(e) { return e.event_type === "Possession lost" && h2Oc(e).indexOf("shot") < 0; }
     function scd(e) { return (e.score || 0) > 0; }
     var g = [];
     var uSh = n(us, shot), oSh = n(op, shot), uP = uSh + n(us, h2Lost), oP = oSh + n(op, h2Lost);
-    g.push({ main: h2Cnt("Possessions", uP, oP), subs: [h2Rate("Shots per 10 possessions", uP ? 10 * uSh / uP : 0, oP ? 10 * oSh / oP : 0), h2Rate("Scores per 10 possessions", uP ? 10 * n(us, function(e) { return shot(e) && scd(e); }) / uP : 0, oP ? 10 * n(op, function(e) { return shot(e) && scd(e); }) / oP : 0)] });
+    var pos = function(e) { return shot(e) || h2Lost(e); };
+    g.push({ main: h2E("Possessions", us.filter(pos), op.filter(pos)), subs: [h2Rate("Shots per 10 possessions", uP ? 10 * uSh / uP : 0, oP ? 10 * oSh / oP : 0), h2Rate("Scores per 10 possessions", uP ? 10 * n(us, function(e) { return shot(e) && scd(e); }) / uP : 0, oP ? 10 * n(op, function(e) { return shot(e) && scd(e); }) / oP : 0)] });
     [["Shots from play", "Shot from play"], ["Scoreable frees", "Scoreable free"]].forEach(function(t) {
       var a = us.filter(function(e) { return e.event_type === t[1]; }), b = op.filter(function(e) { return e.event_type === t[1]; });
       var kinds = [["Goal", function(e) { return (e.score || 0) === 3; }, 1], ["Point", function(e) { return (e.score || 0) === 1; }, 1], ["2-pointer", function(e) { return (e.score || 0) === 2; }, 0], ["Wide", re(/wide/), 1], ["Saved", re(/sav/), 0], ["Dropped short", re(/short/), 0], ["Blocked", re(/block/), 0], ["Woodwork", re(/wood/), 0]];
-      var subs = kinds.map(function(k) { var x = n(a, k[1]), y = n(b, k[1]); return k[2] || x || y ? h2Cnt(k[0], x, y) : null; }).filter(Boolean);
+      var subs = kinds.map(function(k) { var x = a.filter(k[1]), y = b.filter(k[1]); return k[2] || x.length || y.length ? h2E(k[0], x, y) : null; }).filter(Boolean);
       subs.push(h2Pct("Conversion", h2Pc(n(a, scd), a.length), h2Pc(n(b, scd), b.length)));
-      g.push({ main: h2Cnt(t[0], a.length, b.length), subs: subs });
+      g.push({ main: h2E(t[0], a, b), subs: subs });
     });
     var RS = restarts_(), RSc = RS.charAt(0).toUpperCase() + RS.slice(1);
     var uK = us.filter(function(e) { return e.event_type === "Kickout"; }), oK = op.filter(function(e) { return e.event_type === "Kickout"; });
     var kw = function(e) { return KO_WON.has(e.outcome); }, kl = re(/lost/), is = function(t) { return function(e) { return h2Oc(e) === t; }; };
-    g.push({ main: h2Cnt(RSc + " won", n(uK, kw) + n(oK, kl), n(oK, kw) + n(uK, kl)), subs: [
-      h2Cnt("Own " + RS + " taken", uK.length, oK.length),
+    var both = function(fu, fo) { return [uK.filter(fu).concat(oK.filter(fo)), oK.filter(fu).concat(uK.filter(fo))]; };
+    var kWon = both(kw, kl), kClean = both(is("won clean"), is("lost clean")), kBreak = both(is("break won"), is("break lost"));
+    g.push({ main: h2E(RSc + " won", kWon[0], kWon[1]), subs: [
+      h2E("Own " + RS + " taken", uK, oK),
       h2Pct("Own " + RS + " kept", h2Pc(n(uK, kw), uK.length), h2Pc(n(oK, kw), oK.length)),
       h2Pct("Their " + RS + " won", h2Pc(n(oK, kl), oK.length), h2Pc(n(uK, kl), uK.length)),
-      h2Cnt("Won clean", n(uK, is("won clean")) + n(oK, is("lost clean")), n(oK, is("won clean")) + n(uK, is("lost clean"))),
-      h2Cnt("Won on the break", n(uK, is("break won")) + n(oK, is("break lost")), n(oK, is("break won")) + n(uK, is("break lost")))] });
+      h2E("Won clean", kClean[0], kClean[1]),
+      h2E("Won on the break", kBreak[0], kBreak[1])] });
     var uT = us.filter(function(e) { return e.event_type === "Tackle"; }), oT = op.filter(function(e) { return e.event_type === "Tackle"; });
-    g.push({ main: h2Cnt("Tackles", uT.length, oT.length), subs: [
-      h2Cnt("Contact made", n(uT, re(/contact/)), n(oT, re(/contact/))),
-      h2Cnt("Blocks and hooks", n(uT, re(/block|hook/)), n(oT, re(/block|hook/))),
-      h2Cnt("Fouls", n(uT, re(/foul/)), n(oT, re(/foul/))),
+    g.push({ main: h2E("Tackles", uT, oT), subs: [
+      h2E("Contact made", uT.filter(re(/contact/)), oT.filter(re(/contact/))),
+      h2E("Blocks and hooks", uT.filter(re(/block|hook/)), oT.filter(re(/block|hook/))),
+      h2E("Fouls", uT.filter(re(/foul/)), oT.filter(re(/foul/))),
       h2Rate("Per 10 opposition possessions", oP ? 10 * uT.length / oP : 0, uP ? 10 * oT.length / uP : 0)] });
     var uL = us.filter(h2Lost), oL = op.filter(h2Lost);
     var how = [["Kick or strike", /strike|kick/], ["Hand pass", /hand ?pass/], ["Handling", /handl/], ["In contact", /contact/], ["Fouled the ball", /foul/], ["Intercepted", /intercept/]];
-    var lsub = how.map(function(h) { var x = n(uL, re(h[1])), y = n(oL, re(h[1])); return x || y ? h2Cnt(h[0], x, y) : null; }).filter(Boolean);
+    var lsub = how.map(function(h) { var x = uL.filter(re(h[1])), y = oL.filter(re(h[1])); return x.length || y.length ? h2E(h[0], x, y) : null; }).filter(Boolean);
     var tw = function(e) { return e.event_type === "Turnover won" || (e.event_type === "Turnover" && /won/.test(h2Oc(e))); };
-    if (n(us, tw) || n(op, tw)) lsub.push(h2Cnt("Turnovers won", n(us, tw), n(op, tw)));
-    g.push({ main: h2Cnt("Ball lost", uL.length, oL.length), subs: lsub });
+    if (n(us, tw) || n(op, tw)) lsub.push(h2E("Turnovers won", us.filter(tw), op.filter(tw)));
+    g.push({ main: h2E("Ball lost", uL, oL), subs: lsub });
     var uR = us.filter(function(e) { return e.event_type === "Ruck"; }), oR = op.filter(function(e) { return e.event_type === "Ruck"; }), rw = re(/won/);
-    if (uR.length || oR.length) g.push({ main: h2Cnt("Rucks won", n(uR, rw), n(oR, rw)), subs: [h2Pct("Ruck win rate", h2Pc(n(uR, rw), uR.length), h2Pc(n(oR, rw), oR.length))] });
+    if (uR.length || oR.length) g.push({ main: h2E("Rucks won", uR.filter(rw), oR.filter(rw)), subs: [h2Pct("Ruck win rate", h2Pc(n(uR, rw), uR.length), h2Pc(n(oR, rw), oR.length))] });
     var uB = us.filter(function(e) { return e.event_type === "Bookings"; }), oB = op.filter(function(e) { return e.event_type === "Bookings"; });
-    if (uB.length || oB.length) g.push({ main: h2Cnt("Cards", uB.length, oB.length), subs: ["Yellow", "Black", "Red"].map(function(cd) { var r2 = new RegExp(cd, "i"), x = n(uB, function(e) { return r2.test(e.outcome || ""); }), y = n(oB, function(e) { return r2.test(e.outcome || ""); }); return x || y ? h2Cnt(cd, x, y) : null; }).filter(Boolean) });
+    if (uB.length || oB.length) g.push({ main: h2E("Cards", uB, oB), subs: ["Yellow", "Black", "Red"].map(function(cd) { var r2 = new RegExp(cd, "i"), f2 = function(e) { return r2.test(e.outcome || ""); }, x = uB.filter(f2), y = oB.filter(f2); return x.length || y.length ? h2E(cd, x, y) : null; }).filter(Boolean) });
     return g;
   }
   // The head-to-head block: team names, one card per group (with its icon), a More measures
   // card for comparison rows the groups do not cover, and a note on the terms. Used by the
   // dashboard Overview and the live tagger stats.
-  function H2HPanel({ us, op, games, more, usName, oppName, mid, usCol, oppCol }) {
+  function H2HPanel({ us, op, games, more, usName, oppName, mid, usCol, oppCol, onPick }) {
     var ICON = { "Possessions": "\uD83C\uDFC3", "Shots from play": "\uD83C\uDFAF", "Scoreable frees": "\uD83C\uDFAF", "Tackles": "\uD83D\uDEE1\uFE0F", "Ball lost": "\u2194\uFE0F", "Rucks won": "\u270A", "Cards": "\uD83D\uDFE8" };
     var mr = (more || []).filter(function(r) { return r && !(r.hideIfZero && !r.us && !r.opp); });
     var RS = restarts_();
@@ -3922,10 +3934,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         React.createElement("span", { style: { fontWeight: 800, fontSize: FS.md, color: oppCol, textAlign: "right" } }, oppName)),
       h2hGroups(us, op, games).map(function(grp, i) {
         var ic = ICON[grp.main.label] || (/ won$/.test(grp.main.label) ? "\u21BB" : "");
-        return React.createElement(H2HGroup, { key: i, grp: { main: Object.assign({ icon: ic }, grp.main), subs: grp.subs }, usCol: usCol, oppCol: oppCol });
+        return React.createElement(H2HGroup, { key: i, grp: { main: Object.assign({ icon: ic }, grp.main), subs: grp.subs }, usCol: usCol, oppCol: oppCol, onPick: onPick });
       }),
       mr.length ? React.createElement(H2HGroup, { grp: { main: { label: "More measures", u: 0, o: 0, head: true, icon: "\uD83D\uDCCA" }, subs: mr.map(function(r) { var u = Number(r.us) || 0, o = Number(r.opp) || 0; return { label: r.label, u: u, o: o, pct: r.pct, dp: Math.round(u) !== u || Math.round(o) !== o }; }) }, usCol: usCol, oppCol: oppCol }) : null,
-      React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.6, padding: "0 4px" } }, "Possessions are shots plus the times the ball was lost. " + RS.charAt(0).toUpperCase() + RS.slice(1) + " won counts every restart a side came away with, its own and the opposition\u2019s. A bar shows each side\u2019s share of the two figures."));
+      React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.6, padding: "0 4px" } }, "Possessions are shots plus the times the ball was lost. " + RS.charAt(0).toUpperCase() + RS.slice(1) + " won counts every restart a side came away with, its own and the opposition\u2019s. A bar shows each side\u2019s share of the two figures." + (onPick ? " Tap a number to see its events." : "")));
   }
   // Season colours: the club main colour against its second colour, each made readable on the
   // dark background. Green and blue when the club has no colours set. When the two are too
@@ -3940,25 +3952,57 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   }
   function h2hFmt(v, r) { return (r.dp ? (Math.round(v * 10) / 10).toFixed(1) : String(Math.round(v))) + (r.pct ? "%" : ""); }
   // One head-to-head bar: the share of the two figures for each side, in its own colour.
-  function H2HRow({ r, main, usCol, oppCol }) {
+  function H2HRow({ r, main, usCol, oppCol, onPick }) {
     var lab = r.icon ? r.icon + "  " + r.label : r.label;
     if (r.head) return React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800, color: C.white, textAlign: "center" } }, lab);
     var t = r.u + r.o, pu = t > 0 ? 100 * r.u / t : 50;
+    // With onPick, a number with events behind it is a button that lists them.
+    function num(v, ev, side, col, right) {
+      var st = { minWidth: 36, textAlign: right ? "right" : "left", fontFamily: MONO, fontWeight: 800, fontSize: main ? FS.md : FS.sm, color: col };
+      if (!onPick || !ev || !ev.length) return React.createElement("span", { style: st }, h2hFmt(v, r));
+      return React.createElement("button", { onClick: function() { onPick(r.label, side, ev); }, "aria-label": r.label + ": see the " + ev.length + " events", style: Object.assign({}, st, { minHeight: 44, margin: "-14px " + (right ? "-8px -14px 0" : "0 -14px -8px"), padding: right ? "0 8px 0 0" : "0 0 0 8px", background: "none", border: "none", boxShadow: "none", cursor: "pointer", textDecoration: "underline dotted", textUnderlineOffset: 3 }) }, h2hFmt(v, r));
+    }
     return React.createElement("div", { style: { marginBottom: main ? 0 : 9 } },
       React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 4 } },
-        React.createElement("span", { style: { minWidth: 36, fontFamily: MONO, fontWeight: 800, fontSize: main ? FS.md : FS.sm, color: usCol } }, h2hFmt(r.u, r)),
+        num(r.u, r.ue, "us", usCol, false),
         React.createElement("span", { style: { flex: 1, textAlign: "center", fontSize: main ? FS.md : FS.sm, fontWeight: main ? 800 : 600, color: main ? C.white : C.slate } }, lab),
-        React.createElement("span", { style: { minWidth: 36, textAlign: "right", fontFamily: MONO, fontWeight: 800, fontSize: main ? FS.md : FS.sm, color: oppCol } }, h2hFmt(r.o, r))),
+        num(r.o, r.oe, "opp", oppCol, true)),
       React.createElement("div", { style: { display: "flex", gap: 2, height: main ? 12 : 6 } },
         !t ? React.createElement("div", { style: { flex: 1, background: C.border, borderRadius: RAD.sm } }) : null,
         t && r.u > 0 ? React.createElement("div", { style: { width: pu.toFixed(1) + "%", background: usCol, borderRadius: RAD.sm } }) : null,
         t && r.o > 0 ? React.createElement("div", { style: { width: (100 - pu).toFixed(1) + "%", background: oppCol, borderRadius: RAD.sm } }) : null));
   }
-  function H2HGroup({ grp, usCol, oppCol }) {
+  function H2HGroup({ grp, usCol, oppCol, onPick }) {
     return React.createElement("div", { className: "rsa-sec", style: { padding: "14px 16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid } },
-      React.createElement(H2HRow, { r: grp.main, main: true, usCol: usCol, oppCol: oppCol }),
+      React.createElement(H2HRow, { r: grp.main, main: true, usCol: usCol, oppCol: oppCol, onPick: onPick }),
       grp.subs.length ? React.createElement("div", { style: { background: C.field, borderRadius: RAD.md, padding: "10px 12px 1px", marginTop: 10, marginLeft: 10 } },
-        grp.subs.map(function(r, i) { return React.createElement(H2HRow, { key: i, r: r, usCol: usCol, oppCol: oppCol }); })) : null);
+        grp.subs.map(function(r, i) { return React.createElement(H2HRow, { key: i, r: r, usCol: usCol, oppCol: oppCol, onPick: onPick }); })) : null);
+  }
+  // The events behind a tapped head-to-head number. pick: { label, team, evs }. Watch these opens
+  // Game film on just those events; Show on pitch opens the pitch map with only them.
+  function EventsSheet({ pick, match, close, onWatch, onPitch }) {
+    var evs = pick.evs.slice().sort(function(a, b) { return (Number(a.period) || 1) - (Number(b.period) || 1) || (a.seq || 0) - (b.seq || 0); });
+    var ids = evs.map(function(e) { return e.id; }).filter(Boolean);
+    var spots = evs.filter(function(e) { return e.x != null && e.y != null; }).length;
+    var title = pick.label + " \u00B7 " + pick.team;
+    function evAt(e) { var pp = String(e.time_text || "").split(":").map(Number); var sec = pp.length === 3 ? pp[0] * 3600 + pp[1] * 60 + pp[2] : pp.length === 2 ? pp[0] * 60 + pp[1] : null; return (match ? perShort(match, e.period) + " " : "") + (sec == null ? "" : Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0")); }
+    var canWatch = onWatch && match && match.video_tagged && match.video_url && ids.length;
+    var btn = { flex: 1, minHeight: 48, borderRadius: RAD.lg, fontSize: FS.md, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" };
+    return React.createElement("div", { onClick: close, style: { position: "fixed", inset: 0, zIndex: 80, background: C.black + ALPHA.scrim, display: "flex", alignItems: "flex-end", justifyContent: "center" } },
+      React.createElement("div", { role: "dialog", "aria-label": title, onClick: function(ev) { ev.stopPropagation(); }, style: { width: "100%", maxWidth: 520, maxHeight: "80dvh", display: "flex", flexDirection: "column", background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.xl + "px " + RAD.xl + "px 0 0", padding: "18px 18px calc(18px + env(safe-area-inset-bottom))" } },
+        React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 10 } },
+          React.createElement("div", { style: { flex: 1, fontSize: FS.lg, fontWeight: 800 } }, title),
+          React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.sm, color: C.slate } }, evs.length + (evs.length === 1 ? " EVENT" : " EVENTS"))),
+        React.createElement("div", { style: { display: "flex", gap: 8, margin: "14px 0 12px" } },
+          canWatch ? React.createElement("button", { onClick: function() { onWatch(match.id, ids, title); }, style: Object.assign({}, btn, { border: "none", background: C.greenB, color: C.bg }) }, "\u25B6 Watch these") : null,
+          onPitch && match && spots ? React.createElement("button", { onClick: function() { onPitch(match.id, ids, title); }, style: Object.assign({}, btn, { background: "none", border: "1px solid " + C.greenB, color: C.greenB }) }, "\u25CE Show on pitch") : null),
+        React.createElement("div", { style: { flex: 1, overflowY: "auto", minHeight: 0 } }, evs.map(function(e, i) {
+          return React.createElement("div", { key: e.id || i, style: { display: "flex", gap: 10, alignItems: "baseline", padding: "9px 2px", borderBottom: i < evs.length - 1 ? "1px solid " + C.border : "none" } },
+            React.createElement("span", { style: { minWidth: 62, fontFamily: MONO, fontSize: FS.sm, color: C.slate } }, evAt(e)),
+            React.createElement("span", { style: { flex: 1, fontSize: FS.md, color: C.white } }, (e.event_type || "") + (e.outcome ? " \u00B7 " + e.outcome : "")),
+            React.createElement("span", { style: { fontSize: FS.sm, color: C.slateD, textAlign: "right" } }, e.player || ""));
+        })),
+        React.createElement("button", { onClick: close, style: Object.assign({}, btn, { flex: "none", width: "100%", marginTop: 10, background: "none", border: "none", color: C.slateD, fontWeight: 700 }) }, "Close")));
   }
   function ScoreSourcePanel({ data, club, oppName }) {
     var META = [
@@ -10476,6 +10520,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [shotPl, setShotPl] = useState("all");
     const [koBand, setKoBand] = useState("all");
     const [dtab, setDtab] = useState("overview");
+    const [evPick, setEvPick] = useState(null);
     const [ovMode, setOvMode] = useState(function() { return statPref("ov", "key") === "detail" ? "detail" : "key"; });
     const [psort, setPsort] = useState("score");
     if (reportHtml) return React.createElement("div", { className: "rsa-fb", style: { minHeight: "100dvh", background: C.bg } },
@@ -10507,6 +10552,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     // Season Read uses the fuller read once there are three or more games; otherwise the short notes.
     var readNotes = (!isMatch && dtab === "overview" && seasonRead(d, club.name || "They")) || d.notes || [];
     return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb rsa-dash" },
+    evPick && React.createElement(EventsSheet, { pick: evPick, match: match, close: function() { setEvPick(null); }, onWatch: onWatch, onPitch: onPitch }),
     isMatch && React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, margin: "0 0 12px" } },
       onBack ? React.createElement("button", { onClick: onBack, style: { display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", boxShadow: "none", color: C.slate, cursor: "pointer", fontSize: FS.md, margin: "-15px auto -15px 0", fontFamily: MONO, padding: "15px 0" } }, "\u2039 All matches") : React.createElement("span", { style: { marginRight: "auto" } }),
       React.createElement("button", { onClick: exportCSV, style: { minHeight: 44, margin: "-9px 0", padding: 0, flexShrink: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", verticalAlign: "middle" } }, React.createElement("span", { style: { border: "1px solid " + C.slate, color: C.slate, borderRadius: RAD.md, padding: "6px 10px", fontSize: FS.sm, fontWeight: 700 } }, "CSV")),
@@ -10617,7 +10663,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         var c2 = d.compare || [];
         var more = ["Possession", "Accuracy", "Breaking ball won", "Def. work rate", "Tackle foul % \u00B7 lower is better", "Frees won", "Turnover \u2192 shot", "Turnover \u2192 score"].map(function(k) { return c2.find(function(r) { return r.label === k; }); });
         if (!us2.length && !op2.length) return null;
-        return React.createElement(H2HPanel, { us: us2, op: op2, games: games, more: more, usName: club.name || "Us", oppName: isMatch ? (match && match.opponent) || ON : "Opposition", mid: isMatch ? "HEAD TO HEAD" : "PER GAME \u00B7 " + games + (games === 1 ? " GAME" : " GAMES"), usCol: tc2.us, oppCol: tc2.opp });
+        return React.createElement(H2HPanel, { us: us2, op: op2, games: games, more: more, usName: club.name || "Us", oppName: isMatch ? (match && match.opponent) || ON : "Opposition", mid: isMatch ? "HEAD TO HEAD" : "PER GAME \u00B7 " + games + (games === 1 ? " GAME" : " GAMES"), usCol: tc2.us, oppCol: tc2.opp, onPick: isMatch && match ? function(label, side, ev) { setEvPick({ label: label, team: side === "us" ? club.name || "Us" : match.opponent || ON, evs: ev }); } : null });
       }()),
       d.ko && d.ko.total > 0 && React.createElement("div", { style: { padding: "14px 16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid } },
         React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginBottom: 10 } }, "\u21BB RESTART OUTCOMES"),
@@ -11376,7 +11422,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           matches = matches.filter(function(m) {
             if (m.scouting) return true; return m.our_score != null && String(m.our_score).trim() !== "";
           });
-          const events = await fetchAll("events", "match_id,team,event_type,outcome,player,score,x,y,period,seq,time_text");
+          const events = await fetchAll("events", "id,match_id,team,event_type,outcome,player,score,x,y,period,seq,time_text");
           const apps = await fetchAll("appearances", "match_id,player_name,position_slot,jersey");
           matches.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
           // The pooled shot rates for the sport, read before the stats are worked out.
@@ -12121,10 +12167,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   // our team attacks left to right and the opposition is plotted in that same
   // frame, so their attacks finish at our goal. Direction per match half comes
   // from koDirIndex, the orientation the restart map already uses.
-  function PitchExplorer({ club, back, matchId }) {
+  function PitchExplorer({ club, back, matchId, evIds, pickLabel }) {
     const [raw, setRaw] = useState(null);
     const [err, setErr] = useState("");
     const [fMatch, setFMatch] = useState(matchId || "all");
+    // The events picked from a tapped stat, mapped on their own until Show all.
+    const [only, setOnly] = useState(evIds && evIds.length ? evIds : null);
     const [fType, setFType] = useState("");
     const [fOut, setFOut] = useState("all");
     const [fTeam, setFTeam] = useState("us");
@@ -12196,7 +12244,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     });
     var outList = Object.keys(outN).sort(function(a, b) { return outN[b] - outN[a]; });
     var plList = Object.keys(plN).sort(function(a, b) { return plN[b] - plN[a]; });
-    var sel = base.filter(function(e) {
+    var sel = only ? raw.evs.filter(function(e) { return only.indexOf(e.id) >= 0; }) : base.filter(function(e) {
       if (fOut !== "all" && (e.outcome || "—") !== fOut) return false;
       if (fPl !== "all" && e.player !== fPl) return false;
       return true;
@@ -12347,10 +12395,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     return React.createElement("div", { className: "rs-wide rsa-fb", style: shell }, head,
       React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } },
         err && React.createElement("div", { style: { color: C.red, fontSize: FS.sm, marginBottom: 10 } }, err),
+        only && React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", marginBottom: 14, borderRadius: RAD.md, background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB + ALPHA.soft } },
+          React.createElement("div", { style: { flex: 1, fontSize: FS.sm, color: C.white, lineHeight: 1.4 } }, React.createElement("b", null, pickLabel || "Picked events"), React.createElement("div", { style: { color: C.slate } }, mapped.length + " of " + only.length + " on the pitch")),
+          React.createElement("button", { onClick: function() { setOnly(null); }, style: { minHeight: 44, margin: "-9px 0", padding: "0 4px", background: "none", border: "none", color: C.greenB, fontWeight: 800, fontSize: FS.sm, cursor: "pointer", fontFamily: "inherit" } }, "Show all")),
         raw.evs.length === 0 && !err ? React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: FS.md, padding: "30px 0" } }, "No tagged events yet.") :
         React.createElement("div", { style: { display: "flex", flexDirection: wide ? "row" : "column", gap: wide ? 22 : 16, alignItems: "flex-start" } },
-          wide ? React.createElement("div", { key: "f", style: { width: 300, flexShrink: 0 } }, filters) : React.createElement("div", { key: "m", style: { width: "100%" } }, mapCol),
-          wide ? mapCol : React.createElement("div", { key: "f", style: { width: "100%" } }, filters))));
+          wide ? (only ? null : React.createElement("div", { key: "f", style: { width: 300, flexShrink: 0 } }, filters)) : React.createElement("div", { key: "m", style: { width: "100%" } }, mapCol),
+          wide ? mapCol : only ? null : React.createElement("div", { key: "f", style: { width: "100%" } }, filters))));
   }
   // Short team names for tight labels. Words that many club names share (St,
   // Naomh, Na, An) are skipped, so St Judes v St Vincents reads JUDES v VINCENTS
@@ -13030,6 +13081,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     // focusMatch: the match whose clips or pitch map are open from its match view, so back
     // returns to it. statsOpen: the match the dashboard opens on. lastMatch: the home tile.
     const [focusMatch, setFocusMatch] = useState(null);
+    // focusEvs: { ids, label } when a tapped stat opened its own events in Game film or the pitch map.
+    const [focusEvs, setFocusEvs] = useState(null);
     const [statsOpen, setStatsOpen] = useState(null);
     const [lastMatch, setLastMatch] = useState(null);
     const [editMatch, setEditMatch] = useState(null);
@@ -13272,9 +13325,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     } });
     // Back from clips or a pitch map opened on a match: to that match, else home.
     function backToMatch() {
+      setFocusEvs(null);
       if (focusMatch) { setStatsOpen(focusMatch); setFocusMatch(null); setPhase("stats"); } else setPhase("home");
     }
-    if (phase === "pitchmap") return /* @__PURE__ */ React.createElement(PitchExplorer, { club, matchId: focusMatch, back: backToMatch });
+    if (phase === "pitchmap") return /* @__PURE__ */ React.createElement(PitchExplorer, { club, matchId: focusMatch, evIds: focusEvs && focusEvs.ids, pickLabel: focusEvs && focusEvs.label, back: backToMatch });
     if (phase === "opposition") return /* @__PURE__ */ React.createElement(OppDB, { club, role, back: () => setPhase("home") });
     if (phase === "videohub") return /* @__PURE__ */ React.createElement(VideoHub, { club, session, role, onPick: (m) => {
       setTagMatch(m);
@@ -13288,9 +13342,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       loadCount(club.id);
       setPhase("home");
     } });
-    if (phase === "stats") return /* @__PURE__ */ React.createElement(Stats, { key: "stats-" + (statsOpen || ""), club, openMatch: statsOpen, back: () => { setStatsOpen(null); setPhase("home"); }, onWatch: function(id) { setFocusMatch(id); setPhase("gamefilm"); }, onPitch: function(id) { setFocusMatch(id); setPhase("pitchmap"); } });
+    if (phase === "stats") return /* @__PURE__ */ React.createElement(Stats, { key: "stats-" + (statsOpen || ""), club, openMatch: statsOpen, back: () => { setStatsOpen(null); setPhase("home"); }, onWatch: function(id, ids, label) { setFocusMatch(id); setFocusEvs(ids ? { ids: ids, label: label } : null); setPhase("gamefilm"); }, onPitch: function(id, ids, label) { setFocusMatch(id); setFocusEvs(ids ? { ids: ids, label: label } : null); setPhase("pitchmap"); } });
     if (phase === "livepad") return /* @__PURE__ */ React.createElement(LiveStatsPad, { club, back: function() { setPhase("home"); } });
-    if (phase === "gamefilm") return /* @__PURE__ */ React.createElement(GameFilm, { club, role, matchId: focusMatch, back: backToMatch });
+    if (phase === "gamefilm") return /* @__PURE__ */ React.createElement(GameFilm, { club, role, matchId: focusMatch, evIds: focusEvs && focusEvs.ids, pickLabel: focusEvs && focusEvs.label, back: backToMatch });
     return /* @__PURE__ */ React.createElement(Home, { club, onClub: setClub, onSignOut: () => { try { activeClear(); } catch (e) {} db.auth.signOut(); }, onImport: () => setPhase("import"), onGameFilm: () => { setFocusMatch(null); setPhase("gamefilm"); }, onLineups: () => setPhase("lineups"), onStats: () => { setStatsOpen(null); setPhase("stats"); }, lastMatch, onLastMatch: function(m) { setStatsOpen(m.id); setPhase("stats"); }, onNewMatch: () => setPhase("newmatch"), onVideoHub: () => setPhase("videohub"), onTemplate: () => {
       setTplMatch(null);
       setPhase("template");
