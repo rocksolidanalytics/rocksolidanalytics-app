@@ -5012,8 +5012,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     for (var i = 0; i < 36; i++) out += (i === 8 || i === 13 || i === 18 || i === 23) ? "-" : i === 14 ? "4" : h[i === 19 ? (Math.random() * 4 | 8) : (Math.random() * 16 | 0)];
     return out;
   }
+  // An upload that has not answered in 15s counts as failed. On a weak signal (a phone
+  // hotspot) a request can hang without ever failing, and the tagger waits for each upload
+  // before the next, so one hung request held back every tag after it. Ids are made on the
+  // phone, so if the slow request lands after all, the retry does not add it twice.
   function uploadEvent(row) {
-    return db.from("events").upsert(cleanRow(row), { onConflict: "id", ignoreDuplicates: true });
+    var q = db.from("events").upsert(cleanRow(row), { onConflict: "id", ignoreDuplicates: true });
+    return Promise.race([q, new Promise(function(res) { setTimeout(function() { res({ error: { message: "Upload timed out" } }); }, 15000); })]);
   }
   // A database event in the same shape the live tagger creates, so restored tags render,
   // count and edit exactly like tags made on this phone.

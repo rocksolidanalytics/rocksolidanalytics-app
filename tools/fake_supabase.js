@@ -1,6 +1,8 @@
 // Browser-side stand-in for supabase-js, served in place of the CDN script.
 // Reads window.__RSA_FIX = { session, tables: { name: [rows] }, rpc: { name: data }, delay: { table: ms } }.
 // delay holds a table read back so loading states can be captured.
+// hang: { table: n } makes the first n writes to that table never answer (a hung request on a
+// weak signal). Every write is recorded in window.__rsaWrites as [table, kind, payload].
 // Reads filter rows by eq and honour range(); writes succeed and echo their payload. No network.
 (function () {
   function fix() { return window.__RSA_FIX || {}; }
@@ -17,7 +19,9 @@
       return { data: rows, error: null, count: rows.length };
     }
     b = new Proxy({}, { get: function (_, k) {
-      if (k === 'then') return function (ok, bad) { var ms = (fix().delay || {})[table] || 0; return new Promise(function (r) { setTimeout(function () { r(result()); }, ms); }).then(ok, bad); };
+      if (k === 'then') return function (ok, bad) {
+        if (st.write) { (window.__rsaWrites = window.__rsaWrites || []).push([table, st.write.kind, st.write.payload]); var h = fix().hang || {}; if (h[table] > 0) { h[table]--; return new Promise(function () {}); } }
+        var ms = (fix().delay || {})[table] || 0; return new Promise(function (r) { setTimeout(function () { r(result()); }, ms); }).then(ok, bad); };
       if (k === 'eq') return function (c, v) { st.eq.push([c, v]); return b; };
       if (k === 'range') return function (a, z) { st.range = [a, z]; return b; };
       if (k === 'single' || k === 'maybeSingle') return function () { st.one = k; return b; };
