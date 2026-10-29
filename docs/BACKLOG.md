@@ -132,8 +132,8 @@ player ratings).
 
 **Stats journey, still open** (stages 1 to 3 done 2026-10-29)
 - Try it with the analyst who found it jumpy, and fix what still feels like jumping around.
-- More tappable numbers: so far only the match head-to-head counts. Next candidates are the
-  kickout panels and Source of scores, then the Players tab (a player's own events).
+- More tappable numbers: the match head-to-head and the kickout panels are done. Next
+  candidates are Source of scores, then the Players tab (a player's own events).
 - Season figures could open their events per match (pick a match, then watch), if wanted.
 
 **How the app is built**, discussed 2026-10-22. The app is one file (`index.html`, about
@@ -226,6 +226,15 @@ those clips, in order, with Show all) and Show on pitch (the pitch map with just
 events, filters hidden until Show all). Season averages are not tappable (too many games
 behind them). New browser test test_stat_events.js. All three stages deployed (main at
 410e216; rollback dd35450).
+
+**Kickout panels tappable.** On the Restarts tab (season and match), a green hint under the
+team switch says "Tap a number below to see those kickouts on the pitch map". The Restart to
+shot numbers (restarts, won, to shot, to score, per band and in total), the When the restart
+is lost counts and the cells of both zone grids open the pitch map on just those kickouts,
+coloured by outcome, and back returns to the Restarts tab on the same side. The head-to-head
+hint now also says taps lead to watching or the pitch map. The event ids ride on the stats as
+hidden properties, so the stats output (and its snapshot gate) is unchanged. New browser test
+test_kickout_taps.js.
 
 **Founding-club offer.** Lifetime access at EUR 850 becomes a
 founding offer: the first 20 clubs to buy it, or until 31 December 2027, whichever comes
