@@ -244,6 +244,16 @@ the device. Before a team's first score (or shot) the line runs with the match c
 instead of saying "NO SCORE". New browser test test_since_shot.js, and test_format_helpers checks the shot
 count.
 
+**Live tags stalling on a weak signal (fixed).** Tadhg showed a live match on a phone hotspot
+and the restart spots did not update live. The tagger's own map reads the phone's copy and
+was fine; the Live Stats Pad and dashboards read the database, and nothing from that session
+reached it. Cause: uploads had no time limit, and the tagger waits for each upload before the
+next, so one request that hung on the hotspot (never failing) held back every tag after it
+until the tagger was reopened. An upload now counts as failed after 15 seconds and is retried
+on the next 8-second sync; ids are made on the phone, so a late arrival is never doubled. The
+same upload is used by the background sync and the video tagger. New browser test
+test_upload_hang.js (the fake database can now hang writes; the test fails without the fix).
+
 **Founding-club offer.** Lifetime access at EUR 850 becomes a
 founding offer: the first 20 clubs to buy it, or until 31 December 2027, whichever comes
 first (Bray Emmets and St Jude's, given lifetime free as early supporters, do not use a
