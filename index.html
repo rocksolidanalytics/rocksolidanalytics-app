@@ -1199,7 +1199,7 @@
         })));
   }
 
-  function GameFilm({ club, role, back }) {
+  function GameFilm({ club, role, back, matchId }) {
     const [matches, setMatches] = useState(null);
     const [sel, setSel] = useState(null);
     const [events, setEvents] = useState(null);
@@ -1223,7 +1223,7 @@
     const isAnalyst = role !== "player";
     const [showScoutStats, setShowScoutStats] = useState(false);
     function load() {
-      db.from("matches").select("id,date,opponent,video_url,video_enabled,video_throwin,video_halfstart,scouting,half_mins,periods,et_mins,period_marks").eq("club_id", club.id).eq("video_tagged", true).order("date", { ascending: false }).then(function(r) { setMatches(r.data || []); }, function() { setMatches([]); });
+      db.from("matches").select("id,date,opponent,video_url,video_enabled,video_throwin,video_halfstart,scouting,half_mins,periods,et_mins,period_marks").eq("club_id", club.id).eq("video_tagged", true).order("date", { ascending: false }).then(function(r) { setMatches(r.data || []); var om = matchId && (r.data || []).filter(function(m) { return m.id === matchId; })[0]; if (om) open2(om); }, function() { setMatches([]); });
     }
     useEffect(function() { load(); }, []);
     function ytId(u) { if (!u) return null; var m = String(u).match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/); return m ? m[1] : null; }
@@ -1283,7 +1283,7 @@
     }
     function patch(m, fields) { db.from("matches").update(fields).eq("id", m.id).then(function() { Object.assign(m, fields); bump(function(x) { return x + 1; }); }, function() {}); }
     function fmtDate(d) { if (!d) return ""; var x = new Date(d + "T00:00:00"); return x.getDate() + "/" + (x.getMonth() + 1); }
-    var hdr = React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 12 } }, React.createElement("button", { onClick: sel ? function() { setSel(null); } : manage ? function() { setManage(false); } : back, title: "Back", style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, React.createElement(Back, { s: 20 })), React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, flex: 1 } }, sel ? (sel.opponent || "Match") + (sel.scouting ? " \u00b7 Scout" : "") : manage ? "Manage videos" : "Game film"), (sel && sel.scouting) ? React.createElement("button", { onClick: function() { setShowScoutStats(true); }, style: { minHeight: 44, margin: "-9px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { background: C.greenB + ALPHA.soft, border: "1px solid " + C.greenB, color: C.greenB, borderRadius: RAD.md, padding: "6px 12px", fontSize: FS.sm, fontWeight: 800 } }, "Stats")) : null, (!sel && isAnalyst) ? React.createElement("button", { onClick: function() { setManage(!manage); }, style: { minHeight: 44, margin: "-9px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { border: "1px solid " + C.border, color: C.slate, borderRadius: RAD.md, padding: "6px 10px", fontSize: FS.sm, fontWeight: 700 } }, manage ? "Done" : "Manage")) : null);
+    var hdr = React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 12 } }, React.createElement("button", { onClick: sel && !(matchId && sel.id === matchId) ? function() { setSel(null); } : manage ? function() { setManage(false); } : back, title: "Back", style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, React.createElement(Back, { s: 20 })), React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, flex: 1 } }, sel ? (sel.opponent || "Match") + (sel.scouting ? " \u00b7 Scout" : "") : manage ? "Manage videos" : "Game film"), (sel && sel.scouting) ? React.createElement("button", { onClick: function() { setShowScoutStats(true); }, style: { minHeight: 44, margin: "-9px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { background: C.greenB + ALPHA.soft, border: "1px solid " + C.greenB, color: C.greenB, borderRadius: RAD.md, padding: "6px 12px", fontSize: FS.sm, fontWeight: 800 } }, "Stats")) : null, (!sel && isAnalyst) ? React.createElement("button", { onClick: function() { setManage(!manage); }, style: { minHeight: 44, margin: "-9px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { border: "1px solid " + C.border, color: C.slate, borderRadius: RAD.md, padding: "6px 10px", fontSize: FS.sm, fontWeight: 700 } }, manage ? "Done" : "Manage")) : null);
     if (sel && showScoutStats && sel.scouting) {
       return React.createElement(ScoutDash, { m: sel, club: club, back: function() { setShowScoutStats(false); } });
     }
@@ -1337,7 +1337,7 @@
     });
     return React.createElement("div", { className: "rsa-screen rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "14px 14px 24px" } }, React.createElement(ClipBank, { club: club, readOnly: role === "player" }), body));
   }
-  function Home({ club, onSignOut, onImport, onGameFilm, onLineups, onStats, onNewMatch, onVideoHub, onTemplate, onLive, onTactic, onHelp, onSquad, onLivePad, onResume, resumeMatch, matchCount, role, onPitchMap, onOpposition, onClub }) {
+  function Home({ club, onSignOut, onImport, onGameFilm, onLineups, onStats, lastMatch, onLastMatch, onNewMatch, onVideoHub, onTemplate, onLive, onTactic, onHelp, onSquad, onLivePad, onResume, resumeMatch, matchCount, role, onPitchMap, onOpposition, onClub }) {
     const [hact, setHact] = useState(null);
     // Free clubs see how many of their free matches are used; lifetime clubs see nothing.
     const [usage, setUsage] = useState(null);
@@ -1450,6 +1450,13 @@
           React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, color: C.bg, letterSpacing: -0.2 } }, "Dashboard"),
           React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 600, color: C.bg, marginTop: 2 } }, "Season stats, scorers, " + restarts_() + " & positions")),
         React.createElement("span", { style: { fontSize: FS.lg, color: C.bg, flexShrink: 0 } }, "\u2192")),
+      // Straight into the last finished match: its stats, then its clips and pitch map from there.
+      lastMatch && club && lastMatch.club_id === club.id && React.createElement("button", { onClick: function() { onLastMatch(lastMatch); }, className: "rsa-home-span", style: { width: "100%", marginTop: 12, padding: 14, borderRadius: RAD.xl, background: C.bgCard, border: "1px solid " + C.border, cursor: "pointer", display: "flex", alignItems: "center", gap: 12, textAlign: "left", fontFamily: "inherit", color: C.white } },
+        Badge(lastMatch.our_total > lastMatch.opp_total ? "W" : lastMatch.our_total < lastMatch.opp_total ? "L" : "D", lastMatch.our_total > lastMatch.opp_total ? C.greenB : lastMatch.our_total < lastMatch.opp_total ? C.red : C.gold, 12),
+        React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+          React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800, letterSpacing: -0.2 } }, "Last match \u00B7 v " + (lastMatch.opponent || "TBC")),
+          React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 2, fontFamily: MONO } }, (lastMatch.our_score || "") + " \u2013 " + (lastMatch.opp_score || "") + (lastMatch.date ? " \u00B7 " + new Date(lastMatch.date + "T12:00:00").toLocaleDateString("en-IE", { day: "numeric", month: "short" }) : "") + " \u00B7 stats, clips & pitch map")),
+        React.createElement("span", { style: { fontSize: FS.lg, color: C.slate, flexShrink: 0 } }, "\u203A")),
       !isPlayer && usage && usage.licence === "free" && (function() {
         var full = usage.used >= usage.limit, mail = "club.html#pricing";
         var col = full ? C.gold : C.greenB;
@@ -9913,7 +9920,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         data.few.length > 0 && React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.6 } }, "Under " + SC_MIN_GAMES + " games: " + data.few.map(function(f) { return f.name + " (" + f.games + ")"; }).join(", ")),
         link("Adjust targets", "targets")));
   }
-  function DashView({ d: d0, club, scope, match, onBack, oppName, wide }) {
+  function DashView({ d: d0, club, scope, match, onBack, oppName, wide, onWatch, onPitch }) {
     var ON = oppName || "Opposition";
     useSynonyms();
     // Header scoreline for a single match: from all of its events, whichever half is selected.
@@ -10504,6 +10511,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       onBack ? React.createElement("button", { onClick: onBack, style: { display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", boxShadow: "none", color: C.slate, cursor: "pointer", fontSize: FS.md, margin: "-15px auto -15px 0", fontFamily: MONO, padding: "15px 0" } }, "\u2039 All matches") : React.createElement("span", { style: { marginRight: "auto" } }),
       React.createElement("button", { onClick: exportCSV, style: { minHeight: 44, margin: "-9px 0", padding: 0, flexShrink: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", verticalAlign: "middle" } }, React.createElement("span", { style: { border: "1px solid " + C.slate, color: C.slate, borderRadius: RAD.md, padding: "6px 10px", fontSize: FS.sm, fontWeight: 700 } }, "CSV")),
       React.createElement("button", { onClick: exportMatchReport, style: { minHeight: 44, margin: "-9px 0", padding: 0, flexShrink: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", verticalAlign: "middle" } }, React.createElement("span", { style: { background: C.greenB + ALPHA.soft, border: "1px solid " + C.greenB, color: C.greenB, borderRadius: RAD.md, padding: "6px 12px", fontSize: FS.sm, fontWeight: 800 } }, "\u21E5 Export"))),
+    // The match clips and its pitch map open on this match, and their back button returns here.
+    isMatch && match && (onWatch || onPitch) && React.createElement("div", { style: { display: "flex", gap: 8, margin: "0 0 14px" } },
+      onWatch && match.video_tagged && match.video_url ? React.createElement("button", { onClick: function() { onWatch(match.id); }, style: { flex: 1, minHeight: 44, borderRadius: RAD.md, cursor: "pointer", background: C.bgCard, border: "1px solid " + C.border, color: C.white, fontSize: FS.md, fontWeight: 800, fontFamily: "inherit" } }, "\u25B6 Watch this match") : null,
+      onPitch && React.createElement("button", { onClick: function() { onPitch(match.id); }, style: { flex: 1, minHeight: 44, borderRadius: RAD.md, cursor: "pointer", background: C.bgCard, border: "1px solid " + C.border, color: C.white, fontSize: FS.md, fontWeight: 800, fontFamily: "inherit" } }, "\u25CE Pitch map")),
+    isMatch && match && pensNote(match, club.name || "Us", oppName || match.opponent || "Opposition") && React.createElement("div", { style: { textAlign: "center", fontSize: FS.sm, fontWeight: 800, color: C.gold, margin: "0 0 12px" } }, pensNote(match, club.name || "Us", oppName || match.opponent || "Opposition")),
     /* @__PURE__ */ React.createElement("div", { className: "rsa-noscroll", style: { display: "flex", gap: 4, overflowX: "auto", WebkitOverflowScrolling: "touch", margin: "2px -18px 10px", padding: "0 18px" } }, [["overview","Overview"],["attack","Attack"],["defence","Defence"],["kickouts","Restarts"],["players","Players"],["periods","Periods"]].concat(otherEvents(d._events).length ? [["other","Other"]] : []).map(function(t) { var on = dtab === t[0]; return /* @__PURE__ */ React.createElement("button", { key: t[0], onClick: function() { setDtab(t[0]); }, style: { flexShrink: 0, minHeight: 44, margin: "-6px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement("span", { style: { whiteSpace: "nowrap", padding: "8px 15px", borderRadius: RAD.pill, fontSize: FS.md, fontWeight: on ? 800 : 600, fontFamily: MONO, letterSpacing: 0.3, background: on ? C.greenB : "transparent", border: "1px solid transparent", color: on ? C.bg : C.slate } }, t[1])); })),
     /* @__PURE__ */ React.createElement("div", { style: { display: "inline-flex", gap: 2, padding: 3, borderRadius: RAD.lg, background: C.field, border: "1px solid " + C.border, margin: "0 0 16px" } },
       [["all", "FULL GAME"], ["1", "1ST"], ["2", "2ND"]].map(function(hf) {
@@ -10526,7 +10538,6 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           React.createElement("div", { style: { textAlign: "center", flex: 1 } },
             React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1, color: C.blue, fontFamily: MONO, fontWeight: 700, marginBottom: 2 } }, ON.toUpperCase().slice(0,14)),
             React.createElement("div", { style: { fontSize: FS.h1, fontWeight: 900, color: C.white } }, _evSc ? _evSc.opp : (match.opp_score || "0-00")))),
-        pensNote(match, club.name, ON) && React.createElement("div", { style: { textAlign: "center", fontSize: FS.sm, fontWeight: 700, color: C.gold, marginTop: 6 } }, pensNote(match, club.name, ON)),
         React.createElement("div", { style: { display: "flex", gap: 12, marginTop: 10 } },
           React.createElement("div", { style: { flex: 1 } },
             (d.scorers || []).filter(function(s) { return s.total > 0; }).slice(0, 8).map(function(s, idx) {
@@ -11306,7 +11317,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return /* @__PURE__ */ React.createElement(MetricRow, { key: c[0], label: c[1], m: by[line + c[0]], fmt: c[2] });
     })));
   }
-  function Stats({ club, back }) {
+  function Stats({ club, back, openMatch, onWatch, onPitch }) {
+    // A match to open straight away (from the home Last match tile, or coming back from its
+    // clips or pitch map), used once when the matches arrive.
+    const openRef = useRef(openMatch || null);
     const [d, setD] = useState(null);
     const [err, setErr] = useState("");
     const [tab, setTab] = useState("season");
@@ -11335,6 +11349,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       });
       var _cs = computeStats(ms, evs, aps, club); var _ratings = matchRatings(ms, evs); setD(Object.assign({}, _cs, { matches: ms, _events: evs, _apps: aps, ratings: _ratings }));
       setSelMatch(null);
+      if (openRef.current) {
+        var om = ms.filter(function(m) { return m.id === openRef.current; })[0];
+        if (om) { setTab("matches"); setSelMatch(om); }
+        openRef.current = null;
+      }
     }, [raw, comp, yearF]);
     async function fetchAll(table, cols) {
       let from = 0, all = [];
@@ -11351,7 +11370,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     useEffect(() => {
       (async () => {
         try {
-          let matches = await fetchAll("matches", "id,date,opponent,our_score,opp_score,our_total,opp_total,status,referee,venue,venue_type,weather,scouting,competition");
+          let matches = await fetchAll("matches", "id,date,opponent,our_score,opp_score,our_total,opp_total,status,referee,venue,venue_type,weather,scouting,competition,half_mins,periods,et_mins,extra_time,penalties,video_url,video_enabled,video_tagged");
           matches = matches.filter(function(m) {
             if (m.scouting) return true; return m.our_score != null && String(m.our_score).trim() !== "";
           });
@@ -11401,7 +11420,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         borderBottom: `2px solid ${tab === id ? C.greenB : "transparent"}`
       } }, label);
     };
-    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px 0", borderBottom: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, crestOf(club) ? React.createElement("img", { src: crestOf(club), alt: "", style: { width: 26, height: 26, objectFit: "contain" } }) : null, React.createElement("span", { style: { fontSize: FS.lg, fontWeight: 800 } }, club.name)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, color: C.slate, fontFamily: MONO } }, (yearF === "all" ? "ALL SEASONS" : yearF + " SEASON"), " \xB7 ", sport ? sport.label.toUpperCase() : ""))), React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 10 } }, React.createElement("select", { value: comp, onChange: function(e) { var v = e.target.value; setComp(v); if (v === "scout" && tab === "season") setTab("matches"); }, style: { flex: 1, minHeight: 44, padding: "7px 12px", borderRadius: RAD.pill, background: C.field, border: "1px solid transparent", color: comp === "all" ? C.slate : C.greenB, fontSize: FS.sm, fontWeight: 700, fontFamily: MONO, outline: "none" } }, React.createElement("option", { value: "all" }, "ALL COMPS"), React.createElement("option", { value: "League" }, "LEAGUE"), React.createElement("option", { value: "Championship" }, "CHAMPIONSHIP"), React.createElement("option", { value: "Challenge" }, "CHALLENGE"), React.createElement("option", { value: "League,Championship" }, "LEAGUE + CHAMP"), React.createElement("option", { value: "scout" }, "SCOUT")), (function() { var yrs = {}; (raw && raw.matches || []).forEach(function(m2) { if (m2.date) yrs[m2.date.slice(0,4)] = 1; }); var ks = Object.keys(yrs).sort().reverse(); return ks.length > 1 ? React.createElement("select", { value: yearF, onChange: function(e) { setYearF(e.target.value); }, style: { minHeight: 44, padding: "7px 12px", borderRadius: RAD.pill, background: C.field, border: "1px solid transparent", color: yearF === "all" ? C.slate : C.greenB, fontSize: FS.sm, fontWeight: 700, fontFamily: MONO, outline: "none" } }, React.createElement("option", { value: "all" }, "ALL YEARS"), ks.map(function(y) { return React.createElement("option", { key: y, value: y }, y); })) : null; }())), /* @__PURE__ */ React.createElement("div", { className: "rsa-noscroll", style: { display: "flex", overflowX: "auto", WebkitOverflowScrolling: "touch" } }, /* @__PURE__ */ React.createElement(Tab, { id: "season", label: "Season" }), /* @__PURE__ */ React.createElement(Tab, { id: "matches", label: "Matches" }), /* @__PURE__ */ React.createElement(Tab, { id: "bench", label: "Benchmark" }), /* @__PURE__ */ React.createElement(Tab, { id: "cond", label: "Conditions" }), /* @__PURE__ */ React.createElement(Tab, { id: "rank", label: "vs Others" }))),   /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, err && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 12px", background: C.red + ALPHA.faint, border: "1px solid " + C.red + ALPHA.mid, borderRadius: RAD.lg, color: C.red, fontSize: FS.md } }, err), !d && !err && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 60 } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.greenB })), d && tab === "season" && (d.matches.length ? /* @__PURE__ */ React.createElement(DashView, { d, club, scope: "season" }) : /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: FS.md, paddingTop: 40, lineHeight: 1.6 } }, "No ", comp === "all" ? "" : comp.toLowerCase() + " ", "games yet.", /* @__PURE__ */ React.createElement("br", null), "Matches appear here once they have a final score.")), d && tab === "bench" && (d.benchmark && d.benchmark.length > 1 ? /* @__PURE__ */ React.createElement(Benchmark, { rows: d.benchmark, club }) : /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: FS.md, paddingTop: 40, lineHeight: 1.6 } }, "Not enough teams yet.", /* @__PURE__ */ React.createElement("br", null), "Tag a couple of matches and the benchmark fills out.")), d && tab === "cond" && /* @__PURE__ */ React.createElement(Conditions, { matches: d.matches, events: d._events, club }), d && tab === "rank" && /* @__PURE__ */ React.createElement(RankView, { club }), d && tab === "matches" && (selMatch ? editingMatch ? React.createElement(EditMatch, { club: club, match: editingMatch, back: function() { setEditingMatch(null); }, onSaved: function() { setEditingMatch(null); } }) : selMatch.scouting ? React.createElement(ScoutDash, { m: selMatch, club: club, back: function() { setSelMatch(null); } }) : React.createElement(DashView, { key: selMatch.id, d: Object.assign({}, matchStats(selMatch), { ratings: d.ratings }), club, scope: "match", match: selMatch, onEdit: function(mm) { setEditingMatch(mm); }, onBack: function() {
+    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px 0", borderBottom: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, crestOf(club) ? React.createElement("img", { src: crestOf(club), alt: "", style: { width: 26, height: 26, objectFit: "contain" } }) : null, React.createElement("span", { style: { fontSize: FS.lg, fontWeight: 800 } }, club.name)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, color: C.slate, fontFamily: MONO } }, (yearF === "all" ? "ALL SEASONS" : yearF + " SEASON"), " \xB7 ", sport ? sport.label.toUpperCase() : ""))), React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 10 } }, React.createElement("select", { value: comp, onChange: function(e) { var v = e.target.value; setComp(v); if (v === "scout" && tab === "season") setTab("matches"); }, style: { flex: 1, minHeight: 44, padding: "7px 12px", borderRadius: RAD.pill, background: C.field, border: "1px solid transparent", color: comp === "all" ? C.slate : C.greenB, fontSize: FS.sm, fontWeight: 700, fontFamily: MONO, outline: "none" } }, React.createElement("option", { value: "all" }, "ALL COMPS"), React.createElement("option", { value: "League" }, "LEAGUE"), React.createElement("option", { value: "Championship" }, "CHAMPIONSHIP"), React.createElement("option", { value: "Challenge" }, "CHALLENGE"), React.createElement("option", { value: "League,Championship" }, "LEAGUE + CHAMP"), React.createElement("option", { value: "scout" }, "SCOUT")), (function() { var yrs = {}; (raw && raw.matches || []).forEach(function(m2) { if (m2.date) yrs[m2.date.slice(0,4)] = 1; }); var ks = Object.keys(yrs).sort().reverse(); return ks.length > 1 ? React.createElement("select", { value: yearF, onChange: function(e) { setYearF(e.target.value); }, style: { minHeight: 44, padding: "7px 12px", borderRadius: RAD.pill, background: C.field, border: "1px solid transparent", color: yearF === "all" ? C.slate : C.greenB, fontSize: FS.sm, fontWeight: 700, fontFamily: MONO, outline: "none" } }, React.createElement("option", { value: "all" }, "ALL YEARS"), ks.map(function(y) { return React.createElement("option", { key: y, value: y }, y); })) : null; }())), /* @__PURE__ */ React.createElement("div", { className: "rsa-noscroll", style: { display: "flex", overflowX: "auto", WebkitOverflowScrolling: "touch" } }, /* @__PURE__ */ React.createElement(Tab, { id: "season", label: "Season" }), /* @__PURE__ */ React.createElement(Tab, { id: "matches", label: "Matches" }), /* @__PURE__ */ React.createElement(Tab, { id: "bench", label: "Benchmark" }), /* @__PURE__ */ React.createElement(Tab, { id: "cond", label: "Conditions" }), /* @__PURE__ */ React.createElement(Tab, { id: "rank", label: "vs Others" }))),   /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, err && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 12px", background: C.red + ALPHA.faint, border: "1px solid " + C.red + ALPHA.mid, borderRadius: RAD.lg, color: C.red, fontSize: FS.md } }, err), !d && !err && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", paddingTop: 60 } }, /* @__PURE__ */ React.createElement(Spin, { s: 26, c: C.greenB })), d && tab === "season" && (d.matches.length ? /* @__PURE__ */ React.createElement(DashView, { d, club, scope: "season" }) : /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: FS.md, paddingTop: 40, lineHeight: 1.6 } }, "No ", comp === "all" ? "" : comp.toLowerCase() + " ", "games yet.", /* @__PURE__ */ React.createElement("br", null), "Matches appear here once they have a final score.")), d && tab === "bench" && (d.benchmark && d.benchmark.length > 1 ? /* @__PURE__ */ React.createElement(Benchmark, { rows: d.benchmark, club }) : /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: FS.md, paddingTop: 40, lineHeight: 1.6 } }, "Not enough teams yet.", /* @__PURE__ */ React.createElement("br", null), "Tag a couple of matches and the benchmark fills out.")), d && tab === "cond" && /* @__PURE__ */ React.createElement(Conditions, { matches: d.matches, events: d._events, club }), d && tab === "rank" && /* @__PURE__ */ React.createElement(RankView, { club }), d && tab === "matches" && (selMatch ? editingMatch ? React.createElement(EditMatch, { club: club, match: editingMatch, back: function() { setEditingMatch(null); }, onSaved: function() { setEditingMatch(null); } }) : selMatch.scouting ? React.createElement(ScoutDash, { m: selMatch, club: club, back: function() { setSelMatch(null); } }) : React.createElement(DashView, { key: selMatch.id, d: Object.assign({}, matchStats(selMatch), { ratings: d.ratings }), club, scope: "match", match: selMatch, onWatch: onWatch, onPitch: onPitch, onEdit: function(mm) { setEditingMatch(mm); }, onBack: function() {
       setSelMatch(null);
     } }) : /* @__PURE__ */ React.createElement(MatchList, { matches: d.matches, onPick: setSelMatch, club }))));
   }
@@ -12103,10 +12122,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   // our team attacks left to right and the opposition is plotted in that same
   // frame, so their attacks finish at our goal. Direction per match half comes
   // from koDirIndex, the orientation the restart map already uses.
-  function PitchExplorer({ club, back }) {
+  function PitchExplorer({ club, back, matchId }) {
     const [raw, setRaw] = useState(null);
     const [err, setErr] = useState("");
-    const [fMatch, setFMatch] = useState("all");
+    const [fMatch, setFMatch] = useState(matchId || "all");
     const [fType, setFType] = useState("");
     const [fOut, setFOut] = useState("all");
     const [fTeam, setFTeam] = useState("us");
@@ -13009,10 +13028,24 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [phase, setPhase] = useState("loading");
     const [tagMatch, setTagMatch] = useState(null);
     const [resumeMatch, setResumeMatch] = useState(null);
+    // focusMatch: the match whose clips or pitch map are open from its match view, so back
+    // returns to it. statsOpen: the match the dashboard opens on. lastMatch: the home tile.
+    const [focusMatch, setFocusMatch] = useState(null);
+    const [statsOpen, setStatsOpen] = useState(null);
+    const [lastMatch, setLastMatch] = useState(null);
     const [editMatch, setEditMatch] = useState(null);
     const [tplMatch, setTplMatch] = useState(null);
     const [session, setSession] = useState(null);
     const [club, setClub] = useState(null);
+    // The last finished match for the home tile, fetched again on each return home.
+    useEffect(function() {
+      if (phase !== "home" || !club || !club.id) return;
+      var cid = club.id;
+      db.from("matches").select("id,club_id,opponent,date,our_score,opp_score,our_total,opp_total").eq("club_id", cid).eq("status", "final").eq("scouting", false).order("date", { ascending: false }).limit(1).then(function(r) {
+        var m = r && r.data && r.data[0];
+        setLastMatch(m && m.club_id === cid ? m : null);
+      }, function() {});
+    }, [phase, club && club.id]);
     const [role, setRole] = useState("analyst");
     // One open per club per page load, for the app reports
     useEffect(function() { if (club && club.id) logUse("open", club.id, { role: role }); }, [club && club.id]);
@@ -13238,7 +13271,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       db.from("clubs").select("*").eq("id", club.id).maybeSingle().then(function(r) { if (r && r.data && r.data.id === club.id) setClub(r.data); }, function() {});
       setPhase(tplMatch ? "editmatch" : "home");
     } });
-    if (phase === "pitchmap") return /* @__PURE__ */ React.createElement(PitchExplorer, { club, back: () => setPhase("home") });
+    // Back from clips or a pitch map opened on a match: to that match, else home.
+    function backToMatch() {
+      if (focusMatch) { setStatsOpen(focusMatch); setFocusMatch(null); setPhase("stats"); } else setPhase("home");
+    }
+    if (phase === "pitchmap") return /* @__PURE__ */ React.createElement(PitchExplorer, { club, matchId: focusMatch, back: backToMatch });
     if (phase === "opposition") return /* @__PURE__ */ React.createElement(OppDB, { club, role, back: () => setPhase("home") });
     if (phase === "videohub") return /* @__PURE__ */ React.createElement(VideoHub, { club, session, role, onPick: (m) => {
       setTagMatch(m);
@@ -13252,13 +13289,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       loadCount(club.id);
       setPhase("home");
     } });
-    if (phase === "stats") return /* @__PURE__ */ React.createElement(Stats, { club, back: () => setPhase("home") });
+    if (phase === "stats") return /* @__PURE__ */ React.createElement(Stats, { key: "stats-" + (statsOpen || ""), club, openMatch: statsOpen, back: () => { setStatsOpen(null); setPhase("home"); }, onWatch: function(id) { setFocusMatch(id); setPhase("gamefilm"); }, onPitch: function(id) { setFocusMatch(id); setPhase("pitchmap"); } });
     if (phase === "livepad") return /* @__PURE__ */ React.createElement(LiveStatsPad, { club, back: function() { setPhase("home"); } });
-    if (phase === "gamefilm") return /* @__PURE__ */ React.createElement(GameFilm, { club, role, back: () => setPhase("home") });
-    return /* @__PURE__ */ React.createElement(Home, { club, onClub: setClub, onSignOut: () => { try { activeClear(); } catch (e) {} db.auth.signOut(); }, onImport: () => setPhase("import"), onGameFilm: () => setPhase("gamefilm"), onLineups: () => setPhase("lineups"), onStats: () => setPhase("stats"), onNewMatch: () => setPhase("newmatch"), onVideoHub: () => setPhase("videohub"), onTemplate: () => {
+    if (phase === "gamefilm") return /* @__PURE__ */ React.createElement(GameFilm, { club, role, matchId: focusMatch, back: backToMatch });
+    return /* @__PURE__ */ React.createElement(Home, { club, onClub: setClub, onSignOut: () => { try { activeClear(); } catch (e) {} db.auth.signOut(); }, onImport: () => setPhase("import"), onGameFilm: () => { setFocusMatch(null); setPhase("gamefilm"); }, onLineups: () => setPhase("lineups"), onStats: () => { setStatsOpen(null); setPhase("stats"); }, lastMatch, onLastMatch: function(m) { setStatsOpen(m.id); setPhase("stats"); }, onNewMatch: () => setPhase("newmatch"), onVideoHub: () => setPhase("videohub"), onTemplate: () => {
       setTplMatch(null);
       setPhase("template");
-    }, onLive: () => setPhase("live"), onLivePad: () => setPhase("livepad"), onResume: function(m) { if (!club || m.club_id !== club.id) { setResumeMatch(null); return; } setTagMatch(m); setPhase("tagger"); }, resumeMatch, onTactic: () => setPhase("tactic"), onHelp: () => setPhase("help"), onSquad: () => setPhase("squad"), onPitchMap: () => setPhase("pitchmap"), onOpposition: () => setPhase("opposition"), role, matchCount });
+    }, onLive: () => setPhase("live"), onLivePad: () => setPhase("livepad"), onResume: function(m) { if (!club || m.club_id !== club.id) { setResumeMatch(null); return; } setTagMatch(m); setPhase("tagger"); }, resumeMatch, onTactic: () => setPhase("tactic"), onHelp: () => setPhase("help"), onSquad: () => setPhase("squad"), onPitchMap: () => { setFocusMatch(null); setPhase("pitchmap"); }, onOpposition: () => setPhase("opposition"), role, matchCount });
   }
   ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(RSABoundary, null, /* @__PURE__ */ React.createElement(App, null)));
 })();

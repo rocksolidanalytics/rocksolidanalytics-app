@@ -197,7 +197,19 @@ say 5 too. Still saying 10, waiting on the Google Docs and Sheets connectors: th
 in Rock Solid App/2026-10 October (Instagram plan Sheet, business plan, project background,
 terms and pricing page copies).
 
-**Founding-club offer (drafted, not yet deployed).** Lifetime access at EUR 850 becomes a
+**Stats journey, stage 1 of 3.** Tadhg showed the app to another analyst and it felt like a
+lot of jumping around: analysis starts from six home tiles, Game film and Pitch map each
+pick their own match, and the dashboard has up to five rows of controls. Stage 1: a Last
+match tile on home opens that match's stats directly; the match view has Watch this match
+(when it has video) and Pitch map, which open on that match, and back from them returns to
+the match instead of home. Fixed on the way: the dashboard loaded matches without their
+format and penalties, so the timeline half-time line sat at 30:00 on 35-minute games and the
+won on penalties note never showed (now shown at the top of the match view). New browser
+test test_match_journey.js. Next: stage 2 (one slim filter bar; Benchmark, Conditions and vs
+Others under one Compare tab), stage 3 (tap any number to see its events, watch them or see
+them on the pitch).
+
+**Founding-club offer.** Lifetime access at EUR 850 becomes a
 founding offer: the first 20 clubs to buy it, or until 31 December 2027, whichever comes
 first (Bray Emmets and St Jude's, given lifetime free as early supporters, do not use a
 place). After it: EUR 1,500 lifetime or EUR 350 a year. Match reports and live tagging are
