@@ -139,7 +139,6 @@ player ratings).
 - Decide the county deal's shape: lifetime (with an early-closure part-refund, for example
   full in year 1, half in year 2) or a fixed term such as 5 years. A solicitor should look
   over the final county contract.
-- Set-up and coach training "included" on the offer slide is a promise to keep or remove.
 - Before presenting: a separate demo club account for the live tagging part of the demo,
   so Bray's stats are not touched.
 
@@ -243,6 +242,17 @@ second colour is now used when it shares the family but is far lighter or darker
 gap of 35 or more, as navy and sky blue); two mid blues are still too close, and an opposition
 kit keeps the strict rule. Nothing stored changed. test_club_colours.js covers navy and sky blue.
 Deployed (main at 5680452, rollback 50f0c01).
+
+**The price buys the app only.** Tadhg's rule, now said plainly everywhere: EUR 850 (and any
+plan, the county licence included) buys use of the app, data clean-up if needed and minor help
+by email. Nothing else is included: training sessions and workshops, set-up days,
+presentations, match reports, league or championship reports (EUR 75 each) and us tagging a
+game are all extra. Changed: terms (in short, what it covers and does not, a new section for
+season reports, training and presentations, dated 30 October 2026), the club page (founding
+card and fine print), the in-app free matches message, and the Wicklow deck (offer slide no
+longer says set-up and training are included; its extras box is headed "Everything else is
+extra" and adds training workshops or presentations, quoted; the rollout and next-steps
+slides call the workshop a booked extra and on-the-day support becomes help by email).
 
 **Supabase free plan: how long it lasts.** Checked 2026-10-30: the database is about 20 MB of
 the 500 MB allowed, so storage is years away. The first real limit is bandwidth (5 GB a month):
