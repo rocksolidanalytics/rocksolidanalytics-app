@@ -234,6 +234,15 @@ the colour instead of an outline. Wicklow blue no longer gets any outline or rin
 test_club_colours.js now also checks Wicklow has no outline or rings and maroon small numbers
 are a lighter maroon without an outline.
 
+**Club colours deployed** (main at 50f0c01, rollback 764b5e0), with the softer outline.
+Clubs see their own kit in the app from now on; a club without colours set looks as before.
+
+**Supabase free plan: how long it lasts.** Checked 2026-10-30: the database is about 20 MB of
+the 500 MB allowed, so storage is years away. The first real limit is bandwidth (5 GB a month):
+at a worst case of about 1 MB per Dashboard open, that is roughly 25 to 30 clubs using it
+actively. Free projects also pause after 7 days with no activity. Plan: move to Pro ($25 a
+month) once clubs or the county are paying, and before a county roll-out.
+
 **Wicklow deck: reports.** Slide 20 says match reports export free from a team's own tags;
 the offer slide adds a league or championship report at EUR 75 each. The app has no such
 report yet (match reports only): build one, or make them by hand for now.
