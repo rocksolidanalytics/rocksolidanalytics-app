@@ -205,6 +205,28 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-30
 
+**Club colours through the app.** Asked for after the mock-up (Bray, Wicklow, Éire Óg). The
+frame takes the club kit: the Dashboard tile (main colour shading darker, edged in the second
+colour), the Analytics wordmark, tab underlines, section pills, the half and Key / Detail
+switches, Export / Share / Save, the Season Read card, the Resume Tagging tile and the
+restarts and shots team switches. In the stats "us" is the kit main colour exactly as it is
+(Tadhg's wish), with a fine white outline on text and a white ring on bars when it is too
+dark to read on the dark background (a dark maroon, a navy); "them" is the opposition kit
+when known for that match, else blue, else whichever of orange, gold, green and purple is
+furthest from ours and from our second colour (so Wicklow's opposition is not shown in
+Wicklow gold). Covered: key callouts and the donut, the match score card and scorers, head
+to head (numbers, bars, names), restarts won and restart speed, periods tables and chart,
+score types and origins, cards, time metrics, droughts, source of scores, the pitch map's
+team colours and the match pulse (its win-probability line is now grey so it never clashes
+with a blue team). Green, amber and red for good, close and bad are unchanged, as are the
+taggers (they keep their lightened kit colour; their stats sheet shows the true colour). A
+club with no colours set looks exactly as before. New browser test test_club_colours.js
+(maroon, Wicklow, a light green and a club with no colours).
+
+**Wicklow deck: reports.** Slide 20 says match reports export free from a team's own tags;
+the offer slide adds a league or championship report at EUR 75 each. The app has no such
+report yet (match reports only): build one, or make them by hand for now.
+
 **Hung-upload fix deployed** (main at 113c266, rollback 6b877e9). Together with the kickout
 taps, time since last shot and the since-score timer running from the throw-in (all
 2026-10-29), it is now live.
