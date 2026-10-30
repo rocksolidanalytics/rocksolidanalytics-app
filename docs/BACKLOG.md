@@ -100,7 +100,10 @@ player ratings).
   end date (and what happens when it lapses) before the founding offer closes; the terms
   promise its renewal and cancelling terms before then.
 - Founding places are not counted anywhere: keep a tally of founding sales (club_orgs could
-  carry a founding flag), and optionally show places left on the club page.
+  carry a founding flag), and optionally show places left on the club page. There are now
+  10 places, not 20 (2026-10-30).
+- WhatsApp help is promised on the terms, club page and Wicklow deck, but no number or link
+  is published: add one when Tadhg has it.
 
 **Video tagger design follow-ups** (from the 2026-10-27 review, see Done).
 - Bring the live and video taggers onto one shared tagging core, next time a feature touches
@@ -257,7 +260,8 @@ slides call the workshop a booked extra and on-the-day support becomes help by e
 **Founding places cut to 10; help by WhatsApp.** The founding offer (EUR 850 once) is now for
 the first 10 clubs, not 20, or until 31 December 2027 (terms and club page). Minor help is by
 email or WhatsApp when something is unclear (terms, club page, Wicklow deck offer, rollout and
-next-steps slides). No WhatsApp number is published yet.
+next-steps slides). No WhatsApp number is published yet. Both pricing changes (app only, and
+10 places with WhatsApp help) deployed (main at 7e08e20, rollback 5680452).
 
 **Supabase free plan: how long it lasts.** Checked 2026-10-30: the database is about 20 MB of
 the 500 MB allowed, so storage is years away. The first real limit is bandwidth (5 GB a month):
