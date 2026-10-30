@@ -212,9 +212,10 @@ switches, Export / Share / Save, the Season Read card, the Resume Tagging tile a
 restarts and shots team switches. In the stats "us" is the kit main colour exactly as it is
 (Tadhg's wish), with a fine white outline on text and a white ring on bars when it is too
 dark to read on the dark background (a dark maroon, a navy); "them" is the opposition kit
-when known for that match, else blue, else whichever of orange, gold, green and purple is
-furthest from ours and from our second colour (so Wicklow's opposition is not shown in
-Wicklow gold). Covered: key callouts and the donut, the match score card and scorers, head
+when known for that match, else our second kit colour (Tadhg's call: Wicklow's opposition in
+gold, Éire Óg's in white, Bray's in navy with the outline), else blue when the second colour
+is missing or too close to the main one, else whichever of orange, gold, green and purple is
+furthest from ours. Covered: key callouts and the donut, the match score card and scorers, head
 to head (numbers, bars, names), restarts won and restart speed, periods tables and chart,
 score types and origins, cards, time metrics, droughts, source of scores, the pitch map's
 team colours and the match pulse (its win-probability line is now grey so it never clashes
