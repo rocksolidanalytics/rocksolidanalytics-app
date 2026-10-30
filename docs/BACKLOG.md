@@ -237,6 +237,12 @@ are a lighter maroon without an outline.
 **Club colours deployed** (main at 50f0c01, rollback 764b5e0), with the softer outline.
 Clubs see their own kit in the app from now on; a club without colours set looks as before.
 
+**St Jude's: them in sky blue.** St Jude's (navy, sky blue) showed the opposition in gold,
+because the rule turned down a second colour in the same colour family as the main one. Our own
+second colour is now used when it shares the family but is far lighter or darker (a lightness
+gap of 35 or more, as navy and sky blue); two mid blues are still too close, and an opposition
+kit keeps the strict rule. Nothing stored changed. test_club_colours.js covers navy and sky blue.
+
 **Supabase free plan: how long it lasts.** Checked 2026-10-30: the database is about 20 MB of
 the 500 MB allowed, so storage is years away. The first real limit is bandwidth (5 GB a month):
 at a worst case of about 1 MB per Dashboard open, that is roughly 25 to 30 clubs using it

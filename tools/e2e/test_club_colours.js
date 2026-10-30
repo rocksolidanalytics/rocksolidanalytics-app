@@ -47,6 +47,8 @@ module.exports = async function(t) {
   t.ok('red and navy: navy is dark, so them gets the outline', /255, 255, 255/.test(navy.themLine), navy.themLine);
   const same = await look({ name: 'Two Blues', colour_primary: '#1f4fa0', colour_secondary: '#4a9eff' });
   t.ok('two blues: a second colour too close is not used', !['#4a9eff', '#1f4fa0'].includes(same.them), same.them);
+  const sky = await look({ name: 'Navy Sky', colour_primary: '#0b1c35', colour_secondary: '#4a9eff' });
+  t.eq('navy and sky blue: them in sky blue, the same family but far lighter', sky.them, '#4a9eff');
   const green = await look({ name: 'Green Club', colour_primary: '#34c967', colour_secondary: null });
   t.eq('light green: no outline needed', green.usLine, 'none');
   t.ok('light green: bars without rings', green.ring.every(r => r === 'none'), JSON.stringify(green.ring));

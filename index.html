@@ -452,12 +452,15 @@
     return Math.min(d, 360 - d) < 45;
   }
   function _apart(a, b) { return _labDist(a, b) >= 22 && !_sameHue(a, b); }
+  // Our own second colour may share the main colour family (navy and sky blue) when it is far
+  // lighter or darker; two mid blues still count as too close.
+  function _apart2(a, b) { return _apart(a, b) || 100 * Math.abs(_lab(a)[0] - _lab(b)[0]) >= 35; }
   // The two team colours for a view. us is our kit main colour as it is; them is the
-  // opposition kit colour when known and clearly different, else our second kit colour, else
+  // opposition kit colour when known and clearly different, else our second kit colour (see _apart2), else
   // blue, else whichever of orange, gold, green and purple is furthest from ours (never in our
   // second colour's family). A dark them gets the white outline as us does.
   function teamInk(us, them, avoid) {
-    var u = us || C.greenB, t = them && _apart(u, them) ? them : avoid && _apart(u, avoid) ? avoid : null;
+    var u = us || C.greenB, t = them && _apart(u, them) ? them : avoid && _apart2(u, avoid) ? avoid : null;
     var ok = function(c) { return _apart(u, c) && !(avoid && !_apart(avoid, c)); };
     if (!t) t = ok(C.blue) ? C.blue : [C.orange, C.gold, C.greenB, C.purple].filter(ok).reduce(function(b, c) { return !b || _labDist(u, c) > _labDist(u, b) ? c : b; }, null) || C.white;
     _inkSet("us", u); _inkSet("them", t);
