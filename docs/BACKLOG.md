@@ -225,6 +225,15 @@ taggers (they keep their lightened kit colour; their stats sheet shows the true 
 club with no colours set looks exactly as before. New browser test test_club_colours.js
 (maroon, Wicklow, a light green and a club with no colours).
 
+**Club colours: softer outline.** After the before/after mock-up (Wicklow, Bray, maroon),
+Tadhg chose a lighter touch. Only a really dark colour (a maroon, a navy) is treated as dark:
+its big numbers (score, key callouts, kickout speed) keep the fine white outline and its bars
+get a faint 1px half-strength ring, still paired on both bars. Small text in a dim colour (head
+to head numbers and names, periods, tables, droughts, sources, cards) uses a lighter shade of
+the colour instead of an outline. Wicklow blue no longer gets any outline or ring.
+test_club_colours.js now also checks Wicklow has no outline or rings and maroon small numbers
+are a lighter maroon without an outline.
+
 **Wicklow deck: reports.** Slide 20 says match reports export free from a team's own tags;
 the offer slide adds a league or championship report at EUR 75 each. The app has no such
 report yet (match reports only): build one, or make them by hand for now.

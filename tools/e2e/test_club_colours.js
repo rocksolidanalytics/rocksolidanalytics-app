@@ -1,6 +1,7 @@
 // Club colours: the frame (Dashboard tile, tabs) takes the club kit, "us" in the stats is the kit
-// main colour as it is (a white outline when it is too dark to read), "them" is our second kit
-// colour when it is clearly apart from the main one, and a club with no colours keeps green and blue.
+// main colour as it is (only a really dark colour gets a white outline on big numbers and a faint ring
+// on bars; small text uses a lighter shade), "them" is our second kit colour when it is clearly apart
+// from the main one, and a club with no colours keeps green and blue.
 const L = require('./lib.js');
 const hex = rgb => '#' + rgb.match(/\d+/g).slice(0, 3).map(n => (+n).toString(16).padStart(2, '0')).join('');
 module.exports = async function(t) {
@@ -12,6 +13,8 @@ module.exports = async function(t) {
     await p.getByText('Dashboard', { exact: true }).first().click(); await L.wait(p, 1500);
     // The season head to head: the first pair of bars, ours and theirs.
     const ring = await p.evaluate(() => [...document.querySelectorAll('#root div')].filter(d => d.children.length === 0 && /%$/.test(d.style.width) && d.style.background && d.style.height === '').slice(0, 2).map(b => getComputedStyle(b).boxShadow));
+    // A small per-game number on our side of the same bars.
+    const small = await p.evaluate(() => { const el = [...document.querySelectorAll('#root *')].find(d => d.children.length === 0 && /^\d+\.\d$/.test(d.textContent.trim())); return el ? { c: getComputedStyle(el).color, sh: getComputedStyle(el).textShadow } : null; });
     await L.clickTxt(p, '^Matches$'); await L.wait(p, 600);
     await p.getByText('Rathnew').first().click(); await L.wait(p, 1500);
     if (!/HEAD TO HEAD/.test(await L.text(p))) { await L.clickTxt(p, '^KEY$'); await L.wait(p, 500); }
@@ -24,7 +27,7 @@ module.exports = async function(t) {
     });
     t.eq(colours.name + ': no page errors', r.errors, []);
     await r.browser.close();
-    return { tile, us: hex(ink.us.c), usLine: ink.us.sh, them: hex(ink.them.c), themLine: ink.them.sh, ring };
+    return { tile, small: small && hex(small.c), smallLine: small && small.sh, us: hex(ink.us.c), usLine: ink.us.sh, them: hex(ink.them.c), themLine: ink.them.sh, ring };
   }
   const maroon = await look({ name: 'Maroon Test', colour_primary: '#5a1426', colour_secondary: '#ffffff' });
   t.ok('maroon: Dashboard tile in the club colour', /rgb\(90, 20, 38\)/.test(maroon.tile), maroon.tile);
@@ -33,9 +36,12 @@ module.exports = async function(t) {
   t.eq('maroon: them in our second colour, white', maroon.them, '#ffffff');
   t.ok('maroon: both head-to-head bars ringed, not just ours', maroon.ring.length === 2 && maroon.ring.every(r => /255, 255, 255/.test(r)), JSON.stringify(maroon.ring));
   t.eq('maroon: white them text has no outline', maroon.themLine, 'none');
+  t.ok('maroon: small numbers in a lighter maroon, not outlined', maroon.small && maroon.small !== '#5a1426' && maroon.smallLine === 'none', maroon.small + ' ' + maroon.smallLine);
   const wick = await look({ name: 'Wicklow GAA', colour_primary: '#1f4fa0', colour_secondary: '#f7d117' });
   t.eq('wicklow: our score in Wicklow blue', wick.us, '#1f4fa0');
   t.eq('wicklow: them in Wicklow gold', wick.them, '#f7d117');
+  t.eq('wicklow: blue readable enough, so no outline', wick.usLine, 'none');
+  t.ok('wicklow: bars without rings', wick.ring.every(r => r === 'none'), JSON.stringify(wick.ring));
   const navy = await look({ name: 'Navy Second', colour_primary: '#d32f2f', colour_secondary: '#0b1c35' });
   t.eq('red and navy: them in navy', navy.them, '#0b1c35');
   t.ok('red and navy: navy is dark, so them gets the outline', /255, 255, 255/.test(navy.themLine), navy.themLine);

@@ -143,7 +143,7 @@
   // teams in the stats. A team colour too dark to read on the dark background keeps its colour
   // and gets a white outline: usLine/themLine for text, usRing/themRing for bars, usSvg/themSvg
   // for chart marks. Without club colours everything stays green and blue as before.
-  Object.assign(C, { acc: C.greenB, accD: C.green, accT: C.bg, accL: C.greenB, acc2: C.greenB, us: C.greenB, them: C.blue, usLine: "none", themLine: "none", usRing: "none", themRing: "none", usSvg: "none", themSvg: "none" });
+  Object.assign(C, { acc: C.greenB, accD: C.green, accT: C.bg, accL: C.greenB, acc2: C.greenB, us: C.greenB, them: C.blue, usLine: "none", themLine: "none", usRing: "none", themRing: "none", usSvg: "none", themSvg: "none", usText: C.greenB, themText: C.blue });
   const MONO = "Barlow Condensed, Roboto Condensed, Arial Narrow, sans-serif";
   // Design tokens. Taggers keep their hand-tuned font sizes and do not use FS.
   const FS = { xs: 9, sm: 11, md: 13, lg: 15, xl: 18, h2: 22, h1: 30, hero: 46 };
@@ -429,14 +429,20 @@
   }
   function _mixHex(a, b, t) { var x = _hexRgb(a), y = _hexRgb(b); return x && y ? _rgbHex(x.map(function(v, i) { return v + (y[i] - v) * t; })) : a; }
   var INK_LINE = "-0.7px -0.7px 0 #fff, 0.7px -0.7px 0 #fff, -0.7px 0.7px 0 #fff, 0.7px 0.7px 0 #fff";
+  var INK_RING = "0 0 0 1px rgba(255,255,255,0.45)", INK_SVG = "rgba(255,255,255,0.55)";
+  // Only a really dark colour (maroon, navy, black) gets the outline and ring; a dim one (a mid
+  // blue) does without. Small text in a dim colour uses a lighter shade of it instead (Text).
   function _inkSet(side, col) {
-    var dark = _contrastBg(col) < 3;
+    var cr = _contrastBg(col), dark = cr < 2;
     C[side] = col; C[side + "Line"] = dark ? INK_LINE : "none";
-    C[side + "Ring"] = dark ? "0 0 0 1.5px rgba(255,255,255,0.9)" : "none"; C[side + "Svg"] = dark ? "#FFFFFF" : "none";
+    C[side + "Ring"] = dark ? INK_RING : "none"; C[side + "Svg"] = dark ? INK_SVG : "none";
+    C[side + "Text"] = cr < 3 ? (_readable(col) || col) : col;
   }
   // The outline for text or a bar drawn in a team colour (none for any other colour).
   function inkLine(col) { return col === C.us ? C.usLine : col === C.them ? C.themLine : "none"; }
   function inkRing(col) { return col === C.us ? C.usRing : col === C.them ? C.themRing : "none"; }
+  // Small text in a team colour: the colour itself, or a lighter shade when it is dim.
+  function inkText(col) { return col === C.us ? C.usText : col === C.them ? C.themText : col; }
   // Same colour family: both clearly coloured and within 45 degrees of hue (OKLab), so dark
   // blue and sky blue count as alike even though their lightness differs.
   function _sameHue(a, b) {
@@ -458,8 +464,8 @@
     // Bars and chart marks come in pairs, so when one side needs the white ring both get it.
     // Text keeps its own outline: a white edge only blurs a colour that already reads.
     if (C.usRing !== "none" || C.themRing !== "none") {
-      C.usRing = C.themRing = "0 0 0 1.5px rgba(255,255,255,0.9)";
-      C.usSvg = C.themSvg = "#FFFFFF";
+      C.usRing = C.themRing = INK_RING;
+      C.usSvg = C.themSvg = INK_SVG;
     }
   }
   // Our second kit colour, when the kit has one.
@@ -4000,9 +4006,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var RS = restarts_();
     return React.createElement(React.Fragment, null,
       React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, padding: "2px 4px 0" } },
-        React.createElement("span", { style: { fontWeight: 800, fontSize: FS.md, color: usCol, textShadow: inkLine(usCol) } }, usName),
+        React.createElement("span", { style: { fontWeight: 800, fontSize: FS.md, color: inkText(usCol) } }, usName),
         React.createElement("span", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO } }, mid),
-        React.createElement("span", { style: { fontWeight: 800, fontSize: FS.md, color: oppCol, textShadow: inkLine(oppCol), textAlign: "right" } }, oppName)),
+        React.createElement("span", { style: { fontWeight: 800, fontSize: FS.md, color: inkText(oppCol), textAlign: "right" } }, oppName)),
       h2hGroups(us, op, games).map(function(grp, i) {
         var ic = ICON[grp.main.label] || (/ won$/.test(grp.main.label) ? "\u21BB" : "");
         return React.createElement(H2HGroup, { key: i, grp: { main: Object.assign({ icon: ic }, grp.main), subs: grp.subs }, usCol: usCol, oppCol: oppCol, onPick: onPick });
@@ -4029,7 +4035,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var t = r.u + r.o, pu = t > 0 ? 100 * r.u / t : 50;
     // With onPick, a number with events behind it is a button that lists them.
     function num(v, ev, side, col, right) {
-      var st = { minWidth: 36, textAlign: right ? "right" : "left", fontFamily: MONO, fontWeight: 800, fontSize: main ? FS.md : FS.sm, color: col, textShadow: inkLine(col) };
+      var st = { minWidth: 36, textAlign: right ? "right" : "left", fontFamily: MONO, fontWeight: 800, fontSize: main ? FS.md : FS.sm, color: inkText(col) };
       if (!onPick || !ev || !ev.length) return React.createElement("span", { style: st }, h2hFmt(v, r));
       return React.createElement("button", { onClick: function() { onPick(r.label, side, ev); }, "aria-label": r.label + ": see the " + ev.length + " events", style: Object.assign({}, st, { minHeight: 44, margin: "-14px " + (right ? "-8px -14px 0" : "0 -14px -8px"), padding: right ? "0 8px 0 0" : "0 0 0 8px", background: "none", border: "none", boxShadow: "none", cursor: "pointer", textDecoration: "underline dotted", textUnderlineOffset: 3 }) }, h2hFmt(v, r));
     }
@@ -4092,7 +4098,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }
     function block(side, name, nameColor) {
       var src = data[side] || {}, tot = data.tot && data.tot[side] || 0;
-      return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 7 } }, /* @__PURE__ */ React.createElement("span", { style: { color: nameColor, textShadow: inkLine(nameColor), fontWeight: 800, fontSize: FS.md } }, name), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontFamily: MONO, fontSize: FS.xs, letterSpacing: 1 } }, tot, " SCORES")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", height: 11, gap: 2, borderRadius: RAD.sm, overflow: "hidden", marginBottom: 10, background: C.field } }, META.map(function(m) {
+      return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 7 } }, /* @__PURE__ */ React.createElement("span", { style: { color: inkText(nameColor), fontWeight: 800, fontSize: FS.md } }, name), /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontFamily: MONO, fontSize: FS.xs, letterSpacing: 1 } }, tot, " SCORES")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", height: 11, gap: 2, borderRadius: RAD.sm, overflow: "hidden", marginBottom: 10, background: C.field } }, META.map(function(m) {
         var n = (src[m.k] || {}).n || 0;
         if (!n) return null;
         return /* @__PURE__ */ React.createElement("div", { key: m.k, style: { flexGrow: n, flexBasis: 0, background: m.color } });
@@ -10688,18 +10694,18 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       isMatch && match && React.createElement("div", { style: { padding: "16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid } },
         React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } },
           React.createElement("div", { style: { textAlign: "center", flex: 1 } },
-            React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1, color: C.us, textShadow: C.usLine, fontFamily: MONO, fontWeight: 700, marginBottom: 2 } }, (club.name || "Us").toUpperCase().slice(0,14)),
+            React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1, color: C.usText, fontFamily: MONO, fontWeight: 700, marginBottom: 2 } }, (club.name || "Us").toUpperCase().slice(0,14)),
             React.createElement("div", { style: { fontSize: FS.h1, fontWeight: 900, color: C.white } }, _evSc ? _evSc.us : (match.our_score || "0-00"))),
           React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, padding: "0 6px" } }, "v"),
           React.createElement("div", { style: { textAlign: "center", flex: 1 } },
-            React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1, color: C.them, textShadow: C.themLine, fontFamily: MONO, fontWeight: 700, marginBottom: 2 } }, ON.toUpperCase().slice(0,14)),
+            React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1, color: C.themText, fontFamily: MONO, fontWeight: 700, marginBottom: 2 } }, ON.toUpperCase().slice(0,14)),
             React.createElement("div", { style: { fontSize: FS.h1, fontWeight: 900, color: C.white } }, _evSc ? _evSc.opp : (match.opp_score || "0-00")))),
         React.createElement("div", { style: { display: "flex", gap: 12, marginTop: 10 } },
           React.createElement("div", { style: { flex: 1 } },
             (d.scorers || []).filter(function(s) { return s.total > 0; }).slice(0, 8).map(function(s, idx) {
               return React.createElement("div", { key: idx, style: { display: "flex", justifyContent: "space-between", padding: "2px 0", fontSize: FS.sm } },
                 React.createElement("span", { style: { color: C.white } }, s.name),
-                React.createElement("span", { style: { fontFamily: MONO, color: C.us, textShadow: C.usLine, fontWeight: 700 } }, s.g + "-" + (s.ptot < 10 ? "0" : "") + s.ptot));
+                React.createElement("span", { style: { fontFamily: MONO, color: C.usText, fontWeight: 700 } }, s.g + "-" + (s.ptot < 10 ? "0" : "") + s.ptot));
             })))),
       isMatch && match && d._events && React.createElement(PulseTimeline, { events: (d._events || []).filter(function(e) { return e.match_id === match.id; }), match: match, club: club }),
       d.ratings && match && d.ratings[match.id] && (function() {
@@ -11071,7 +11077,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       });
       function stTable(team, teamColour, teamLabel) {
         return React.createElement("div", { style: { overflowX: "auto", marginBottom: 16, background: C.bgCard, borderRadius: RAD.xl, boxShadow: "0 2px 8px " + C.black + ALPHA.mid, padding: "16px 14px" } },
-          React.createElement("div", { style: { fontSize: FS.sm, fontFamily: MONO, letterSpacing: 1.5, color: teamColour, textShadow: inkLine(teamColour), fontWeight: 800, marginBottom: 12 } }, teamLabel),
+          React.createElement("div", { style: { fontSize: FS.sm, fontFamily: MONO, letterSpacing: 1.5, color: inkText(teamColour), fontWeight: 800, marginBottom: 12 } }, teamLabel),
           React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: FS.md, fontFamily: MONO } },
             React.createElement("thead", null, React.createElement("tr", null,
               React.createElement("th", { style: { textAlign: "left", padding: "6px 6px", borderBottom: "2px solid " + C.border, color: C.slateD, fontSize: FS.xs, letterSpacing: 1 } }, ""),
@@ -11092,7 +11098,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       }
       function srcTable(team, teamColour, teamLabel) {
         return React.createElement("div", { style: { overflowX: "auto", marginBottom: 16, background: C.bgCard, borderRadius: RAD.xl, boxShadow: "0 2px 8px " + C.black + ALPHA.mid, padding: "16px 14px" } },
-          React.createElement("div", { style: { fontSize: FS.sm, fontFamily: MONO, letterSpacing: 1.5, color: teamColour, textShadow: inkLine(teamColour), fontWeight: 800, marginBottom: 12 } }, teamLabel),
+          React.createElement("div", { style: { fontSize: FS.sm, fontFamily: MONO, letterSpacing: 1.5, color: inkText(teamColour), fontWeight: 800, marginBottom: 12 } }, teamLabel),
           React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: FS.md, fontFamily: MONO } },
             React.createElement("thead", null, React.createElement("tr", null,
               React.createElement("th", { style: { textAlign: "left", padding: "6px 6px", borderBottom: "2px solid " + C.border, color: C.slateD, fontSize: FS.xs, letterSpacing: 1 } }, ""),
@@ -11106,7 +11112,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                 row.map(function(v, ci) {
                   var isHigh = v > 0;
                   var isPeak = ci === peak && pv > 0;
-                  return React.createElement("td", { key: ci, style: { textAlign: "center", padding: "10px 14px", color: isHigh ? teamColour : C.slateD, textShadow: isHigh ? inkLine(teamColour) : "none", fontWeight: isHigh ? 800 : 400, background: isPeak ? teamColour + ALPHA.faint : "none", borderRadius: isPeak ? RAD.md : 0, whiteSpace: "nowrap" } }, isHigh ? String(v) : "\u2014");
+                  return React.createElement("td", { key: ci, style: { textAlign: "center", padding: "10px 14px", color: isHigh ? inkText(teamColour) : C.slateD, fontWeight: isHigh ? 800 : 400, background: isPeak ? teamColour + ALPHA.faint : "none", borderRadius: isPeak ? RAD.md : 0, whiteSpace: "nowrap" } }, isHigh ? String(v) : "\u2014");
                 }));
             }))));
       }
@@ -11158,7 +11164,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                   var val = v == null ? "\u2014" : (row[0].indexOf("%") >= 0 ? v + "%" : String(v));
                   var isHigh = typeof v === "number" && v > 0;
                   var isPeak = ci === peak && pv > 0;
-                  return React.createElement("td", { key: ci, style: { textAlign: "center", padding: "10px 14px", color: isHigh ? row[2] : C.slateD, textShadow: isHigh ? inkLine(row[2]) : "none", fontWeight: isHigh ? 800 : 400, background: isPeak ? row[2] + ALPHA.faint : "none", borderRadius: isPeak ? RAD.md : 0, whiteSpace: "nowrap" } }, val);
+                  return React.createElement("td", { key: ci, style: { textAlign: "center", padding: "10px 14px", color: isHigh ? inkText(row[2]) : C.slateD, fontWeight: isHigh ? 800 : 400, background: isPeak ? row[2] + ALPHA.faint : "none", borderRadius: isPeak ? RAD.md : 0, whiteSpace: "nowrap" } }, val);
                 })
               );
             })
@@ -11192,8 +11198,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         React.createElement(Section, { title: nM > 1 ? "AVG CUMULATIVE SCORE \u00b7 " + nM + " GAMES" : "CUMULATIVE SCORE" },
           React.createElement("div", { style: { background: C.bgCard, borderRadius: RAD.xl, boxShadow: "0 2px 8px " + C.black + ALPHA.mid, padding: "16px 12px 10px" } },
           React.createElement("div", { style: { display: "flex", gap: 16, justifyContent: "center", marginBottom: 10 } },
-            React.createElement("span", { style: { fontSize: FS.sm, color: C.us, textShadow: C.usLine, fontWeight: 700 } }, "\u2014 " + (club.name || "Us")),
-            React.createElement("span", { style: { fontSize: FS.sm, color: C.them, textShadow: C.themLine, fontWeight: 700 } }, "- - " + (ON || "Opposition"))
+            React.createElement("span", { style: { fontSize: FS.sm, color: C.usText, fontWeight: 700 } }, "\u2014 " + (club.name || "Us")),
+            React.createElement("span", { style: { fontSize: FS.sm, color: C.themText, fontWeight: 700 } }, "- - " + (ON || "Opposition"))
           ), chart)),
         React.createElement(Section, { title: nM > 1 ? "SCORING DROUGHTS \u00b7 " + nM + " GAMES" : "SCORING DROUGHTS" }, React.createElement(DroughtView, { dr: d && d.droughts, club: club, oppName: ON, nM: nM })),
         React.createElement(Section, { title: nM > 1 ? "TIME LEADING \u00b7 LEVEL \u00b7 BEHIND \u00b7 " + nM + " GAMES" : "TIME LEADING \u00b7 LEVEL \u00b7 BEHIND" }, React.createElement(GameStateView, { gs: d && d.gameState, club: club, nM: nM })),
@@ -11594,7 +11600,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         React.createElement("div", { style: Object.assign({}, _TM_CARD, { display: "flex", gap: 10 }) },
           [[usN, r.us, C.us], [opN, r.opp, C.them]].map(function(s, i) {
             return React.createElement("div", { key: i, style: { flex: 1, textAlign: "center" } },
-              React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1, color: s[2], textShadow: inkLine(s[2]), fontFamily: MONO, fontWeight: 700 } }, s[0].toUpperCase().slice(0, 16)),
+              React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1, color: inkText(s[2]), fontFamily: MONO, fontWeight: 700 } }, s[0].toUpperCase().slice(0, 16)),
               React.createElement("div", { style: { fontSize: FS.h2, fontWeight: 800, fontFamily: MONO, color: C.white, marginTop: 4 } }, s[1] ? _tmMin(s[1].len) : "\u2014"),
               React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, s[1] ? "from " + Math.floor(s[1].start / 60) + "\u2032 \u00b7 " + (s[1].half === 2 ? "2nd" : "1st") + " half" : ""));
           })),
@@ -11605,7 +11611,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       React.createElement("div", { style: Object.assign({}, _TM_CARD, { display: "flex", gap: 10, marginBottom: 12 }) },
         [[usN, dr.usAvg, dr.usWorst, C.us], [opN, dr.oppAvg, dr.oppWorst, C.them]].map(function(s, i) {
           return React.createElement("div", { key: i, style: { flex: 1, textAlign: "center" } },
-            React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1, color: s[3], textShadow: inkLine(s[3]), fontFamily: MONO, fontWeight: 700 } }, s[0].toUpperCase().slice(0, 16)),
+            React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1, color: inkText(s[3]), fontFamily: MONO, fontWeight: 700 } }, s[0].toUpperCase().slice(0, 16)),
             React.createElement("div", { style: { fontSize: FS.h2, fontWeight: 800, fontFamily: MONO, color: C.white, marginTop: 4 } }, s[1] != null ? _tmMin(s[1]) : "\u2014"),
             React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, "avg longest per game"),
             s[2] ? React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, fontFamily: MONO, marginTop: 6 } }, "worst " + _tmMin(s[2].len) + " v " + (s[2].opponent || "?")) : null);
@@ -11614,13 +11620,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: FS.md, fontFamily: MONO } },
           React.createElement("thead", null, React.createElement("tr", null,
             React.createElement("th", { style: Object.assign({}, _TM_TH, { textAlign: "left", padding: "10px 4px" }) }, "GAME"),
-            React.createElement("th", { style: Object.assign({}, _TM_TH, { color: C.us, textShadow: C.usLine, padding: "10px 4px" }) }, teamWord(usN).toUpperCase()),
-            React.createElement("th", { style: Object.assign({}, _TM_TH, { color: C.them, textShadow: C.themLine, padding: "10px 4px" }) }, "OPP"))),
+            React.createElement("th", { style: Object.assign({}, _TM_TH, { color: C.usText, padding: "10px 4px" }) }, teamWord(usN).toUpperCase()),
+            React.createElement("th", { style: Object.assign({}, _TM_TH, { color: C.themText, padding: "10px 4px" }) }, "OPP"))),
           React.createElement("tbody", null, rows.map(function(r, i) {
             return React.createElement("tr", { key: i, style: { borderBottom: "1px solid " + C.border + ALPHA.mid } },
               React.createElement("td", { style: Object.assign({}, _TM_LBL, { padding: "10px 4px", whiteSpace: "normal", lineHeight: 1.3 }) }, r[0]),
-              React.createElement("td", { style: Object.assign({}, _TM_TD, { color: C.us, textShadow: C.usLine, padding: "10px 4px" }) }, r[1]),
-              React.createElement("td", { style: Object.assign({}, _TM_TD, { color: C.them, textShadow: C.themLine, padding: "10px 4px" }) }, r[2]));
+              React.createElement("td", { style: Object.assign({}, _TM_TD, { color: C.usText, padding: "10px 4px" }) }, r[1]),
+              React.createElement("td", { style: Object.assign({}, _TM_TD, { color: C.themText, padding: "10px 4px" }) }, r[2]));
           })))),
       React.createElement("div", { style: _TM_NOTE }, "Each game: longest spell without a score \u00b7 the minute it started. Each half is measured on its own; half-time never counts."));
   }
@@ -11696,7 +11702,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     return /* @__PURE__ */ React.createElement("div", { style: _KC_BOX },
       React.createElement("div", { style: { display: "flex", alignItems: "baseline" } },
         React.createElement("div", { style: Object.assign({}, _KC_LBL, { flex: 1 }) }, "POSSESSION LOST"),
-        d.tagged && React.createElement("div", { style: { fontFamily: MONO, fontSize: FS.md, fontWeight: 800, color: C.them, textShadow: C.themLine } }, d.opp, React.createElement("span", { style: { fontSize: FS.xs, color: C.slateD, fontWeight: 700, marginLeft: 4 } }, "THEM"))),
+        d.tagged && React.createElement("div", { style: { fontFamily: MONO, fontSize: FS.md, fontWeight: 800, color: C.themText } }, d.opp, React.createElement("span", { style: { fontSize: FS.xs, color: C.slateD, fontWeight: 700, marginLeft: 4 } }, "THEM"))),
       !d.tagged ? React.createElement("div", null, React.createElement("div", { style: { fontFamily: MONO, fontSize: FS.h1, fontWeight: 800, color: C.slateD, marginTop: 6 } }, "—"), React.createElement("div", { style: _KC_SUB }, "NOT TAGGED")) :
       React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: 8 } },
         React.createElement("svg", { width: 140, height: 140, viewBox: "0 0 140 140", role: "img", "aria-label": "Possession lost " + d.us },
@@ -11791,7 +11797,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             React.createElement("span", { style: { width: 44, fontFamily: MONO, color: C.slateD } }, String(e.time_text || "").replace(/^00:/, "") || (e.period ? (e.period === 2 ? "2nd" : "1st") : "")),
             cardChip(e._k, "", "c"),
             React.createElement("span", { style: { flex: 1, color: C.white } }, String(e.player || "").trim() || "—"),
-            React.createElement("span", { style: { color: e.team === "us" ? C.us : C.them, textShadow: e.team === "us" ? C.usLine : C.themLine, fontFamily: MONO, fontSize: FS.xs } }, e.team === "us" ? "US" : "THEM"));
+            React.createElement("span", { style: { color: e.team === "us" ? C.usText : C.themText, fontFamily: MONO, fontSize: FS.xs } }, e.team === "us" ? "US" : "THEM"));
         }));
     }
     var byM = {}, byP = {};
@@ -12253,11 +12259,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
       React.createElement("div", { style: Object.assign({}, _KC_BOX, { display: "flex", alignItems: "center", gap: 8 }) },
         React.createElement("div", { style: { flex: 1, minWidth: 0 } },
-          React.createElement("div", { style: Object.assign({}, _KC_LBL, { color: C.us, textShadow: C.usLine, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }) }, usName || "US"),
+          React.createElement("div", { style: Object.assign({}, _KC_LBL, { color: C.usText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }) }, usName || "US"),
           React.createElement("div", { style: { fontFamily: MONO, fontSize: FS.h1, fontWeight: 800, color: C.us, textShadow: C.usLine, marginTop: 2 } }, gp(kc.score.us))),
         React.createElement("div", { style: { fontFamily: MONO, fontSize: FS.sm, color: C.slateD, textAlign: "center", letterSpacing: 1, flexShrink: 0 } }, clock || ""),
         React.createElement("div", { style: { flex: 1, minWidth: 0, textAlign: "right" } },
-          React.createElement("div", { style: Object.assign({}, _KC_LBL, { color: C.them, textShadow: C.themLine, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }) }, oppName || "THEM"),
+          React.createElement("div", { style: Object.assign({}, _KC_LBL, { color: C.themText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }) }, oppName || "THEM"),
           React.createElement("div", { style: { fontFamily: MONO, fontSize: FS.h1, fontWeight: 800, color: C.them, textShadow: C.themLine, marginTop: 2 } }, gp(kc.score.opp)))),
       React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } },
         kc.cards.map(function(c) {
@@ -12276,7 +12282,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         React.createElement("div", { style: { marginTop: 6 } }, kc.scorers.map(function(s, i) {
           return React.createElement("div", { key: s.name, style: { display: "flex", alignItems: "baseline", padding: "7px 0", borderTop: i ? "1px solid " + C.border : "none" } },
             React.createElement("span", { style: { flex: 1, minWidth: 0, fontSize: FS.md, color: C.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, s.name),
-            React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.md, fontWeight: 800, color: C.us, textShadow: C.usLine } }, gp(s)));
+            React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.md, fontWeight: 800, color: C.usText } }, gp(s)));
         }))));
   }
   // Stand alone pitch map. Every event with a saved spot, drawn in one frame:
