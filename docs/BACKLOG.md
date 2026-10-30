@@ -254,6 +254,11 @@ longer says set-up and training are included; its extras box is headed "Everythi
 extra" and adds training workshops or presentations, quoted; the rollout and next-steps
 slides call the workshop a booked extra and on-the-day support becomes help by email).
 
+**Founding places cut to 10; help by WhatsApp.** The founding offer (EUR 850 once) is now for
+the first 10 clubs, not 20, or until 31 December 2027 (terms and club page). Minor help is by
+email or WhatsApp when something is unclear (terms, club page, Wicklow deck offer, rollout and
+next-steps slides). No WhatsApp number is published yet.
+
 **Supabase free plan: how long it lasts.** Checked 2026-10-30: the database is about 20 MB of
 the 500 MB allowed, so storage is years away. The first real limit is bandwidth (5 GB a month):
 at a worst case of about 1 MB per Dashboard open, that is roughly 25 to 30 clubs using it
@@ -355,7 +360,7 @@ same upload is used by the background sync and the video tagger. New browser tes
 test_upload_hang.js (the fake database can now hang writes; the test fails without the fix).
 
 **Founding-club offer.** Lifetime access at EUR 850 becomes a
-founding offer: the first 20 clubs to buy it, or until 31 December 2027, whichever comes
+founding offer: the first 20 clubs (cut to 10 on 2026-10-30) to buy it, or until 31 December 2027, whichever comes
 first (Bray Emmets and St Jude's, given lifetime free as early supporters, do not use a
 place). After it: EUR 1,500 lifetime or EUR 350 a year. Match reports and live tagging are
 stated as extra to any plan. No fair-use limit on the team-sheet reader (Tadhg's call).
