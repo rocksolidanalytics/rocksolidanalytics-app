@@ -455,6 +455,12 @@
     var ok = function(c) { return _apart(u, c) && !(avoid && !_apart(avoid, c)); };
     if (!t) t = ok(C.blue) ? C.blue : [C.orange, C.gold, C.greenB, C.purple].filter(ok).reduce(function(b, c) { return !b || _labDist(u, c) > _labDist(u, b) ? c : b; }, null) || C.white;
     _inkSet("us", u); _inkSet("them", t);
+    // Bars and chart marks come in pairs, so when one side needs the white ring both get it.
+    // Text keeps its own outline: a white edge only blurs a colour that already reads.
+    if (C.usRing !== "none" || C.themRing !== "none") {
+      C.usRing = C.themRing = "0 0 0 1.5px rgba(255,255,255,0.9)";
+      C.usSvg = C.themSvg = "#FFFFFF";
+    }
   }
   // Our second kit colour, when the kit has one.
   function clubInk2(club) {

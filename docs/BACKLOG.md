@@ -215,7 +215,8 @@ dark to read on the dark background (a dark maroon, a navy); "them" is the oppos
 when known for that match, else our second kit colour (Tadhg's call: Wicklow's opposition in
 gold, Éire Óg's in white, Bray's in navy with the outline), else blue when the second colour
 is missing or too close to the main one, else whichever of orange, gold, green and purple is
-furthest from ours. Covered: key callouts and the donut, the match score card and scorers, head
+furthest from ours. Bars and chart marks come in pairs, so when either side needs the white
+ring both get it (Tadhg's call); text keeps its own outline, only on a colour too dark to read. Covered: key callouts and the donut, the match score card and scorers, head
 to head (numbers, bars, names), restarts won and restart speed, periods tables and chart,
 score types and origins, cards, time metrics, droughts, source of scores, the pitch map's
 team colours and the match pulse (its win-probability line is now grey so it never clashes
