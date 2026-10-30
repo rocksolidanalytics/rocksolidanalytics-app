@@ -242,6 +242,7 @@ because the rule turned down a second colour in the same colour family as the ma
 second colour is now used when it shares the family but is far lighter or darker (a lightness
 gap of 35 or more, as navy and sky blue); two mid blues are still too close, and an opposition
 kit keeps the strict rule. Nothing stored changed. test_club_colours.js covers navy and sky blue.
+Deployed (main at 5680452, rollback 50f0c01).
 
 **Supabase free plan: how long it lasts.** Checked 2026-10-30: the database is about 20 MB of
 the 500 MB allowed, so storage is years away. The first real limit is bandwidth (5 GB a month):
