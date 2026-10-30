@@ -130,6 +130,19 @@ player ratings).
 - Team sheet reader: optionally capture marks such as asterisks; optional stronger model for
   messy handwritten sheets.
 
+**Wicklow GAA presentation, still open** (deck made 2026-10-29, see Done 2026-10-30).
+- Fill the placeholders: the county price on the offer slide, the date on the cover, the
+  dates on the next-steps slide.
+- Confirm Bray Emmets are happy for their real data to be shown, and that Wicklow GAA is
+  happy for its crest and the academy logo to appear as "prepared for".
+- Under-18 player logins: agree with Wicklow's Children's Officer (the data slide says so).
+- Decide the county deal's shape: lifetime (with an early-closure part-refund, for example
+  full in year 1, half in year 2) or a fixed term such as 5 years. A solicitor should look
+  over the final county contract.
+- Set-up and coach training "included" on the offer slide is a promise to keep or remove.
+- Before presenting: a separate demo club account for the live tagging part of the demo,
+  so Bray's stats are not touched.
+
 **Stats journey, still open** (stages 1 to 3 done 2026-10-29)
 - Try it with the analyst who found it jumpy, and fix what still feels like jumping around.
 - More tappable numbers: the match head-to-head and the kickout panels are done. Next
@@ -189,6 +202,34 @@ columns. Wide screens now go up to 1200px.
 
 **Still to look at:** the opposition team page, match lists, Game film list, the video
 tagger in landscape, and button sizes in the live tagger on a big screen.
+
+## Done 2026-10-30
+
+**Hung-upload fix deployed** (main at 113c266, rollback 6b877e9). Together with the kickout
+taps, time since last shot and the since-score timer running from the throw-in (all
+2026-10-29), it is now live.
+
+**Lifetime access: no fixed term.** Tadhg asked whether to cap lifetime access at, say, 5
+years in case the app ever closes. Decision: no cap. The terms already say lifetime access
+lasts for as long as Rock Solid Analytics operates, with at least 3 months notice and a copy
+of the club's data if it closes; a 5-year cap would need renaming ("lifetime" that ends
+reads as misleading), sets a renewal date and gives no extra protection. The county deal may
+still be done differently (see Open).
+
+**Wicklow GAA presentation deck** (claude.ai Slides artifact, private: "Rock Solid Analytics
+for Wicklow GAA", made 2026-10-29). For a possible presentation to Wicklow GAA and its
+academy in a few weeks; academy first, talk plus live demo, the ask being lifetime access for
+every academy squad and adult team with reports and live tagging extra. 25 slides with
+speaker notes and a five-step demo script: why and what, Bray Emmets' season as proof (3,298
+tagged events, 16 matches, 9 from video), scorecard, targets, clips for players, player
+logins, a week in a squad, live and video tagging, the match view, source of scores,
+kickouts, pitch map, opposition and tactical pad, Kerry v Mayo reports, roll-out over 8
+weeks, the offer, data and safeguarding (facts from the privacy notice), next steps.
+Screenshots taken fresh from the app with real Bray Emmets and All-Ireland showcase data
+(scratch fixtures only, nothing committed); the video screens use illustrative footage and
+say so. Wicklow crest and academy logo on the cover, the academy divider and the closing
+slide. Offer slide wording changed today from "forever" to "for as long as the app runs",
+to match the terms.
 
 ## Done 2026-10-29
 
