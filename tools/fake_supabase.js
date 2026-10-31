@@ -3,16 +3,16 @@
 // delay holds a table read back so loading states can be captured.
 // hang: { table: n } makes the first n writes to that table never answer (a hung request on a
 // weak signal). Every write is recorded in window.__rsaWrites as [table, kind, payload].
-// Reads filter rows by eq and honour range(); writes succeed and echo their payload. No network.
+// Reads filter rows by eq and is (null), and honour range(); writes succeed and echo their payload. No network.
 (function () {
   function fix() { return window.__RSA_FIX || {}; }
   function builder(table) {
-    var st = { eq: [], one: null, write: null, range: null };
+    var st = { eq: [], is: [], one: null, write: null, range: null };
     var b;
     function result() {
       if (st.write) return { data: st.write.payload, error: null };
       var rows = ((fix().tables || {})[table] || []).filter(function (r) {
-        return st.eq.every(function (f) { return String(r[f[0]]) === String(f[1]); });
+        return st.eq.every(function (f) { return String(r[f[0]]) === String(f[1]); }) && st.is.every(function (f) { return f[1] === null ? r[f[0]] == null : r[f[0]] === f[1]; });
       });
       if (st.range) rows = rows.slice(st.range[0], st.range[1] + 1);
       if (st.one) return { data: rows[0] || null, error: st.one === 'single' && !rows.length ? { message: 'no rows' } : null, count: rows.length };
@@ -23,6 +23,7 @@
         if (st.write) { (window.__rsaWrites = window.__rsaWrites || []).push([table, st.write.kind, st.write.payload]); var h = fix().hang || {}; if (h[table] > 0) { h[table]--; return new Promise(function () {}); } }
         var ms = (fix().delay || {})[table] || 0; return new Promise(function (r) { setTimeout(function () { r(result()); }, ms); }).then(ok, bad); };
       if (k === 'eq') return function (c, v) { st.eq.push([c, v]); return b; };
+      if (k === 'is') return function (c, v) { st.is.push([c, v]); return b; };
       if (k === 'range') return function (a, z) { st.range = [a, z]; return b; };
       if (k === 'single' || k === 'maybeSingle') return function () { st.one = k; return b; };
       if (k === 'insert' || k === 'upsert' || k === 'update') return function (p) { st.write = { kind: k, payload: Array.isArray(p) ? p : Object.assign({ id: 'fake-' + table + '-' + (++window.__rsaFakeSeq || (window.__rsaFakeSeq = 1)) }, p) }; return b; };

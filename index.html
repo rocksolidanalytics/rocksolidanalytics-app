@@ -1025,8 +1025,13 @@
     }, [token]);
 
     function ytId(u) { if (!u) return null; var m = String(u).match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/); return m ? m[1] : null; }
-    var clips = (data && data.clips) || [];
-    var vid = data ? ytId(data.video_url) : null;
+    // A playlist across games sends a video per match (videos); a one-game playlist sends one.
+    // Clips whose match is gone (or not this club) are left out rather than played on the wrong video.
+    var clips = ((data && data.clips) || []).filter(function(c) { return !(data && data.videos) || data.videos[c.match_id]; });
+    function gameOf(i) { var c = clips[i] || {}; return ((data && data.videos) || {})[c.match_id] || null; }
+    function vidOf(i) { var g = gameOf(i); return ytId(g ? g.video_url : data && data.video_url); }
+    var vid = data ? vidOf(0) : null;
+    const curVid = useRef(null), holdTo = useRef(0);
     function startOf(i) { return clipStart(clips[i] || {}); }
     function endOf(i) { return clipEnd(clips[i] || {}); }
 
@@ -1044,7 +1049,7 @@
         hostRef.current.appendChild(host);
         try {
           ytRef.current = new window.YT.Player(host, {
-            videoId: vid, width: "100%", height: "100%",
+            videoId: (curVid.current = vid), width: "100%", height: "100%",
             playerVars: { rel: 0, playsinline: 1, controls: 0, disablekb: 1, iv_load_policy: 3, start: Math.floor(startOf(0)) },
             events: {
               onReady: function(ev) { try { ev.target.seekTo(startOf(idxRef.current), true); ev.target.playVideo(); } catch (e) {} },
@@ -1056,11 +1061,11 @@
         // auto-advance: when the current clip runs past its tail, move on
         watch = setInterval(function() {
           var p = ytRef.current;
-          if (!p || !p.getCurrentTime) return;
+          if (!p || !p.getCurrentTime || Date.now() < holdTo.current) return;
           var t = 0; try { t = p.getCurrentTime() || 0; } catch (e) { return; }
           var i = idxRef.current;
           if (t > endOf(i)) {
-            if (i < clips.length - 1) { idxRef.current = i + 1; setIdx(i + 1); try { p.seekTo(startOf(i + 1), true); } catch (e) {} }
+            if (i < clips.length - 1) { idxRef.current = i + 1; setIdx(i + 1); cue(p, i + 1, false); }
             else { try { p.pauseVideo(); } catch (e) {} }
           }
         }, 400);
@@ -1082,11 +1087,20 @@
       };
     }, [vid, clips.length]);
 
+    // Starts clip i: a seek in the same video, or the video of the next game loaded at the clip start.
+    function cue(p, i, play) {
+      var v = vidOf(i);
+      try {
+        // While the new video loads the player can still report the old time, so the auto-advance waits.
+        if (v && v !== curVid.current && p.loadVideoById) { curVid.current = v; holdTo.current = Date.now() + 2500; p.loadVideoById({ videoId: v, startSeconds: startOf(i) }); }
+        else { p.seekTo(startOf(i), true); if (play && p.playVideo) p.playVideo(); }
+      } catch (e) {}
+    }
     function go(i) {
       if (i < 0 || i >= clips.length) return;
       idxRef.current = i; setIdx(i);
       var p = ytRef.current;
-      if (p && p.seekTo) { try { p.seekTo(startOf(i), true); if (p.playVideo) p.playVideo(); } catch (e) {} }
+      if (p && p.seekTo) cue(p, i, true);
     }
     function playPause() {
       var p = ytRef.current;
@@ -1109,7 +1123,7 @@
         /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } },
           /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, letterSpacing: -0.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, data.name),
           /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, fontFamily: MONO, marginTop: 2 } },
-            (data.opponent || "") + (data.match_date ? " \u00b7 " + data.match_date : "") + " \u00b7 " + clips.length + (clips.length === 1 ? " clip" : " clips")))),
+            (data.videos ? "Across games" : (data.opponent || "") + (data.match_date ? " \u00b7 " + data.match_date : "")) + " \u00b7 " + clips.length + (clips.length === 1 ? " clip" : " clips")))),
       vid && !apiFail
         ? /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: "100%", aspectRatio: "16/9", background: C.black, borderRadius: RAD.xl, overflow: "hidden", border: "1px solid " + C.border } },
             React.createElement("div", { ref: hostRef, style: { position: "absolute", inset: 0 } }),
@@ -1145,19 +1159,23 @@
             /* @__PURE__ */ React.createElement("div", { style: { width: 28, height: 28, flexShrink: 0, borderRadius: RAD.md, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontSize: FS.sm, fontWeight: 800, background: on ? C.greenB : C.field, color: on ? C.bg : C.slateD } }, String(i + 1)),
             /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } },
               /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.md, fontWeight: 700, color: on ? C.greenB : C.white, lineHeight: 1.3 } }, c.label || ("Clip " + (i + 1))),
-              /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, mmss(startOf(i))),
+              /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, (gameOf(i) ? "v " + (gameOf(i).opponent || "Match") + " \u00b7 " : "") + mmss(startOf(i))),
               c.note && /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, lineHeight: 1.45, marginTop: 4 } }, c.note)));
         })),
       /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18, textAlign: "center", fontSize: FS.sm, color: C.slateD, fontFamily: MONO } }, "Rock Solid Analytics"));
   }
 
+  // match.mixed: the playlists that hold clips from more than one game (no match of their own);
+  // each clip then names its match, shown from match.names.
   function PlaylistPanel({ match, hideHead, readOnly }) {
     const [pls, setPls] = useState(null);
     const [open, setOpen] = useState(-1);
     const [msg, setMsg] = useState("");
     useEffect(function() {
       if (!match || !match.id) return;
-      db.from("playlists").select("id,name,clips,token").eq("match_id", match.id).order("created_at", { ascending: true }).then(
+      var q = db.from("playlists").select("id,name,clips,token");
+      q = match.mixed ? q.eq("club_id", match.club_id).is("match_id", null) : q.eq("match_id", match.id);
+      q.order("created_at", { ascending: true }).then(
         function(r) { setPls((r.data || []).map(function(x) { return { id: x.id, name: x.name, events: x.clips || [], token: x.token }; })); },
         function() { setPls([]); });
     }, [match && match.id]);
@@ -1239,7 +1257,8 @@
             evs.map(function(c, j) {
               return /* @__PURE__ */ React.createElement("div", { key: j, style: { paddingTop: 10, marginTop: 10, borderTop: "1px solid " + C.border } },
                 /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 } },
-                  /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontSize: FS.md, fontWeight: 700, color: C.white } }, (j + 1) + ". " + (c.label || "Clip")),
+                  /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontSize: FS.md, fontWeight: 700, color: C.white } }, (j + 1) + ". " + (c.label || "Clip"),
+                    match.mixed && React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 500, color: C.slate, fontFamily: MONO, marginTop: 2 } }, (match.names || {})[c.match_id] || "Match removed")),
                   /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, flexShrink: 0 } }, Math.round(clipLen(c)) + "s"),
                   !readOnly && [[-1, "\u2191", "Move up", j === 0], [1, "\u2193", "Move down", j === evs.length - 1]].map(function(m) {
                     return React.createElement("button", { key: m[0], onClick: function() { moveClip(i, j, m[0]); }, disabled: m[3], "aria-label": m[2] + ": " + (c.label || "clip"),
@@ -1262,24 +1281,28 @@
   function ClipBank({ club, readOnly }) {
     const [rows, setRows] = useState(null);
     const [open, setOpen] = useState(false);
+    const [names, setNames] = useState({});
     useEffect(function() {
       if (!club || !club.id) return;
+      db.from("matches").select("id,opponent,date").eq("club_id", club.id).then(function(r) {
+        var n = {}; (r.data || []).forEach(function(m) { n[m.id] = "v " + (m.opponent || "Match") + (m.date ? " \u00b7 " + m.date : ""); }); setNames(n);
+      }, function() {});
       db.from("playlists").select("id,name,clips,token,match_id,matches(id,date,opponent)").eq("club_id", club.id)
         .then(function(r) {
           var byMatch = {};
           (r.data || []).forEach(function(p) {
-            var m = p.matches || {}; var k = p.match_id;
+            var m = p.matches || {}; var k = p.match_id || "mixed";
             if (!byMatch[k]) byMatch[k] = { id: k, date: m.date, opponent: m.opponent, playlists: [] };
             byMatch[k].playlists.push({ id: p.id, name: p.name, events: p.clips || [], token: p.token });
           });
           var out = Object.keys(byMatch).map(function(k) { return byMatch[k]; });
-          out.sort(function(a, b) { return String(b.date || "").localeCompare(String(a.date || "")); });
+          out.sort(function(a, b) { return (b.id === "mixed") - (a.id === "mixed") || String(b.date || "").localeCompare(String(a.date || "")); });
           setRows(out);
         }, function() { setRows([]); });
     }, [club && club.id]);
 
     if (rows === null || !rows.length) return null;
-    var nPl = 0, nClips = 0, nShared = 0;
+    var nPl = 0, nClips = 0, nShared = 0, nGames = rows.filter(function(m) { return m.id !== "mixed"; }).length;
     rows.forEach(function(m) {
       nPl += m.playlists.length;
       m.playlists.forEach(function(p) {
@@ -1295,14 +1318,14 @@
         /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } },
           /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, color: C.white, letterSpacing: -0.2 } }, "Clip bank"),
           /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 500, color: C.slate, marginTop: 2, fontFamily: MONO } },
-            nClips + (nClips === 1 ? " clip" : " clips") + " \u00b7 " + nPl + (nPl === 1 ? " playlist" : " playlists") + " \u00b7 " + rows.length + (rows.length === 1 ? " match" : " matches") + (nShared ? " \u00b7 " + nShared + " shared" : ""))),
+            nClips + (nClips === 1 ? " clip" : " clips") + " \u00b7 " + nPl + (nPl === 1 ? " playlist" : " playlists") + " \u00b7 " + nGames + (nGames === 1 ? " match" : " matches") + (nShared ? " \u00b7 " + nShared + " shared" : ""))),
         /* @__PURE__ */ React.createElement("span", { style: { fontSize: FS.lg, color: C.slateD, flexShrink: 0 } }, open ? "\u2303" : "\u2304")),
       open && /* @__PURE__ */ React.createElement("div", { style: { padding: "0 14px 14px" } },
         rows.map(function(m) {
           return /* @__PURE__ */ React.createElement("div", { key: m.id, style: { marginTop: 6 } },
             /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 800, color: C.greenB, fontFamily: MONO, letterSpacing: 0.5, paddingTop: 10, borderTop: "1px solid " + C.border } },
-              (m.opponent || "Match") + (m.date ? "  \u00b7  " + m.date : "")),
-            /* @__PURE__ */ React.createElement(PlaylistPanel, { match: m, hideHead: true, readOnly: readOnly }));
+              m.id === "mixed" ? "ACROSS GAMES" : (m.opponent || "Match") + (m.date ? "  \u00b7  " + m.date : "")),
+            /* @__PURE__ */ React.createElement(PlaylistPanel, { match: m.id === "mixed" ? { id: "mixed", mixed: true, club_id: club.id, names: names } : m, hideHead: true, readOnly: readOnly }));
         })));
   }
 
@@ -8123,6 +8146,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       db.from("playlists").select("id,name,clips,token").eq("match_id", match.id).order("created_at", { ascending: true }).then(function(r) {
         setPlSaved((r.data || []).map(function(x) { return { id: x.id, name: x.name, events: x.clips || [], token: x.token }; }));
       }, function() {});
+      db.from("playlists").select("id,name,clips").eq("club_id", club.id).is("match_id", null).order("created_at", { ascending: true }).then(function(r) {
+        setPlMixed((r.data || []).map(function(x) { return { id: x.id, name: x.name, events: x.clips || [] }; }));
+      }, function() {});
       db.from("events").select("id,team,event_type,outcome,player,x,y,period,time_text,seq,score,video_ts").eq("match_id", match.id).order("seq", { ascending: true }).then(function(r) {
         var rows = r.data || [];
         setExisting(0);
@@ -8384,6 +8410,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [plSel, setPlSel] = useState({});
     const [plName, setPlName] = useState("");
     const [plSaved, setPlSaved] = useState([]);
+    // Playlists across games: no match of their own, each clip carries its match_id.
+    const [plMixed, setPlMixed] = useState([]);
     const [plPlay, setPlPlay] = useState(null);
     const [plIdx, setPlIdx] = useState(0);
     const plTimerRef = useRef(null);
@@ -8612,16 +8640,31 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function plSave() {
       var evts = Object.values(plSel).sort(function(a,b) { return (a.video_ts||0) - (b.video_ts||0); });
       if (!evts.length) return;
+      // Clips in a playlist across games carry the match they come from.
+      var tagged2 = evts.map(function(c) { return Object.assign({}, c, { match_id: match.id }); });
+      var kind = plTarget.slice(0, 2), ti = +plTarget.slice(2);
       // Adding to a playlist already made: new clips go on the end, ones already in it are skipped.
-      var tgt = plTarget === "" ? null : plSaved[+plTarget];
+      var tgt = kind === "m:" ? plSaved[ti] : kind === "x:" ? plMixed[ti] : null;
       if (tgt) {
         var have = {}; (tgt.events || []).forEach(function(c) { have[c.id] = 1; });
-        var add = evts.filter(function(c) { return !have[c.id]; });
-        var nx = plSaved.slice(), ti = +plTarget;
-        nx[ti] = Object.assign({}, tgt, { events: (tgt.events || []).concat(add) });
+        var add = (kind === "x:" ? tagged2 : evts).filter(function(c) { return !have[c.id]; });
+        var row = Object.assign({}, tgt, { events: (tgt.events || []).concat(add) });
         setPlSel({}); setPlName(""); setPlMode(false); setPlTarget("");
-        plWrite(nx, ti); setPlOpen(ti);
-        say("\u2713 " + add.length + (add.length === 1 ? " clip" : " clips") + " added to " + tgt.name + (add.length < evts.length ? " \u00b7 " + (evts.length - add.length) + " already in it" : ""));
+        if (kind === "m:") { var nx = plSaved.slice(); nx[ti] = row; plWrite(nx, ti); setPlOpen(ti); }
+        else {
+          var nm = plMixed.slice(); nm[ti] = row; setPlMixed(nm);
+          if (row.id) db.from("playlists").update({ name: row.name, clips: row.events }).eq("id", row.id).then(function() {}, function() { say("Could not save the playlist \u2014 check your connection"); });
+        }
+        say("\u2713 " + add.length + (add.length === 1 ? " clip" : " clips") + " added to " + tgt.name + (add.length < evts.length ? " \u00b7 " + (evts.length - add.length) + " already in it" : "") + (kind === "x:" ? " \u00b7 edit it in Game film, Clip bank" : ""));
+        return;
+      }
+      if (plTarget === "mix") {
+        var mname = plName.trim() || ("Across games " + (plMixed.length + 1));
+        setPlSel({}); setPlName(""); setPlMode(false); setPlTarget("");
+        db.from("playlists").insert({ club_id: club.id, match_id: null, name: mname, clips: tagged2 }).select("id").single().then(function(r) {
+          setPlMixed(function(cur) { return (cur || []).concat([{ id: r && r.data ? r.data.id : null, name: mname, events: tagged2 }]); });
+        }, function() { say("Could not save the playlist \u2014 check your connection"); });
+        say("\u2713 " + mname + " saved \u00b7 " + tagged2.length + " clips \u2014 add clips from other games here, then set lengths and notes in Game film, Clip bank");
         return;
       }
       var name = plName.trim() || ("Playlist " + (plSaved.length + 1));
@@ -9265,10 +9308,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5 } }, avail.map(function(p) {
             return /* @__PURE__ */ React.createElement("button", { key: p.id, onClick: function() { doVSub(vSubOff, vSubOn || nextN, p.name, p.id); }, style: { textAlign: "left", padding: "10px 12px", background: C.bgCard, border: "1px solid " + C.greenB + ALPHA.mid, borderRadius: RAD.md, color: C.greenB, cursor: "pointer", fontSize: 13, fontWeight: 700 } }, p.name);
           }))));
-    })(), plMode && Object.keys(plSel).length > 0 && React.createElement("div", { style: { padding: "8px 6px", borderTop: "1px solid " + C.gold + ALPHA.mid, background: C.gold + ALPHA.faint, display: "flex", gap: 6, alignItems: "center" } }, plSaved.length > 0 && React.createElement("select", { value: plTarget, onChange: function(e) { setPlTarget(e.target.value); }, "aria-label": "Save to", style: { flex: plTarget === "" ? "none" : 1, maxWidth: plTarget === "" ? 120 : "none", minWidth: 0, padding: "8px 6px", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bg, color: C.white, fontSize: 12 } },
+    })(), plMode && Object.keys(plSel).length > 0 && React.createElement("div", { style: { padding: "8px 6px", borderTop: "1px solid " + C.gold + ALPHA.mid, background: C.gold + ALPHA.faint, display: "flex", gap: 6, alignItems: "center" } }, React.createElement("select", { value: plTarget, onChange: function(e) { setPlTarget(e.target.value); }, "aria-label": "Save to", style: { flex: plTarget === "" || plTarget === "mix" ? "none" : 1, maxWidth: plTarget === "" || plTarget === "mix" ? 120 : "none", minWidth: 0, padding: "8px 6px", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bg, color: C.white, fontSize: 12 } },
       React.createElement("option", { value: "" }, "New playlist"),
-      plSaved.map(function(p, pi) { return React.createElement("option", { key: pi, value: String(pi) }, "Add to " + (p.name || "Playlist " + (pi + 1))); })),
-      plTarget === "" && React.createElement("input", { value: plName, onChange: function(e) { setPlName(e.target.value); }, placeholder: "Playlist name", style: { flex: 1, minWidth: 0, padding: "8px 10px", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bg, color: C.white, fontSize: 12 } }), React.createElement("button", { onClick: plSave, style: { padding: "8px 14px", borderRadius: RAD.md, border: "none", background: C.gold, color: C.black, fontWeight: 800, fontSize: 12, cursor: "pointer", flexShrink: 0 } }, (plTarget === "" ? "\u2713 Save " : "\uFF0B Add ") + Object.keys(plSel).length)), plSaved.length > 0 && !plMode && React.createElement("div", { style: { padding: "4px 6px" } }, React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, padding: "6px 0 4px" } }, "PLAYLISTS"), plSaved.map(function(pl, pi) { return React.createElement(React.Fragment, { key: pi }, React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, padding: "6px 0", borderBottom: "1px solid " + C.border } }, React.createElement("button", { onClick: function() { plStart(pl); }, style: { flex: 1, textAlign: "left", background: "none", border: "none", color: C.white, cursor: "pointer", padding: 0 } }, React.createElement("div", { style: { fontSize: 13, fontWeight: 700 } }, pl.name), React.createElement("div", { style: { fontSize: 10, color: C.slateD } }, pl.events.length + " clips")), React.createElement("button", { onClick: function() { plStart(pl); }, style: { padding: "6px 12px", borderRadius: RAD.md, border: "1px solid " + C.greenB, background: C.greenB + ALPHA.faint, color: C.greenB, fontWeight: 800, fontSize: 11, cursor: "pointer" } }, "\u25B6"), React.createElement("button", { onClick: function() { videoSrc ? plExport(pl) : setPlExp({ err: "Load the match video first \u2014 clips are cut from the file on this device." }); }, disabled: !!plExp, title: videoSrc ? "Export clips as one video" : "Load the match video first", style: { padding: "6px 10px", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bgCard, color: plExp ? C.slateD : C.white, fontSize: 11, fontWeight: 800, cursor: "pointer" } }, "\u2913"), React.createElement("button", { onClick: function() { plDelete(pi); }, style: { padding: "6px 8px", borderRadius: RAD.md, border: "1px solid " + C.red + ALPHA.mid, background: "none", color: C.red, fontSize: 11, cursor: "pointer" } }, "\u2715"), React.createElement("button", { onClick: function() { setPlOpen(plOpen === pi ? -1 : pi); }, title: "Edit clip lengths and notes", style: { padding: "6px 8px", borderRadius: RAD.md, border: "1px solid " + C.border, background: "none", color: plOpen === pi ? C.greenB : C.slateD, fontSize: 12, cursor: "pointer" } }, plOpen === pi ? "\u2303" : "\u2304"))); })),plOpen >= 0 && plSaved[plOpen] && (function() {
+      React.createElement("option", { value: "mix" }, "New playlist across games"),
+      plSaved.map(function(p, pi) { return React.createElement("option", { key: "m" + pi, value: "m:" + pi }, "Add to " + (p.name || "Playlist " + (pi + 1))); }),
+      plMixed.map(function(p, pi) { return React.createElement("option", { key: "x" + pi, value: "x:" + pi }, "Add to " + (p.name || "Playlist") + " (across games)"); })),
+      (plTarget === "" || plTarget === "mix") && React.createElement("input", { value: plName, onChange: function(e) { setPlName(e.target.value); }, placeholder: "Playlist name", style: { flex: 1, minWidth: 0, padding: "8px 10px", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bg, color: C.white, fontSize: 12 } }), React.createElement("button", { onClick: plSave, style: { padding: "8px 14px", borderRadius: RAD.md, border: "none", background: C.gold, color: C.black, fontWeight: 800, fontSize: 12, cursor: "pointer", flexShrink: 0 } }, (plTarget === "" || plTarget === "mix" ? "\u2713 Save " : "\uFF0B Add ") + Object.keys(plSel).length)), plSaved.length > 0 && !plMode && React.createElement("div", { style: { padding: "4px 6px" } }, React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, padding: "6px 0 4px" } }, "PLAYLISTS"), plSaved.map(function(pl, pi) { return React.createElement(React.Fragment, { key: pi }, React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, padding: "6px 0", borderBottom: "1px solid " + C.border } }, React.createElement("button", { onClick: function() { plStart(pl); }, style: { flex: 1, textAlign: "left", background: "none", border: "none", color: C.white, cursor: "pointer", padding: 0 } }, React.createElement("div", { style: { fontSize: 13, fontWeight: 700 } }, pl.name), React.createElement("div", { style: { fontSize: 10, color: C.slateD } }, pl.events.length + " clips")), React.createElement("button", { onClick: function() { plStart(pl); }, style: { padding: "6px 12px", borderRadius: RAD.md, border: "1px solid " + C.greenB, background: C.greenB + ALPHA.faint, color: C.greenB, fontWeight: 800, fontSize: 11, cursor: "pointer" } }, "\u25B6"), React.createElement("button", { onClick: function() { videoSrc ? plExport(pl) : setPlExp({ err: "Load the match video first \u2014 clips are cut from the file on this device." }); }, disabled: !!plExp, title: videoSrc ? "Export clips as one video" : "Load the match video first", style: { padding: "6px 10px", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bgCard, color: plExp ? C.slateD : C.white, fontSize: 11, fontWeight: 800, cursor: "pointer" } }, "\u2913"), React.createElement("button", { onClick: function() { plDelete(pi); }, style: { padding: "6px 8px", borderRadius: RAD.md, border: "1px solid " + C.red + ALPHA.mid, background: "none", color: C.red, fontSize: 11, cursor: "pointer" } }, "\u2715"), React.createElement("button", { onClick: function() { setPlOpen(plOpen === pi ? -1 : pi); }, title: "Edit clip lengths and notes", style: { padding: "6px 8px", borderRadius: RAD.md, border: "1px solid " + C.border, background: "none", color: plOpen === pi ? C.greenB : C.slateD, fontSize: 12, cursor: "pointer" } }, plOpen === pi ? "\u2303" : "\u2304"))); })),plOpen >= 0 && plSaved[plOpen] && (function() {
       var pl = plSaved[plOpen], evs = pl.events || [];
       var total = 0; evs.forEach(function(c) { total += clipLen(c); });
       return React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 58, background: C.bg, display: "flex", flexDirection: "column" } },

@@ -225,10 +225,24 @@ video tagger clip tree (event, outcome, player) has a tick box that selects all 
 (part-ticked when some are); the save bar can add to a playlist already made (new clips go
 on the end, ones already in it are skipped and counted); and every clip has up and down
 buttons in the clip bank and the tagger playlist editor. Covered in test_clip_player.js.
+Deployed (main at b70eb50, rollback 7e08e20), with the sliders and the shared player fix.
+
+**Playlists across games** (branch only until the database change is applied). The video
+tagger save bar offers "New playlist across games" and "Add to ... (across games)" on every
+match, so a coach can go game by game ticking, say, the Kickout folder into "Kickouts this
+season". Such a playlist has no match of its own (match_id null) and each clip carries its
+match_id. The Game film clip bank shows them first under ACROSS GAMES, each clip naming its
+game, with the same sliders, notes, reorder and share. The shared link plays them in order,
+loading the next game video at the clip start when the game changes (a short hold stops the
+auto-advance reading the old video time while it loads); clips whose match is gone are left
+out. Database change, tested on a local Postgres: playlists.match_id may be null, and
+clip_playlist returns videos (one per match of the same club used by the clips) for such a
+playlist, one-game playlists unchanged. The fake database learned .is(column, null).
+Covered in test_clip_player.js (31 checks).
 
 **Playlists, still open.**
-- Playlists that mix clips from different matches (Hudl and Nacsport do; ours belong to one
-  match, as each clip plays from its match video). Tadhg finds it interesting; a bigger change.
+- Playlists across games: built on the branch 2026-10-31 (see Done), waiting on the database
+  change (supabase/migrations/20261031_playlists_across_games.sql) before it can go to main.
 - One playlist per player in one tap, default lead and tail per event type, a ready WhatsApp
   message on share, and who watched (proposed 2026-10-31).
 

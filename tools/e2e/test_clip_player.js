@@ -6,9 +6,10 @@ const fakeYT = () => {
   window.__ytCalls = [];
   window.YT = { Player: function(host, o) {
     let st = -1; const set = s => { st = s; o.events.onStateChange && o.events.onStateChange({ data: s }); };
-    window.__ytVars = o.playerVars;
+    window.__ytVars = o.playerVars; window.__vid = o.videoId;
     this.playVideo = () => { window.__ytCalls.push('play'); set(1); }; this.pauseVideo = () => { window.__ytCalls.push('pause'); set(2); };
     this.seekTo = t => { window.__ytCalls.push('seek ' + Math.round(t)); };
+    this.loadVideoById = o => { window.__ytCalls.push('load ' + o.videoId + ' ' + Math.round(o.startSeconds)); };
     this.getCurrentTime = () => 0; this.getPlayerState = () => st; this.destroy = () => {};
     setTimeout(() => o.events.onReady && o.events.onReady({ target: this }), 50);
   } };
@@ -60,7 +61,7 @@ module.exports = async function(t) {
   t.ok('tagger: folders get a select-all box in playlist mode', cbs.length >= 2, String(cbs.length));
   await p.click('input[aria-label="Select all 4"]'); await L.wait(p, 300);
   t.ok('tagger: the folder ticks all 4 clips', /Save 4|Add 4/.test(await L.buttons(p, '(Save|Add) \\d')), await L.buttons(p, '(Save|Add) \\d'));
-  await p.selectOption('select[aria-label="Save to"]', '0'); await L.wait(p, 200);
+  await p.selectOption('select[aria-label="Save to"]', 'm:0'); await L.wait(p, 200);
   await L.clickTxt(p, 'Add 4$'); await L.wait(p, 600);
   let pw = await p.evaluate(() => (window.__rsaWrites || []).filter(x => x[0] === 'playlists' && x[1] === 'update').map(x => x[2].clips.map(c => c.id).join(',')));
   t.eq('tagger: added to the end of the existing playlist, no repeats', pw.slice(-1)[0], 'e3,e1,e2,e4');
@@ -69,5 +70,58 @@ module.exports = async function(t) {
   pw = await p.evaluate(() => (window.__rsaWrites || []).filter(x => x[0] === 'playlists' && x[1] === 'update').map(x => x[2].clips.map(c => c.id).join(',')));
   t.eq('tagger: move down saves the new order', pw.slice(-1)[0], 'e1,e3,e2,e4');
   t.eq('tagger: no page errors', r.errors, []);
+  await r.browser.close();
+
+  // Across games: a new playlist from Mayo, then clips from Kerry added to it in the Kerry tagger.
+  const two = () => { const x = L.fixtures({ videoPack: true, matches: [{ id: 'mv', club_id: L.C, opponent: 'Mayo', date: '2026-10-27', status: 'final', video_throwin: 2 }, { id: 'mk', club_id: L.C, opponent: 'Kerry', date: '2026-10-20', status: 'final', video_throwin: 2 }] });
+    x.tables.events = [sh('e1', 4, 'Point', 'Sean Murphy'), sh('e2', 8, 'Point', 'Cian Byrne'), Object.assign(sh('k1', 6, 'Wide', 'Sean Murphy'), { match_id: 'mk' })].concat(x.tables.events); return x; };
+  r = await L.open({ fixtures: two() }); p = r.page;
+  await L.videoTagger(p, 'Mayo');
+  await L.clickTxt(p, '^Folders$'); await L.clickTxt(p, 'Playlist$'); await L.wait(p, 300);
+  await p.click('input[aria-label="Select all 2"]'); await L.wait(p, 200);
+  await p.selectOption('select[aria-label="Save to"]', 'mix'); await p.fill('input[placeholder="Playlist name"]', 'Shots this season');
+  await L.clickTxt(p, 'Save 2$'); await L.wait(p, 600);
+  const ins = await p.evaluate(() => (window.__rsaWrites || []).filter(x => x[0] === 'playlists' && x[1] === 'insert').map(x => x[2]));
+  t.ok('across games: saved with no match of its own', ins.length === 1 && ins[0].match_id === null && ins[0].name === 'Shots this season', JSON.stringify(ins));
+  t.ok('across games: each clip names its match', ins[0] && ins[0].clips.every(c => c.match_id === 'mv'));
+  t.eq('across games: no page errors (Mayo)', r.errors, []);
+  await r.browser.close();
+  const k = two(); k.tables.playlists = [{ id: 'mix1', club_id: L.C, match_id: null, name: 'Shots this season', token: null, clips: [{ id: 'e1', video_ts: 4, match_id: 'mv', label: 'Shot from play Point Sean Murphy' }] }];
+  r = await L.open({ fixtures: k }); p = r.page;
+  await L.videoTagger(p, 'Kerry');
+  await L.clickTxt(p, '^Folders$'); await L.clickTxt(p, 'Playlist$'); await L.wait(p, 300);
+  await p.click('input[aria-label="Select all 1"]'); await L.wait(p, 200);
+  const opts = await p.evaluate(() => [...document.querySelectorAll('select[aria-label="Save to"] option')].map(o => o.textContent));
+  t.ok('across games: offered in another game', opts.includes('Add to Shots this season (across games)'), opts.join(' | '));
+  await p.selectOption('select[aria-label="Save to"]', 'x:0'); await L.clickTxt(p, 'Add 1$'); await L.wait(p, 600);
+  const up = await p.evaluate(() => (window.__rsaWrites || []).filter(x => x[0] === 'playlists' && x[1] === 'update').map(x => x[2].clips.map(c => c.id + '@' + c.match_id).join(',')));
+  t.eq('across games: Kerry clip added after the Mayo one', up.slice(-1)[0], 'e1@mv,k1@mk');
+  t.eq('across games: no page errors (Kerry)', r.errors, []);
+  await r.browser.close();
+
+  // Clip bank: its own group, each clip says which game.
+  k.tables.playlists[0].clips.push({ id: 'k1', video_ts: 6, match_id: 'mk', label: 'Shot from play Wide Sean Murphy' });
+  r = await L.open({ fixtures: k }); p = r.page;
+  await p.getByText('Game film', { exact: true }).first().click(); await L.wait(p, 1200);
+  await p.getByText('Clip bank').first().click(); await L.wait(p, 500);
+  await p.getByText('Shots this season').first().click(); await L.wait(p, 500);
+  let tx = await L.text(p);
+  t.ok('clip bank: an Across games group', /ACROSS GAMES/.test(tx));
+  t.ok('clip bank: each clip names its game', /v Mayo · 2026-10-27/.test(tx) && /v Kerry · 2026-10-20/.test(tx));
+  t.eq('clip bank: no page errors (across games)', r.errors, []);
+  await r.browser.close();
+
+  // Shared link across games: the next clip from another game loads that video at its start.
+  const sf = L.fixtures();
+  sf.rpc.clip_playlist = { name: 'Shots this season', clips: [{ id: 'e1', video_ts: 20, match_id: 'mv', label: 'Point' }, { id: 'k1', video_ts: 40, match_id: 'mk', label: 'Wide' }, { id: 'zz', video_ts: 9, match_id: 'gone', label: 'Gone' }],
+    videos: { mv: { video_url: 'https://youtu.be/AAAAAAAAAAA', opponent: 'Mayo', date: '2026-10-27' }, mk: { video_url: 'https://youtu.be/BBBBBBBBBBB', opponent: 'Kerry', date: '2026-10-20' } } };
+  r = await L.open({ fixtures: sf, hash: '?clips=tok2', init: fakeYT }); p = r.page;
+  await L.wait(p, 800);
+  tx = await L.text(p);
+  t.ok('shared across games: header and games named', /Across games · 2 clips/.test(tx) && /v Mayo · 0:14/.test(tx) && /v Kerry · 0:34/.test(tx), tx.slice(0, 300));
+  t.eq('shared across games: starts on the first game video', await p.evaluate(() => window.__vid), 'AAAAAAAAAAA');
+  await L.clickTxt(p, 'NEXT'); await L.wait(p, 300);
+  t.eq('shared across games: next clip loads the Kerry video at its start', (await p.evaluate(() => window.__ytCalls)).slice(-1)[0], 'load BBBBBBBBBBB 34');
+  t.eq('shared across games: no page errors', r.errors, []);
   await r.browser.close();
 };
