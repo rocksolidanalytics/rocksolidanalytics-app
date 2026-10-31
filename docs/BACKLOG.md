@@ -207,6 +207,15 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-31
 
+**One playlist per player.** In the video tagger playlist mode there is now a SELECT ALL CLIPS
+box over the folders, and the save bar has "One playlist per player": the ticked clips are
+split by player into playlists named "<player> · v <opponent>" (or a typed ending, such as
+"turnovers v Mayo"). Tick everything for a full review per player, or one folder for each
+player's turnovers or shots. Clips with no player are left out. Running it again after more
+tagging tops up each player's playlist instead of making copies. Each one is shared from Game
+film, Clip bank as usual (player logins are not tied to a squad name, so the app cannot yet
+put them straight into each player's own view). Covered in test_clip_player.js (37 checks).
+
 **Video up the home screen.** Tadhg: the video part was too far down the list. Game film and
 Video tagger now have their own VIDEO section straight after the Dashboard and Last match
 tiles (side by side on iPad), ahead of MATCH and ANALYSIS, with subtitles that say what they
@@ -260,8 +269,10 @@ Covered in test_clip_player.js (31 checks).
 **Playlists, still open.**
 - The shared playlist "PO Break" is on a match with no YouTube link saved, so its link shows
   timestamps only: add the link to that match if it should play.
-- One playlist per player in one tap, default lead and tail per event type, a ready WhatsApp
-  message on share, and who watched (proposed 2026-10-31).
+- Default lead and tail per event type, a ready WhatsApp message on share, and who watched
+  (proposed 2026-10-31).
+- Player logins tied to a squad name, so a player's own playlists (and stats) show for them
+  without a shared link.
 
 
 **Club colours through the app.** Asked for after the mock-up (Bray, Wicklow, Éire Óg). The

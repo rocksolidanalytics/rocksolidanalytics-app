@@ -99,6 +99,29 @@ module.exports = async function(t) {
   t.eq('across games: no page errors (Kerry)', r.errors, []);
   await r.browser.close();
 
+  // One playlist per player: select all, split by player; a second run tops up instead of copying.
+  r = await L.open({ fixtures: v }); p = r.page;
+  await L.videoTagger(p, 'Mayo');
+  await L.clickTxt(p, '^Folders$'); await L.clickTxt(p, 'Playlist$'); await L.wait(p, 300);
+  t.ok('per player: a select-all box over the folders', /SELECT ALL CLIPS · 4/.test(await L.text(p)));
+  await p.click('input[aria-label="Select all 4"]'); await L.wait(p, 200);
+  await p.selectOption('select[aria-label="Save to"]', 'pp'); await L.clickTxt(p, 'Save 4$'); await L.wait(p, 600);
+  let pi = await p.evaluate(() => (window.__rsaWrites || []).filter(x => x[0] === 'playlists' && x[1] === 'insert').map(x => x[2]));
+  t.eq('per player: one playlist each, named with the opponent', pi.length === 1 ? pi[0].map(x => x.name + ':' + x.clips.map(c => c.id).join('+')).join(' | ') : JSON.stringify(pi), 'Cian Byrne · v Mayo:e2 | Sean Murphy · v Mayo:e1+e3+e4');
+  t.ok('per player: says how many were made', /2 player playlists made/.test(await L.text(p)));
+  t.eq('per player: no page errors', r.errors, []);
+  await r.browser.close();
+  const v2 = JSON.parse(JSON.stringify(v)); v2.tables.playlists = [{ id: 'sm', club_id: L.C, match_id: 'mv', name: 'Sean Murphy · v Mayo', token: null, clips: [{ id: 'e1', video_ts: 4, label: 'x' }] }];
+  r = await L.open({ fixtures: v2 }); p = r.page;
+  await L.videoTagger(p, 'Mayo');
+  await L.clickTxt(p, '^Folders$'); await L.clickTxt(p, 'Playlist$'); await L.wait(p, 300);
+  await p.click('input[aria-label="Select all 4"]'); await L.wait(p, 200);
+  await p.selectOption('select[aria-label="Save to"]', 'pp'); await L.clickTxt(p, 'Save 4$'); await L.wait(p, 600);
+  const w2 = await p.evaluate(() => (window.__rsaWrites || []).filter(x => x[0] === 'playlists').map(x => x[1] + ':' + (Array.isArray(x[2]) ? x[2].map(y => y.name).join('+') : x[2].clips.map(c => c.id).join('+'))));
+  t.eq('per player: second run tops up Sean and makes Cian', w2.join(' | '), 'update:e1+e3+e4 | insert:Cian Byrne · v Mayo');
+  t.eq('per player: no page errors (second run)', r.errors, []);
+  await r.browser.close();
+
   // Clip bank: its own group, each clip says which game.
   k.tables.playlists[0].clips.push({ id: 'k1', video_ts: 6, match_id: 'mk', label: 'Shot from play Wide Sean Murphy' });
   r = await L.open({ fixtures: k }); p = r.page;
