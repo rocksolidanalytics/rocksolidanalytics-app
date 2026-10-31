@@ -1608,6 +1608,10 @@
       })(),
       // On a wide screen (iPad landscape, desktop) the tiles sit two to a row under each section label; on a phone they stack.
       React.createElement("div", { className: "rsa-home-grid" },
+      // Video first after the dashboard: clips and playlists are what academy coaches use most.
+      Label("VIDEO"),
+      Row(onGameFilm, "\u25B6", C.greenB, "Game film", isPlayer ? "Watch your games \xB7 your clips & playlists" : "Watch games \xB7 clips & playlists for the squad", C.greenB, 13),
+      !isPlayer && Row(onVideoHub, "\u25C6", C.greenB, "Video tagger", "Tag a match from footage \xB7 build clip playlists", C.greenB, 13),
       !isPlayer && Label("MATCH"),
       !isPlayer && resumeMatch && club && resumeMatch.club_id === club.id && React.createElement("button", { onClick: function() { onResume(resumeMatch); }, className: "rsa-home-span", style: { width: "100%", marginTop: 12, padding: 14, borderRadius: RAD.xl, background: C.acc + ALPHA.faint, border: "1px solid " + C.accL + ALPHA.mid, boxShadow: "0 0 20px " + C.acc + ALPHA.faint, cursor: "pointer", display: "flex", alignItems: "center", gap: 12 } },
         Badge("\u25B6", C.accL, 12),
@@ -1621,10 +1625,8 @@
       !isPlayer && Row(onSquad, "\u25C9", C.greenB, "Squad", "Add players \xB7 set preferred positions", null, 19),
       Label("ANALYSIS"),
       isPlayer ? null : Row(onLivePad, "\u25C9", C.gold, "Live Stats Pad", "Follow a match in real time", null, 19),
-      Row(onGameFilm, "\u25B6", C.greenB, "Game film", "Watch your games \xB7 jump to any event", C.greenB, 13),
       Row(onPitchMap, "\u25CE", C.greenB, "Pitch map", "Where events happen \xB7 filter by match, event & player", null, 17),
       Row(onOpposition, "vs", C.greenB, "Opposition", "Past results, scorers, line-ups & notes on every team", null, 13),
-      !isPlayer && Row(onVideoHub, "\u25C6", C.greenB, "Video tagger", "Tag a match back from footage into your dashboards", C.greenB, 13),
       !isPlayer && React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 12 } },
         React.createElement("button", { onClick: onLive, style: { flex: 1, minWidth: 0, padding: "16px 14px", borderRadius: RAD.xl, cursor: "pointer", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 12 } },
           Badge("\u2605", C.gold, 15),

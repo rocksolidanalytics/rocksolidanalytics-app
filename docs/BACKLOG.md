@@ -207,6 +207,12 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-31
 
+**Video up the home screen.** Tadhg: the video part was too far down the list. Game film and
+Video tagger now have their own VIDEO section straight after the Dashboard and Last match
+tiles (side by side on iPad), ahead of MATCH and ANALYSIS, with subtitles that say what they
+are for: "Watch games, clips & playlists for the squad" and "Tag a match from footage, build
+clip playlists". Players see Game film there too ("your clips & playlists").
+
 **Clip lead and tail as sliders; shared clips without the YouTube bar.** Asked for from a
 screenshot of the Game film clip bank. Lead and tail were fixed chips (3, 6, 10, 15, 30 and 2,
 5, 10, 20 seconds); both are now sliders from 0 to 60 seconds in steps of 1, saved when let go,
