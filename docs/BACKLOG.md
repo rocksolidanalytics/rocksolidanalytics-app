@@ -227,7 +227,8 @@ on the end, ones already in it are skipped and counted); and every clip has up a
 buttons in the clip bank and the tagger playlist editor. Covered in test_clip_player.js.
 Deployed (main at b70eb50, rollback 7e08e20), with the sliders and the shared player fix.
 
-**Playlists across games** (branch only until the database change is applied). The video
+**Playlists across games.** Database change applied to the live project 2026-10-31 (migration
+playlists_across_games); both existing shared links checked and still resolve. The video
 tagger save bar offers "New playlist across games" and "Add to ... (across games)" on every
 match, so a coach can go game by game ticking, say, the Kickout folder into "Kickouts this
 season". Such a playlist has no match of its own (match_id null) and each clip carries its
@@ -241,8 +242,8 @@ playlist, one-game playlists unchanged. The fake database learned .is(column, nu
 Covered in test_clip_player.js (31 checks).
 
 **Playlists, still open.**
-- Playlists across games: built on the branch 2026-10-31 (see Done), waiting on the database
-  change (supabase/migrations/20261031_playlists_across_games.sql) before it can go to main.
+- The shared playlist "PO Break" is on a match with no YouTube link saved, so its link shows
+  timestamps only: add the link to that match if it should play.
 - One playlist per player in one tap, default lead and tail per event type, a ready WhatsApp
   message on share, and who watched (proposed 2026-10-31).
 
