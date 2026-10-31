@@ -214,7 +214,8 @@ settings are kept) and go onto each clip as it is ticked into a playlist (new, a
 per player); clips now also keep their event type (ev). Any clip can still be changed on its
 own. An open playlist has "Use the event lengths on every clip", which also works on older
 clips by matching the start of their label. Event types with nothing set use the standard 6s
-lead and 5s tail. Covered in test_clip_player.js (43 checks).
+lead and 5s tail. Covered in test_clip_player.js (43 checks). Deployed (main at 054ebe0,
+rollback beedefd).
 
 **One playlist per player.** In the video tagger playlist mode there is now a SELECT ALL CLIPS
 box over the folders, and the save bar has "One playlist per player": the ticked clips are
