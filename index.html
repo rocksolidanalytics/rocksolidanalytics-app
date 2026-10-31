@@ -8625,7 +8625,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function plGroup(list) {
       setPlSel(function(p) {
         var n = Object.assign({}, p), all = list.every(function(e) { return n[e._id]; });
-        list.forEach(function(e) { if (all) delete n[e._id]; else n[e._id] = { id: e._id, video_ts: e._vt, label: plLabel(e) }; });
+        list.forEach(function(e) { if (all) delete n[e._id]; else n[e._id] = plEntry(e); });
         return n;
       });
     }
@@ -8636,8 +8636,14 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         onChange: function() { plGroup(list); }, onClick: function(ev) { ev.stopPropagation(); },
         style: { width: 18, height: 18, accentColor: C.gold, cursor: "pointer", flexShrink: 0, margin: "0 2px 0 4px" } });
     }
+    function plEntry(e) {
+      var o = { id: e._id, video_ts: e._vt, label: plLabel(e), ev: e.event_type || null }, d = clipSpans[e.event_type];
+      if (d) { o.pre = d.pre; o.post = d.post; }
+      return o;
+    }
     function plToggle(id, vt, label) {
-      setPlSel(function(p) { var n = Object.assign({}, p); if (n[id]) delete n[id]; else n[id] = { id: id, video_ts: vt, label: label }; return n; });
+      var row = null; tagged.forEach(function(r) { if (r._id === id) row = r; });
+      setPlSel(function(p) { var n = Object.assign({}, p); if (n[id]) delete n[id]; else n[id] = row ? plEntry(row) : { id: id, video_ts: vt, label: label }; return n; });
     }
     function plSave() {
       var evts = Object.values(plSel).sort(function(a,b) { return (a.video_ts||0) - (b.video_ts||0); });
@@ -8706,6 +8712,28 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }
     const [plOpen, setPlOpen] = useState(-1);
     const [plTarget, setPlTarget] = useState("");
+    // Default lead and tail per event type, kept in the club settings (tag_settings.clipSpans) and
+    // put on each clip as it goes into a playlist; a clip can still be changed on its own.
+    const [clipSpans, setClipSpans] = useState(function() { var ts = (club && club.tag_settings) || {}; return ts.clipSpans || {}; });
+    const [spanOpen, setSpanOpen] = useState(false);
+    async function saveSpan(ev, field, v) {
+      try {
+        var cr = await db.from("clubs").select("tag_settings").eq("id", club.id).maybeSingle();
+        if (cr.error) throw new Error(cr.error.message);
+        var next = JSON.parse(JSON.stringify((cr.data && cr.data.tag_settings) || {}));
+        var all = next.clipSpans || {}, cur = all[ev] || { pre: CLIP_PRE, post: CLIP_POST };
+        all[ev] = Object.assign({}, cur, field === "pre" ? { pre: v } : { post: v }); next.clipSpans = all;
+        var up = await db.from("clubs").update({ tag_settings: next }).eq("id", club.id);
+        if (up.error) throw new Error(up.error.message);
+        setClipSpans(all);
+      } catch (e) { say("Could not save the clip lengths \u2014 check your connection"); }
+    }
+    // The event type of a clip: saved on it, or for older clips the start of its label.
+    function evOfClip(c) {
+      if (c.ev) return c.ev;
+      var lab = c.label || "";
+      return Object.keys(clipSpans).sort(function(a, b) { return b.length - a.length; }).filter(function(k) { return lab === k || lab.indexOf(k + " ") === 0; })[0] || null;
+    }
     // Writes only the playlist that changed, so two analysts editing the same
     // match no longer overwrite each other's work.
     function plWrite(next, pi) {
@@ -9343,7 +9371,27 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       React.createElement("option", { value: "pp" }, "One playlist per player"),
       plSaved.map(function(p, pi) { return React.createElement("option", { key: "m" + pi, value: "m:" + pi }, "Add to " + (p.name || "Playlist " + (pi + 1))); }),
       plMixed.map(function(p, pi) { return React.createElement("option", { key: "x" + pi, value: "x:" + pi }, "Add to " + (p.name || "Playlist") + " (across games)"); })),
-      (plTarget === "" || plTarget === "mix" || plTarget === "pp") && React.createElement("input", { value: plName, onChange: function(e) { setPlName(e.target.value); }, placeholder: plTarget === "pp" ? "v " + (match.opponent || "Opp") : "Playlist name", style: { flex: 1, minWidth: 0, padding: "8px 10px", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bg, color: C.white, fontSize: 12 } }), React.createElement("button", { onClick: plSave, style: { padding: "8px 14px", borderRadius: RAD.md, border: "none", background: C.gold, color: C.black, fontWeight: 800, fontSize: 12, cursor: "pointer", flexShrink: 0 } }, (plTarget === "" || plTarget === "mix" || plTarget === "pp" ? "\u2713 Save " : "\uFF0B Add ") + Object.keys(plSel).length)), plSaved.length > 0 && !plMode && React.createElement("div", { style: { padding: "4px 6px" } }, React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, padding: "6px 0 4px" } }, "PLAYLISTS"), plSaved.map(function(pl, pi) { return React.createElement(React.Fragment, { key: pi }, React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, padding: "6px 0", borderBottom: "1px solid " + C.border } }, React.createElement("button", { onClick: function() { plStart(pl); }, style: { flex: 1, textAlign: "left", background: "none", border: "none", color: C.white, cursor: "pointer", padding: 0 } }, React.createElement("div", { style: { fontSize: 13, fontWeight: 700 } }, pl.name), React.createElement("div", { style: { fontSize: 10, color: C.slateD } }, pl.events.length + " clips")), React.createElement("button", { onClick: function() { plStart(pl); }, style: { padding: "6px 12px", borderRadius: RAD.md, border: "1px solid " + C.greenB, background: C.greenB + ALPHA.faint, color: C.greenB, fontWeight: 800, fontSize: 11, cursor: "pointer" } }, "\u25B6"), React.createElement("button", { onClick: function() { videoSrc ? plExport(pl) : setPlExp({ err: "Load the match video first \u2014 clips are cut from the file on this device." }); }, disabled: !!plExp, title: videoSrc ? "Export clips as one video" : "Load the match video first", style: { padding: "6px 10px", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bgCard, color: plExp ? C.slateD : C.white, fontSize: 11, fontWeight: 800, cursor: "pointer" } }, "\u2913"), React.createElement("button", { onClick: function() { plDelete(pi); }, style: { padding: "6px 8px", borderRadius: RAD.md, border: "1px solid " + C.red + ALPHA.mid, background: "none", color: C.red, fontSize: 11, cursor: "pointer" } }, "\u2715"), React.createElement("button", { onClick: function() { setPlOpen(plOpen === pi ? -1 : pi); }, title: "Edit clip lengths and notes", style: { padding: "6px 8px", borderRadius: RAD.md, border: "1px solid " + C.border, background: "none", color: plOpen === pi ? C.greenB : C.slateD, fontSize: 12, cursor: "pointer" } }, plOpen === pi ? "\u2303" : "\u2304"))); })),plOpen >= 0 && plSaved[plOpen] && (function() {
+      (plTarget === "" || plTarget === "mix" || plTarget === "pp") && React.createElement("input", { value: plName, onChange: function(e) { setPlName(e.target.value); }, placeholder: plTarget === "pp" ? "v " + (match.opponent || "Opp") : "Playlist name", style: { flex: 1, minWidth: 0, padding: "8px 10px", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bg, color: C.white, fontSize: 12 } }), React.createElement("button", { onClick: plSave, style: { padding: "8px 14px", borderRadius: RAD.md, border: "none", background: C.gold, color: C.black, fontWeight: 800, fontSize: 12, cursor: "pointer", flexShrink: 0 } }, (plTarget === "" || plTarget === "mix" || plTarget === "pp" ? "\u2713 Save " : "\uFF0B Add ") + Object.keys(plSel).length)), plSaved.length > 0 && !plMode && React.createElement("div", { style: { padding: "4px 6px" } }, React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, padding: "6px 0 4px" } }, "PLAYLISTS"), plSaved.map(function(pl, pi) { return React.createElement(React.Fragment, { key: pi }, React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, padding: "6px 0", borderBottom: "1px solid " + C.border } }, React.createElement("button", { onClick: function() { plStart(pl); }, style: { flex: 1, textAlign: "left", background: "none", border: "none", color: C.white, cursor: "pointer", padding: 0 } }, React.createElement("div", { style: { fontSize: 13, fontWeight: 700 } }, pl.name), React.createElement("div", { style: { fontSize: 10, color: C.slateD } }, pl.events.length + " clips")), React.createElement("button", { onClick: function() { plStart(pl); }, style: { padding: "6px 12px", borderRadius: RAD.md, border: "1px solid " + C.greenB, background: C.greenB + ALPHA.faint, color: C.greenB, fontWeight: 800, fontSize: 11, cursor: "pointer" } }, "\u25B6"), React.createElement("button", { onClick: function() { videoSrc ? plExport(pl) : setPlExp({ err: "Load the match video first \u2014 clips are cut from the file on this device." }); }, disabled: !!plExp, title: videoSrc ? "Export clips as one video" : "Load the match video first", style: { padding: "6px 10px", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bgCard, color: plExp ? C.slateD : C.white, fontSize: 11, fontWeight: 800, cursor: "pointer" } }, "\u2913"), React.createElement("button", { onClick: function() { plDelete(pi); }, style: { padding: "6px 8px", borderRadius: RAD.md, border: "1px solid " + C.red + ALPHA.mid, background: "none", color: C.red, fontSize: 11, cursor: "pointer" } }, "\u2715"), React.createElement("button", { onClick: function() { setPlOpen(plOpen === pi ? -1 : pi); }, title: "Edit clip lengths and notes", style: { padding: "6px 8px", borderRadius: RAD.md, border: "1px solid " + C.border, background: "none", color: plOpen === pi ? C.greenB : C.slateD, fontSize: 12, cursor: "pointer" } }, plOpen === pi ? "\u2303" : "\u2304"))); })), spanOpen && (function() {
+      var evs2 = {}; tagged.forEach(function(r) { if (r._vt != null && r.event_type) evs2[r.event_type] = 1; }); Object.keys(clipSpans).forEach(function(k) { evs2[k] = 1; });
+      var list = Object.keys(evs2).sort();
+      return React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 59, background: C.bg, display: "flex", flexDirection: "column" } },
+        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "14px 14px 10px", borderBottom: "1px solid " + C.border, flexShrink: 0 } },
+          React.createElement("button", { onClick: function() { setSpanOpen(false); }, "aria-label": "Back", style: { background: "none", border: "none", color: C.slate, cursor: "pointer", width: 44, height: 44, margin: "-11px -6px", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement(Back, { s: 20 })),
+          React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+            React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: C.white } }, "Clip lengths by event"),
+            React.createElement("div", { style: { fontSize: 11, color: C.slateD, marginTop: 2, lineHeight: 1.4 } }, "For the whole club. Used for clips added to playlists from now on; any clip can still be changed on its own."))),
+        React.createElement("div", { style: { flex: 1, minHeight: 0, overflowY: "auto", padding: "8px 14px 20px" } },
+          list.length === 0 ? React.createElement("div", { style: { padding: 24, textAlign: "center", color: C.slateD, fontSize: 13 } }, "Tag some events first; their types appear here.")
+          : list.map(function(ev) {
+            var d = clipSpans[ev] || { pre: CLIP_PRE, post: CLIP_POST };
+            return React.createElement("div", { key: ev, style: { padding: "10px 0", borderBottom: "1px solid " + C.border } },
+              React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8 } },
+                React.createElement("div", { style: { flex: 1, fontSize: 14, fontWeight: 800, color: C.white } }, ev),
+                React.createElement("div", { style: { fontSize: 11, color: clipSpans[ev] ? C.greenB : C.slateD, fontFamily: MONO } }, clipSpans[ev] ? (d.pre + d.post) + "s clips" : "standard " + (CLIP_PRE + CLIP_POST) + "s")),
+              React.createElement(SpanSlider, { label: "LEAD", value: d.pre, onCommit: function(v) { saveSpan(ev, "pre", v); } }),
+              React.createElement(SpanSlider, { label: "TAIL", value: d.post, onCommit: function(v) { saveSpan(ev, "post", v); } }));
+          })));
+    })(), plOpen >= 0 && plSaved[plOpen] && (function() {
       var pl = plSaved[plOpen], evs = pl.events || [];
       var total = 0; evs.forEach(function(c) { total += clipLen(c); });
       return React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 58, background: C.bg, display: "flex", flexDirection: "column" } },
@@ -9358,6 +9406,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             React.createElement("div", { style: { fontSize: 10, color: C.slateD, fontFamily: MONO, marginTop: 3 } },
               evs.length + (evs.length === 1 ? " clip" : " clips") + "  \u00b7  " + Math.round(total) + "s total"))),
         React.createElement("div", { style: { flex: 1, minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "10px 14px 16px" } },
+          Object.keys(clipSpans).length > 0 && evs.length > 0 && React.createElement("button", { onClick: function() {
+              var n = plSaved.slice(), hit = 0;
+              n[plOpen] = Object.assign({}, n[plOpen], { events: (n[plOpen].events || []).map(function(c) { var d = clipSpans[evOfClip(c)]; if (!d) return c; hit++; return Object.assign({}, c, { pre: d.pre, post: d.post }); }) });
+              plWrite(n); say(hit ? "\u2713 Event lengths put on " + hit + (hit === 1 ? " clip" : " clips") : "No clip here has an event length set");
+            }, style: { width: "100%", minHeight: 44, marginBottom: 10, borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bgCard, color: C.slate, fontSize: 12, fontWeight: 800, cursor: "pointer" } }, "\u23F1 Use the event lengths on every clip"),
           evs.length === 0
             ? React.createElement("div", { style: { padding: 24, textAlign: "center", color: C.slateD, fontSize: 13 } }, "No clips left in this playlist.")
             : evs.map(function(c, ci) {
@@ -9413,7 +9466,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return /* @__PURE__ */ React.createElement("button", { key: o[0], onClick: function() {
         setListMode(o[0]);
       }, style: { flex: 1, minHeight: 44, padding: "6px 4px", borderRadius: RAD.md, cursor: "pointer", fontSize: 11, fontWeight: 800, background: on ? C.blue : C.bgCard, border: "1px solid " + (on ? C.blue : C.border), color: on ? C.bg : C.slate } }, o[1]);
-    })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, paddingBottom: 6 } }, [["all", "All"], ["us", teamWord(SC ? scoutAName : club.name)], ["opp", teamWord(SC ? scoutBName : (match.opponent || "Opp"))]].map(function(tf) { var on = vtTeamF === tf[0]; return /* @__PURE__ */ React.createElement("button", { key: tf[0], onClick: function() { setVtTeamF(tf[0]); }, style: { flex: 1, minHeight: 44, padding: "6px 0", borderRadius: RAD.md, border: "1px solid " + (on ? C.accL : C.border), background: on ? C.acc + ALPHA.mid : "none", color: on ? C.accL : C.slate, fontWeight: 700, fontSize: 10.5, cursor: "pointer" } }, tf[1]); })), /* @__PURE__ */ React.createElement("button", { onClick: function() { setPlMode(!plMode); if (plMode) setPlSel({}); }, style: { minHeight: 44, padding: "6px 10px", borderRadius: RAD.md, border: "1px solid " + (plMode ? C.gold : C.border), background: plMode ? C.gold + ALPHA.soft : "none", color: plMode ? C.gold : C.slate, fontWeight: 700, fontSize: 10, cursor: "pointer" } }, plMode ? "\u2715 Cancel" : "\uFF0B Playlist"), listMode === "spots" ? renderBackfill() : listMode === "folders" ? (function() {
+    })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, paddingBottom: 6 } }, [["all", "All"], ["us", teamWord(SC ? scoutAName : club.name)], ["opp", teamWord(SC ? scoutBName : (match.opponent || "Opp"))]].map(function(tf) { var on = vtTeamF === tf[0]; return /* @__PURE__ */ React.createElement("button", { key: tf[0], onClick: function() { setVtTeamF(tf[0]); }, style: { flex: 1, minHeight: 44, padding: "6px 0", borderRadius: RAD.md, border: "1px solid " + (on ? C.accL : C.border), background: on ? C.acc + ALPHA.mid : "none", color: on ? C.accL : C.slate, fontWeight: 700, fontSize: 10.5, cursor: "pointer" } }, tf[1]); })), /* @__PURE__ */ React.createElement("button", { onClick: function() { setPlMode(!plMode); if (plMode) setPlSel({}); }, style: { minHeight: 44, padding: "6px 10px", borderRadius: RAD.md, border: "1px solid " + (plMode ? C.gold : C.border), background: plMode ? C.gold + ALPHA.soft : "none", color: plMode ? C.gold : C.slate, fontWeight: 700, fontSize: 10, cursor: "pointer" } }, plMode ? "\u2715 Cancel" : "\uFF0B Playlist"), plMode && React.createElement("button", { onClick: function() { setSpanOpen(true); }, style: { minHeight: 44, padding: "6px 10px", marginLeft: 6, borderRadius: RAD.md, border: "1px solid " + C.border, background: "none", color: C.slate, fontWeight: 700, fontSize: 10, cursor: "pointer" } }, "\u23F1 Clip lengths"), listMode === "spots" ? renderBackfill() : listMode === "folders" ? (function() {
       var tr = {};
       tagged.filter(function(e) { return vtTeamF === "all" || e.team === vtTeamF; }).forEach(function(e) {
         if (e._vt == null) return;

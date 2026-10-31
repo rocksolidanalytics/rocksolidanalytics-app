@@ -122,6 +122,34 @@ module.exports = async function(t) {
   t.eq('per player: no page errors (second run)', r.errors, []);
   await r.browser.close();
 
+  // Clip lengths by event: set Shot from play to a 12s lead, new clips take it, and an older
+  // playlist (clips with no event saved) picks it up from the button.
+  const v3 = JSON.parse(JSON.stringify(v)); v3.tables.playlists[0].clips = [{ id: 'e3', video_ts: 12, label: 'Shot from play Wide Sean Murphy' }];
+  r = await L.open({ fixtures: v3 }); p = r.page;
+  await L.videoTagger(p, 'Mayo');
+  await L.clickTxt(p, '^Folders$'); await L.clickTxt(p, 'Playlist$'); await L.wait(p, 300);
+  await L.clickTxt(p, 'Clip lengths$'); await L.wait(p, 300);
+  t.ok('lengths: the sheet lists the event types tagged', /Clip lengths by event/.test(await L.text(p)) && /Shot from play/.test(await L.text(p)));
+  const sl = p.locator('input[aria-label="lead seconds"]').first(); await sl.fill('12'); await sl.blur(); await L.wait(p, 500);
+  const cw = await p.evaluate(() => (window.__rsaWrites || []).filter(x => x[0] === 'clubs').map(x => x[2].tag_settings && x[2].tag_settings.clipSpans));
+  t.eq('lengths: saved in the club settings', JSON.stringify(cw.slice(-1)[0]), '{"Shot from play":{"pre":12,"post":5}}');
+  await p.click('button[aria-label=Back]'); await L.wait(p, 300);
+  await p.click('input[aria-label="Select all 4"]'); await L.wait(p, 200);
+  await p.fill('input[placeholder="Playlist name"]', 'Shots'); await L.clickTxt(p, 'Save 4$'); await L.wait(p, 600);
+  const ni = await p.evaluate(() => (window.__rsaWrites || []).filter(x => x[0] === 'playlists' && x[1] === 'insert').map(x => x[2].clips.map(c => c.ev + ':' + c.pre + '/' + c.post).join(',')));
+  t.eq('lengths: new clips take the event length', ni.slice(-1)[0], 'Shot from play:12/5,Shot from play:12/5,Shot from play:12/5,Shot from play:12/5');
+  t.eq('lengths: no page errors', r.errors, []);
+  await r.browser.close();
+  v3.tables.clubs[0].tag_settings = Object.assign({}, v3.tables.clubs[0].tag_settings || {}, { clipSpans: { 'Shot from play': { pre: 12, post: 5 } } });
+  r = await L.open({ fixtures: v3 }); p = r.page;
+  await L.videoTagger(p, 'Mayo');
+  await p.click('button[title="Edit clip lengths and notes"]'); await L.wait(p, 400);
+  await L.clickTxt(p, 'Use the event lengths on every clip'); await L.wait(p, 400);
+  const uw = await p.evaluate(() => (window.__rsaWrites || []).filter(x => x[0] === 'playlists' && x[1] === 'update').map(x => x[2].clips.map(c => c.id + ':' + c.pre).join(',')));
+  t.eq('lengths: an older playlist picks them up from its labels', uw.slice(-1)[0], 'e3:12');
+  t.eq('lengths: no page errors (older playlist)', r.errors, []);
+  await r.browser.close();
+
   // Clip bank: its own group, each clip says which game.
   k.tables.playlists[0].clips.push({ id: 'k1', video_ts: 6, match_id: 'mk', label: 'Shot from play Wide Sean Murphy' });
   r = await L.open({ fixtures: k }); p = r.page;

@@ -207,6 +207,15 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-31
 
+**Clip lengths by event type.** In the video tagger playlist mode, "Clip lengths" opens a sheet
+listing every event type tagged (and any already set), each with a lead and tail slider. The
+lengths are for the whole club (clubs.tag_settings.clipSpans, saved read-change-write so other
+settings are kept) and go onto each clip as it is ticked into a playlist (new, across games or
+per player); clips now also keep their event type (ev). Any clip can still be changed on its
+own. An open playlist has "Use the event lengths on every clip", which also works on older
+clips by matching the start of their label. Event types with nothing set use the standard 6s
+lead and 5s tail. Covered in test_clip_player.js (43 checks).
+
 **One playlist per player.** In the video tagger playlist mode there is now a SELECT ALL CLIPS
 box over the folders, and the save bar has "One playlist per player": the ticked clips are
 split by player into playlists named "<player> · v <opponent>" (or a typed ending, such as
@@ -270,8 +279,9 @@ Covered in test_clip_player.js (31 checks).
 **Playlists, still open.**
 - The shared playlist "PO Break" is on a match with no YouTube link saved, so its link shows
   timestamps only: add the link to that match if it should play.
-- Default lead and tail per event type, a ready WhatsApp message on share, and who watched
-  (proposed 2026-10-31).
+- A ready WhatsApp message on share, and who watched (proposed 2026-10-31).
+- "Use the event lengths" is in the video tagger playlist editor only; the Game film clip bank
+  could have it too.
 - Player logins tied to a squad name, so a player's own playlists (and stats) show for them
   without a shared link.
 
