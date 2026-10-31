@@ -213,7 +213,8 @@ zoom used for the header, Sub/Team/Undo row and banners (the emulator honoured i
 explicit sizes in landscape on a tablet: score 52px with the total 22px, clock 50px, half 16px,
 win chance 16px, team names 18px with a 28px crest, time since score 16px, the clock column 220px
 wide, the Sub/Team/Undo row and banners 15 to 16px, a bigger back arrow. test_ipad_tagger.js
-now checks the font sizes rather than zoom.
+now checks the font sizes rather than zoom. Deployed (main at c31bdfe, rollback 2bd207e)
+together with the match length sliders, name suggestions and scouting explainer below.
 
 **Name suggestions and a scouting explainer.** On New match (and Edit match information) the
 Opposition, Home team, Away team and Referee boxes offer earlier names as taps under the box as
@@ -337,7 +338,9 @@ Covered in test_clip_player.js (31 checks).
 
 **iPad live tagger, still open.**
 - Try it on the real iPad at a practice match: the turn-sideways prompt, button sizes, and that
-  pitch taps land where expected. Tests ran in an iPad emulator only.
+  pitch taps land where expected. Tests ran in an iPad emulator only. Event buttons confirmed on
+  the real iPad (Tadhg, 31 Oct); the new header still to be confirmed with a fresh screenshot.
+- Lesson: iPad Safari ignored CSS zoom that the emulator honoured; use explicit sizes.
 - The video tagger and the stats screens keep their current sizes on iPad; the same treatment
   could follow if wanted.
 
@@ -454,6 +457,13 @@ public API cannot read (our tables hold no emails). There is no field-level encr
 Supabase dashboard login is the real key. What keeps clubs apart is row level security, on for
 every table: club members only for players, events, matches and appearances, own profile only.
 Advisor findings are listed under Open (security tidy-up).
+
+**Four more Instagram posts** (2026-10-31, not in the repository): a helmet colours reel and a
+tactical pad reel (both with covers, fictional Ballyvale Gaels data), an any-device post and a
+one club, one account, every code post, with captions. The captions are a Google Doc in Drive
+(Rock Solid App / 2026-10 October / 5 Instagram / 2026-10-31 Helmets, tactical pad, any device,
+one club); the images and videos were too big for the Drive connector and were sent to Tadhg to
+save there.
 
 **Instagram reels: Instagram size and a club colours reel** (not in the repository). The four
 reels and the demo were 780x1688, which Instagram would crop top and bottom (captions
