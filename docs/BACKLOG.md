@@ -228,7 +228,8 @@ buttons in the clip bank and the tagger playlist editor. Covered in test_clip_pl
 Deployed (main at b70eb50, rollback 7e08e20), with the sliders and the shared player fix.
 
 **Playlists across games.** Database change applied to the live project 2026-10-31 (migration
-playlists_across_games); both existing shared links checked and still resolve. The video
+playlists_across_games); both existing shared links checked and still resolve. Deployed (main
+at c5f9c44, rollback b70eb50). Tadhg to try one across two games on his phone. The video
 tagger save bar offers "New playlist across games" and "Add to ... (across games)" on every
 match, so a coach can go game by game ticking, say, the Kickout folder into "Kickouts this
 season". Such a playlist has no match of its own (match_id null) and each clip carries its
@@ -240,6 +241,14 @@ out. Database change, tested on a local Postgres: playlists.match_id may be null
 clip_playlist returns videos (one per match of the same club used by the clips) for such a
 playlist, one-game playlists unchanged. The fake database learned .is(column, null).
 Covered in test_clip_player.js (31 checks).
+
+**Security tidy-up** (Supabase security advisor, 2026-10-30).
+- About 30 SECURITY DEFINER functions can be called without signing in (club_activity,
+  club_usage, live_board and more): check each one returns nothing about another club.
+- 10 functions have no fixed search_path: one line each to set it.
+- Leaked password protection is off (likely needs the Pro plan).
+- The Pointless quiz shares this database: a separate Supabase project would keep the two apart.
+- Turn on two-factor sign-in for the Supabase dashboard account.
 
 **Playlists, still open.**
 - The shared playlist "PO Break" is on a match with no YouTube link saved, so its link shows
@@ -339,6 +348,22 @@ Screenshots taken fresh from the app with real Bray Emmets and All-Ireland showc
 say so. Wicklow crest and academy logo on the cover, the academy divider and the closing
 slide. Offer slide wording changed today from "forever" to "for as long as the app runs",
 to match the terms.
+
+**Data security question answered.** Tadhg asked whether Supabase encrypts emails and personal
+data or relies on the site. Answer: Supabase encrypts in transit (HTTPS) and at rest (disks and
+backups), stores passwords only as hashes, and keeps emails in its own auth table that the
+public API cannot read (our tables hold no emails). There is no field-level encryption, so the
+Supabase dashboard login is the real key. What keeps clubs apart is row level security, on for
+every table: club members only for players, events, matches and appearances, own profile only.
+Advisor findings are listed under Open (security tidy-up).
+
+**Instagram reels: Instagram size and a club colours reel** (not in the repository). The four
+reels and the demo were 780x1688, which Instagram would crop top and bottom (captions
+included); all five were padded to 1080x1920. A fifth reel, Club colours (38s), shows the
+fictional Ballyvale Gaels in Wicklow blue and gold (home tile, season head to head, match key
+callouts, head to head, restarts), with a cover and a caption in the captions file. The club
+stays fictional on purpose: Wicklow GAA name or crest on public posts with made-up data would
+need their permission.
 
 ## Done 2026-10-29
 
