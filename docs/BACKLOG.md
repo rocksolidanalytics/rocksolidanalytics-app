@@ -207,6 +207,17 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-31
 
+**iPad live tagger: sideways, full-screen pitch, bigger controls.** From Tadhg's comparison with
+Performa on the iPad. A web app cannot lock the iPad rotation (Apple ignores it for home screen
+apps), so the live tagger on a tablet held upright shows "Turn your iPad sideways to tag" over
+everything (the clock keeps running, tags are safe, "Leave the tagger" is there); phones and
+computers are unchanged (tablet = touch screen at least 700 by 950). Sideways (rsa-tl): the event
+column is 200px wide with buttons filling its height (17px text), outcome tiles 20px, player
+numbers 30px with names 14px, prompts 15px, the tag list 15px. The pitch step covers the whole
+screen with the landscape pitch (same tap-to-spot mapping as upright, so saved spots are the
+same), the teams named at each end (◀ BALLYVALE ... LUCAN ▶), "ATTACKING LEFT/RIGHT GOAL", a
+sideways SWAP, and a Cancel button. New browser test test_ipad_tagger.js (20 tests now).
+
 **Phone back gesture stays in the app.** Tadhg (Android, screen recording): swiping back on Edit
 match information left the app, as screens change without browser history. Now, while the
 screen shows an in-app back control (the arrow Back button, or "‹ All matches", "‹ Close",
