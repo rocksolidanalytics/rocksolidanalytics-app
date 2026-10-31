@@ -207,6 +207,12 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-31
 
+**iPad video tagger: pitch step no longer cut off.** Tadhg's photo: the bottom of the pop-up
+pitch was hidden behind the bottom strip, as the strip buttons got taller. On a tablet in
+landscape the pitch now sits above the strip (96px up) and is sized to the height left
+(80vw, 900px or (100dvh - 230px) x 1.55, whichever is smallest), with 14px labels. The iPad
+video test checks the whole pitch is above the strip and below the top.
+
 **iPad video tagger in landscape.** From Tadhg's iPad screenshot: the event boxes were big but
 the score, the full screen / undo / tags buttons, the strip and the tags list were small, and
 once the halves were marked there was no button to mark or move them. On a tablet in landscape
@@ -352,8 +358,8 @@ Covered in test_clip_player.js (31 checks).
   pitch taps land where expected. Tests ran in an iPad emulator only. Event buttons confirmed on
   the real iPad (Tadhg, 31 Oct); the new header confirmed too ("iPad layout now looks really
   good"). The video tagger refresh still to be checked on the real iPad.
-- The pitch and outcome steps of the video tagger in landscape kept their sizes; check them on
-  the iPad and enlarge if needed.
+- Video tagger pitch step on the iPad: fixed 31 Oct (bottom was cut off behind the taller
+  strip). Check on the real iPad.
 - Lesson: iPad Safari ignored CSS zoom that the emulator honoured; use explicit sizes.
 - The video tagger and the stats screens keep their current sizes on iPad; the same treatment
   could follow if wanted.

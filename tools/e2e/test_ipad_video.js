@@ -24,6 +24,11 @@ module.exports = async function(t) {
   await L.seek(p, 5); await L.clickTxt(p, '^✓ Throw-in'); await L.wait(p, 300);
   t.ok('moving a mark asks first', r.dialogs.some(d => /Move the throw-in mark from 00:03 to 00:05/.test(d)), r.dialogs.join(' | '));
   t.ok('and then moves it', /✓ Throw-in 00:05/.test(await L.buttons(p, '^✓ Throw')));
+  // The pitch step: all of the pitch above the strip.
+  await L.seek(p, 25); await L.clickTxt(p, '^SHOT$'); await L.wait(p, 500);
+  const fit = await p.evaluate(() => { const box = document.querySelector('#root .rsa-vtl-pitch'), strip = document.querySelector('#root .rsa-vtl-strip'); if (!box || !strip) return null; const svg = [...box.querySelectorAll('svg')].sort((a, b) => b.getBoundingClientRect().height - a.getBoundingClientRect().height)[0]; return { pitchBottom: Math.round(svg.getBoundingClientRect().bottom), boxBottom: Math.round(box.getBoundingClientRect().bottom), stripTop: Math.round(strip.getBoundingClientRect().top), top: Math.round(box.getBoundingClientRect().top) }; });
+  t.ok('pitch sits wholly above the strip and below the top', fit && fit.boxBottom <= fit.stripTop && fit.pitchBottom <= fit.stripTop && fit.top >= 0, JSON.stringify(fit));
+  await L.shot(p, 'ipad_video_pitch');
   t.eq('iPad: no page errors', r.errors, []);
   await r.browser.close();
   const q = await L.open({ fixtures: f, w: 844, h: 390, touch: true });
