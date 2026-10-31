@@ -1197,14 +1197,30 @@
       return "tok_" + raw.slice(0, 32);
     }
     function linkFor(t) { return window.location.origin + window.location.pathname + "?clips=" + t; }
+    // The message that goes with a shared link: name, game, clips and time, the notes, the link.
+    function playlistMsg(p, url) {
+      var evs = p.events || [], total = 0;
+      evs.forEach(function(c) { total += clipLen(c); });
+      total = Math.round(total);
+      var dur = total >= 60 ? Math.floor(total / 60) + " min" + (total % 60 ? " " + (total % 60) + " s" : "") : total + " s";
+      var where = match.mixed ? "Across games" : "v " + (match.opponent || "Match") + (match.date ? " \u00b7 " + match.date : "");
+      var lines = [p.name || "Clips", where + " \u00b7 " + evs.length + (evs.length === 1 ? " clip" : " clips") + " \u00b7 " + dur];
+      var notes = evs.map(function(c, j) { return c.note && c.note.trim() ? (j + 1) + ". " + c.note.trim() : null; }).filter(Boolean);
+      if (notes.length) { lines.push("", "What to look for:"); lines = lines.concat(notes.slice(0, 6)); if (notes.length > 6) lines.push("(" + (notes.length - 6) + " more in the link)"); }
+      lines.push("", url);
+      return lines.join("\n");
+    }
+    function copyMsg(text) {
+      if (navigator.clipboard) { navigator.clipboard.writeText(text); setMsg("Message copied \u2014 paste it into WhatsApp."); setTimeout(function() { setMsg(""); }, 4000); }
+      else { prompt("Copy this message:", text); }
+    }
     function share(i) {
       var next = (pls || []).slice();
       var p = Object.assign({}, next[i]);
       if (!p.token || String(p.token).length < 12) { p.token = mintToken(); next[i] = p; save(next, i); }
-      var url = linkFor(p.token);
-      if (navigator.share) { navigator.share({ title: p.name || "Clips", url: url }).catch(function() {}); }
-      else if (navigator.clipboard) { navigator.clipboard.writeText(url); setMsg("Link copied \u2014 paste it into WhatsApp."); setTimeout(function() { setMsg(""); }, 4000); }
-      else { prompt("Copy this link:", url); }
+      var text = playlistMsg(p, linkFor(p.token));
+      if (navigator.share) { navigator.share({ title: p.name || "Clips", text: text }).catch(function() {}); }
+      else copyMsg(text);
     }
     function revoke(i) {
       var next = (pls || []).slice();
@@ -1274,7 +1290,12 @@
             shared && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginTop: 12 } },
               /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontSize: FS.sm, color: C.slateD, fontFamily: MONO, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, linkFor(p.token)),
               /* @__PURE__ */ React.createElement("button", { onClick: function() { revoke(i); },
-                style: { flexShrink: 0, margin: "-10px 0", minHeight: 44, padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement("span", { style: { padding: "6px 10px", borderRadius: RAD.pill, border: "1px solid " + C.red + ALPHA.strong, color: C.red, fontSize: FS.sm, fontWeight: 800, fontFamily: MONO } }, "REVOKE")))));
+                style: { flexShrink: 0, margin: "-10px 0", minHeight: 44, padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement("span", { style: { padding: "6px 10px", borderRadius: RAD.pill, border: "1px solid " + C.red + ALPHA.strong, color: C.red, fontSize: FS.sm, fontWeight: 800, fontFamily: MONO } }, "REVOKE"))),
+            shared && React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 8 } },
+              React.createElement("a", { href: "https://wa.me/?text=" + encodeURIComponent(playlistMsg(p, linkFor(p.token))), target: "_blank", rel: "noopener",
+                style: { flex: 1, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: RAD.lg, background: "#25D366", color: C.bg, fontSize: FS.md, fontWeight: 800, fontFamily: MONO, textDecoration: "none" } }, "WHATSAPP"),
+              React.createElement("button", { onClick: function() { copyMsg(playlistMsg(p, linkFor(p.token))); },
+                style: { flex: 1, minHeight: 44, borderRadius: RAD.lg, background: C.bgCard, border: "1px solid " + C.border, color: C.white, fontSize: FS.md, fontWeight: 800, fontFamily: MONO, cursor: "pointer" } }, "COPY MESSAGE"))));
       }));
   }
 

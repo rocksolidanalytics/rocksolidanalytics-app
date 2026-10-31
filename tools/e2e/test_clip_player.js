@@ -47,6 +47,22 @@ module.exports = async function(t) {
   t.eq('clip bank: no page errors', r.errors, []);
   await r.browser.close();
 
+  // A ready message on share: name, game, clips and time, the notes, the link; WhatsApp opens with it.
+  const m = JSON.parse(JSON.stringify(g));
+  m.tables.playlists = [{ id: 'pl1', club_id: L.C, match_id: 'gf', name: 'Our shots', token: 'tok_abcdefghijklmnop', clips: [{ label: 'Point', video_ts: 20, note: 'Head up before the shot' }, { label: 'Wide', video_ts: 50 }], matches: { id: 'gf', date: '2026-10-20', opponent: 'An Tochar' } }];
+  r = await L.open({ fixtures: m, init: () => { window.__shared = []; navigator.share = d => { window.__shared.push(d); return Promise.resolve(); }; } }); p = r.page;
+  await p.getByText('Game film', { exact: true }).first().click(); await L.wait(p, 1200);
+  await p.getByText('Clip bank').first().click(); await L.wait(p, 500);
+  await p.getByText('Our shots').first().click(); await L.wait(p, 500);
+  const href = await p.evaluate(() => { const a = [...document.querySelectorAll('#root a')].find(x => x.innerText.trim() === 'WHATSAPP'); return a ? a.href : ''; });
+  const want = 'Our shots\nv An Tochar · 2026-10-20 · 2 clips · 22 s\n\nWhat to look for:\n1. Head up before the shot\n\nhttp://app.local/index.html?clips=tok_abcdefghijklmnop';
+  t.eq('share: WhatsApp opens with the ready message', href.startsWith('https://wa.me/?text=') ? decodeURIComponent(href.slice(20)) : href, want);
+  await L.clickTxt(p, '^SHARE$'); await L.wait(p, 300);
+  t.eq('share: the share sheet gets the same message', await p.evaluate(() => window.__shared.map(d => d.text).join('|')), want);
+  t.ok('share: a copy button too', /COPY MESSAGE/.test(await L.buttons(p, 'COPY MESSAGE')));
+  t.eq('share: no page errors', r.errors, []);
+  await r.browser.close();
+
   // Video tagger: tick a whole folder, add it to a playlist already made, then reorder.
   const v = L.fixtures({ videoPack: true, matches: [{ id: 'mv', club_id: L.C, opponent: 'Mayo', date: '2026-10-27', status: 'final', video_throwin: 2 }] });
   const sh = (id, ts, oc, pl) => ({ id, match_id: 'mv', club_id: L.C, seq: ts, period: 1, team: 'us', event_type: 'Shot from play', outcome: oc, score: oc === 'Point' ? 1 : 0, player: pl, video_ts: ts, time_text: '00:00:' + String(ts).padStart(2, '0') });

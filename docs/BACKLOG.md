@@ -207,6 +207,13 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-31
 
+**A ready message when sharing a playlist.** SHARE now sends a message, not a bare link: the
+playlist name; the game ("v An Tochar · 2026-10-20", or "Across games"), the number of clips and
+total time; "What to look for:" with each clip note numbered as in the player (up to 6, then
+"(n more in the link)"); and the link. A shared playlist also has a green WHATSAPP button
+(wa.me, opens WhatsApp with the message ready to send to a chat or group) and COPY MESSAGE for
+anywhere else. Covered in test_clip_player.js (47 checks).
+
 **Clip lengths by event type.** In the video tagger playlist mode, "Clip lengths" opens a sheet
 listing every event type tagged (and any already set), each with a lead and tail slider. The
 lengths are for the whole club (clubs.tag_settings.clipSpans, saved read-change-write so other
@@ -280,7 +287,7 @@ Covered in test_clip_player.js (31 checks).
 **Playlists, still open.**
 - The shared playlist "PO Break" is on a match with no YouTube link saved, so its link shows
   timestamps only: add the link to that match if it should play.
-- A ready WhatsApp message on share, and who watched (proposed 2026-10-31).
+- Who watched a shared playlist (proposed 2026-10-31).
 - "Use the event lengths" is in the video tagger playlist editor only; the Game film clip bank
   could have it too.
 - Player logins tied to a squad name, so a player's own playlists (and stats) show for them
