@@ -45,4 +45,29 @@ module.exports = async function(t) {
   t.ok('clip bank: clip length follows', /17s/.test(await L.text(p)));
   t.eq('clip bank: no page errors', r.errors, []);
   await r.browser.close();
+
+  // Video tagger: tick a whole folder, add it to a playlist already made, then reorder.
+  const v = L.fixtures({ videoPack: true, matches: [{ id: 'mv', club_id: L.C, opponent: 'Mayo', date: '2026-10-27', status: 'final', video_throwin: 2 }] });
+  const sh = (id, ts, oc, pl) => ({ id, match_id: 'mv', club_id: L.C, seq: ts, period: 1, team: 'us', event_type: 'Shot from play', outcome: oc, score: oc === 'Point' ? 1 : 0, player: pl, video_ts: ts, time_text: '00:00:' + String(ts).padStart(2, '0') });
+  v.tables.events = [sh('e1', 4, 'Point', 'Sean Murphy'), sh('e2', 8, 'Point', 'Cian Byrne'), sh('e3', 12, 'Wide', 'Sean Murphy'), sh('e4', 16, 'Point', 'Sean Murphy')].concat(v.tables.events);
+  v.tables.playlists = [{ id: 'plx', club_id: L.C, match_id: 'mv', name: 'Shooting', token: null, clips: [{ id: 'e3', video_ts: 12, label: 'Shot from play Wide Sean Murphy' }] }];
+  r = await L.open({ fixtures: v }); p = r.page;
+  await L.videoTagger(p, 'Mayo');
+  await L.clickTxt(p, '^Folders$'); await L.wait(p, 300);
+  await L.clickTxt(p, 'Playlist$'); await L.wait(p, 300);
+  await L.clickTxt(p, 'Shot from play\\s+\\d'); await L.wait(p, 300);
+  const cbs = await p.$$('input[aria-label^="Select all"]');
+  t.ok('tagger: folders get a select-all box in playlist mode', cbs.length >= 2, String(cbs.length));
+  await p.click('input[aria-label="Select all 4"]'); await L.wait(p, 300);
+  t.ok('tagger: the folder ticks all 4 clips', /Save 4|Add 4/.test(await L.buttons(p, '(Save|Add) \\d')), await L.buttons(p, '(Save|Add) \\d'));
+  await p.selectOption('select[aria-label="Save to"]', '0'); await L.wait(p, 200);
+  await L.clickTxt(p, 'Add 4$'); await L.wait(p, 600);
+  let pw = await p.evaluate(() => (window.__rsaWrites || []).filter(x => x[0] === 'playlists' && x[1] === 'update').map(x => x[2].clips.map(c => c.id).join(',')));
+  t.eq('tagger: added to the end of the existing playlist, no repeats', pw.slice(-1)[0], 'e3,e1,e2,e4');
+  t.ok('tagger: says how many were added', /3 clips added to Shooting/.test(await L.text(p)) && /1 already in it/.test(await L.text(p)));
+  await p.click('button[aria-label^="Move down: Shot from play Wide"]'); await L.wait(p, 400);
+  pw = await p.evaluate(() => (window.__rsaWrites || []).filter(x => x[0] === 'playlists' && x[1] === 'update').map(x => x[2].clips.map(c => c.id).join(',')));
+  t.eq('tagger: move down saves the new order', pw.slice(-1)[0], 'e1,e3,e2,e4');
+  t.eq('tagger: no page errors', r.errors, []);
+  await r.browser.close();
 };

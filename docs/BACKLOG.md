@@ -218,6 +218,20 @@ over the video (after the first play, which some phones need to start) and a PLA
 button between PREV and NEXT, so no extra lead-in is needed to hide them. New browser test
 test_clip_player.js (18 tests now, all pass).
 
+**Playlists: tick a whole folder, add to an existing playlist, reorder.** After comparing how
+Hudl, Sportscode, Nacsport and Veo do it (filter, then select all or hand-pick into a new or
+existing playlist), Tadhg kept mix and match and added: in playlist mode each folder of the
+video tagger clip tree (event, outcome, player) has a tick box that selects all its clips
+(part-ticked when some are); the save bar can add to a playlist already made (new clips go
+on the end, ones already in it are skipped and counted); and every clip has up and down
+buttons in the clip bank and the tagger playlist editor. Covered in test_clip_player.js.
+
+**Playlists, still open.**
+- Playlists that mix clips from different matches (Hudl and Nacsport do; ours belong to one
+  match, as each clip plays from its match video). Tadhg finds it interesting; a bigger change.
+- One playlist per player in one tap, default lead and tail per event type, a ready WhatsApp
+  message on share, and who watched (proposed 2026-10-31).
+
 
 **Club colours through the app.** Asked for after the mock-up (Bray, Wicklow, Éire Óg). The
 frame takes the club kit: the Dashboard tile (main colour shading darker, edged in the second

@@ -104,6 +104,12 @@
   function clipStart(c) { return Math.max(0, ((c && c.video_ts) || 0) - clipPre(c)); }
   function clipEnd(c) { return ((c && c.video_ts) || 0) + clipPost(c); }
   function clipLen(c) { return clipEnd(c) - clipStart(c); }
+  // A copy of a playlist clip list with clip j moved up (d = -1) or down (d = 1).
+  function shiftClip(list, j, d) {
+    var a = (list || []).slice(), k = j + d;
+    if (k < 0 || k >= a.length) return a;
+    var x = a[j]; a[j] = a[k]; a[k] = x; return a;
+  }
   const C = {
     bg: "#0A0A0D",
     bgCard: "#141417",
@@ -1194,6 +1200,11 @@
       evs[j] = Object.assign({}, evs[j], field === "pre" ? { pre: v } : { post: v });
       p.events = evs; next[i] = p; save(next, i);
     }
+    function moveClip(i, j, d) {
+      var next = (pls || []).slice();
+      var p = Object.assign({}, next[i]);
+      p.events = shiftClip(p.events, j, d); next[i] = p; save(next, i);
+    }
     function setNote(i, j, v) {
       var next = (pls || []).slice();
       var p = Object.assign({}, next[i]);
@@ -1229,7 +1240,11 @@
               return /* @__PURE__ */ React.createElement("div", { key: j, style: { paddingTop: 10, marginTop: 10, borderTop: "1px solid " + C.border } },
                 /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 } },
                   /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontSize: FS.md, fontWeight: 700, color: C.white } }, (j + 1) + ". " + (c.label || "Clip")),
-                  /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, flexShrink: 0 } }, Math.round(clipLen(c)) + "s")),
+                  /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, flexShrink: 0 } }, Math.round(clipLen(c)) + "s"),
+                  !readOnly && [[-1, "\u2191", "Move up", j === 0], [1, "\u2193", "Move down", j === evs.length - 1]].map(function(m) {
+                    return React.createElement("button", { key: m[0], onClick: function() { moveClip(i, j, m[0]); }, disabled: m[3], "aria-label": m[2] + ": " + (c.label || "clip"),
+                      style: { flexShrink: 0, width: 36, minHeight: 36, margin: "-8px 0", padding: 0, borderRadius: RAD.md, border: "1px solid " + C.border, background: "none", color: m[3] ? C.border : C.slate, fontSize: FS.md, fontWeight: 800, cursor: m[3] ? "default" : "pointer" } }, m[1]);
+                  })),
                 React.createElement(SpanSlider, { label: "LEAD", value: clipPre(c), onCommit: function(v) { setSpan(i, j, "pre", v); } }),
                 React.createElement(SpanSlider, { label: "TAIL", value: clipPost(c), onCommit: function(v) { setSpan(i, j, "post", v); } }),
                 /* @__PURE__ */ React.createElement("textarea", {
@@ -8575,12 +8590,40 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setEditRow(null);
       say("\u2713 Deleted");
     }
+    function plLabel(e) { return (e.event_type || "") + " " + (e.outcome || "") + " " + (e.player || ""); }
+    // Ticks every clip in a group of the clip tree, or unticks them all when all are ticked.
+    function plGroup(list) {
+      setPlSel(function(p) {
+        var n = Object.assign({}, p), all = list.every(function(e) { return n[e._id]; });
+        list.forEach(function(e) { if (all) delete n[e._id]; else n[e._id] = { id: e._id, video_ts: e._vt, label: plLabel(e) }; });
+        return n;
+      });
+    }
+    function plGroupCb(list) {
+      var on = list.filter(function(e) { return plSel[e._id]; }).length;
+      return React.createElement("input", { type: "checkbox", checked: on > 0 && on === list.length, "aria-label": "Select all " + list.length,
+        ref: function(el) { if (el) el.indeterminate = on > 0 && on < list.length; },
+        onChange: function() { plGroup(list); }, onClick: function(ev) { ev.stopPropagation(); },
+        style: { width: 18, height: 18, accentColor: C.gold, cursor: "pointer", flexShrink: 0, margin: "0 2px 0 4px" } });
+    }
     function plToggle(id, vt, label) {
       setPlSel(function(p) { var n = Object.assign({}, p); if (n[id]) delete n[id]; else n[id] = { id: id, video_ts: vt, label: label }; return n; });
     }
     function plSave() {
       var evts = Object.values(plSel).sort(function(a,b) { return (a.video_ts||0) - (b.video_ts||0); });
       if (!evts.length) return;
+      // Adding to a playlist already made: new clips go on the end, ones already in it are skipped.
+      var tgt = plTarget === "" ? null : plSaved[+plTarget];
+      if (tgt) {
+        var have = {}; (tgt.events || []).forEach(function(c) { have[c.id] = 1; });
+        var add = evts.filter(function(c) { return !have[c.id]; });
+        var nx = plSaved.slice(), ti = +plTarget;
+        nx[ti] = Object.assign({}, tgt, { events: (tgt.events || []).concat(add) });
+        setPlSel({}); setPlName(""); setPlMode(false); setPlTarget("");
+        plWrite(nx, ti); setPlOpen(ti);
+        say("\u2713 " + add.length + (add.length === 1 ? " clip" : " clips") + " added to " + tgt.name + (add.length < evts.length ? " \u00b7 " + (evts.length - add.length) + " already in it" : ""));
+        return;
+      }
       var name = plName.trim() || ("Playlist " + (plSaved.length + 1));
       setPlSel({}); setPlName(""); setPlMode(false);
       db.from("playlists").insert({ club_id: club.id, match_id: match.id, name: name, clips: evts }).select("id").single().then(function(r) {
@@ -8590,6 +8633,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       say("\u2713 " + name + " saved \u00b7 " + evts.length + " clips \u2014 open it below to set clip lengths, add notes and export");
     }
     const [plOpen, setPlOpen] = useState(-1);
+    const [plTarget, setPlTarget] = useState("");
     // Writes only the playlist that changed, so two analysts editing the same
     // match no longer overwrite each other's work.
     function plWrite(next, pi) {
@@ -9221,7 +9265,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5 } }, avail.map(function(p) {
             return /* @__PURE__ */ React.createElement("button", { key: p.id, onClick: function() { doVSub(vSubOff, vSubOn || nextN, p.name, p.id); }, style: { textAlign: "left", padding: "10px 12px", background: C.bgCard, border: "1px solid " + C.greenB + ALPHA.mid, borderRadius: RAD.md, color: C.greenB, cursor: "pointer", fontSize: 13, fontWeight: 700 } }, p.name);
           }))));
-    })(), plMode && Object.keys(plSel).length > 0 && React.createElement("div", { style: { padding: "8px 6px", borderTop: "1px solid " + C.gold + ALPHA.mid, background: C.gold + ALPHA.faint, display: "flex", gap: 6, alignItems: "center" } }, React.createElement("input", { value: plName, onChange: function(e) { setPlName(e.target.value); }, placeholder: "Playlist name", style: { flex: 1, padding: "8px 10px", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bg, color: C.white, fontSize: 12 } }), React.createElement("button", { onClick: plSave, style: { padding: "8px 14px", borderRadius: RAD.md, border: "none", background: C.gold, color: C.black, fontWeight: 800, fontSize: 12, cursor: "pointer" } }, "\u2713 Save " + Object.keys(plSel).length)), plSaved.length > 0 && !plMode && React.createElement("div", { style: { padding: "4px 6px" } }, React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, padding: "6px 0 4px" } }, "PLAYLISTS"), plSaved.map(function(pl, pi) { return React.createElement(React.Fragment, { key: pi }, React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, padding: "6px 0", borderBottom: "1px solid " + C.border } }, React.createElement("button", { onClick: function() { plStart(pl); }, style: { flex: 1, textAlign: "left", background: "none", border: "none", color: C.white, cursor: "pointer", padding: 0 } }, React.createElement("div", { style: { fontSize: 13, fontWeight: 700 } }, pl.name), React.createElement("div", { style: { fontSize: 10, color: C.slateD } }, pl.events.length + " clips")), React.createElement("button", { onClick: function() { plStart(pl); }, style: { padding: "6px 12px", borderRadius: RAD.md, border: "1px solid " + C.greenB, background: C.greenB + ALPHA.faint, color: C.greenB, fontWeight: 800, fontSize: 11, cursor: "pointer" } }, "\u25B6"), React.createElement("button", { onClick: function() { videoSrc ? plExport(pl) : setPlExp({ err: "Load the match video first \u2014 clips are cut from the file on this device." }); }, disabled: !!plExp, title: videoSrc ? "Export clips as one video" : "Load the match video first", style: { padding: "6px 10px", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bgCard, color: plExp ? C.slateD : C.white, fontSize: 11, fontWeight: 800, cursor: "pointer" } }, "\u2913"), React.createElement("button", { onClick: function() { plDelete(pi); }, style: { padding: "6px 8px", borderRadius: RAD.md, border: "1px solid " + C.red + ALPHA.mid, background: "none", color: C.red, fontSize: 11, cursor: "pointer" } }, "\u2715"), React.createElement("button", { onClick: function() { setPlOpen(plOpen === pi ? -1 : pi); }, title: "Edit clip lengths and notes", style: { padding: "6px 8px", borderRadius: RAD.md, border: "1px solid " + C.border, background: "none", color: plOpen === pi ? C.greenB : C.slateD, fontSize: 12, cursor: "pointer" } }, plOpen === pi ? "\u2303" : "\u2304"))); })),plOpen >= 0 && plSaved[plOpen] && (function() {
+    })(), plMode && Object.keys(plSel).length > 0 && React.createElement("div", { style: { padding: "8px 6px", borderTop: "1px solid " + C.gold + ALPHA.mid, background: C.gold + ALPHA.faint, display: "flex", gap: 6, alignItems: "center" } }, plSaved.length > 0 && React.createElement("select", { value: plTarget, onChange: function(e) { setPlTarget(e.target.value); }, "aria-label": "Save to", style: { flex: plTarget === "" ? "none" : 1, maxWidth: plTarget === "" ? 120 : "none", minWidth: 0, padding: "8px 6px", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bg, color: C.white, fontSize: 12 } },
+      React.createElement("option", { value: "" }, "New playlist"),
+      plSaved.map(function(p, pi) { return React.createElement("option", { key: pi, value: String(pi) }, "Add to " + (p.name || "Playlist " + (pi + 1))); })),
+      plTarget === "" && React.createElement("input", { value: plName, onChange: function(e) { setPlName(e.target.value); }, placeholder: "Playlist name", style: { flex: 1, minWidth: 0, padding: "8px 10px", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bg, color: C.white, fontSize: 12 } }), React.createElement("button", { onClick: plSave, style: { padding: "8px 14px", borderRadius: RAD.md, border: "none", background: C.gold, color: C.black, fontWeight: 800, fontSize: 12, cursor: "pointer", flexShrink: 0 } }, (plTarget === "" ? "\u2713 Save " : "\uFF0B Add ") + Object.keys(plSel).length)), plSaved.length > 0 && !plMode && React.createElement("div", { style: { padding: "4px 6px" } }, React.createElement("div", { style: { fontSize: 9, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, padding: "6px 0 4px" } }, "PLAYLISTS"), plSaved.map(function(pl, pi) { return React.createElement(React.Fragment, { key: pi }, React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, padding: "6px 0", borderBottom: "1px solid " + C.border } }, React.createElement("button", { onClick: function() { plStart(pl); }, style: { flex: 1, textAlign: "left", background: "none", border: "none", color: C.white, cursor: "pointer", padding: 0 } }, React.createElement("div", { style: { fontSize: 13, fontWeight: 700 } }, pl.name), React.createElement("div", { style: { fontSize: 10, color: C.slateD } }, pl.events.length + " clips")), React.createElement("button", { onClick: function() { plStart(pl); }, style: { padding: "6px 12px", borderRadius: RAD.md, border: "1px solid " + C.greenB, background: C.greenB + ALPHA.faint, color: C.greenB, fontWeight: 800, fontSize: 11, cursor: "pointer" } }, "\u25B6"), React.createElement("button", { onClick: function() { videoSrc ? plExport(pl) : setPlExp({ err: "Load the match video first \u2014 clips are cut from the file on this device." }); }, disabled: !!plExp, title: videoSrc ? "Export clips as one video" : "Load the match video first", style: { padding: "6px 10px", borderRadius: RAD.md, border: "1px solid " + C.border, background: C.bgCard, color: plExp ? C.slateD : C.white, fontSize: 11, fontWeight: 800, cursor: "pointer" } }, "\u2913"), React.createElement("button", { onClick: function() { plDelete(pi); }, style: { padding: "6px 8px", borderRadius: RAD.md, border: "1px solid " + C.red + ALPHA.mid, background: "none", color: C.red, fontSize: 11, cursor: "pointer" } }, "\u2715"), React.createElement("button", { onClick: function() { setPlOpen(plOpen === pi ? -1 : pi); }, title: "Edit clip lengths and notes", style: { padding: "6px 8px", borderRadius: RAD.md, border: "1px solid " + C.border, background: "none", color: plOpen === pi ? C.greenB : C.slateD, fontSize: 12, cursor: "pointer" } }, plOpen === pi ? "\u2303" : "\u2304"))); })),plOpen >= 0 && plSaved[plOpen] && (function() {
       var pl = plSaved[plOpen], evs = pl.events || [];
       var total = 0; evs.forEach(function(c) { total += clipLen(c); });
       return React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 58, background: C.bg, display: "flex", flexDirection: "column" } },
@@ -9243,6 +9290,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
                   React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 } },
                     React.createElement("div", { style: { flex: 1, minWidth: 0, fontSize: 14, fontWeight: 800, color: C.white } }, (ci + 1) + ". " + (c.label || "Clip")),
                     React.createElement("div", { style: { fontSize: 11, color: C.greenB, fontFamily: MONO, fontWeight: 800 } }, Math.round(clipLen(c)) + "s"),
+                    [[-1, "\u2191", "Move up", ci === 0], [1, "\u2193", "Move down", ci === evs.length - 1]].map(function(m) {
+                      return React.createElement("button", { key: m[0], disabled: m[3], "aria-label": m[2] + ": " + (c.label || "clip"), onClick: function() {
+                          var n = plSaved.slice(); n[plOpen] = Object.assign({}, n[plOpen], { events: shiftClip(n[plOpen].events, ci, m[0]) }); plWrite(n);
+                        }, style: { flexShrink: 0, width: 32, padding: "4px 0", borderRadius: RAD.md, border: "1px solid " + C.border, background: "none", color: m[3] ? C.border : C.slate, fontSize: 12, fontWeight: 800, cursor: m[3] ? "default" : "pointer" } }, m[1]);
+                    }),
                     React.createElement("button", { onClick: function() {
                         var n = plSaved.slice();
                         var p = Object.assign({}, n[plOpen]);
@@ -9303,23 +9355,23 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 3 } }, keys.map(function(ev) {
         var EG = tr[ev];
         var o1 = treeOpen[ev];
-        return /* @__PURE__ */ React.createElement("div", { key: ev }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
+        return /* @__PURE__ */ React.createElement("div", { key: ev }, React.createElement("div", { style: { display: "flex", alignItems: "center" } }, plMode && plGroupCb([].concat.apply([], Object.keys(EG.o).map(function(o) { return [].concat.apply([], Object.keys(EG.o[o].p).map(function(q) { return EG.o[o].p[q]; })); }))), /* @__PURE__ */ React.createElement("button", { onClick: function() {
           togTree(ev);
-        }, style: { width: "100%", minHeight: 44, textAlign: "left", display: "flex", alignItems: "center", gap: 8, padding: "10px 10px", borderRadius: RAD.md, cursor: "pointer", background: C.bgCard, border: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.blue, fontSize: 11, width: 10 } }, o1 ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 13.5, fontWeight: 800, color: C.white } }, ev), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, EG.n)), o1 && Object.keys(EG.o).sort().map(function(oc) {
+        }, style: { width: "100%", minHeight: 44, textAlign: "left", display: "flex", alignItems: "center", gap: 8, padding: "10px 10px", borderRadius: RAD.md, cursor: "pointer", background: C.bgCard, border: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.blue, fontSize: 11, width: 10 } }, o1 ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 13.5, fontWeight: 800, color: C.white } }, ev), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, EG.n))), o1 && Object.keys(EG.o).sort().map(function(oc) {
           var k2 = ev + "|" + oc;
           var OG = EG.o[oc];
           var o2 = treeOpen[k2];
-          return /* @__PURE__ */ React.createElement("div", { key: k2 }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
+          return /* @__PURE__ */ React.createElement("div", { key: k2 }, React.createElement("div", { style: { display: "flex", alignItems: "center" } }, plMode && plGroupCb([].concat.apply([], Object.keys(OG.p).map(function(q) { return OG.p[q]; }))), /* @__PURE__ */ React.createElement("button", { onClick: function() {
             togTree(k2);
-          }, style: { width: "100%", minHeight: 44, textAlign: "left", display: "flex", alignItems: "center", gap: 8, padding: "8px 10px 8px 24px", cursor: "pointer", background: "none", border: "none" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slate, fontSize: 10, width: 10 } }, o2 ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 12.5, fontWeight: 600, color: C.slate } }, oc), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10.5, color: C.slateD, fontFamily: MONO } }, OG.n)), o2 && Object.keys(OG.p).sort().map(function(pl) {
+          }, style: { width: "100%", minHeight: 44, textAlign: "left", display: "flex", alignItems: "center", gap: 8, padding: "8px 10px 8px 24px", cursor: "pointer", background: "none", border: "none" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slate, fontSize: 10, width: 10 } }, o2 ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 12.5, fontWeight: 600, color: C.slate } }, oc), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10.5, color: C.slateD, fontFamily: MONO } }, OG.n))), o2 && Object.keys(OG.p).sort().map(function(pl) {
             var k3 = k2 + "|" + pl;
             var arr = OG.p[pl];
             var o3 = treeOpen[k3];
-            return /* @__PURE__ */ React.createElement("div", { key: k3 }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
+            return /* @__PURE__ */ React.createElement("div", { key: k3 }, React.createElement("div", { style: { display: "flex", alignItems: "center" } }, plMode && plGroupCb(arr), /* @__PURE__ */ React.createElement("button", { onClick: function() {
               togTree(k3);
-            }, style: { width: "100%", minHeight: 44, textAlign: "left", display: "flex", alignItems: "center", gap: 8, padding: "7px 10px 7px 40px", cursor: "pointer", background: "none", border: "none" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 10, width: 10 } }, o3 ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 12, color: C.slate } }, pl), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, color: C.slateD, fontFamily: MONO } }, arr.length)), o3 && arr.map(function(e) {
+            }, style: { width: "100%", minHeight: 44, textAlign: "left", display: "flex", alignItems: "center", gap: 8, padding: "7px 10px 7px 40px", cursor: "pointer", background: "none", border: "none" } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 10, width: 10 } }, o3 ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 12, color: C.slate } }, pl), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, color: C.slateD, fontFamily: MONO } }, arr.length))), o3 && arr.map(function(e) {
               var tc2 = e.team === "us" ? TC.us : C.slate;
-              return /* @__PURE__ */ React.createElement("div", { key: e._id, style: { display: "flex", alignItems: "center", gap: 4 } }, plMode && React.createElement("input", { type: "checkbox", checked: !!plSel[e._id], onChange: function() { plToggle(e._id, e._vt, (e.event_type || "") + " " + (e.outcome || "") + " " + (e.player || "")); }, style: { width: 18, height: 18, accentColor: C.gold, cursor: "pointer", flexShrink: 0 } }), React.createElement("button", { key: "b", onClick: function() {
+              return /* @__PURE__ */ React.createElement("div", { key: e._id, style: { display: "flex", alignItems: "center", gap: 4 } }, plMode && React.createElement("input", { type: "checkbox", checked: !!plSel[e._id], onChange: function() { plToggle(e._id, e._vt, plLabel(e)); }, style: { width: 18, height: 18, accentColor: C.gold, cursor: "pointer", flexShrink: 0 } }), React.createElement("button", { key: "b", onClick: function() {
                 jump(e._vt);
               }, style: { width: "100%", minHeight: 44, textAlign: "left", display: "flex", alignItems: "center", gap: 9, padding: "7px 10px 7px 54px", borderRadius: RAD.md, cursor: "pointer", background: "none", border: "1px solid transparent" } }, /* @__PURE__ */ React.createElement("span", { style: { width: 6, height: 6, borderRadius: "50%", background: tc2, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 11.5, color: C.white, fontFamily: MONO } }, (e.time_text || "").slice(3)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10.5, color: C.gold, fontFamily: MONO } }, "\u25B6")));
             }));
@@ -9327,7 +9379,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         }));
       }));
     })() : (function(){ var _ft = tagged.filter(function(e) { return vtTeamF === "all" || e.team === vtTeamF; }); return _ft; })().length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 11.5, paddingTop: 8, lineHeight: 1.6 } }, throwIn == null ? "Scrub to the throw-in and tap \u2691 Mark throw-in to set the clock." : "Pause on a moment, then tap an event. Single tap = " + teamWord(SC ? scoutAName : club.name) + ", double = opposition.") : tagged.map(function(r) {
-      var _plCb = plMode ? React.createElement("input", { type: "checkbox", checked: !!plSel[r._id], onChange: function(ev) { ev.stopPropagation(); plToggle(r._id, r._vt, (r.event_type || "") + " " + (r.outcome || "") + " " + (r.player || "")); }, style: { width: 18, height: 18, accentColor: C.gold, cursor: "pointer", flexShrink: 0, marginRight: 4 } }) : null;
+      var _plCb = plMode ? React.createElement("input", { type: "checkbox", checked: !!plSel[r._id], onChange: function(ev) { ev.stopPropagation(); plToggle(r._id, r._vt, plLabel(r)); }, style: { width: 18, height: 18, accentColor: C.gold, cursor: "pointer", flexShrink: 0, marginRight: 4 } }) : null;
       var good = (r.score || 0) > 0 || ["Won clean", "Break won", "Contact Made", "Block", "Hook"].indexOf(r.outcome) >= 0;
       return /* @__PURE__ */ React.createElement(
         "div",
