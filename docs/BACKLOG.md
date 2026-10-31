@@ -345,6 +345,19 @@ clip_playlist returns videos (one per match of the same club used by the clips) 
 playlist, one-game playlists unchanged. The fake database learned .is(column, null).
 Covered in test_clip_player.js (31 checks).
 
+**Next to build (agreed 2026-10-31, start 1 Nov): season efficiency shot map.**
+- From Tadhg's Stephen Curry example and the mock-ups on real St Jude's camogie and Bray
+  Emmets senior football tags (scratch only, nothing in the repository). Chosen: the
+  density plus efficiency map in the season overview, with a filter by player.
+- Map: attacking half, every shot turned to attack the same goal, shots from play only.
+  Colour is the score rate against the team (or player) average, red below to green above;
+  strength comes from the number of shots, smoothed (about 4 to 5m), so a lone score does not
+  light up. Pitch lines 13m, 20m, 45m, the D, and the 40m arc for football.
+- Filter by player, and keep the existing season filters (competition, year). Below about 40
+  shots, fade the colours or say there are not enough shots yet.
+- Not chosen for now: the plain density map and the hexagon chart (possible for the reports).
+- Real club images stay private: check with the club before showing them outside it.
+
 **Security tidy-up** (Supabase security advisor, 2026-10-30).
 - About 30 SECURITY DEFINER functions can be called without signing in (club_activity,
   club_usage, live_board and more): check each one returns nothing about another club.
