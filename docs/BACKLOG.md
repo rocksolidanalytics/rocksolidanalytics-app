@@ -220,7 +220,9 @@ sideways SWAP, and a Cancel button. New browser test test_ipad_tagger.js (20 tes
 Then, at Tadhg's ask, the top of the screen scales up the same way: the score, team names,
 clock and time since score (zoom 1.6), the Sub, Team and Undo row (1.5) and the sync, half-time
 and confirmation banners (1.4); the full-screen pitch now starts under the score and clock so
-they stay in view, sized to the height left.
+they stay in view, sized to the height left. Deployed (main at 2bd207e, rollback 054ebe0),
+together with the share message and the back gesture below. Tadhg to try a practice match on
+the iPad before the next real one.
 
 **Phone back gesture stays in the app.** Tadhg (Android, screen recording): swiping back on Edit
 match information left the app, as screens change without browser history. Now, while the
@@ -306,6 +308,12 @@ Covered in test_clip_player.js (31 checks).
 - Leaked password protection is off (likely needs the Pro plan).
 - The Pointless quiz shares this database: a separate Supabase project would keep the two apart.
 - Turn on two-factor sign-in for the Supabase dashboard account.
+
+**iPad live tagger, still open.**
+- Try it on the real iPad at a practice match: the turn-sideways prompt, button sizes, and that
+  pitch taps land where expected. Tests ran in an iPad emulator only.
+- The video tagger and the stats screens keep their current sizes on iPad; the same treatment
+  could follow if wanted.
 
 **Playlists, still open.**
 - The shared playlist "PO Break" is on a match with no YouTube link saved, so its link shows
