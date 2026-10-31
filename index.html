@@ -13410,7 +13410,45 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, marginTop: 4, fontFamily: MONO } }, m2.date || "", " \u00b7 ", m2.competition || ""));
         })));
   }
+  // The phone back gesture (or Android back button) used to leave the app, as screens change
+  // without browser history. Now, while the screen shows an in-app back control, one history step
+  // is kept; going back presses that control instead, so the gesture lands where Back would.
+  // On a screen with no back control (home) the step is dropped and back leaves as normal.
+  function findBackCtl() {
+    var best = null, bestZ = -1, bestText = false;
+    document.querySelectorAll("#root button").forEach(function(b) {
+      if (!b.getClientRects().length || b.disabled) return;
+      var t = (b.innerText || "").trim(), lab = b.getAttribute("aria-label") || b.title || "";
+      var text = /^\u2039 (All matches|Close|Video hub)|^\u2190 Back/.test(t);
+      var icon = lab === "Back" || !!b.querySelector('polyline[points="12 19 5 12 12 5"]');
+      if (!text && !icon) return;
+      // Prefer the control in the topmost fixed layer, then a text link (a deeper level), then the last one.
+      var z = 0;
+      for (var el = b; el && el !== document.body; el = el.parentElement) { var cs = getComputedStyle(el); if (cs.position === "fixed") { z = 1 + (parseInt(cs.zIndex, 10) || 0); break; } }
+      if (z > bestZ || (z === bestZ && (text || !bestText))) { best = b; bestZ = z; bestText = text; }
+    });
+    return best;
+  }
+  function backTrap() {
+    var armed = false, skip = false;
+    function check() {
+      var has = !!findBackCtl();
+      if (has && !armed) { try { history.pushState({ rsaBack: 1 }, ""); armed = true; } catch (e) {} }
+      else if (!has && armed) { armed = false; skip = true; try { history.back(); } catch (e) { skip = false; } }
+    }
+    window.addEventListener("popstate", function() {
+      if (skip) { skip = false; return; }
+      armed = false;
+      var b = findBackCtl();
+      if (b) b.click();
+      setTimeout(check, 350);
+    });
+    document.addEventListener("click", function() { setTimeout(check, 350); }, true);
+    setInterval(check, 1500);
+    setTimeout(check, 800);
+  }
   function App() {
+    useEffect(function() { backTrap(); }, []);
     const [phase, setPhase] = useState("loading");
     const [tagMatch, setTagMatch] = useState(null);
     const [resumeMatch, setResumeMatch] = useState(null);

@@ -207,6 +207,14 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-31
 
+**Phone back gesture stays in the app.** Tadhg (Android, screen recording): swiping back on Edit
+match information left the app, as screens change without browser history. Now, while the
+screen shows an in-app back control (the arrow Back button, or "‹ All matches", "‹ Close",
+"‹ Video hub", "← Back to ..."), the app keeps one history step; the back gesture or Android
+back button presses that control (the one in the topmost layer, a text link before the arrow),
+so it lands where Back would. On the home screen there is no step, so back leaves as before.
+Works on the iPad edge swipe too. New browser test test_back_gesture.js (19 tests now).
+
 **A ready message when sharing a playlist.** SHARE now sends a message, not a bare link: the
 playlist name; the game ("v An Tochar · 2026-10-20", or "Across games"), the number of clips and
 total time; "What to look for:" with each clip note numbered as in the player (up to 6, then
