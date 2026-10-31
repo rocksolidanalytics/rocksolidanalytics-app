@@ -34,7 +34,7 @@ function fixtures(extra) {
 // Opens the app. o: { fixtures, w, h, init }. Dialogs are accepted and their text kept in r.dialogs.
 async function open(o) {
   o = o || {};
-  const r = await openApp(APP, { fixtures: o.fixtures || fixtures(), width: o.w || 390, height: o.h || 844, init: o.init });
+  const r = await openApp(APP, { fixtures: o.fixtures || fixtures(), width: o.w || 390, height: o.h || 844, init: o.init, hash: o.hash });
   r.dialogs = [];
   r.page.on('dialog', d => { r.dialogs.push(d.message()); d.accept(); });
   await r.page.waitForTimeout(1500);

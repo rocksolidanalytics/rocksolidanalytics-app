@@ -205,7 +205,19 @@ columns. Wide screens now go up to 1200px.
 **Still to look at:** the opposition team page, match lists, Game film list, the video
 tagger in landscape, and button sizes in the live tagger on a big screen.
 
-## Done 2026-10-30
+## Done 2026-10-31
+
+**Clip lead and tail as sliders; shared clips without the YouTube bar.** Asked for from a
+screenshot of the Game film clip bank. Lead and tail were fixed chips (3, 6, 10, 15, 30 and 2,
+5, 10, 20 seconds); both are now sliders from 0 to 30 seconds in steps of 1, saved when let go,
+in the Game film clip bank and in the video tagger playlist editor (new SpanSlider). The real
+fix for the YouTube controls: the shared clip page (?clips= link) ran YouTube with its own
+controls on, so the bar and title flashed over the first seconds of every clip after each
+seek. It now runs with controls off, like the tagger and Game film, with a clear tap layer
+over the video (after the first play, which some phones need to start) and a PLAY / PAUSE
+button between PREV and NEXT, so no extra lead-in is needed to hide them. New browser test
+test_clip_player.js (18 tests now, all pass).
+
 
 **Club colours through the app.** Asked for after the mock-up (Bray, Wicklow, Éire Óg). The
 frame takes the club kit: the Dashboard tile (main colour shading darker, edged in the second
