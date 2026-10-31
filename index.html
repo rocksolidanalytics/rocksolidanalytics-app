@@ -1011,6 +1011,38 @@
   function Skel({ h, w, mb }) { return React.createElement("div", { className: "rsa-skel", style: { height: h || 14, width: w || "100%", marginBottom: mb == null ? 8 : mb } }); }
   function SkelRows({ n, h }) { var a = []; for (var i = 0; i < (n || 5); i++) a.push(React.createElement(Skel, { key: i, h: h || 46 })); return React.createElement("div", {}, a); }
   // Lead or tail of a clip, 0 to 60 seconds in steps of 1. Saved when the slider is let go.
+  // Team and referee names from the club's earlier matches, most used first. A scouted game's
+  // "A v B" gives both teams.
+  function usePastNames(club) {
+    const [n, setN] = useState({ teams: [], refs: [] });
+    useEffect(function() {
+      if (!club || !club.id) return;
+      db.from("matches").select("opponent,referee,scouting").eq("club_id", club.id).then(function(r) {
+        var tc = {}, rc = {}, own = String(club.name || "").trim().toLowerCase();
+        (r.data || []).forEach(function(m) {
+          (m.scouting ? String(m.opponent || "").split(" v ") : [m.opponent]).forEach(function(x) { x = String(x || "").trim(); if (x && x.toLowerCase() !== own) tc[x] = (tc[x] || 0) + 1; });
+          var rf = String(m.referee || "").trim(); if (rf) rc[rf] = (rc[rf] || 0) + 1;
+        });
+        function srt(o) { return Object.keys(o).sort(function(a, b) { return o[b] - o[a] || a.localeCompare(b); }); }
+        setN({ teams: srt(tc), refs: srt(rc) });
+      }, function() {});
+    }, [club && club.id]);
+    return n;
+  }
+  // Names that match what has been typed, as taps under the box: those with a word starting with
+  // it first, then any containing it. Gone once the box holds one of the names exactly.
+  function NameSuggest({ value, names, onPick }) {
+    var q = String(value || "").trim().toLowerCase();
+    if (!q || (names || []).some(function(x) { return x.toLowerCase() === q; })) return null;
+    var starts = names.filter(function(x) { return x.toLowerCase().split(/[\s'-]+/).some(function(w) { return w.indexOf(q) === 0; }); });
+    var rest = names.filter(function(x) { return starts.indexOf(x) < 0 && x.toLowerCase().indexOf(q) >= 0; });
+    var list = starts.concat(rest).slice(0, 4);
+    if (!list.length) return null;
+    return React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 } }, list.map(function(x) {
+      return React.createElement("button", { key: x, onClick: function() { onPick(x); }, "aria-label": "Use " + x,
+        style: { minHeight: 40, padding: "0 12px", borderRadius: RAD.pill, border: "1px solid " + C.greenB + ALPHA.mid, background: C.greenB + ALPHA.faint, color: C.greenB, fontSize: FS.md, fontWeight: 700, cursor: "pointer" } }, x);
+    }));
+  }
   // A labelled number slider that reports every move (match format when setting up a game).
   function FmtSlider({ label, value, min, max, unit, onChange }) {
     return React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
@@ -6895,6 +6927,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [match, setMatch] = useState(null);
     const [players, setPlayers] = useState([]);
     const [allMatches, setAllMatches] = useState([]);
+    const past = usePastNames(club);
     var COMPS = ["Championship", "League", "Challenge"];
     // Number of periods and minutes per period, 2 x 30 to start. The database allows 2 or 3
     // periods of 10 to 45 minutes.
@@ -7001,12 +7034,16 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }, style: { marginTop: 10, minHeight: 44, padding: "13px 28px", borderRadius: RAD.lg, border: "1px solid " + C.greenB + ALPHA.strong, cursor: "pointer", background: C.greenB + ALPHA.faint, color: C.greenB, fontWeight: 800, fontSize: FS.md } }, "\u{1F3AC} Tag from video"), /* @__PURE__ */ React.createElement("button", { onClick: back, style: { marginTop: 10, minHeight: 44, padding: "11px 24px", borderRadius: RAD.lg, border: "1px solid " + C.border, cursor: "pointer", background: "none", color: C.slate, fontWeight: 700, fontSize: FS.md } }, "Back to home"));
     return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.sm, letterSpacing: 1, color: C.slate } }, "NEW MATCH")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700 } }, "MATCH"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginTop: 16, marginBottom: 8 } },
         React.createElement("button", { onClick: function() { setIsScout(!isScout); }, style: { width: "100%", padding: "14px 20px", borderRadius: RAD.lg, border: "2px solid " + (isScout ? C.gold : C.border), background: isScout ? C.gold + ALPHA.soft : C.bgCard, color: isScout ? C.gold : C.white, fontWeight: 800, fontSize: FS.lg, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, boxShadow: isScout ? "0 2px 8px " + C.gold + ALPHA.soft : "none" } }, isScout ? "\u2713 Scouting Mode On" : "\u{1F50D} Scout a Match")),
+      React.createElement("div", { style: { fontSize: FS.sm, color: isScout ? C.slate : C.slateD, lineHeight: 1.55, marginTop: 8 } }, isScout
+        ? "Watch two other teams and tag both: single tap for the home team, double tap for the away team. Their results, scorers and line-ups build up under Opposition, ready for when you play them, and the game is kept apart from your own team\u2019s stats. On the free plan a scouted game counts as one of your free matches."
+        : "Tag a game you are not playing in, to learn about teams you will meet."),
       isScout && React.createElement("div", null,
         React.createElement("div", { style: lab }, "HOME TEAM"),
-        React.createElement("input", { value: teamA, onChange: function(e) { setTeamA(e.target.value); }, placeholder: "e.g. Erins Isle", className: "rsa-field", style: fld })),
+        React.createElement("input", { value: teamA, onChange: function(e) { setTeamA(e.target.value); }, placeholder: "e.g. Erins Isle", className: "rsa-field", style: fld }),
+        React.createElement(NameSuggest, { value: teamA, names: past.teams, onPick: setTeamA })),
       React.createElement("div", { style: lab }, isScout ? "AWAY TEAM" : "OPPOSITION"), /* @__PURE__ */ React.createElement("input", { value: opponent, onChange: function(e) {
       setOpp(e.target.value);
-    }, placeholder: isScout ? "e.g. Na Fianna" : "e.g. Rathnew", className: "rsa-field", style: fld }), isScout && React.createElement(React.Fragment, null, React.createElement("div", { style: lab }, "COMPETITION"), React.createElement("div", { style: { display: "flex", gap: 8 } }, COMPS.map(function(c) {
+    }, placeholder: isScout ? "e.g. Na Fianna" : "e.g. Rathnew", className: "rsa-field", style: fld }), React.createElement(NameSuggest, { value: opponent, names: past.teams, onPick: setOpp }), isScout && React.createElement(React.Fragment, null, React.createElement("div", { style: lab }, "COMPETITION"), React.createElement("div", { style: { display: "flex", gap: 8 } }, COMPS.map(function(c) {
       return React.createElement("button", { key: c, onClick: function() { setComp(c); }, style: { flex: 1, minHeight: 44, padding: "10px 4px", borderRadius: RAD.md, cursor: "pointer", fontSize: FS.md, fontWeight: 700, border: "1px solid " + (competition === c ? C.gold : C.border), background: competition === c ? C.gold + ALPHA.soft : C.field, color: competition === c ? C.gold : C.slate } }, c);
     })), React.createElement("div", { style: lab }, competition === "League" ? "ROUND (e.g. Round 3)" : competition === "Championship" ? "STAGE (e.g. Quarter-Final)" : "ROUND (optional)"), React.createElement("input", { value: round, onChange: function(e) { setRound(e.target.value); }, placeholder: "Optional", className: "rsa-field", style: fld }), mlenRow()), !isScout && React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: lab }, "COMPETITION"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, COMPS.map(function(c) {
       return /* @__PURE__ */ React.createElement("button", { key: c, onClick: function() {
@@ -7025,7 +7062,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setDate(e.target.value);
     }, className: "rsa-field", style: fld }), mlenRow(), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 2, color: C.greenB, fontFamily: MONO, fontWeight: 700, marginTop: 26 } }, "DETAILS"), /* @__PURE__ */ React.createElement("div", { style: lab }, "REFEREE"), /* @__PURE__ */ React.createElement("input", { value: referee, onChange: function(e) {
       setRef(e.target.value);
-    }, placeholder: "Name (optional)", className: "rsa-field", style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "WEATHER"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 8 } }, WX.map(function(w) {
+    }, placeholder: "Name (optional)", className: "rsa-field", style: fld }), React.createElement(NameSuggest, { value: referee, names: past.refs, onPick: setRef }), /* @__PURE__ */ React.createElement("div", { style: lab }, "WEATHER"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 8 } }, WX.map(function(w) {
       return /* @__PURE__ */ React.createElement("button", { key: w, onClick: function() {
         setWx(w);
       }, style: { minHeight: 44, padding: "9px 12px", borderRadius: RAD.md, cursor: "pointer", fontSize: FS.md, fontWeight: 600, border: "1px solid " + (weather === w ? C.greenB : C.border), background: weather === w ? C.greenB + ALPHA.soft : C.field, color: weather === w ? C.greenB : C.slate } }, w);
@@ -7410,6 +7447,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     return EB;
   })();
   function EditMatch({ club, match, session, back, onSaved }) {
+    const past = usePastNames(club);
     const [isScout, setIsScout] = useState(match.scouting || false);
     const [scoutSheets, setScoutSheets] = useState(false);
     const [opponent, setOpp] = useState(match.opponent || "");
@@ -7469,7 +7507,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     if (scoutSheets) return React.createElement(ScoutTeamsheet, { match: match, teamA: scNames[0] || "Team A", teamB: scNames[1] || "Team B", stick: club.sport === "hurling" || club.sport === "camogie", session: session, edit: true, onDone: function() { setScoutSheets(false); } });
     return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: back, style: { background: "none", border: "none", color: C.slate, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, padding: 0, margin: "-11px -6px", borderRadius: RAD.lg } }, /* @__PURE__ */ React.createElement(Back, { s: 20 })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.sm, letterSpacing: 1, color: C.slate } }, "MATCH DETAILS")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.xl, fontWeight: 800, marginBottom: 2 } }, matchTitle(club.name, match, opponent || match.opponent)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, fontFamily: MONO, marginBottom: 6 } }, "Edit details \u2014 fill in weather, referee and the rest after the game."), React.createElement("div", { style: lab }, isScout ? "AWAY TEAM" : "OPPONENT"), /* @__PURE__ */ React.createElement("input", { value: opponent, onChange: function(e) {
       setOpp(e.target.value);
-    }, className: "rsa-field", style: fld }), match.scouting && React.createElement("button", { onClick: function() { setScoutSheets(true); }, style: { width: "100%", minHeight: 44, marginTop: 12, padding: "11px 12px", borderRadius: RAD.lg, border: "1px solid " + C.gold + ALPHA.strong, background: C.gold + ALPHA.faint, color: C.gold, fontWeight: 800, fontSize: FS.md, cursor: "pointer" } }, "Edit team sheets"), /* @__PURE__ */ React.createElement("div", { style: lab }, "COMPETITION"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, COMPS.map(function(c) {
+    }, className: "rsa-field", style: fld }), !match.scouting && React.createElement(NameSuggest, { value: opponent, names: past.teams, onPick: setOpp }), match.scouting && React.createElement("button", { onClick: function() { setScoutSheets(true); }, style: { width: "100%", minHeight: 44, marginTop: 12, padding: "11px 12px", borderRadius: RAD.lg, border: "1px solid " + C.gold + ALPHA.strong, background: C.gold + ALPHA.faint, color: C.gold, fontWeight: 800, fontSize: FS.md, cursor: "pointer" } }, "Edit team sheets"), /* @__PURE__ */ React.createElement("div", { style: lab }, "COMPETITION"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, COMPS.map(function(c) {
       var on = competition === c;
       return /* @__PURE__ */ React.createElement("button", { key: c, onClick: function() {
         setComp(c);
@@ -7487,7 +7525,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       setDate(e.target.value);
     }, className: "rsa-field", style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "REFEREE"), /* @__PURE__ */ React.createElement("input", { value: referee, onChange: function(e) {
       setRef(e.target.value);
-    }, placeholder: "Referee name", className: "rsa-field", style: fld }), /* @__PURE__ */ React.createElement("div", { style: lab }, "WEATHER"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 } }, WX.map(function(w) {
+    }, placeholder: "Referee name", className: "rsa-field", style: fld }), React.createElement(NameSuggest, { value: referee, names: past.refs, onPick: setRef }), /* @__PURE__ */ React.createElement("div", { style: lab }, "WEATHER"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 } }, WX.map(function(w) {
       var on = weather === w;
       return /* @__PURE__ */ React.createElement("button", { key: w, onClick: function() {
         setWx(w);

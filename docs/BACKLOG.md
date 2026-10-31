@@ -207,6 +207,17 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-31
 
+**Name suggestions and a scouting explainer.** On New match (and Edit match information) the
+Opposition, Home team, Away team and Referee boxes offer earlier names as taps under the box as
+you type: teams from the club's matches (both sides of a scouted "A v B", the club's own name
+left out) and referees, most used first; a name with a word starting with what was typed comes
+before one only containing it, so "b" gives Baltinglass, Blessington, Bray Emmets. They go once
+the box holds one exactly. Under Scout a Match: "Tag a game you are not playing in, to learn
+about teams you will meet", and once on, how tagging works (single tap home, double tap away),
+that results, scorers and line-ups build up under Opposition, that it is kept apart from the
+club's own stats, and that on the free plan it counts as one of the free matches. New browser
+test test_name_suggest.js (21 tests now).
+
 **Match length as sliders.** Setting up a game (and scouting one) now has two sliders under
 MATCH LENGTH, Periods (2 or 3) and Minutes each (10 to 45), starting at 2 x 30 with the
 summary beside the heading ("2 × 30 MIN"), in place of the three 2x30 / 2x35 / 3x20 buttons.
