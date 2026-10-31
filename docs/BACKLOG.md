@@ -207,6 +207,17 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-31
 
+**iPad video tagger in landscape.** From Tadhg's iPad screenshot: the event boxes were big but
+the score, the full screen / undo / tags buttons, the strip and the tags list were small, and
+once the halves were marked there was no button to mark or move them. On a tablet in landscape
+(rsa-vtl, explicit sizes): the score chip 21px, the top buttons 16px and labelled (Full screen,
+Undo last tag, Tags), event labels 17px, every bottom strip button 16px and 52px tall (seek,
+outcomes, players, Save), the tags panel wider (up to 520px) with 15px text, and the strip
+stopping at the panel while it is open. The strip now shows every half mark ("✓ Throw-in
+00:03", "✓ 2nd half 32:10", "⚑ Mark ..." for the next); moving a mark already set asks first,
+as it changes the match clock on the tags. Phones unchanged. New browser test
+test_ipad_video.js (22 tests now).
+
 **iPad tagger header, fixed on the real iPad.** Tadhg's iPad screenshot showed the event buttons
 right but the score banner still small with a lot of empty space: iPad Safari ignored the CSS
 zoom used for the header, Sub/Team/Undo row and banners (the emulator honoured it). Replaced with
