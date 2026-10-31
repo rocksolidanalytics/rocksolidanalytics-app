@@ -216,7 +216,7 @@ outcomes, players, Save), the tags panel wider (up to 520px) with 15px text, and
 stopping at the panel while it is open. The strip now shows every half mark ("✓ Throw-in
 00:03", "✓ 2nd half 32:10", "⚑ Mark ..." for the next); moving a mark already set asks first,
 as it changes the match clock on the tags. Phones unchanged. New browser test
-test_ipad_video.js (22 tests now).
+test_ipad_video.js (22 tests now). Deployed (main at c4c8a38, rollback feaaee0).
 
 **iPad tagger header, fixed on the real iPad.** Tadhg's iPad screenshot showed the event buttons
 right but the score banner still small with a lot of empty space: iPad Safari ignored the CSS
@@ -350,7 +350,10 @@ Covered in test_clip_player.js (31 checks).
 **iPad live tagger, still open.**
 - Try it on the real iPad at a practice match: the turn-sideways prompt, button sizes, and that
   pitch taps land where expected. Tests ran in an iPad emulator only. Event buttons confirmed on
-  the real iPad (Tadhg, 31 Oct); the new header still to be confirmed with a fresh screenshot.
+  the real iPad (Tadhg, 31 Oct); the new header confirmed too ("iPad layout now looks really
+  good"). The video tagger refresh still to be checked on the real iPad.
+- The pitch and outcome steps of the video tagger in landscape kept their sizes; check them on
+  the iPad and enlarge if needed.
 - Lesson: iPad Safari ignored CSS zoom that the emulator honoured; use explicit sizes.
 - The video tagger and the stats screens keep their current sizes on iPad; the same treatment
   could follow if wanted.
