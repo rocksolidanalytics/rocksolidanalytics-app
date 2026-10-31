@@ -990,14 +990,14 @@
   }
   function Skel({ h, w, mb }) { return React.createElement("div", { className: "rsa-skel", style: { height: h || 14, width: w || "100%", marginBottom: mb == null ? 8 : mb } }); }
   function SkelRows({ n, h }) { var a = []; for (var i = 0; i < (n || 5); i++) a.push(React.createElement(Skel, { key: i, h: h || 46 })); return React.createElement("div", {}, a); }
-  // Lead or tail of a clip, 0 to 30 seconds in steps of 1. Saved when the slider is let go.
+  // Lead or tail of a clip, 0 to 60 seconds in steps of 1. Saved when the slider is let go.
   function SpanSlider({ label, value, onCommit }) {
     const [v, setV] = useState(value), vRef = useRef(value);
     useEffect(function() { setV(value); vRef.current = value; }, [value]);
     function done() { if (vRef.current !== value) onCommit(vRef.current); }
     return React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
       React.createElement("span", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO, letterSpacing: 0.5, width: 34, flexShrink: 0 } }, label),
-      React.createElement("input", { type: "range", min: 0, max: 30, step: 1, value: v, "aria-label": label.toLowerCase() + " seconds",
+      React.createElement("input", { type: "range", min: 0, max: 60, step: 1, value: v, "aria-label": label.toLowerCase() + " seconds",
         onChange: function(e) { var n = +e.target.value; vRef.current = n; setV(n); },
         onPointerUp: done, onTouchEnd: done, onKeyUp: done, onBlur: done,
         style: { flex: 1, minWidth: 0, height: 44, margin: 0, accentColor: C.greenB, cursor: "pointer" } }),

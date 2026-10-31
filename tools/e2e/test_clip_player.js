@@ -38,6 +38,7 @@ module.exports = async function(t) {
   await p.getByText('Playlist 1').first().click().catch(() => {}); await L.wait(p, 500);
   const lead = p.locator('input[aria-label="lead seconds"]').first();
   t.eq('clip bank: lead is a slider at the default 6s', await lead.inputValue(), '6');
+  t.eq('clip bank: slider goes up to 60s', await lead.getAttribute('max'), '60');
   await lead.fill('12'); await lead.blur(); await L.wait(p, 500);
   const w = await p.evaluate(() => (window.__rsaWrites || []).filter(x => x[0] === 'playlists').map(x => x[2]));
   t.ok('clip bank: letting go saves the new lead', w.some(x => x && x.clips && x.clips[0] && x.clips[0].pre === 12), JSON.stringify(w).slice(0, 300));

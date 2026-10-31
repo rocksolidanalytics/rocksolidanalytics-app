@@ -209,7 +209,7 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 **Clip lead and tail as sliders; shared clips without the YouTube bar.** Asked for from a
 screenshot of the Game film clip bank. Lead and tail were fixed chips (3, 6, 10, 15, 30 and 2,
-5, 10, 20 seconds); both are now sliders from 0 to 30 seconds in steps of 1, saved when let go,
+5, 10, 20 seconds); both are now sliders from 0 to 60 seconds in steps of 1, saved when let go,
 in the Game film clip bank and in the video tagger playlist editor (new SpanSlider). The real
 fix for the YouTube controls: the shared clip page (?clips= link) ran YouTube with its own
 controls on, so the bar and title flashed over the first seconds of every clip after each
