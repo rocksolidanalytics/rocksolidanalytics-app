@@ -215,6 +215,7 @@ player's turnovers or shots. Clips with no player are left out. Running it again
 tagging tops up each player's playlist instead of making copies. Each one is shared from Game
 film, Clip bank as usual (player logins are not tied to a squad name, so the app cannot yet
 put them straight into each player's own view). Covered in test_clip_player.js (37 checks).
+Deployed (main at beedefd, rollback c0aae9a).
 
 **Video up the home screen.** Tadhg: the video part was too far down the list. Game film and
 Video tagger now have their own VIDEO section straight after the Dashboard and Last match
