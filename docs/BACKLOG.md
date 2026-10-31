@@ -217,6 +217,10 @@ numbers 30px with names 14px, prompts 15px, the tag list 15px. The pitch step co
 screen with the landscape pitch (same tap-to-spot mapping as upright, so saved spots are the
 same), the teams named at each end (◀ BALLYVALE ... LUCAN ▶), "ATTACKING LEFT/RIGHT GOAL", a
 sideways SWAP, and a Cancel button. New browser test test_ipad_tagger.js (20 tests now).
+Then, at Tadhg's ask, the top of the screen scales up the same way: the score, team names,
+clock and time since score (zoom 1.6), the Sub, Team and Undo row (1.5) and the sync, half-time
+and confirmation banners (1.4); the full-screen pitch now starts under the score and clock so
+they stay in view, sized to the height left.
 
 **Phone back gesture stays in the app.** Tadhg (Android, screen recording): swiping back on Edit
 match information left the app, as screens change without browser history. Now, while the
