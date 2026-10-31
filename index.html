@@ -1011,6 +1011,21 @@
   function Skel({ h, w, mb }) { return React.createElement("div", { className: "rsa-skel", style: { height: h || 14, width: w || "100%", marginBottom: mb == null ? 8 : mb } }); }
   function SkelRows({ n, h }) { var a = []; for (var i = 0; i < (n || 5); i++) a.push(React.createElement(Skel, { key: i, h: h || 46 })); return React.createElement("div", {}, a); }
   // Lead or tail of a clip, 0 to 60 seconds in steps of 1. Saved when the slider is let go.
+  // A labelled number slider that reports every move (match format when setting up a game).
+  function FmtSlider({ label, value, min, max, unit, onChange }) {
+    return React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
+      React.createElement("span", { style: { fontSize: FS.sm, color: C.slate, width: 74, flexShrink: 0 } }, label),
+      React.createElement("input", { type: "range", min: min, max: max, step: 1, value: value, "aria-label": label,
+        onChange: function(e) { onChange(+e.target.value); },
+        style: { flex: 1, minWidth: 0, height: 44, margin: 0, accentColor: C.greenB, cursor: "pointer" } }),
+      React.createElement("span", { style: { fontSize: FS.md, fontWeight: 800, fontFamily: MONO, color: C.white, width: 62, textAlign: "right", flexShrink: 0 } }, value + (unit || "")));
+  }
+  // The remembered match format, "2x30"; older saves were "30", "35" or "3x20".
+  function mlenParse(v) {
+    var m = /^(\d)x(\d+)$/.exec(String(v || ""));
+    var per = m ? +m[1] : 2, mins = m ? +m[2] : +v || 30;
+    return { per: Math.min(3, Math.max(2, per)), mins: Math.min(45, Math.max(10, mins)) };
+  }
   function SpanSlider({ label, value, onCommit }) {
     const [v, setV] = useState(value), vRef = useRef(value);
     useEffect(function() { setV(value); vRef.current = value; }, [value]);
@@ -6873,7 +6888,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     // Match length: 30 (two 30-minute halves), 35 (inter-county) or 3x20
     // (training games). The last choice is kept per club as the default.
     const [mlen, setMlen] = useState(function() {
-      try { return window.localStorage.getItem("rsa_mlen_" + club.id) || "30"; } catch (e) { return "30"; }
+      try { return mlenParse(window.localStorage.getItem("rsa_mlen_" + club.id)); } catch (e) { return mlenParse(null); }
     });
     const [busy, setBusy] = useState(false);
     const [err, setErr] = useState("");
@@ -6881,11 +6896,13 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [players, setPlayers] = useState([]);
     const [allMatches, setAllMatches] = useState([]);
     var COMPS = ["Championship", "League", "Challenge"];
+    // Number of periods and minutes per period, 2 x 30 to start. The database allows 2 or 3
+    // periods of 10 to 45 minutes.
     function mlenRow() {
-      return React.createElement(React.Fragment, null, React.createElement("div", { style: lab }, "MATCH LENGTH"), React.createElement("div", { style: { display: "flex", gap: 8 } }, [["30", "2 \xD7 30"], ["35", "2 \xD7 35"], ["3x20", "3 \xD7 20"]].map(function(v) {
-        var on = mlen === v[0];
-        return React.createElement("button", { key: v[0], onClick: function() { setMlen(v[0]); }, style: { flex: 1, minHeight: 44, padding: "10px 4px", borderRadius: RAD.md, cursor: "pointer", fontSize: FS.md, fontWeight: 700, border: "1px solid " + (on ? C.greenB : C.border), background: on ? C.greenB + ALPHA.soft : C.field, color: on ? C.greenB : C.slate } }, v[1]);
-      })));
+      return React.createElement(React.Fragment, null,
+        React.createElement("div", { style: Object.assign({}, lab, { display: "flex", justifyContent: "space-between" }) }, React.createElement("span", null, "MATCH LENGTH"), React.createElement("span", { style: { color: C.greenB, fontWeight: 700 } }, mlen.per + " \xD7 " + mlen.mins + " MIN")),
+        React.createElement(FmtSlider, { label: "Periods", value: mlen.per, min: 2, max: 3, onChange: function(v) { setMlen(function(m) { return Object.assign({}, m, { per: v }); }); } }),
+        React.createElement(FmtSlider, { label: "Minutes each", value: mlen.mins, min: 10, max: 45, unit: " min", onChange: function(v) { setMlen(function(m) { return Object.assign({}, m, { mins: v }); }); } }));
     }
     var WX = ["Dry", "Dry & Windy", "Light Rain", "Heavy Rain", "Rain & Wind", "Other"];
     var fld = { "--rsa-ring": C.greenB, width: "100%", minHeight: 44, padding: "12px 14px", borderRadius: RAD.lg, background: C.field, border: "1px solid " + C.border, color: C.white, fontSize: FS.lg, fontFamily: "inherit", outline: "none", boxSizing: "border-box" };
@@ -6926,8 +6943,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           date,
           competition,
           round: round.trim() || null,
-          half_mins: mlen === "35" ? 35 : mlen === "3x20" ? 20 : null,
-          periods: mlen === "3x20" ? 3 : null,
+          half_mins: mlen.mins === 30 ? null : mlen.mins,
+          periods: mlen.per === 2 ? null : mlen.per,
           status: "scheduled",
           source: "live"
         } : {
@@ -6941,12 +6958,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           venue_type: venueType || null,
           referee: referee.trim() || null,
           weather,
-          half_mins: mlen === "35" ? 35 : mlen === "3x20" ? 20 : null,
-          periods: mlen === "3x20" ? 3 : null,
+          half_mins: mlen.mins === 30 ? null : mlen.mins,
+          periods: mlen.per === 2 ? null : mlen.per,
           status: "scheduled",
           source: "live"
         }).select().single();
-        try { window.localStorage.setItem("rsa_mlen_" + club.id, mlen); } catch (e) {}
+        try { window.localStorage.setItem("rsa_mlen_" + club.id, mlen.per + "x" + mlen.mins); } catch (e) {}
         if (r.error) throw new Error(r.error.message);
         var p = await db.from("players").select("id,name,preferred_slot").eq("club_id", club.id).order("name");
         var m = await db.from("matches").select("id,date,opponent").eq("club_id", club.id).eq("scouting", false).order("date");

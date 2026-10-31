@@ -207,6 +207,13 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-31
 
+**Match length as sliders.** Setting up a game (and scouting one) now has two sliders under
+MATCH LENGTH, Periods (2 or 3) and Minutes each (10 to 45), starting at 2 x 30 with the
+summary beside the heading ("2 × 30 MIN"), in place of the three 2x30 / 2x35 / 3x20 buttons.
+Saved as before (half_mins and periods, left empty for 30 and 2) and remembered per club as
+"2x30" (older saves read as before). The ranges are what the database allows. Test
+test_new_match_length.js rewritten (slider ranges, the summary, the saved match, the memory).
+
 **iPad live tagger: sideways, full-screen pitch, bigger controls.** From Tadhg's comparison with
 Performa on the iPad. A web app cannot lock the iPad rotation (Apple ignores it for home screen
 apps), so the live tagger on a tablet held upright shows "Turn your iPad sideways to tag" over
@@ -314,6 +321,10 @@ Covered in test_clip_player.js (31 checks).
   pitch taps land where expected. Tests ran in an iPad emulator only.
 - The video tagger and the stats screens keep their current sizes on iPad; the same treatment
   could follow if wanted.
+
+**Match format, still open.**
+- Four quarters (or one period) would need the database check widened (periods in 2, 3), period
+  names past three, and the stats half filters (they show 1ST and 2ND only, even for 3 x 20).
 
 **Playlists, still open.**
 - The shared playlist "PO Break" is on a match with no YouTube link saved, so its link shows
