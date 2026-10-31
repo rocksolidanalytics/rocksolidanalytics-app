@@ -1011,8 +1011,8 @@
   function Skel({ h, w, mb }) { return React.createElement("div", { className: "rsa-skel", style: { height: h || 14, width: w || "100%", marginBottom: mb == null ? 8 : mb } }); }
   function SkelRows({ n, h }) { var a = []; for (var i = 0; i < (n || 5); i++) a.push(React.createElement(Skel, { key: i, h: h || 46 })); return React.createElement("div", {}, a); }
   // Lead or tail of a clip, 0 to 60 seconds in steps of 1. Saved when the slider is let go.
-  // Team and referee names from the club's earlier matches, most used first. A scouted game's
-  // "A v B" gives both teams.
+  // Team and referee names from earlier matches of the club, most used first. The "A v B" of a
+  // scouted game gives both teams.
   function usePastNames(club) {
     const [n, setN] = useState({ teams: [], refs: [] });
     useEffect(function() {
