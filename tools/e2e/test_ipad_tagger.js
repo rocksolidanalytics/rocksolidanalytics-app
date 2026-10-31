@@ -23,8 +23,8 @@ module.exports = async function(t) {
   await L.clickTxt(p, '^Point$'); await L.wait(p, 400);
   const pr = await p.evaluate(() => { const el = document.querySelector('#root .rsa-tl-pitch'), h = document.querySelector('#root .rsa-tl-head'); if (!el || !h) return null; const r = el.getBoundingClientRect(); return { w: Math.round(r.width), top: Math.round(r.top), bottom: Math.round(r.bottom), head: Math.round(h.getBoundingClientRect().bottom) }; });
   t.ok('pitch step fills the screen under the score and clock', pr && pr.w === 1180 && pr.bottom === 820 && Math.abs(pr.top - pr.head) <= 1 && pr.top > 60, JSON.stringify(pr));
-  const clockPx = await p.evaluate(() => { const h = document.querySelector('#root .rsa-tl-head'); return h ? parseFloat(getComputedStyle(h).zoom) : 0; });
-  t.ok('score and clock scaled up too', clockPx >= 1.5, String(clockPx));
+  const sizes = await p.evaluate(() => ['.rsa-tl-sc', '.rsa-tl-clk', '.rsa-tl-tn'].map(q => parseFloat(getComputedStyle(document.querySelector('#root ' + q)).fontSize)));
+  t.ok('score, clock and team names in large type (no zoom)', sizes[0] >= 48 && sizes[1] >= 44 && sizes[2] >= 16, sizes.join(','));
   t.ok('pitch step has Cancel and both team ends', /Cancel/.test(await L.buttons(p, 'Cancel')) && /◀ BALLYVALE/.test(await L.text(p)) && /LUCAN ▶/.test(await L.text(p)));
   await L.shot(p, 'ipad_tagger_pitch');
   const svg = await p.evaluate(() => { const s = [...document.querySelectorAll('#root .rsa-tl-pitch svg')].sort((a, b) => b.getBoundingClientRect().width - a.getBoundingClientRect().width)[0]; const r = s.getBoundingClientRect(); return { x: r.left + r.width * 0.8, y: r.top + r.height * 0.5, w: r.width }; });

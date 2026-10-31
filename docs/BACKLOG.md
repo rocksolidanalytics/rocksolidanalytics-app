@@ -207,6 +207,14 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-10-31
 
+**iPad tagger header, fixed on the real iPad.** Tadhg's iPad screenshot showed the event buttons
+right but the score banner still small with a lot of empty space: iPad Safari ignored the CSS
+zoom used for the header, Sub/Team/Undo row and banners (the emulator honoured it). Replaced with
+explicit sizes in landscape on a tablet: score 52px with the total 22px, clock 50px, half 16px,
+win chance 16px, team names 18px with a 28px crest, time since score 16px, the clock column 220px
+wide, the Sub/Team/Undo row and banners 15 to 16px, a bigger back arrow. test_ipad_tagger.js
+now checks the font sizes rather than zoom.
+
 **Name suggestions and a scouting explainer.** On New match (and Edit match information) the
 Opposition, Home team, Away team and Referee boxes offer earlier names as taps under the box as
 you type: teams from the club's matches (both sides of a scouted "A v B", the club's own name
