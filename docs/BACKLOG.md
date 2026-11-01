@@ -205,6 +205,19 @@ columns. Wide screens now go up to 1200px.
 **Still to look at:** the opposition team page, match lists, Game film list, the video
 tagger in landscape, and button sizes in the live tagger on a big screen.
 
+## Done 2026-11-01
+
+**Efficiency maps on the season shot and restart maps.** From Tadhg's Stephen Curry example,
+then mock-ups redone in the app style at his ask. The OWN SHOT MAP and OWN RESTART MAP cards
+have a Dots / Efficiency switch (kept per device, rsa_mapview). Efficiency draws, between the
+grass and the lines of the same pitch, the scoring rate (shots from play only, frees left out)
+or the restart win rate where each landed, against the average of what is shown: app red below,
+gold level, green above, smoothed over about 4.5m and stronger where more points sit. The player
+picker (shots) and All / Short / Mid / Long (restarts) still apply, and the Opposition side too.
+Under 40 points the colours are faded with a note; under 20 there is no layer, just "Not enough
+... yet". Legend: Below / Above average, or Lost / Won more often, with the count and rate. New
+browser test test_eff_maps.js (23 tests now).
+
 ## Done 2026-10-31
 
 **iPad video tagger: pitch step no longer cut off.** Tadhg's photo: the bottom of the pop-up
@@ -344,19 +357,6 @@ out. Database change, tested on a local Postgres: playlists.match_id may be null
 clip_playlist returns videos (one per match of the same club used by the clips) for such a
 playlist, one-game playlists unchanged. The fake database learned .is(column, null).
 Covered in test_clip_player.js (31 checks).
-
-**Next to build (agreed 2026-10-31, start 1 Nov): season efficiency shot map.**
-- From Tadhg's Stephen Curry example and the mock-ups on real St Jude's camogie and Bray
-  Emmets senior football tags (scratch only, nothing in the repository). Chosen: the
-  density plus efficiency map in the season overview, with a filter by player.
-- Map: attacking half, every shot turned to attack the same goal, shots from play only.
-  Colour is the score rate against the team (or player) average, red below to green above;
-  strength comes from the number of shots, smoothed (about 4 to 5m), so a lone score does not
-  light up. Pitch lines 13m, 20m, 45m, the D, and the 40m arc for football.
-- Filter by player, and keep the existing season filters (competition, year). Below about 40
-  shots, fade the colours or say there are not enough shots yet.
-- Not chosen for now: the plain density map and the hexagon chart (possible for the reports).
-- Real club images stay private: check with the club before showing them outside it.
 
 **Security tidy-up** (Supabase security advisor, 2026-10-30).
 - About 30 SECURITY DEFINER functions can be called without signing in (club_activity,
