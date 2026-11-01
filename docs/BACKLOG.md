@@ -207,6 +207,20 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-11-01
 
+**Home on a wide screen: tiles left, club panel right.** iPad sideways and computers (wider than
+1000px and landscape): the tiles stack in one column on the left and a panel on the right stays
+in view while the tiles scroll. The panel has the club banner (moved from the left) and slides
+that change every 8 seconds with a fade: last match (score, result, six figures us v them, top
+scorer), season (W-D-L, average score, the same figures as totals), a player spotlight (number,
+position, games, scored, shot efficiency, tackles, turnovers won, per game, "most in the squad"
+or "top 3" worked out), the Rock Solid Analytics logo, top scorers and work rate (top five;
+these two wait until there are 2 games and 3 players). Dots jump to a slide and pause it for 30
+seconds (hovering pauses on a computer); tapping the score or record opens the match or the
+dashboard. A club with no finished match sees "Tag your first match". Figures use the latest
+season only and six event types, read in pages of 1000 and kept on the device per club
+(rsa_homepanel_<club>), read again only when a new match is finished. Phones and an upright
+iPad are unchanged. New browser test test_home_panel.js (24 tests now).
+
 **Efficiency maps on the season shot and restart maps.** From Tadhg's Stephen Curry example,
 then mock-ups redone in the app style at his ask. The OWN SHOT MAP and OWN RESTART MAP cards
 have a Dots / Efficiency switch (kept per device, rsa_mapview). Efficiency draws, between the

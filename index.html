@@ -85,6 +85,16 @@
   .rsa-vtl .rsa-vtl-pitch{bottom:calc(96px + env(safe-area-inset-bottom,0px))!important;width:min(80vw,900px,calc((100dvh - 230px) * 1.55))!important}
   .rsa-vtl .rsa-vtl-pitch span,.rsa-vtl .rsa-vtl-pitch button{font-size:14px!important}
   .rsa-vtl.rsa-vtl-open .rsa-vtl-strip{right:calc(min(48vw,520px) + 6px)!important}
+  /* Home on a wide screen (rsa-hw): tiles in one column on the left, the club panel on the right. */
+  .rsa-hw{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);column-gap:28px;align-items:start}
+  #root > div.rs-wide.rsa-hw{max-width:1440px}
+  .rsa-hw > *{grid-column:1}
+  .rsa-hw > .rsa-homepanel{grid-column:2;grid-row:1 / span 60}
+  .rsa-hw .rsa-home-grid{grid-template-columns:minmax(0,1fr)!important}
+  .rsa-hw > .rsa-hw-banner{display:none}
+  .rsa-slide{animation:rsaFade .6s ease-out}
+  @keyframes rsaFade{from{opacity:0}to{opacity:1}}
+  @media (prefers-reduced-motion: reduce){.rsa-slide{animation:none}}
   /* Tactical pad in landscape: pitch on the left at full height, plays and controls on the right. */
   @media (min-width: 1000px) and (orientation: landscape){
     .rsa-tac { display: grid; grid-template-columns: minmax(0, 1fr) 380px; column-gap: 8px; align-items: start; }
@@ -1585,8 +1595,168 @@
     });
     return React.createElement("div", { className: "rsa-screen rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column" } }, hdr, React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "14px 14px 24px" } }, React.createElement(ClipBank, { club: club, readOnly: role === "player" }), body));
   }
+  // Home on a wide screen (iPad sideways, computer): a panel beside the tiles with the club
+  // branding and slides that change every 8 seconds: last match, season, a player, the app,
+  // top scorers, work rate. Figures come from the matches of the latest season, kept on the
+  // device per club and read again only when a new match is finished.
+  var HP_EV = ["Shot from play", "Scoreable free", "Kickout", "Turnover won", "Possession lost", "Tackle"];
+  var HP_POS = { 1: "Goalkeeper", 2: "Right corner back", 3: "Full back", 4: "Left corner back", 5: "Right half back", 6: "Centre half back", 7: "Left half back", 8: "Midfield", 9: "Midfield", 10: "Right half forward", 11: "Centre half forward", 12: "Left half forward", 13: "Right corner forward", 14: "Full forward", 15: "Left corner forward" };
+  function homeStats(ms, ev, apps) {
+    function blk(list) {
+      var ids = {}; list.forEach(function(m) { ids[m.id] = 1; });
+      var e = ev.filter(function(x) { return ids[x.match_id]; });
+      function of(tm, ty) { return e.filter(function(x) { return x.team === tm && x.event_type === ty; }); }
+      function hpSc(a) { return a.filter(function(x) { return (x.score || 0) > 0; }).length; }
+      function kw(a) { return a.filter(function(x) { return /won/i.test(x.outcome || ""); }).length; }
+      var su = of("us", "Shot from play"), so = of("opp", "Shot from play"), fu = of("us", "Scoreable free"), fo = of("opp", "Scoreable free"), ku = of("us", "Kickout"), ko = of("opp", "Kickout");
+      var w = 0, d = 0, l = 0, f = 0, a = 0;
+      list.forEach(function(m) { f += m.our_total || 0; a += m.opp_total || 0; if ((m.our_total || 0) > (m.opp_total || 0)) w++; else if ((m.our_total || 0) < (m.opp_total || 0)) l++; else d++; });
+      var pts = {};
+      e.filter(function(x) { return x.team === "us" && (x.score || 0) > 0 && x.player; }).forEach(function(x) { var q = pts[x.player] || (pts[x.player] = { g: 0, p: 0 }); if (x.score === 3) q.g++; else q.p += x.score; });
+      var top = Object.keys(pts).sort(function(p1, p2) { return (pts[p2].g * 3 + pts[p2].p) - (pts[p1].g * 3 + pts[p1].p); })[0];
+      function hpPc(a1, b1) { return b1 ? Math.round(100 * a1 / b1) : null; }
+      return { n: list.length, w: w, d: d, l: l, f: list.length ? f / list.length : 0, a: list.length ? a / list.length : 0,
+        shots: [su.length, so.length], eff: [hpPc(hpSc(su), su.length), hpPc(hpSc(so), so.length)], frees: [hpSc(fu) + "/" + fu.length, hpSc(fo) + "/" + fo.length],
+        ko: [hpPc(kw(ku), ku.length), hpPc(ko.length - kw(ko), ko.length)], tw: [of("us", "Turnover won").length, of("opp", "Turnover won").length], pl: [of("us", "Possession lost").length, of("opp", "Possession lost").length],
+        top: top ? [top, pts[top].g + "-" + String(pts[top].p).padStart(2, "0")] : null };
+    }
+    var P = {};
+    function pl(n) { return P[n] || (P[n] = { name: n, games: {}, g: 0, p: 0, sh: 0, shs: 0, tw: 0, tk: 0, slot: {}, n: 0 }); }
+    (apps || []).forEach(function(x) { if (!x.player_name || (x.position_slot != null && x.position_slot > 30)) return; var q = pl(x.player_name); q.games[x.match_id] = 1; if (x.position_slot) q.slot[x.position_slot] = (q.slot[x.position_slot] || 0) + 1; });
+    ev.filter(function(x) { return x.team === "us" && x.player; }).forEach(function(x) {
+      var q = pl(x.player); q.games[x.match_id] = 1;
+      if (x.score === 3) q.g++; else if ((x.score || 0) > 0) q.p += x.score;
+      if (x.event_type === "Shot from play") { q.sh++; if ((x.score || 0) > 0) q.shs++; }
+      if (x.event_type === "Turnover won") q.tw++;
+      if (x.event_type === "Tackle") q.tk++;
+    });
+    var players = Object.keys(P).map(function(k) { var q = P[k], top = Object.keys(q.slot).sort(function(a, b) { return q.slot[b] - q.slot[a]; })[0]; return { name: q.name, games: Object.keys(q.games).length, g: q.g, p: q.p, tot: q.g * 3 + q.p, sh: q.sh, eff: q.sh >= 5 ? Math.round(100 * q.shs / q.sh) : null, tw: q.tw, tk: q.tk, wr: q.tw + q.tk, slot: top ? +top : null }; }).filter(function(q) { return q.games > 0; });
+    return { last: ms.length ? blk([ms[0]]) : null, season: blk(ms), m: ms[0] || null, players: players, games: ms.length };
+  }
+  function HomePanel({ club, onLastMatch, onStats }) {
+    const [st, setSt] = useState(null);
+    const [si, setSi] = useState(0);
+    const [hold, setHold] = useState(0);
+    const [spot, setSpot] = useState(0);
+    useEffect(function() {
+      if (!club || !club.id) return;
+      var dead = false, key = "rsa_homepanel_" + club.id;
+      (async function() {
+        try {
+          var mr = await db.from("matches").select("id,date,opponent,competition,our_score,opp_score,our_total,opp_total").eq("club_id", club.id).eq("status", "final").eq("scouting", false).order("date", { ascending: false });
+          var all = ((mr && mr.data) || []).filter(function(m) { return m.date; }).sort(function(a, b) { return String(b.date).localeCompare(String(a.date)); });
+          if (!all.length) { if (!dead) setSt({ empty: true }); return; }
+          var yr = String(all[0].date).slice(0, 4), ms = all.filter(function(m) { return String(m.date).slice(0, 4) === yr; });
+          var sig = all[0].id + ":" + ms.length;
+          try { var c = JSON.parse(localStorage.getItem(key) || "null"); if (c && c.sig === sig && c.st) { if (!dead) setSt(c.st); return; } } catch (e) {}
+          var ids = ms.map(function(m) { return m.id; }), ev = [], apps = [];
+          for (var i = 0; i < ids.length; i += 25) {
+            var part = ids.slice(i, i + 25);
+            for (var from = 0; ; from += 1000) {
+              var r = await db.from("events").select("match_id,team,event_type,outcome,score,player").eq("club_id", club.id).in("match_id", part).in("event_type", HP_EV).range(from, from + 999);
+              var rows = (r && r.data) || []; ev = ev.concat(rows); if (rows.length < 1000) break;
+            }
+            var ar = await db.from("appearances").select("match_id,player_name,position_slot").eq("club_id", club.id).in("match_id", part);
+            apps = apps.concat((ar && ar.data) || []);
+          }
+          var keep = {}; ids.forEach(function(x) { keep[x] = 1; });
+          var out = homeStats(ms, ev.filter(function(x) { return keep[x.match_id] && HP_EV.indexOf(x.event_type) >= 0; }), apps.filter(function(x) { return keep[x.match_id]; }));
+          out.year = yr;
+          try { localStorage.setItem(key, JSON.stringify({ sig: sig, st: out })); } catch (e) {}
+          if (!dead) setSt(out);
+        } catch (e) { if (!dead) setSt({ empty: true }); }
+      })();
+      return function() { dead = true; };
+    }, [club && club.id]);
+    var slides = !st || st.empty ? [] : ["last", "season"].concat(st.players.length ? ["spot"] : [], ["logo"], st.games >= 2 && st.players.length >= 3 ? ["board", "work"] : []);
+    useEffect(function() {
+      if (slides.length < 2) return;
+      var t = setInterval(function() { if (Date.now() < hold) return; setSi(function(x) { var nx = (x + 1) % slides.length; if (slides[nx] === "spot") setSpot(function(y) { return y + 1; }); return nx; }); }, 8000);
+      return function() { clearInterval(t); };
+    }, [slides.length, hold]);
+    var card = { borderRadius: RAD.xl, background: C.bgCard, border: "1px solid " + C.border, padding: "18px 20px", display: "flex", flexDirection: "column", gap: 14, flex: 1, minHeight: 0, overflow: "hidden" };
+    var lbl = { fontSize: FS.xs, letterSpacing: 2, color: C.slateD, fontFamily: MONO, fontWeight: 700 };
+    function big(t, col, sz) { return React.createElement("span", { style: { fontFamily: MONO, fontWeight: 800, fontSize: sz || 44, lineHeight: 1, color: col } }, t); }
+    function stat(k, u, o, sub) {
+      return React.createElement("div", { key: k, style: { background: C.field, border: "1px solid " + C.border, borderRadius: RAD.lg, padding: "11px 13px" } },
+        React.createElement("div", { style: lbl }, k),
+        React.createElement("div", { style: { marginTop: 4, display: "flex", alignItems: "baseline", gap: 8 } }, big(u == null ? "\u2013" : u, C.us, 30), o != null && React.createElement("span", { style: { fontFamily: MONO, fontWeight: 800, fontSize: 20, color: C.them } }, o)),
+        sub && React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, marginTop: 2 } }, sub));
+    }
+    function pct(v) { return v == null ? null : v + "%"; }
+    function hpGrid(b, tot) {
+      var t = tot ? " (total)" : "";
+      return React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } },
+        stat("SHOTS FROM PLAY", b.shots[0], b.shots[1], "us v them" + t), stat("SHOT EFFICIENCY", pct(b.eff[0]), pct(b.eff[1]), "scored from play"),
+        stat("FREES SCORED", b.frees[0], b.frees[1], "us v them"), stat(restarts_().toUpperCase() + " WON", pct(b.ko[0]), pct(b.ko[1]), "own kept \u00b7 theirs won"),
+        stat("TURNOVERS WON", b.tw[0], b.tw[1], "us v them" + t), stat("POSSESSION LOST", b.pl[0], b.pl[1], "us v them" + t));
+    }
+    function topRow(b) {
+      return b.top && React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", background: C.field, border: "1px solid " + C.border, borderRadius: RAD.lg, padding: "11px 13px" } },
+        React.createElement("div", null, React.createElement("div", { style: lbl }, "TOP SCORER"), React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 700, marginTop: 2 } }, b.top[0])), big(b.top[1], C.us, 26));
+    }
+    function body() {
+      if (!st) return React.createElement("div", { style: { color: C.slateD, fontSize: FS.md } }, "Loading\u2026");
+      if (st.empty) return React.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, textAlign: "center", color: C.slate } },
+        React.createElement("img", { src: LOGO, alt: "", width: 96, height: 96 }), React.createElement("div", { style: { fontFamily: MONO, fontWeight: 800, fontSize: 28, color: C.white } }, "Tag your first match"), React.createElement("div", { style: { fontSize: FS.md } }, "Its key figures will show here."));
+      var k = slides[si % slides.length], m = st.m;
+      if (k === "last" || k === "season") {
+        var b = st[k], head = k === "last"
+          ? React.createElement("button", { onClick: function() { onLastMatch && onLastMatch(m); }, style: { background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer", color: C.white, display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 } },
+              React.createElement("div", null, React.createElement("div", { style: lbl }, "LAST MATCH \u00b7 " + ((m.competition || "") + " v " + (m.opponent || "")).toUpperCase().replace(/^ V /, "V ") + " \u00b7 " + new Date(m.date + "T12:00:00").toLocaleDateString("en-IE", { day: "numeric", month: "short" }).toUpperCase()),
+                React.createElement("div", { style: { marginTop: 6 } }, big(m.our_score || "", C.us), React.createElement("span", { style: { color: C.slateD, fontSize: 20, margin: "0 8px", fontFamily: MONO } }, "v"), big(m.opp_score || "", C.them))),
+              React.createElement("span", { style: { fontFamily: MONO, fontWeight: 800, fontSize: FS.md, padding: "4px 12px", borderRadius: RAD.md, color: m.our_total > m.opp_total ? C.greenB : m.our_total < m.opp_total ? C.red : C.gold, border: "1px solid currentColor" } }, m.our_total === m.opp_total ? "DRAW" : (m.our_total > m.opp_total ? "WON BY " : "LOST BY ") + Math.abs((m.our_total || 0) - (m.opp_total || 0))))
+          : React.createElement("button", { onClick: onStats, style: { background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer", color: C.white, display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 } },
+              React.createElement("div", null, React.createElement("div", { style: lbl }, st.year + " SEASON \u00b7 " + b.n + (b.n === 1 ? " GAME" : " GAMES") + " \u00b7 W-D-L"), React.createElement("div", { style: { marginTop: 6 } }, big(b.w + "-" + b.d + "-" + b.l, C.us))),
+              React.createElement("div", { style: { textAlign: "right" } }, React.createElement("div", { style: lbl }, "AVERAGE SCORE"), React.createElement("div", { style: { marginTop: 6 } }, big(b.f.toFixed(1), C.us, 32), React.createElement("span", { style: { color: C.slateD, fontSize: 16, margin: "0 6px", fontFamily: MONO } }, "v"), big(b.a.toFixed(1), C.them, 32))));
+        return [head, hpGrid(b, k === "season"), topRow(b)];
+      }
+      if (k === "logo") return React.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, textAlign: "center", background: "radial-gradient(circle at 50% 42%," + C.greenB + "22, transparent 62%)" } },
+        React.createElement("img", { src: LOGO, alt: "", style: { width: 170, height: 170, borderRadius: 36 } }),
+        React.createElement("div", { style: { fontFamily: MONO, fontWeight: 800, fontSize: 48, lineHeight: 1 } }, "Rock Solid ", React.createElement("span", { style: { color: C.greenB } }, "Analytics")),
+        React.createElement("div", { style: { color: C.slate, fontSize: FS.lg } }, "Match analysis for every GAA club"));
+      var ps = st.players;
+      if (k === "spot") {
+        var order = ps.slice().sort(function(a, b) { return b.games - a.games || a.name.localeCompare(b.name); }), q = order[spot % order.length];
+        var byTk = ps.slice().sort(function(a, b) { return b.tk - a.tk; }), byTw = ps.slice().sort(function(a, b) { return b.tw - a.tw; });
+        function rank(list, v) { var i = list.indexOf(q); return !v ? "" : i === 0 ? "most in the squad" : i < 3 ? "top 3 in the squad" : ""; }
+        return [React.createElement("div", { key: "l", style: lbl }, "PLAYER SPOTLIGHT \u00b7 " + st.year + " SEASON"),
+          React.createElement("div", { key: "w", style: { display: "flex", alignItems: "center", gap: 18 } },
+            React.createElement("div", { style: { width: 80, height: 80, borderRadius: 20, background: C.acc, border: "3px solid " + C.acc2, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontWeight: 800, fontSize: 42, color: C.accT, flexShrink: 0 } }, q.slot || "\u2022"),
+            React.createElement("div", { style: { minWidth: 0 } }, React.createElement("div", { style: { fontFamily: MONO, fontWeight: 800, fontSize: 40, lineHeight: 1 } }, q.name),
+              React.createElement("div", { style: { color: C.slate, fontSize: FS.md, marginTop: 4 } }, (q.slot && HP_POS[q.slot] ? HP_POS[q.slot] + " \u00b7 " : "") + q.games + (q.games === 1 ? " game played" : " games played")))),
+          React.createElement("div", { key: "g", style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 } },
+            stat("SCORED", q.g + "-" + String(q.p).padStart(2, "0"), null, "from play & frees"), stat("SHOT EFFICIENCY", pct(q.eff), null, q.sh + (q.sh === 1 ? " shot" : " shots") + " from play"), stat("TACKLES", q.tk, null, rank(byTk, q.tk))),
+          React.createElement("div", { key: "h", style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } },
+            stat("TURNOVERS WON", q.tw, null, rank(byTw, q.tw)), stat("PER GAME", (q.tk / Math.max(1, q.games)).toFixed(1), "tackles", (q.tot / Math.max(1, q.games)).toFixed(1) + " points a game"))];
+      }
+      var wr = k === "work", lead = ps.slice().sort(function(a, b) { return wr ? b.wr - a.wr : b.tot - a.tot; }).filter(function(q2) { return wr ? q2.wr > 0 : q2.tot > 0; }).slice(0, 5), mx = lead.length ? (wr ? lead[0].wr : lead[0].tot) : 1;
+      return [React.createElement("div", { key: "t" }, React.createElement("div", { style: { fontFamily: MONO, fontWeight: 800, fontSize: 30 } }, wr ? "Work rate" : "Top scorers"), React.createElement("div", { style: { color: C.slate, fontSize: FS.sm, marginTop: 2 } }, st.year + " season \u00b7 " + (wr ? "tackles plus turnovers won" : "scores from play and frees"))),
+        React.createElement("div", { key: "b", style: { display: "flex", flexDirection: "column", gap: 9 } }, lead.map(function(q2, i) {
+          return React.createElement("div", { key: q2.name, style: { display: "grid", gridTemplateColumns: "26px 1fr auto", alignItems: "center", gap: 12, background: C.field, border: "1px solid " + C.border, borderRadius: RAD.lg, padding: "10px 14px" } },
+            React.createElement("span", { style: { fontFamily: MONO, fontWeight: 800, fontSize: 22, color: C.slateD } }, i + 1),
+            React.createElement("div", { style: { minWidth: 0 } }, React.createElement("div", { style: { fontSize: FS.md, fontWeight: 600 } }, q2.name, React.createElement("span", { style: { color: C.slateD, fontSize: FS.sm } }, " \u00b7 " + q2.games + " games")), React.createElement("div", { style: { height: 6, borderRadius: 3, background: C.us, marginTop: 6, width: Math.round(100 * (wr ? q2.wr : q2.tot) / mx) + "%" } })),
+            big(wr ? q2.wr : q2.g + "-" + String(q2.p).padStart(2, "0"), C.us, 24));
+        }))];
+    }
+    return React.createElement("div", { className: "rsa-homepanel", onMouseEnter: function() { setHold(Date.now() + 6e5); }, onMouseLeave: function() { setHold(0); }, style: { position: "sticky", top: 20, display: "flex", flexDirection: "column", gap: 14, height: "calc(100dvh - 40px)", minHeight: 560 } },
+      React.createElement(ClubBanner, { club: club, sportLabel: (SPORTS.find(function(x) { return x.id === club.sport; }) || {}).label || club.sport }),
+      React.createElement("div", { style: card },
+        React.createElement("div", { key: slides[si % Math.max(1, slides.length)] + ":" + spot, className: "rsa-slide", style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14 } }, body()),
+        slides.length > 1 && React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, marginTop: "auto" } }, slides.map(function(k2, i) {
+          var on = i === si % slides.length;
+          return React.createElement("button", { key: k2, onClick: function() { setSi(i); setHold(Date.now() + 30000); }, "aria-label": "Show " + ({ last: "last match", season: "season", spot: "player spotlight", logo: "Rock Solid Analytics", board: "top scorers", work: "work rate" })[k2], style: { width: 32, height: 32, padding: 0, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } },
+            React.createElement("span", { style: { width: on ? 24 : 9, height: 9, borderRadius: 5, background: on ? C.acc : C.borderB, transition: "width .2s" } }));
+        }), React.createElement("span", { style: { marginLeft: "auto", fontSize: FS.sm, color: C.slateD } }, Date.now() < hold ? "paused" : "tap a dot to stop on it"))));
+  }
   function Home({ club, onSignOut, onImport, onGameFilm, onLineups, onStats, lastMatch, onLastMatch, onNewMatch, onVideoHub, onTemplate, onLive, onTactic, onHelp, onSquad, onLivePad, onResume, resumeMatch, matchCount, role, onPitchMap, onOpposition, onClub }) {
     const [hact, setHact] = useState(null);
+    // Wide and landscape (iPad sideways, a computer): the tiles take the left and a club panel the right.
+    const [wideHome, setWideHome] = useState(function() { return window.innerWidth >= 1000 && window.innerWidth > window.innerHeight; });
+    useEffect(function() {
+      function onSize() { setWideHome(window.innerWidth >= 1000 && window.innerWidth > window.innerHeight); }
+      window.addEventListener("resize", onSize); return function() { window.removeEventListener("resize", onSize); };
+    }, []);
     // Free clubs see how many of their free matches are used; lifetime clubs see nothing.
     const [usage, setUsage] = useState(null);
     useEffect(function() {
@@ -1685,12 +1855,13 @@
           React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 500, color: C.slate, marginTop: 2, lineHeight: 1.35 } }, sub)),
         React.createElement("span", { style: { fontSize: FS.lg, color: C.slateD, flexShrink: 0 } }, "\u203A"));
     }
-    return React.createElement("div", { className: "rs-wide rsa-fb", style: { minHeight: "100dvh", background: C.bg, color: C.white, padding: "20px 18px" } },
+    return React.createElement("div", { className: "rs-wide rsa-fb" + (wideHome ? " rsa-hw" : ""), style: { minHeight: "100dvh", background: C.bg, color: C.white, padding: "20px 18px" } },
+      wideHome && React.createElement(HomePanel, { club: club, onLastMatch: onLastMatch, onStats: onStats }),
       React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 22 } },
         React.createElement("img", { src: LOGO, alt: "", width: 30, height: 30 }),
         React.createElement("div", { style: { flex: 1 } }, React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800, letterSpacing: -0.2 } }, "Rock Solid ", React.createElement("span", { style: { color: C.accL } }, "Analytics"))),
         React.createElement("button", { onClick: onSignOut, style: { minHeight: 44, margin: "-8px 0", padding: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", display: "flex", alignItems: "center" } }, React.createElement("span", { style: { border: "1px solid " + C.border, borderRadius: RAD.lg, color: C.slate, fontSize: FS.sm, padding: "7px 12px", fontFamily: MONO } }, "Sign out"))),
-      React.createElement(ClubBanner, { club: club, sportLabel: sport ? sport.label : club.sport, extra: !club.verified ? Pill("Unverified", C.gold) : null, onCrest: isPlayer ? null : function() { setCrestErr(""); setKitDraft(null); setSheetTab("crest"); setCrestOpen(true); } }),
+      React.createElement("div", { className: "rsa-hw-banner" }, React.createElement(ClubBanner, { club: club, sportLabel: sport ? sport.label : club.sport, extra: !club.verified ? Pill("Unverified", C.gold) : null, onCrest: isPlayer ? null : function() { setCrestErr(""); setKitDraft(null); setSheetTab("crest"); setCrestOpen(true); } })),
       crestSheet(),
       React.createElement("button", { onClick: onStats, style: { width: "100%", marginTop: 14, padding: "16px 14px", borderRadius: RAD.xl, cursor: "pointer", textAlign: "left", background: "linear-gradient(135deg," + C.acc + "," + C.accD + ")", border: "2px solid " + C.acc2, boxShadow: "0 8px 28px " + C.acc + ALPHA.soft, display: "flex", alignItems: "center", gap: 12 } },
         React.createElement("div", { style: { width: 36, height: 36, borderRadius: RAD.lg, background: C.white + ALPHA.mid, color: C.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: FS.lg, fontWeight: 800, lineHeight: 1, flexShrink: 0 } }, "\u25A6"),
