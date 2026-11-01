@@ -29,6 +29,18 @@ module.exports = async function(t) {
   t.eq('no page errors (iPad)', r.errors, []);
   await r.browser.close();
 
+  // A club in green and navy, with no turnovers won tagged: navy figures get the white outline,
+  // and tackles take the place of turnovers won.
+  const f = L.fixtures({ club: { colour_primary: '#34c967', colour_secondary: '#0b1c35' } });
+  f.tables.events = f.tables.events.filter(e => e.event_type !== 'Turnover won' && e.event_type !== 'Turnover');
+  r = await L.open({ fixtures: f, w: 1180, h: 820 }); p = r.page; await L.wait(p, 1500);
+  await p.click('#root button[aria-label="Show season"]'); await L.wait(p, 300);
+  const sh = await p.evaluate(() => { const navy = [...document.querySelectorAll('#root .rsa-slide span')].filter(x => /rgb\(11, 28, 53\)/.test(getComputedStyle(x).color)); return navy.length ? [navy.length, getComputedStyle(navy[0]).textShadow] : null; });
+  t.ok('navy figures have the white outline', sh && /255, 255, 255/.test(sh[1]), JSON.stringify(sh));
+  t.ok('tackles shown when no turnovers won are tagged', /TACKLES/.test(await slide(p)) && !/TURNOVERS WON/.test(await slide(p)), (await slide(p)).slice(0, 400));
+  t.eq('no page errors (navy club)', r.errors, []);
+  await r.browser.close();
+
   for (const [w, h, n] of [[390, 844, 'phone'], [820, 1180, 'upright iPad']]) {
     r = await L.open({ fixtures: L.fixtures(), w, h }); p = r.page; await L.wait(p, 1200);
     t.ok(n + ': no panel, banner as before', !(await panel(p)) && /Dashboard/.test(await L.text(p)));

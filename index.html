@@ -1599,7 +1599,9 @@
   // branding and slides that change every 8 seconds: last match, season, a player, the app,
   // top scorers, work rate. Figures come from the matches of the latest season, kept on the
   // device per club and read again only when a new match is finished.
-  var HP_EV = ["Shot from play", "Scoreable free", "Kickout", "Turnover won", "Possession lost", "Tackle"];
+  var HP_EV = ["Shot from play", "Scoreable free", "Kickout", "Turnover won", "Turnover", "Possession lost", "Tackle"];
+  // A turnover won, tagged either way (as the dashboard counts it).
+  function hpTw(x) { return x.event_type === "Turnover won" || (x.event_type === "Turnover" && /won/i.test(x.outcome || "")); }
   var HP_POS = { 1: "Goalkeeper", 2: "Right corner back", 3: "Full back", 4: "Left corner back", 5: "Right half back", 6: "Centre half back", 7: "Left half back", 8: "Midfield", 9: "Midfield", 10: "Right half forward", 11: "Centre half forward", 12: "Left half forward", 13: "Right corner forward", 14: "Full forward", 15: "Left corner forward" };
   function homeStats(ms, ev, apps) {
     function blk(list) {
@@ -1617,7 +1619,7 @@
       function hpPc(a1, b1) { return b1 ? Math.round(100 * a1 / b1) : null; }
       return { n: list.length, w: w, d: d, l: l, f: list.length ? f / list.length : 0, a: list.length ? a / list.length : 0,
         shots: [su.length, so.length], eff: [hpPc(hpSc(su), su.length), hpPc(hpSc(so), so.length)], frees: [hpSc(fu) + "/" + fu.length, hpSc(fo) + "/" + fo.length],
-        ko: [hpPc(kw(ku), ku.length), hpPc(ko.length - kw(ko), ko.length)], tw: [of("us", "Turnover won").length, of("opp", "Turnover won").length], pl: [of("us", "Possession lost").length, of("opp", "Possession lost").length],
+        ko: [hpPc(kw(ku), ku.length), hpPc(ko.length - kw(ko), ko.length)], tw: [e.filter(function(x) { return x.team === "us" && hpTw(x); }).length, e.filter(function(x) { return x.team === "opp" && hpTw(x); }).length], tk: [of("us", "Tackle").length, of("opp", "Tackle").length], pl: [of("us", "Possession lost").length, of("opp", "Possession lost").length],
         top: top ? [top, pts[top].g + "-" + String(pts[top].p).padStart(2, "0")] : null };
     }
     var P = {};
@@ -1627,7 +1629,7 @@
       var q = pl(x.player); q.games[x.match_id] = 1;
       if (x.score === 3) q.g++; else if ((x.score || 0) > 0) q.p += x.score;
       if (x.event_type === "Shot from play") { q.sh++; if ((x.score || 0) > 0) q.shs++; }
-      if (x.event_type === "Turnover won") q.tw++;
+      if (hpTw(x)) q.tw++;
       if (x.event_type === "Tackle") q.tk++;
     });
     var players = Object.keys(P).map(function(k) { var q = P[k], top = Object.keys(q.slot).sort(function(a, b) { return q.slot[b] - q.slot[a]; })[0]; return { name: q.name, games: Object.keys(q.games).length, g: q.g, p: q.p, tot: q.g * 3 + q.p, sh: q.sh, eff: q.sh >= 5 ? Math.round(100 * q.shs / q.sh) : null, tw: q.tw, tk: q.tk, wr: q.tw + q.tk, slot: top ? +top : null }; }).filter(function(q) { return q.games > 0; });
@@ -1640,7 +1642,7 @@
     const [spot, setSpot] = useState(0);
     useEffect(function() {
       if (!club || !club.id) return;
-      var dead = false, key = "rsa_homepanel_" + club.id;
+      var dead = false, key = "rsa_homepanel2_" + club.id;
       (async function() {
         try {
           var mr = await db.from("matches").select("id,date,opponent,competition,our_score,opp_score,our_total,opp_total").eq("club_id", club.id).eq("status", "final").eq("scouting", false).order("date", { ascending: false });
@@ -1676,11 +1678,11 @@
     }, [slides.length, hold]);
     var card = { borderRadius: RAD.xl, background: C.bgCard, border: "1px solid " + C.border, padding: "18px 20px", display: "flex", flexDirection: "column", gap: 14, flex: 1, minHeight: 0, overflow: "hidden" };
     var lbl = { fontSize: FS.xs, letterSpacing: 2, color: C.slateD, fontFamily: MONO, fontWeight: 700 };
-    function big(t, col, sz) { return React.createElement("span", { style: { fontFamily: MONO, fontWeight: 800, fontSize: sz || 44, lineHeight: 1, color: col } }, t); }
+    function big(t, col, sz) { return React.createElement("span", { style: { fontFamily: MONO, fontWeight: 800, fontSize: sz || 44, lineHeight: 1, color: col, textShadow: col === C.them ? C.themLine : col === C.us ? C.usLine : "none" } }, t); }
     function stat(k, u, o, sub) {
       return React.createElement("div", { key: k, style: { background: C.field, border: "1px solid " + C.border, borderRadius: RAD.lg, padding: "11px 13px" } },
         React.createElement("div", { style: lbl }, k),
-        React.createElement("div", { style: { marginTop: 4, display: "flex", alignItems: "baseline", gap: 8 } }, big(u == null ? "\u2013" : u, C.us, 30), o != null && React.createElement("span", { style: { fontFamily: MONO, fontWeight: 800, fontSize: 20, color: C.them } }, o)),
+        React.createElement("div", { style: { marginTop: 4, display: "flex", alignItems: "baseline", gap: 8 } }, big(u == null ? "\u2013" : u, C.us, 30), o != null && React.createElement("span", { style: { fontFamily: MONO, fontWeight: 800, fontSize: 20, color: C.them, textShadow: C.themLine } }, o)),
         sub && React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, marginTop: 2 } }, sub));
     }
     function pct(v) { return v == null ? null : v + "%"; }
@@ -1689,7 +1691,7 @@
       return React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } },
         stat("SHOTS FROM PLAY", b.shots[0], b.shots[1], "us v them" + t), stat("SHOT EFFICIENCY", pct(b.eff[0]), pct(b.eff[1]), "scored from play"),
         stat("FREES SCORED", b.frees[0], b.frees[1], "us v them"), stat(restarts_().toUpperCase() + " WON", pct(b.ko[0]), pct(b.ko[1]), "own kept \u00b7 theirs won"),
-        stat("TURNOVERS WON", b.tw[0], b.tw[1], "us v them" + t), stat("POSSESSION LOST", b.pl[0], b.pl[1], "us v them" + t));
+        b.tw[0] || b.tw[1] || !b.tk ? stat("TURNOVERS WON", b.tw[0], b.tw[1], "us v them" + t) : stat("TACKLES", b.tk[0], b.tk[1], "us v them" + t), stat("POSSESSION LOST", b.pl[0], b.pl[1], "us v them" + t));
     }
     function topRow(b) {
       return b.top && React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", background: C.field, border: "1px solid " + C.border, borderRadius: RAD.lg, padding: "11px 13px" } },
@@ -1735,7 +1737,7 @@
         React.createElement("div", { key: "b", style: { display: "flex", flexDirection: "column", gap: 9 } }, lead.map(function(q2, i) {
           return React.createElement("div", { key: q2.name, style: { display: "grid", gridTemplateColumns: "26px 1fr auto", alignItems: "center", gap: 12, background: C.field, border: "1px solid " + C.border, borderRadius: RAD.lg, padding: "10px 14px" } },
             React.createElement("span", { style: { fontFamily: MONO, fontWeight: 800, fontSize: 22, color: C.slateD } }, i + 1),
-            React.createElement("div", { style: { minWidth: 0 } }, React.createElement("div", { style: { fontSize: FS.md, fontWeight: 600 } }, q2.name, React.createElement("span", { style: { color: C.slateD, fontSize: FS.sm } }, " \u00b7 " + q2.games + " games")), React.createElement("div", { style: { height: 6, borderRadius: 3, background: C.us, marginTop: 6, width: Math.round(100 * (wr ? q2.wr : q2.tot) / mx) + "%" } })),
+            React.createElement("div", { style: { minWidth: 0 } }, React.createElement("div", { style: { fontSize: FS.md, fontWeight: 600 } }, q2.name, React.createElement("span", { style: { color: C.slateD, fontSize: FS.sm } }, " \u00b7 " + q2.games + " games")), React.createElement("div", { style: { height: 6, borderRadius: 3, background: C.us, boxShadow: C.usRing, marginTop: 6, width: Math.round(100 * (wr ? q2.wr : q2.tot) / mx) + "%" } })),
             big(wr ? q2.wr : q2.g + "-" + String(q2.p).padStart(2, "0"), C.us, 24));
         }))];
     }

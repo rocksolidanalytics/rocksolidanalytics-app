@@ -218,8 +218,13 @@ these two wait until there are 2 games and 3 players). Dots jump to a slide and 
 seconds (hovering pauses on a computer); tapping the score or record opens the match or the
 dashboard. A club with no finished match sees "Tag your first match". Figures use the latest
 season only and six event types, read in pages of 1000 and kept on the device per club
-(rsa_homepanel_<club>), read again only when a new match is finished. Phones and an upright
+(rsa_homepanel2_<club>), read again only when a new match is finished. Phones and an upright
 iPad are unchanged. New browser test test_home_panel.js (24 tests now).
+Then, from Tadhg's iPad photo of Bray: the navy "them" figures lacked the white outline (now on
+every figure, with the ring on the leaderboard bars), and turnovers won read 0 v 0 as Bray tag
+no turnovers won; turnovers now count "Turnover won" or "Turnover" with a won outcome (as the
+dashboard), and when neither side has any the card shows tackles instead. Saved figures moved to
+a new key so devices read them again once.
 
 **Efficiency maps on the season shot and restart maps.** From Tadhg's Stephen Curry example,
 then mock-ups redone in the app style at his ask. The OWN SHOT MAP and OWN RESTART MAP cards
