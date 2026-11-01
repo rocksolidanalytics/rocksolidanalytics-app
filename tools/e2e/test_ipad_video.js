@@ -31,6 +31,12 @@ module.exports = async function(t) {
   await L.shot(p, 'ipad_video_pitch');
   t.eq('iPad: no page errors', r.errors, []);
   await r.browser.close();
+  const dsk = await L.open({ fixtures: f, w: 1440, h: 900 });
+  await L.videoTagger(dsk.page, 'Mayo');
+  t.ok('computer, wide window: the larger video layout', await dsk.page.evaluate(() => !!document.querySelector('#root .rsa-vtl')));
+  await L.shot(dsk.page, 'desktop_video');
+  t.eq('computer: no page errors', dsk.errors, []);
+  await dsk.browser.close();
   const q = await L.open({ fixtures: f, w: 844, h: 390, touch: true });
   await L.videoTagger(q.page, 'Mayo');
   t.ok('phone landscape: no iPad layout', !(await q.page.evaluate(() => !!document.querySelector('#root .rsa-vtl'))));

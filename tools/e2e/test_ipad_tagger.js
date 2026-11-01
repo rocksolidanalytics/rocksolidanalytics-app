@@ -38,6 +38,15 @@ module.exports = async function(t) {
   t.eq('iPad: no page errors', r.errors, []);
   await r.browser.close();
 
+  // A computer: the larger layout in a wide window, and never the turn-sideways prompt.
+  r = await L.open({ fixtures: f, init, w: 1440, h: 900 }); p = r.page; await L.wait(p, 800);
+  t.ok('computer, wide window: the larger layout, no prompt', (await tl(p)) && !(await turn(p)));
+  await L.shot(p, 'desktop_tagger');
+  await p.setViewportSize({ width: 900, height: 1100 }); await L.wait(p, 500);
+  t.ok('computer, tall window: no prompt, the standard layout', !(await turn(p)) && !(await tl(p)));
+  t.eq('computer: no page errors', r.errors, []);
+  await r.browser.close();
+
   r = await L.open({ fixtures: f, init, w: 390, h: 844, touch: true }); p = r.page;
   await L.wait(p, 800);
   t.ok('phone: no prompt and no iPad layout', !(await turn(p)) && !(await tl(p)));

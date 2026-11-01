@@ -207,6 +207,13 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-11-01
 
+**Larger tagger layouts on a computer too.** Tadhg: optimise for desktop as well. The live and
+video tagger layouts made for the iPad sideways (bigger event buttons, score, clock, strip,
+full-screen pitch, labelled buttons, half marks) now also apply on a computer whenever the
+window is wide (landscape, at least 1000 by 560, no touch screen). A computer never gets the
+turn-sideways screen; a tall or narrow window keeps the standard layout. The home panel already
+worked on a computer. Desktop checks added to test_ipad_tagger.js and test_ipad_video.js.
+
 **Home on a wide screen: tiles left, club panel right.** iPad sideways and computers (wider than
 1000px and landscape): the tiles stack in one column on the left and a panel on the right stays
 in view while the tiles scroll. The panel has the club banner (moved from the left) and slides
