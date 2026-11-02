@@ -4254,12 +4254,16 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var e = p.ev || {}, m = mOf ? mOf(e.match_id) : null;
     var what = kind === "ko" ? restarts_().charAt(0).toUpperCase() + restarts_().slice(1, -1) : e.event_type === "Scoreable free" || p.isFree ? "Free" : "Shot";
     var oc = e.outcome || (kind === "ko" ? (p.won ? "Won" : "Lost") : ""), col = kind === "ko" ? (p.won ? C.greenB : C.red) : (p.score || 0) > 0 ? C.greenB : C.red;
+    var xs = kind === "shot" && xpFromPlay(e.x != null ? e : p) ? xpFor(e.x != null ? e : p) : null;
     var when = [m ? "v " + (m.opponent || "TBC") + (m.date ? " \u00b7 " + m.date : "") : "", e.period ? (Number(e.period) > 2 ? "P" + e.period : "H" + e.period) + (e.time_text ? " " + String(e.time_text).replace(/^00:/, "") : "") : ""].filter(Boolean).join(" \u00b7 ");
     return React.createElement("div", { role: "status", style: { marginTop: 10, padding: "10px 12px", borderRadius: RAD.md, background: C.bgCard, border: "1px solid " + col + ALPHA.mid, borderLeft: "4px solid " + col, display: "flex", alignItems: "center", gap: 10 } },
       React.createElement("div", { style: { flex: 1, minWidth: 0 } },
         React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800 } }, (p.num ? "#" + p.num + " " : "") + (p.player || "No player tagged")),
         React.createElement("div", { style: { fontSize: FS.sm, marginTop: 3, fontFamily: MONO, fontWeight: 700, letterSpacing: 0.5, color: col } }, (what + (oc ? " \u00b7 " + oc : "")).toUpperCase()),
         when && React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 2, fontFamily: MONO } }, when)),
+      xs != null && React.createElement("div", { title: "Expected score: how often shots from play from this zone score", style: { textAlign: "center", flexShrink: 0, padding: "0 4px" } },
+        React.createElement("div", { "data-xs": xs.toFixed(2), style: { fontSize: FS.xl, fontWeight: 800, fontFamily: MONO, color: C.white } }, xs.toFixed(2)),
+        React.createElement("div", { style: { fontSize: FS.xs, color: C.slate, fontFamily: MONO, letterSpacing: 1, marginTop: 1 } }, "xS")),
       React.createElement("button", { onClick: onClose, "aria-label": "Close", style: { background: "none", border: "none", color: C.slate, cursor: "pointer", fontSize: FS.lg, width: 44, height: 44, padding: 0, flexShrink: 0 } }, "\u00d7"));
   }
   // Efficiency maps. Each point is { x, y, hit } in the map viewBox; the layer is the hit rate,

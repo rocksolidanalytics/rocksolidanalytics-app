@@ -19,7 +19,8 @@ module.exports = async function(t) {
   t.eq('shot map: no card before a tap', await card(), '');
   const n = await tap('SHOT MAP', 0); await L.wait(p, 300);
   const c1 = await card();
-  t.ok('shot map: two tappable dots and a card for the first', n === 2 && /Sean Murphy/.test(c1) && /SHOT . POINT/.test(c1) && /v Kilcoole/.test(c1) && /H1 12:34/.test(c1), n + ' ' + c1);
+  t.ok('shot map: two tappable dots and a card for the first', n === 2 && /Sean Murphy/.test(c1) && /SHOT . POINT/.test(c1) && /v Kilcoole/.test(c1) && /H1 12:34/.test(c1) && /0\.\d\d xS/.test(c1), n + ' ' + c1);
+  t.ok('shot map: the xS matches the zone rate', await p.evaluate(() => { const v = document.querySelector('#root [data-xs]'); return !!v && +v.dataset.xs > 0 && +v.dataset.xs < 1; }));
   await p.evaluate(() => document.querySelector('#root [role=status]').scrollIntoView({ block: 'end' })); await L.wait(p, 300);
   await L.shot(p, 'map_tap_shot');
   await tap('SHOT MAP', 1); await L.wait(p, 300);
@@ -28,7 +29,7 @@ module.exports = async function(t) {
   t.eq('shot map: tapping it again hides the card', await card(), '');
   await tab('Restarts');
   await tap('RESTART MAP$', 0); await L.wait(p, 300);
-  t.ok('restart map: card for the kickout', /Cian Byrne/.test(await card()) && /KICKOUT . WON CLEAN/.test(await card()), await card());
+  t.ok('restart map: card for the kickout', /Cian Byrne/.test(await card()) && /KICKOUT . WON CLEAN/.test(await card()) && !/xS/.test(await card()), await card());
   await p.evaluate(() => document.querySelector('#root [role=status] button[aria-label=Close]').click()); await L.wait(p, 300);
   t.eq('restart map: the close button hides it', await card(), '');
   t.eq('no page errors', r.errors, []);
