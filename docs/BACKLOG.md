@@ -205,6 +205,19 @@ columns. Wide screens now go up to 1200px.
 **Still to look at:** the opposition team page, match lists, Game film list, the video
 tagger in landscape, and button sizes in the live tagger on a big screen.
 
+## Done 2026-11-02
+
+**Tap a dot on the season and match maps for its details.** Tadhg: GAA Tracker shows a shot's
+details when you hover over it. On the Dashboard shot map (Attack) and restart map (Restarts),
+tapping a dot now rings it in white and shows a card under the map: the player and number,
+what it was and how it ended (SHOT · POINT, FREE · WIDE, KICKOUT · WON CLEAN, in green for
+a score or a win and red otherwise), and the match it came from with the half and clock
+(v Kilcoole · 2026-10-30 · H1 12:34). Tapping the dot again or the close button hides it;
+changing the filters or switching to the efficiency view clears it. Each dot has a larger hidden
+touch target, so it works with a finger on the phone and iPad. Exported reports are unchanged.
+The stats are untouched: the link from a dot to its tagged event is kept out of the stats data.
+Test: `test_map_tap.js`.
+
 ## Done 2026-11-01
 
 **Larger tagger layouts on a computer too.** Tadhg: optimise for desktop as well. The live and
