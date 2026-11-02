@@ -207,6 +207,12 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-11-02
 
+**A GAA ball for the loading spinner.** Tadhg: make the loading circle GAA related, like an
+O’Neills football. The spinner is now a Gaelic football drawn in lines (the band round the
+middle and the panel seams above and below) rolling round; hurling and camogie clubs get a
+sliotar with its seam. No maker’s name on it (a trademark, and unreadable at 14-26px). It keeps
+the colour of each place it is used, so it still shows on green buttons and the scoreboard.
+
 **Tap a dot on the season and match maps for its details.** Tadhg: GAA Tracker shows a shot's
 details when you hover over it. On the Dashboard shot map (Attack) and restart map (Restarts),
 tapping a dot now rings it in white and shows a card under the map: the player and number,
