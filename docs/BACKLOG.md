@@ -207,6 +207,9 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-11-02
 
+Deployed to main: map tap cards with xS at 25a4b8a (rollback 4f8285e), the GAA ball spinner at
+a9af3bf (rollback 25a4b8a). All 25 e2e tests pass.
+
 **A GAA ball for the loading spinner.** Tadhg: make the loading circle GAA related, like an
 O’Neills football. The spinner is now a Gaelic football drawn in lines (the band round the
 middle and the panel seams above and below) rolling round; hurling and camogie clubs get a
