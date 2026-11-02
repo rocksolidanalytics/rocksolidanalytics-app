@@ -209,8 +209,8 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 **Video tagger on a computer: Tags panel and the play bar (feedback from Si).** Clicking on the
 video now closes the Tags panel when it is open (without playing or pausing it), and so does
-the Escape key; the panel's close button is now a full-size "Close \u00bb" instead of a small
-\u00bb. The video now ends above the seek strip (\u00ab10s, -5s, +5s, 10s\u00bb) instead of under it, so
+the Escape key; the panel's close button is now a full-size "Close »" instead of a small
+». The video now ends above the seek strip («10s, -5s, +5s, 10s») instead of under it, so
 the video's own play bar and timeline are no longer hidden. Same on the iPad sideways.
 Test: `test_vt_desktop_dock.js`.
 
