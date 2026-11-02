@@ -207,6 +207,13 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-11-02
 
+**Match score beside each shot in the video tagger and Game film.** Tadhg: show the match
+score beside each shot, from a free or from play. Every shot from play and scoreable free in
+the video tagger tag list and the Game film event list now shows the score just after it, own
+team first (e.g. 1-01 – 0-02): white when the shot scored, grey when it missed. It is counted
+in match order (half, then clock), so a moment tagged later still gets the score at that point
+in the game. Other events show no score. Test: `test_run_score.js`.
+
 Deployed to main: map tap cards with xS at 25a4b8a (rollback 4f8285e), the GAA ball spinner at
 a9af3bf (rollback 25a4b8a). All 25 e2e tests pass.
 

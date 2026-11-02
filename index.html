@@ -1560,6 +1560,7 @@
       var vid = ytId(sel.video_url);
       var noSync = sel.video_throwin == null && sel.video_halfstart == null;
       var player = vid ? React.createElement("div", { style: { position: "relative", paddingTop: "56.25%", background: C.black, borderRadius: RAD.lg, overflow: "hidden" } }, apiFail ? React.createElement("iframe", { key: Math.floor(ts), src: "https://www.youtube.com/embed/" + vid + "?start=" + Math.floor(ts) + "&autoplay=1&rel=0&controls=0", style: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }, allow: "autoplay; encrypted-media; fullscreen", allowFullScreen: true }) : React.createElement("div", { ref: hostRef, style: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" } }), !apiFail && ytGo && React.createElement("div", { onClick: toggle, style: { position: "absolute", inset: 0, zIndex: 2, cursor: "pointer" } })) : React.createElement("div", { style: { color: C.slateD, fontSize: FS.md, padding: 16, textAlign: "center" } }, "No valid YouTube link on this match.");
+      var gfRun = rsaRunScore(events || [], function(e) { return e.id; });
       var rows = (events || []).map(function(e) { return { e: e, t: seekOf(e, sel) }; }).filter(function(r) { return r.t != null && r.t >= 0; });
       var picked = only && sel.id === matchId;
       if (picked) rows = rows.filter(function(r) { return only.indexOf(r.e.id) >= 0; });
@@ -1580,9 +1581,9 @@
         return React.createElement("button", { key: g[0], onClick: function() { setGroupBy(g[0]); setOpenF({}); }, style: { flex: 1, minHeight: 44, padding: "7px", borderRadius: RAD.md, border: "1px solid " + (on ? C.accL : C.border), background: on ? C.acc + ALPHA.mid : "none", color: on ? C.accL : C.slate, fontWeight: 800, fontSize: FS.sm, cursor: "pointer" } }, g[1]);
       }));
       function evBtn(r, i) {
-        var e = r.e;
+        var e = r.e, rs = rsaIsShot(e) ? gfRun[e.id] : null;
         var col = (e.score || 0) > 0 ? C.greenB : (e.event_type === "Shot from play" || e.event_type === "Scoreable free") ? C.red : C.slate;
-        return React.createElement("button", { key: e.id || i, onClick: function() { jump(r.t); }, style: { width: "100%", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, borderLeft: "3px solid " + col, borderRadius: RAD.md, minHeight: 44, padding: "8px 10px", marginBottom: 5, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" } }, React.createElement("div", null, React.createElement("span", { style: { fontSize: FS.md, fontWeight: 700, color: C.white } }, byPl ? ((e.event_type || "") + (e.outcome ? (" \u00b7 " + e.outcome) : "")) : (e.outcome || e.event_type)), React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, marginTop: 1 } }, byPl ? (e.team === "us" ? usN : oppN) : ((e.player || "\u2014") + " \u00b7 " + (e.team === "us" ? usN : oppN)))), React.createElement("span", { style: { fontSize: FS.sm, color: C.slate, fontFamily: MONO } }, e.time_text || ""));
+        return React.createElement("button", { key: e.id || i, onClick: function() { jump(r.t); }, style: { width: "100%", textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, borderLeft: "3px solid " + col, borderRadius: RAD.md, minHeight: 44, padding: "8px 10px", marginBottom: 5, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" } }, React.createElement("div", null, React.createElement("span", { style: { fontSize: FS.md, fontWeight: 700, color: C.white } }, byPl ? ((e.event_type || "") + (e.outcome ? (" \u00b7 " + e.outcome) : "")) : (e.outcome || e.event_type)), React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, marginTop: 1 } }, byPl ? (e.team === "us" ? usN : oppN) : ((e.player || "\u2014") + " \u00b7 " + (e.team === "us" ? usN : oppN)))), rs ? React.createElement("div", { style: { textAlign: "right", flexShrink: 0, marginLeft: 8 } }, React.createElement("div", { "data-runscore": rs, style: { fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, color: (e.score || 0) > 0 ? C.white : C.slate, whiteSpace: "nowrap" } }, rs), React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO, marginTop: 1 } }, e.time_text || "")) : React.createElement("span", { style: { fontSize: FS.sm, color: C.slate, fontFamily: MONO } }, e.time_text || ""));
       }
       var pickBar = picked && React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", marginBottom: 10, borderRadius: RAD.md, background: C.greenB + ALPHA.faint, border: "1px solid " + C.greenB + ALPHA.soft } },
         React.createElement("div", { style: { flex: 1, fontSize: FS.sm, color: C.white, lineHeight: 1.4 } }, React.createElement("b", null, pickLabel || "Picked events"), React.createElement("div", { style: { color: C.slate } }, rows.length + " of " + only.length + " with video" + (rows.length ? " \u00B7 tap one to watch" : ""))),
@@ -8416,6 +8417,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [tagSet, setTagSet] = useState(club.tag_settings || null);
     var _tevs = sportEvents(club.sport).map(function(e) { return withLocMode(e, tagSet); });
     const [tagged, setTagged] = useState(function() { return vtLoad(match.id); });
+    var vtRun = {};
     const [nameMap, setNameMap] = useState({});
     const [oppNameMap, setOppNameMap] = useState({});
     // Starting fifteen as jersey numbers in teamsheet slot order, or null when no teamsheet.
@@ -9936,7 +9938,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           }));
         }));
       }));
-    })() : (function(){ var _ft = tagged.filter(function(e) { return vtTeamF === "all" || e.team === vtTeamF; }); return _ft; })().length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 11.5, paddingTop: 8, lineHeight: 1.6 } }, throwIn == null ? "Scrub to the throw-in and tap \u2691 Mark throw-in to set the clock." : "Pause on a moment, then tap an event. Single tap = " + teamWord(SC ? scoutAName : club.name) + ", double = opposition.") : tagged.map(function(r) {
+    })() : (function(){ var _ft = tagged.filter(function(e) { return vtTeamF === "all" || e.team === vtTeamF; }); return _ft; })().length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: C.slateD, fontSize: 11.5, paddingTop: 8, lineHeight: 1.6 } }, throwIn == null ? "Scrub to the throw-in and tap \u2691 Mark throw-in to set the clock." : "Pause on a moment, then tap an event. Single tap = " + teamWord(SC ? scoutAName : club.name) + ", double = opposition.") : (function() { vtRun = rsaRunScore(tagged, function(e) { return e._id; }); return tagged; })().map(function(r) {
+      var _rs = rsaIsShot(r) ? vtRun[r._id] : null;
       var _plCb = plMode ? React.createElement("input", { type: "checkbox", checked: !!plSel[r._id], onChange: function(ev) { ev.stopPropagation(); plToggle(r._id, r._vt, plLabel(r)); }, style: { width: 18, height: 18, accentColor: C.gold, cursor: "pointer", flexShrink: 0, marginRight: 4 } }) : null;
       var good = (r.score || 0) > 0 || ["Won clean", "Break won", "Contact Made", "Block", "Hook"].indexOf(r.outcome) >= 0;
       return /* @__PURE__ */ React.createElement(
@@ -9970,6 +9973,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         /* @__PURE__ */ _plCb, React.createElement("span", { style: { fontFamily: MONO, fontSize: 11, fontWeight: 700, color: C.slateD, minWidth: 38 } }, ttShort(r.time_text)),
         /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9.5, fontWeight: 700, fontFamily: MONO, color: r.period === "1" ? C.greenB : C.gold, border: "1px solid " + (r.period === "1" ? C.greenB : C.gold) + ALPHA.mid, borderRadius: RAD.md, padding: "1px 5px" } }, r.period === "1" ? "H1" : "H2"),
         /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { color: r.team === "us" ? TC.us : TC.opp, fontWeight: 700 } }, evLabel(r.event_type)), " ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, "\xB7 ", r.outcome), r.player ? /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, " \xB7 ", r.player) : null, r.x == null ? /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 10 } }, " \xB7 no loc") : null),
+        _rs ? React.createElement("span", { "data-runscore": _rs, style: { fontSize: 11, fontWeight: 800, fontFamily: MONO, color: (r.score || 0) > 0 ? C.white : C.slate, whiteSpace: "nowrap", flexShrink: 0 } }, _rs) : null,
         r._err ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.red, fontFamily: MONO } }, "not saved") : null
       );
     })))), dockX && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, padding: "8px 10px", borderTop: "1px solid " + C.border } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.slate, fontFamily: MONO } }, tagged.length, " tagged", tagged.length > 0 ? " \xB7 swipe a tag to edit" : ""), failed > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, color: C.red, fontFamily: MONO } }, failed, " not saved \xB7 check signal")), /* @__PURE__ */ React.createElement("button", { onClick: finish, style: { flex: 1.3, minHeight: 44, padding: "13px", borderRadius: RAD.lg, border: "none", cursor: "pointer", background: C.greenB, color: C.bg, fontWeight: 800, fontSize: 14 } }, "\u2713 Finish & save")))), editRow && /* @__PURE__ */ React.createElement("div", { onClick: function() {
@@ -10377,6 +10381,21 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     });
     return { g: g, p: p, n: n };
   }
+  // The match score just after each event, counted in match order (half, then clock), for the
+  // shot rows of the video tagger and Game film. Returns { key: "1-04 \u2013 0-03" }, own team first.
+  function rsaRunScore(list, keyOf) {
+    function secs(t) { var pp = String(t || "").split(":").map(Number); return pp.length === 3 ? pp[0] * 3600 + pp[1] * 60 + pp[2] : pp.length === 2 ? pp[0] * 60 + pp[1] : 0; }
+    var u = { g: 0, p: 0 }, o = { g: 0, p: 0 }, out = {};
+    (list || []).map(function(e, i) { return { e: e, i: i, pr: Number(e.period) || 1, s: secs(e.time_text) }; })
+      .sort(function(a, b) { return a.pr - b.pr || a.s - b.s || (a.e.seq || 0) - (b.e.seq || 0) || a.i - b.i; })
+      .forEach(function(r) {
+        var v = Number(r.e.score) || 0;
+        if (v > 0 && r.e.event_type !== "Substitution") { var t = r.e.team === "opp" ? o : u; if (v === 3) t.g++; else t.p += v; }
+        out[keyOf(r.e)] = fmtScoreGP(u) + " \u2013 " + fmtScoreGP(o);
+      });
+    return out;
+  }
+  function rsaIsShot(e) { return !!e && (e.event_type === "Shot from play" || e.event_type === "Scoreable free"); }
   function fmtScoreGP(o) { return o.g + "-" + (o.p < 10 ? "0" : "") + o.p; }
   // Player scorecard for the season view. One row per player with 3 or more games: effort
   // columns (how often) and technique columns (how well), each ticked or crossed against a
