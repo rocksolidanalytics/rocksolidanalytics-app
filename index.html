@@ -93,6 +93,10 @@
   .rsa-hw > .rsa-homepanel{grid-column:2;grid-row:1 / span 60}
   .rsa-hw .rsa-home-grid{grid-template-columns:minmax(0,1fr)!important}
   .rsa-hw > .rsa-hw-banner{display:none}
+  /* Larger tile text on a wide home, and each panel slide centred in its card (from the top where it does not fit). */
+  .rsa-hw .rsa-ht{font-size:17px!important}
+  .rsa-hw .rsa-hs{font-size:13px!important}
+  .rsa-homepanel .rsa-slide{justify-content:center;justify-content:safe center}
   .rsa-slide{animation:rsaFade .6s ease-out}
   @keyframes rsaFade{from{opacity:0}to{opacity:1}}
   @media (prefers-reduced-motion: reduce){.rsa-slide{animation:none}}
@@ -1767,7 +1771,7 @@
           var on = i === si % slides.length;
           return React.createElement("button", { key: k2, onClick: function() { setSi(i); setHold(Date.now() + 30000); }, "aria-label": "Show " + ({ last: "last match", season: "season", spot: "player spotlight", logo: "Rock Solid Analytics", board: "top scorers", work: "work rate" })[k2], style: { width: 32, height: 32, padding: 0, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } },
             React.createElement("span", { style: { width: on ? 24 : 9, height: 9, borderRadius: 5, background: on ? C.acc : C.borderB, transition: "width .2s" } }));
-        }), React.createElement("span", { style: { marginLeft: "auto", fontSize: FS.sm, color: C.slateD } }, Date.now() < hold ? "paused" : "tap a dot to stop on it"))));
+        }), React.createElement("span", { className: "rsa-hs", style: { marginLeft: "auto", fontSize: FS.sm, color: C.slateD } }, Date.now() < hold ? "paused" : "tap a dot to stop on it"))));
   }
   function Home({ club, onSignOut, onImport, onGameFilm, onLineups, onStats, lastMatch, onLastMatch, onNewMatch, onVideoHub, onTemplate, onLive, onTactic, onHelp, onSquad, onLivePad, onResume, resumeMatch, matchCount, role, onPitchMap, onOpposition, onClub }) {
     const [hact, setHact] = useState(null);
@@ -1871,8 +1875,8 @@
       return React.createElement("button", { onClick: onClick, style: TILE },
         Badge(glyph, tint, gs),
         React.createElement("div", { style: { flex: 1, minWidth: 0 } },
-          React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, color: titleColor || C.white, letterSpacing: -0.2 } }, title),
-          React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 500, color: C.slate, marginTop: 2, lineHeight: 1.35 } }, sub)),
+          React.createElement("div", { className: "rsa-ht", style: { fontSize: FS.lg, fontWeight: 800, color: titleColor || C.white, letterSpacing: -0.2 } }, title),
+          React.createElement("div", { className: "rsa-hs", style: { fontSize: FS.sm, fontWeight: 500, color: C.slate, marginTop: 2, lineHeight: 1.35 } }, sub)),
         React.createElement("span", { style: { fontSize: FS.lg, color: C.slateD, flexShrink: 0 } }, "\u203A"));
     }
     return React.createElement("div", { className: "rs-wide rsa-fb" + (wideHome ? " rsa-hw" : ""), style: { minHeight: "100dvh", background: C.bg, color: C.white, padding: "20px 18px" } },
@@ -1886,15 +1890,15 @@
       React.createElement("button", { onClick: onStats, style: { width: "100%", marginTop: 14, padding: "16px 14px", borderRadius: RAD.xl, cursor: "pointer", textAlign: "left", background: "linear-gradient(135deg," + C.acc + "," + C.accD + ")", border: "2px solid " + C.acc2, boxShadow: "0 8px 28px " + C.acc + ALPHA.soft, display: "flex", alignItems: "center", gap: 12 } },
         React.createElement("div", { style: { width: 36, height: 36, borderRadius: RAD.lg, background: C.white + ALPHA.mid, color: C.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: FS.lg, fontWeight: 800, lineHeight: 1, flexShrink: 0 } }, "\u25A6"),
         React.createElement("div", { style: { flex: 1, minWidth: 0 } },
-          React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, color: C.accT, letterSpacing: -0.2 } }, "Dashboard"),
-          React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 600, color: C.accT, marginTop: 2 } }, "Season stats, scorers, " + restarts_() + " & positions")),
+          React.createElement("div", { className: "rsa-ht", style: { fontSize: FS.lg, fontWeight: 800, color: C.accT, letterSpacing: -0.2 } }, "Dashboard"),
+          React.createElement("div", { className: "rsa-hs", style: { fontSize: FS.sm, fontWeight: 600, color: C.accT, marginTop: 2 } }, "Season stats, scorers, " + restarts_() + " & positions")),
         React.createElement("span", { style: { fontSize: FS.lg, color: C.accT, flexShrink: 0 } }, "\u2192")),
       // Straight into the last finished match: its stats, then its clips and pitch map from there.
       lastMatch && club && lastMatch.club_id === club.id && React.createElement("button", { onClick: function() { onLastMatch(lastMatch); }, className: "rsa-home-span", style: { width: "100%", marginTop: 12, padding: 14, borderRadius: RAD.xl, background: C.bgCard, border: "1px solid " + C.border, cursor: "pointer", display: "flex", alignItems: "center", gap: 12, textAlign: "left", fontFamily: "inherit", color: C.white } },
         Badge(lastMatch.our_total > lastMatch.opp_total ? "W" : lastMatch.our_total < lastMatch.opp_total ? "L" : "D", lastMatch.our_total > lastMatch.opp_total ? C.greenB : lastMatch.our_total < lastMatch.opp_total ? C.red : C.gold, 12),
         React.createElement("div", { style: { flex: 1, minWidth: 0 } },
-          React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800, letterSpacing: -0.2 } }, "Last match \u00B7 v " + (lastMatch.opponent || "TBC")),
-          React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 2, fontFamily: MONO } }, (lastMatch.our_score || "") + " \u2013 " + (lastMatch.opp_score || "") + (lastMatch.date ? " \u00B7 " + new Date(lastMatch.date + "T12:00:00").toLocaleDateString("en-IE", { day: "numeric", month: "short" }) : "") + " \u00B7 stats, clips & pitch map")),
+          React.createElement("div", { className: "rsa-ht", style: { fontSize: FS.md, fontWeight: 800, letterSpacing: -0.2 } }, "Last match \u00B7 v " + (lastMatch.opponent || "TBC")),
+          React.createElement("div", { className: "rsa-hs", style: { fontSize: FS.sm, color: C.slate, marginTop: 2, fontFamily: MONO } }, (lastMatch.our_score || "") + " \u2013 " + (lastMatch.opp_score || "") + (lastMatch.date ? " \u00B7 " + new Date(lastMatch.date + "T12:00:00").toLocaleDateString("en-IE", { day: "numeric", month: "short" }) : "") + " \u00B7 stats, clips & pitch map")),
         React.createElement("span", { style: { fontSize: FS.lg, color: C.slate, flexShrink: 0 } }, "\u203A")),
       !isPlayer && usage && usage.licence === "free" && (function() {
         var full = usage.used >= usage.limit, mail = "club.html#pricing";

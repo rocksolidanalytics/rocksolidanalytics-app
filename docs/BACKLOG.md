@@ -207,6 +207,12 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 
 ## Done 2026-11-02
 
+**Home on a computer: panel and text size.** The slide in the right-hand panel (last match,
+season, player, top scorers, work rate) now sits in the middle of the panel instead of at the top
+with a gap under it, and the tile titles and descriptions on the left are larger on a wide home
+(17px and 13px). The dark strip to the right in the screenshot was the browser scrollbar: at
+1280 wide the page fills the window and on wider screens it is centred.
+
 **Video tagger on a computer: Tags panel and the play bar (feedback from Si).** Clicking on the
 video now closes the Tags panel when it is open (without playing or pausing it), and so does
 the Escape key; the panel's close button is now a full-size "Close »" instead of a small

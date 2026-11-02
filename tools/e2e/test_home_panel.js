@@ -12,6 +12,10 @@ module.exports = async function(t) {
   const s1 = await slide(p);
   t.ok('first slide: the last match', /LAST MATCH/.test(s1) && /SHOTS FROM PLAY/.test(s1) && /TOP SCORER/.test(s1), s1.slice(0, 200));
   await L.shot(p, 'home_panel_ipad');
+  t.ok('wide home: larger tile text', await p.evaluate(() => getComputedStyle(document.querySelector('#root .rsa-hs')).fontSize === '13px' && getComputedStyle(document.querySelector('#root .rsa-ht')).fontSize === '17px'));
+  await p.click('#root button[aria-label="Show top scorers"]'); await L.wait(p, 300);
+  t.ok('wide home: a short slide sits in the middle of the panel', await p.evaluate(() => { const s = document.querySelector('#root .rsa-slide'), r = s.getBoundingClientRect(), a = s.firstElementChild.getBoundingClientRect(), b = s.lastElementChild.getBoundingClientRect(); return Math.abs((a.top - r.top) - (r.bottom - b.bottom)) < 4 && a.top - r.top > 20; }));
+  await p.click('#root button[aria-label="Show last match"]'); await L.wait(p, 300);
   const dots = await p.evaluate(() => [...document.querySelectorAll('#root .rsa-homepanel button[aria-label^="Show "]')].map(b => b.getAttribute('aria-label').slice(5)));
   t.eq('slides in order', dots, ['last match', 'season', 'player spotlight', 'Rock Solid Analytics', 'top scorers', 'work rate']);
   for (const [lab, re] of [['season', /SEASON .* W-D-L/], ['player spotlight', /PLAYER SPOTLIGHT/], ['Rock Solid Analytics', /Match analysis for every GAA club/], ['top scorers', /Top scorers/], ['work rate', /Work rate/]]) {
