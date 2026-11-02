@@ -222,7 +222,9 @@ in match order (half, then clock), so a moment tagged later still gets the score
 in the game. Other events show no score. Test: `test_run_score.js`.
 
 Deployed to main: map tap cards with xS at 25a4b8a (rollback 4f8285e), the GAA ball spinner at
-a9af3bf (rollback 25a4b8a). All 25 e2e tests pass.
+a9af3bf (rollback 25a4b8a), the match score beside each shot at aa5ef8f (rollback 232cc86),
+the video tagger Tags panel and play bar fixes at bcafbb8 (rollback aa5ef8f). All 27 e2e tests
+pass.
 
 **A GAA ball for the loading spinner.** Tadhg: make the loading circle GAA related, like an
 O’Neills football. The spinner is now a Gaelic football drawn in lines (the band round the
