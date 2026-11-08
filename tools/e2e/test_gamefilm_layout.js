@@ -14,6 +14,12 @@ module.exports = async function(t) {
     const n = w + 'x' + h;
     t.ok(n + ': video and its buttons fit the screen height', m.vBottom <= h + 1, 'video ends at ' + Math.round(m.vBottom));
     t.eq(n + (side ? ': clip list beside the video' : ': clip list under the video'), m.eLeft >= m.vRight - 1, side);
+    // A phone on its side: the video fills the height, with the play buttons in a strip beside it.
+    if (h < 560) {
+      const q = await p.evaluate(() => { const f = document.querySelector('.rsa-gf-frame').getBoundingClientRect(), c = document.querySelector('.rsa-gf-ctrls').getBoundingClientRect(); return { fw: f.width, fh: f.height, cLeft: c.left, fRight: f.right }; });
+      t.ok(n + ': video at least 3/4 of the screen height', q.fh >= h * 0.7, JSON.stringify(q));
+      t.ok(n + ': play buttons in a strip beside the video', q.cLeft >= q.fRight, JSON.stringify(q));
+    }
     t.eq(n + ': no page errors', r.errors, []);
     await r.browser.close();
   }

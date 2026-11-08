@@ -227,6 +227,14 @@ the team as a 3px bar in the team colour down its left edge (as on the Performa 
 event name is white instead of being painted in the team colour, which was hard to read for
 dark kits. Test: a check in `tools/e2e/test_clip_player.js`.
 
+**Game film on a phone on its side: bigger video.** The play buttons (and the draw and full
+screen buttons) move into a strip down the right of the video, the header is slimmer and the
+"tap an event" hint is hidden, so the video fills the screen height: about 580px wide on a
+915x412 phone instead of 455. While drawing, the seven tools take that strip and the colours and
+undo / clear / save / close sit in one row under the video. Tablets and portrait are unchanged.
+Not fixable from the app: YouTube shows its own title, share and "Watch on YouTube" overlay
+whenever the video is paused or not yet started, inside its player where the app cannot reach.
+
 ## Done 2026-11-02
 
 **Home on a computer: panel and text size.** The slide in the right-hand panel (last match,
