@@ -22,7 +22,6 @@ module.exports = async function(t) {
     r = await L.open({ fixtures: L.fixtures({ matches: [{ id: 'gf', club_id: L.C, opponent: 'An Tochar', date: '2026-10-20', status: 'final', video_tagged: true, video_enabled: true, video_url: 'https://youtu.be/QyBK5QpmSfw', video_throwin: 5 }] }), w, h }); p = r.page;
     await L.fakeYouTube(p);
     await p.getByText('Game film', { exact: true }).first().click(); await L.wait(p, 1200);
-    await p.getByText('An Tochar').first().click().catch(() => {}); await L.wait(p, 600);
     await L.clickTxt(p, 'Watch'); await L.wait(p, 2500);
     t.ok(n + ' Game film: clips start 8s before', /STARTS 8s BEFORE/.test(await L.text(p)));
     t.eq(n + ' Game film: no tap layer before the first play', await L.tapLayers(p), 0);

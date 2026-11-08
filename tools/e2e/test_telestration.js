@@ -31,7 +31,6 @@ module.exports = async function(t) {
   g.tables.playlists = [{ id: 'pl1', club_id: L.C, match_id: 'gf', name: 'Playlist 1', token: null, clips: [{ label: 'Point', video_ts: 20, pre: 6, post: 5 }] }];
   let r = await L.open({ fixtures: g, init: fakeYT, w: 1180, h: 820 }), p = r.page;
   await p.getByText('Game film', { exact: true }).first().click(); await L.wait(p, 1200);
-  await p.getByText('An Tochar').first().click().catch(() => {}); await L.wait(p, 600);
   await L.clickTxt(p, 'Watch'); await L.wait(p, 1200);
   t.ok('game film: a draw button under the video', await p.locator('button[aria-label="Draw"]').count() === 1);
   await p.evaluate(() => { window.__t = 20.4; });

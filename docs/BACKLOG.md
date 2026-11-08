@@ -244,6 +244,12 @@ with VIEW and REMOVE. Export clips now burns the drawing in: the exported video 
 frame for 4 seconds with the drawing on it, then plays on (notes still burned in as before).
 Test: `tools/e2e/test_tagger_drawing.js`.
 
+**Game film: bigger video on an iPad on its side, small cards for the games.** On a tablet
+or computer held sideways the video now takes about two thirds of the width (was 55%), with the
+playlists and events beside it. The games list is a grid of small cards (crest, opponent, date,
+a small Watch pill) instead of full-width tiles with a big green button; the whole card opens
+the game. Manage keeps the old full layout with the link boxes.
+
 ## Done 2026-11-02
 
 **Home on a computer: panel and text size.** The slide in the right-hand panel (last match,

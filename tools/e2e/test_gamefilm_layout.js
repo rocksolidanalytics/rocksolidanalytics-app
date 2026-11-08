@@ -8,7 +8,9 @@ module.exports = async function(t) {
     const r = await L.open({ fixtures: f, w, h }), p = r.page;
     await L.fakeYouTube(p);
     await p.getByText('Game film', { exact: true }).first().click(); await L.wait(p, 1200);
-    await p.getByText('An Tochar').first().click().catch(() => {}); await L.wait(p, 600);
+    // The games list: small cards in a grid, not full-width tiles.
+    const cards = await p.evaluate(() => [...document.querySelectorAll('[data-gf-grid] > button')].map(b => { const r = b.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; }));
+    t.ok(w + 'x' + h + ': games list is small cards', cards.length === 1 && cards[0][1] <= 120 && cards[0][0] <= Math.max(260, w / 2), JSON.stringify(cards));
     await L.clickTxt(p, 'Watch'); await L.wait(p, 1800);
     const m = await p.evaluate(() => { const v = document.querySelector('.rsa-gf-video').getBoundingClientRect(), e = document.querySelector('.rsa-gf-events').getBoundingClientRect(); return { vBottom: v.bottom, vRight: v.right, eLeft: e.left }; });
     const n = w + 'x' + h;
@@ -19,6 +21,10 @@ module.exports = async function(t) {
       const q = await p.evaluate(() => { const f = document.querySelector('.rsa-gf-frame').getBoundingClientRect(), c = document.querySelector('.rsa-gf-ctrls').getBoundingClientRect(); return { fw: f.width, fh: f.height, cLeft: c.left, fRight: f.right }; });
       t.ok(n + ': video at least 3/4 of the screen height', q.fh >= h * 0.7, JSON.stringify(q));
       t.ok(n + ': play buttons in a strip beside the video', q.cLeft >= q.fRight, JSON.stringify(q));
+    }
+    if (w >= 1000) {
+      const vw = await p.evaluate(() => document.querySelector('.rsa-gf-video').getBoundingClientRect().width);
+      t.ok(n + ': video takes about two thirds of the width', vw >= w * 0.6, String(vw));
     }
     t.eq(n + ': no page errors', r.errors, []);
     await r.browser.close();

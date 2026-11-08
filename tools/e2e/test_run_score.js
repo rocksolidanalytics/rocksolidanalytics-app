@@ -21,7 +21,6 @@ module.exports = async function(t) {
   let r = await L.open({ fixtures: fx(), w: 1180, h: 820 }), p = r.page;
   await L.fakeYouTube(p);
   await p.getByText('Game film', { exact: true }).first().click(); await L.wait(p, 1200);
-  await p.getByText('An Tochar').first().click().catch(() => {}); await L.wait(p, 600);
   await L.clickTxt(p, 'Watch'); await L.wait(p, 1800);
   await p.evaluate(() => [...document.querySelectorAll('#root button')].filter(b => b.firstChild && /^\W*(Shot from play|Scoreable free|Kickout)$/.test(b.firstChild.textContent.trim())).forEach(b => b.click()));
   await L.wait(p, 400);
