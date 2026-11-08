@@ -205,6 +205,23 @@ columns. Wide screens now go up to 1200px.
 **Still to look at:** the opposition team page, match lists, Game film list, the video
 tagger in landscape, and button sizes in the live tagger on a big screen.
 
+## Done 2026-11-08
+
+**Drawing over video (telestration), step 1.** Game film has a DRAW button under the video. It
+pauses the video and opens drawing tools over the frame: arrow, curve, dashed run line, ring
+around a player, zone (tap four corners), pen and text label, in six colours, with undo and
+clear. Analysts press SAVE TO CLIP and the drawing is saved on the playlist clip that covers that
+moment (`clip.draw = { at, hold: 4, shapes }`, points as fractions of the frame, inside the
+existing `clips` jsonb, so no schema change). If more than one clip covers it, a list asks which
+one. Each clip with a drawing shows "Drawing at m:ss" in the playlist panel, with VIEW and
+REMOVE. Shared links pause at the drawing, show it for 4 seconds, then play on, and the clip is
+marked with a pencil. FULL SCREEN puts the video and tools full screen where the browser allows
+it. The playlists now load once in Game film and the panel uses that copy, so a later edit cannot
+save over a new drawing. YouTube does not let the app read frames, so drawings cannot be burned
+into an exported video. Test: `tools/e2e/test_telestration.js`.
+Still to do: drawing in the Video tagger; the keyframed spotlight and tap-to-track ideas
+(steps 2 and 3) are to be tried outside the app first.
+
 ## Done 2026-11-02
 
 **Home on a computer: panel and text size.** The slide in the right-hand panel (last match,
