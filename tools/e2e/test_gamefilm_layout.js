@@ -10,7 +10,7 @@ module.exports = async function(t) {
     await p.getByText('Game film', { exact: true }).first().click(); await L.wait(p, 1200);
     // The games list: small cards in a grid, not full-width tiles.
     const cards = await p.evaluate(() => [...document.querySelectorAll('[data-gf-grid] > button')].map(b => { const r = b.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; }));
-    t.ok(w + 'x' + h + ': games list is small cards', cards.length === 1 && cards[0][1] <= 120 && cards[0][0] <= Math.max(260, w / 2), JSON.stringify(cards));
+    t.ok(w + 'x' + h + ': games list is small cards', cards.length === 1 && cards[0][1] <= 200 && cards[0][0] <= Math.max(320, w / 2), JSON.stringify(cards));
     await L.clickTxt(p, 'Watch'); await L.wait(p, 1800);
     const m = await p.evaluate(() => { const v = document.querySelector('.rsa-gf-video').getBoundingClientRect(), e = document.querySelector('.rsa-gf-events').getBoundingClientRect(); return { vBottom: v.bottom, vRight: v.right, eLeft: e.left }; });
     const n = w + 'x' + h;

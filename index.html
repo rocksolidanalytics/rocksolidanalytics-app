@@ -1910,13 +1910,18 @@
     }
     var visible = (matches || []).filter(function(m) { return manage ? true : (m.video_enabled && ytId(m.video_url)); });
     // Each game is a small card: the whole card opens it.
-    var gfCards = !manage && visible.length > 0 && React.createElement("div", { "data-gf-grid": "1", style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 } }, visible.map(function(m, i) {
+    var gfCards = !manage && visible.length > 0 && React.createElement("div", { "data-gf-grid": "1", style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(200px, calc(50% - 6px)), 1fr))", gap: 12 } }, visible.map(function(m, i) {
+      var kit = kitOf(matchOppKit(club, m)), crest = matchOppCrest(club, m), dd = "";
+      try { dd = m.date ? new Date(m.date + "T00:00:00").toLocaleDateString("en-IE", { weekday: "short", day: "numeric", month: "short", year: "numeric" }) : ""; } catch (e) { dd = fmtDate(m.date); }
       return React.createElement("button", { key: m.id || i, onClick: function() { open2(m); }, "aria-label": "Watch " + (m.opponent || "match"),
-        style: { minHeight: 92, textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.lg, padding: 12, cursor: "pointer", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 10, color: C.white } },
-        React.createElement("div", { style: { fontSize: FS.md, fontWeight: 800, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis" } }, teamMark(matchOppCrest(club, m), matchOppKit(club, m)), m.opponent || "Match"),
-        React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 } },
-          React.createElement("span", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO } }, fmtDate(m.date)),
-          React.createElement("span", { style: { padding: "4px 9px", borderRadius: RAD.pill, background: C.greenB, color: C.bg, fontSize: FS.xs, fontWeight: 800, fontFamily: MONO, whiteSpace: "nowrap" } }, "\u25B6 Watch")));
+        style: { minHeight: 136, textAlign: "left", background: C.bgCard, border: "1px solid " + C.border, borderTop: "4px solid " + (kit ? kit.a : C.greenB), borderRadius: RAD.lg, padding: 14, cursor: "pointer", display: "flex", flexDirection: "column", gap: 12, color: C.white } },
+        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, minWidth: 0 } },
+          React.createElement("div", { style: { width: 44, height: 44, flexShrink: 0, borderRadius: RAD.md, background: C.field, display: "flex", alignItems: "center", justifyContent: "center" } },
+            crest ? React.createElement("img", { src: crest, alt: "", style: { width: 34, height: 34, objectFit: "contain" } }) : kit ? React.createElement(KitJersey, { kit: kit, size: 34 }) : React.createElement("span", { style: { fontSize: FS.lg, fontWeight: 800, color: C.slate } }, String(m.opponent || "?").charAt(0).toUpperCase())),
+          React.createElement("div", { style: { minWidth: 0 } },
+            React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, lineHeight: 1.2, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", wordBreak: "break-word" } }, m.opponent || "Match"),
+            React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, marginTop: 3 } }, dd))),
+        React.createElement("div", { style: { marginTop: "auto", minHeight: 38, borderRadius: RAD.md, background: C.greenB, color: C.bg, fontSize: FS.md, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" } }, "\u25B6 Watch"));
     }));
     var body = matches === null ? React.createElement("div", { style: { paddingTop: 4 } }, React.createElement(SkelRows, { n: 2, h: 92 })) : visible.length === 0 ? React.createElement("div", { style: { padding: 24, textAlign: "center", color: C.slateD, fontSize: FS.md } }, manage ? "No video-tagged games yet." : isAnalyst ? "No games switched on yet. Tap Manage to add a link and enable one." : "No game film available yet.") : gfCards ? gfCards : visible.map(function(m, i) {
       var has = !!ytId(m.video_url);

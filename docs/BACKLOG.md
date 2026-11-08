@@ -246,9 +246,10 @@ Test: `tools/e2e/test_tagger_drawing.js`.
 
 **Game film: bigger video on an iPad on its side, small cards for the games.** On a tablet
 or computer held sideways the video now takes about two thirds of the width (was 55%), with the
-playlists and events beside it. The games list is a grid of small cards (crest, opponent, date,
-a small Watch pill) instead of full-width tiles with a big green button; the whole card opens
-the game. Manage keeps the old full layout with the link boxes.
+playlists and events beside it. The games list is a grid of cards instead of full-width tiles: a
+strip in the opponent kit colour along the top, their crest or jersey (or initial), the name,
+the full date and a Watch button; the whole card opens the game. Two cards a row on a phone,
+about five on an iPad on its side. Manage keeps the old full layout with the link boxes.
 
 ## Done 2026-11-02
 
