@@ -219,8 +219,8 @@ marked with a pencil. FULL SCREEN puts the video and tools full screen where the
 it. The playlists now load once in Game film and the panel uses that copy, so a later edit cannot
 save over a new drawing. YouTube does not let the app read frames, so drawings cannot be burned
 into an exported video. Test: `tools/e2e/test_telestration.js`.
-Still to do: drawing in the Video tagger; the keyframed spotlight and tap-to-track ideas
-(steps 2 and 3) are to be tried outside the app first.
+Still to do: the keyframed spotlight and tap-to-track ideas (steps 2 and 3) are to be tried
+outside the app first.
 
 **Video tagger: team colour bar on event rows.** Each row in the tagger event list now shows
 the team as a 3px bar in the team colour down its left edge (as on the Performa screen), and the
@@ -234,6 +234,15 @@ screen buttons) move into a strip down the right of the video, the header is sli
 undo / clear / save / close sit in one row under the video. Tablets and portrait are unchanged.
 Not fixable from the app: YouTube shows its own title, share and "Watch on YouTube" overlay
 whenever the video is paused or not yet started, inside its player where the app cannot reach.
+
+**Drawing in the Video tagger.** A ✎ button (in the play controls; "Draw" in the top bar with
+the phone on its side) pauses the video and opens the same drawing tools as Game film, with the
+tools in a strip along the bottom. The drawing covers the picture itself, not the black bars, so
+it lines up the same in Game film and shared links. SAVE TO CLIP puts it on the playlist clip
+covering that moment (this match or across games). The playlist editor shows "Drawing at m:ss"
+with VIEW and REMOVE. Export clips now burns the drawing in: the exported video holds on the
+frame for 4 seconds with the drawing on it, then plays on (notes still burned in as before).
+Test: `tools/e2e/test_tagger_drawing.js`.
 
 ## Done 2026-11-02
 
