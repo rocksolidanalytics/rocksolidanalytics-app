@@ -222,6 +222,11 @@ into an exported video. Test: `tools/e2e/test_telestration.js`.
 Still to do: drawing in the Video tagger; the keyframed spotlight and tap-to-track ideas
 (steps 2 and 3) are to be tried outside the app first.
 
+**Video tagger: team colour bar on event rows.** Each row in the tagger event list now shows
+the team as a 3px bar in the team colour down its left edge (as on the Performa screen), and the
+event name is white instead of being painted in the team colour, which was hard to read for
+dark kits. Test: a check in `tools/e2e/test_clip_player.js`.
+
 ## Done 2026-11-02
 
 **Home on a computer: panel and text size.** The slide in the right-hand panel (last match,

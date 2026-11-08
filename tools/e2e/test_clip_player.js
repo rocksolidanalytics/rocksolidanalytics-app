@@ -70,6 +70,10 @@ module.exports = async function(t) {
   v.tables.playlists = [{ id: 'plx', club_id: L.C, match_id: 'mv', name: 'Shooting', token: null, clips: [{ id: 'e3', video_ts: 12, label: 'Shot from play Wide Sean Murphy' }] }];
   r = await L.open({ fixtures: v }); p = r.page;
   await L.videoTagger(p, 'Mayo');
+  // Event rows carry the team as a coloured bar down the left, with the event name in white.
+  const bars = await p.evaluate(() => [...document.querySelectorAll('[data-team-bar]')].map(d => ({ t: d.getAttribute('data-team-bar'), b: getComputedStyle(d).borderLeftWidth })));
+  t.ok('tagger: event rows have a team colour bar', bars.filter(x => x.t === 'us').length >= 4 && bars.every(x => x.b === '3px'), JSON.stringify(bars.slice(0, 3)));
+  await L.shot(p, 'tagger-team-bars');
   await L.clickTxt(p, '^Folders$'); await L.wait(p, 300);
   await L.clickTxt(p, 'Playlist$'); await L.wait(p, 300);
   await L.clickTxt(p, 'Shot from play\\s+\\d'); await L.wait(p, 300);

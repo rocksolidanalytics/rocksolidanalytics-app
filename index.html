@@ -10241,11 +10241,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             }
             jump(r._vt);
           },
-          style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 6px", borderBottom: "1px solid " + C.border, cursor: "pointer", opacity: r._err ? 0.6 : 1 }
+          "data-team-bar": r.team === "us" ? "us" : "opp",
+          style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 6px 7px 8px", borderBottom: "1px solid " + C.border, borderLeft: "3px solid " + (r.team === "us" ? TC.us : TC.opp), cursor: "pointer", opacity: r._err ? 0.6 : 1 }
         },
         /* @__PURE__ */ _plCb, React.createElement("span", { style: { fontFamily: MONO, fontSize: 11, fontWeight: 700, color: C.slateD, minWidth: 38 } }, ttShort(r.time_text)),
         /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9.5, fontWeight: 700, fontFamily: MONO, color: r.period === "1" ? C.greenB : C.gold, border: "1px solid " + (r.period === "1" ? C.greenB : C.gold) + ALPHA.mid, borderRadius: RAD.md, padding: "1px 5px" } }, r.period === "1" ? "H1" : "H2"),
-        /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { color: r.team === "us" ? TC.us : TC.opp, fontWeight: 700 } }, evLabel(r.event_type)), " ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, "\xB7 ", r.outcome), r.player ? /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, " \xB7 ", r.player) : null, r.x == null ? /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 10 } }, " \xB7 no loc") : null),
+        /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.white, fontWeight: 700 } }, evLabel(r.event_type)), " ", /* @__PURE__ */ React.createElement("span", { style: { color: C.slate } }, "\xB7 ", r.outcome), r.player ? /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD } }, " \xB7 ", r.player) : null, r.x == null ? /* @__PURE__ */ React.createElement("span", { style: { color: C.slateD, fontSize: 10 } }, " \xB7 no loc") : null),
         _rs ? React.createElement("span", { "data-runscore": _rs, style: { fontSize: 11, fontWeight: 800, fontFamily: MONO, color: (r.score || 0) > 0 ? C.white : C.slate, whiteSpace: "nowrap", flexShrink: 0 } }, _rs) : null,
         r._err ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.red, fontFamily: MONO } }, "not saved") : null
       );
