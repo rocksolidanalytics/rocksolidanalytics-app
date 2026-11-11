@@ -210,9 +210,13 @@ tagger in landscape, and button sizes in the live tagger on a big screen.
 **Momentum chart on a match (FotMob style).** The match overview (KEY and DETAIL) opens with
 a Momentum card: a smoothed wave above the line when we are on top and below when the opposition
 is, in the two team colours, with goals marked on their side, a dashed half-time line and
-0' / HT / FT along the bottom. Pressure is built from scores (more for a goal), shots, and ball
-won (kickouts, turnovers, frees, dispossessions), each spread over about a minute and a half and
-scaled to the busiest spell of the match. Touch or hover shows the minute and who was on top.
+0' / HT / FT along the bottom. Pressure is built from scores (a point 3, a 2-pointer double that at 6,
+a goal 8), shots (1.5) and ball won (kickouts, turnovers, frees, dispossessions, 1 each), each
+spread over about a minute and a half and scaled to the busiest spell of the match. A red card
+(or second yellow) gives the other team a push of 5 spread over about four minutes; a black card
+3 over about two and a half. Goals, 2-pointers and red / black cards are marked on the side of
+the team that scored or was carded, nudged apart when close. Touch or hover shows the minute and
+who was on top in the line under the legend.
 Test: `tools/e2e/test_momentum.js`.
 
 ## Done 2026-11-08
