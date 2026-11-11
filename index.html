@@ -10644,7 +10644,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     pts.forEach(function(p) { p[1] = p[1] / top; });
     return { ft: ft, ht: ht, pts: pts, marks: marks };
   }
-  function MomentumChart({ events, match, club }) {
+  function MomentumChart({ events, match, club, flush }) {
     const [hov, setHov] = useState(null);
     var m = momSeries(events, match);
     if (!m) return null;
@@ -10679,7 +10679,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         React.createElement("circle", { cx: cx, cy: cy, r: 2.6, fill: C.bg }),
         [0, 72, 144, 216, 288].map(function(a) { var rd = a * Math.PI / 180; return React.createElement("circle", { key: a, cx: cx + Math.sin(rd) * 5, cy: cy - Math.cos(rd) * 5, r: 1.3, fill: C.bg }); }));
     };
-    return React.createElement("div", { "data-momentum": "1", style: { marginBottom: 16, borderRadius: RAD.xl, background: C.bgCard, border: "1px solid " + C.border, padding: "14px 12px 10px" } },
+    return React.createElement("div", { "data-momentum": "1", style: { marginBottom: flush ? 0 : 16, borderRadius: RAD.xl, background: C.bgCard, padding: "16px 12px 12px" } },
       React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
       React.createElement("div", { style: { textAlign: "center", fontSize: FS.lg, fontWeight: 800, color: C.white } }, "Momentum"),
       React.createElement("div", { style: { position: "relative" } },
@@ -11890,8 +11890,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return React.createElement(ReadPoint, { key: i, p: n, first: i === 0, last: i === readNotes.length - 1 });
     }))),
     dtab === "overview" && isMatch && ovMode === "key" && match && match.status !== "final" && (d._events || []).length >= 30 && React.createElement(HalfTimeCard, { evs: (d._events || []).filter(function(e) { return !e.match_id || e.match_id === match.id; }), usName: club.name, oppName: oppName || match.opponent || "Opposition", title: (d._events || []).some(function(e) { return String(e.period) === "2"; }) ? "TALKING POINTS \u00B7 SO FAR" : "TALKING POINTS \u00B7 1ST HALF" }),
-    dtab === "overview" && isMatch && ovMode === "key" && d.callouts && React.createElement(KeyCalloutsPanel, { kc: d.callouts, usName: club.name, oppName: oppName || (match && match.opponent) || "THEM", clock: half === "1" ? "1ST" : half === "2" ? "2ND" : match && match.status !== "final" ? "LIVE" : "FT" }),
-    dtab === "overview" && isMatch && match && d._events && React.createElement(MomentumChart, { events: (d._events || []).filter(function(e) { return e.match_id === match.id; }), match: match, club: club }),
+    dtab === "overview" && isMatch && ovMode === "key" && d.callouts && React.createElement(KeyCalloutsPanel, { club: club, match: match, evs: (d._events || []).filter(function(e) { return match && e.match_id === match.id && (half === "1" ? String(e.period) === "1" : half === "2" ? String(e.period) === "2" : true); }), mid: match && d._events ? React.createElement(MomentumChart, { flush: true, events: (d._events || []).filter(function(e) { return e.match_id === match.id; }), match: match, club: club }) : null, kc: d.callouts, usName: club.name, oppName: oppName || (match && match.opponent) || "THEM", clock: half === "1" ? "1ST" : half === "2" ? "2ND" : match && match.status !== "final" ? "LIVE" : "FT" }),
+    dtab === "overview" && isMatch && match && d._events && !(ovMode === "key" && d.callouts) && React.createElement(MomentumChart, { events: (d._events || []).filter(function(e) { return e.match_id === match.id; }), match: match, club: club }),
     dtab === "overview" && !(isMatch && ovMode === "key") && React.createElement("div", { className: "rsa-ovgrid", style: { display: "flex", flexDirection: "column", gap: 12 } },
       isMatch && match && React.createElement("div", { style: { padding: "16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid } },
         React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } },
@@ -12867,7 +12867,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   // Donut colour follows the outcome, never its rank. Lightness steps 0.89 / 0.82 / 0.71 / 0.61 / 0.52.
   var _KC_SEG = { "Strike": C.goldL, "Kick Pass": C.goldL, "Hand Pass": C.pink, "In Contact": C.teal, "Handling": C.rust, "Foul": C.violet, "Solo": C.redL };
   function _kcSegCol(lb) { return _KC_SEG[lb] || C.slateD; }
-  var _KC_BOX = { background: C.bgCard, border: "1px solid " + C.border, borderRadius: RAD.lg, padding: "12px 14px" };
+  var _KC_BOX = { background: C.bgCard, borderRadius: RAD.xl, padding: "16px" };
   var _KC_LBL = { fontSize: FS.xs, letterSpacing: 1.5, color: C.slate, fontFamily: MONO, fontWeight: 700, textTransform: "uppercase" };
   var _KC_SUB = { fontSize: FS.xs, letterSpacing: 0.8, color: C.slateD, fontFamily: MONO, marginTop: 6 };
   function _kcFig(c, side) {
@@ -13455,37 +13455,82 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         row("k", "THEIR " + RST() + "s", h.oKo ? h.oKo.w + " of " + h.oKo.n + " won" + (h.oKo.zone ? " · " + h.oKo.zone.n + " went " + h.oKo.zone.k + " (" + h.oKo.zone.w + " won)" : "") : "None tagged yet."),
         h.l10 ? row("l", "LAST 10 MIN", React.createElement("span", null, h.l10.us + " v " + h.l10.opp, " ", React.createElement("b", { style: { color: h.l10.d > 0 ? C.greenB : h.l10.d < 0 ? C.red : C.slate } }, h.l10.d > 0 ? "+" + h.l10.d : h.l10.d === 0 ? "level" : h.l10.d), h.l10.kn ? " · our " + R + " " + h.l10.kw + " of " + h.l10.kn : "")) : null));
   }
-  function KeyCalloutsPanel({ kc, usName, oppName, clock }) {
-    var gp = function(o) { return fmtScoreGP(o); };
-    var label = function(c) { return c.key === "restarts" ? RESTART().toUpperCase() + "S WON" : _KC_LABEL[c.key] || c.key; };
-    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
-      React.createElement("div", { style: Object.assign({}, _KC_BOX, { display: "flex", alignItems: "center", gap: 8 }) },
-        React.createElement("div", { style: { flex: 1, minWidth: 0 } },
-          React.createElement("div", { style: Object.assign({}, _KC_LBL, { color: C.usText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }) }, usName || "US"),
-          React.createElement("div", { style: { fontFamily: MONO, fontSize: FS.h1, fontWeight: 800, color: C.us, textShadow: C.usLine, marginTop: 2 } }, gp(kc.score.us))),
-        React.createElement("div", { style: { fontFamily: MONO, fontSize: FS.sm, color: C.slateD, textAlign: "center", letterSpacing: 1, flexShrink: 0 } }, clock || ""),
-        React.createElement("div", { style: { flex: 1, minWidth: 0, textAlign: "right" } },
-          React.createElement("div", { style: Object.assign({}, _KC_LBL, { color: C.themText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }) }, oppName || "THEM"),
-          React.createElement("div", { style: { fontFamily: MONO, fontSize: FS.h1, fontWeight: 800, color: C.them, textShadow: C.themLine, marginTop: 2 } }, gp(kc.score.opp)))),
-      React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } },
-        kc.cards.map(function(c) {
-          var fu = _kcFig(c, "us"), fo = _kcFig(c, "opp");
-          return React.createElement("div", { key: c.key, style: _KC_BOX },
-            React.createElement("div", { style: _KC_LBL }, label(c)),
-            React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 10, marginTop: 6, fontFamily: MONO, fontWeight: 800 } },
-              React.createElement("span", { style: { fontSize: FS.h1, color: fu === "—" ? C.slateD : C.us, textShadow: fu === "\u2014" ? "none" : C.usLine } }, fu),
-              React.createElement("span", { style: { fontSize: FS.xl, color: fo === "—" ? C.slateD : C.them, textShadow: fo === "\u2014" ? "none" : C.themLine } }, fo)),
-            React.createElement("div", { style: _KC_SUB }, c.tagged ? c.sub.join(" \xB7 ") : "NOT TAGGED"));
-        })),
-      React.createElement(KcDonut, { d: kc.donut }),
-      React.createElement("div", { style: _KC_BOX },
-        React.createElement("div", { style: _KC_LBL }, "SCORERS"),
-        kc.scorers.length === 0 ? React.createElement("div", { style: _KC_SUB }, "NO SCORES YET") :
-        React.createElement("div", { style: { marginTop: 6 } }, kc.scorers.map(function(s, i) {
-          return React.createElement("div", { key: s.name, style: { display: "flex", alignItems: "baseline", padding: "7px 0", borderTop: i ? "1px solid " + C.border : "none" } },
-            React.createElement("span", { style: { flex: 1, minWidth: 0, fontSize: FS.md, color: C.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, s.name),
-            React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.md, fontWeight: 800, color: C.usText } }, gp(s)));
-        }))));
+  var _KC_NAME = { shots: "Shots from play", eff: "Shot efficiency", frees: "Frees scored", tackles: "Tackles", fouls: "Fouls conceded", lost: "Possession lost" };
+  // The side that leads a stat, for its highlight. Fouls and ball lost are better low.
+  function _kcLead(key, fu, fo) {
+    var a = parseFloat(fu), b = parseFloat(fo);
+    if (isNaN(a) || isNaN(b) || a === b) return null;
+    return ((key === "fouls" || key === "lost") ? a < b : a > b) ? "us" : "opp";
+  }
+  function _kcInk(col) { try { return _hexLum(col) > 0.35 ? "#14181f" : "#f2f4f8"; } catch (e) { return C.white; } }
+  // Match overview in the FotMob style: the two teams either side of the score with their
+  // scorers, then the momentum chart (mid), then the top stats as rows with the leading figure
+  // in a pill of that team colour, then where the ball was lost.
+  function KeyCalloutsPanel({ kc, usName, oppName, clock, club, match, evs, mid }) {
+    var gp = fmtScoreGP, tot = function(o) { return o.g * 3 + o.p; };
+    // Their scorers come from the same events (the callouts keep ours only); unnamed are left out.
+    var opMap = {}, opList = [];
+    (evs || []).forEach(function(e) {
+      var v = e.score || 0, nm = String(e.player || "").trim();
+      if (e.team !== "opp" || v <= 0 || !nm) return;
+      if (!opMap[nm]) { opMap[nm] = { name: nm, g: 0, p: 0 }; opList.push(opMap[nm]); }
+      if (v === 3) opMap[nm].g++; else opMap[nm].p += v;
+    });
+    opList.sort(function(a, b) { return tot(b) - tot(a); });
+    function badge(crest, kit, col, nm) {
+      return React.createElement("div", { style: { width: 52, height: 52, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center" } },
+        crest ? React.createElement("img", { src: crest, alt: "", style: { width: 48, height: 48, objectFit: "contain" } })
+          : kit ? React.createElement(KitJersey, { kit: kit, size: 48 })
+          : React.createElement("div", { style: { width: 44, height: 44, borderRadius: "50%", background: col, color: _kcInk(col), display: "flex", alignItems: "center", justifyContent: "center", fontSize: FS.lg, fontWeight: 800 } }, String(nm || "?").charAt(0).toUpperCase()));
+    }
+    var status = clock === "FT" ? "Full time" : clock === "1ST" ? "First half" : clock === "2ND" ? "Second half" : clock === "LIVE" ? "Live" : (clock || "");
+    var teamCol = function(side) {
+      var us = side === "us";
+      return React.createElement("div", { style: { flex: 1, minWidth: 0, textAlign: "center" } },
+        badge(us ? crestOf(club) : matchOppCrest(club, match), us ? (club ? clubKit(club) : null) : kitOf(matchOppKit(club, match)), us ? C.us : C.them, us ? usName : oppName),
+        React.createElement("div", { style: { marginTop: 8, fontSize: FS.md, fontWeight: 800, color: C.white, lineHeight: 1.25, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" } }, (us ? usName : oppName) || (us ? "Us" : "Them")));
+    };
+    var scorerCol = function(list, right) {
+      return React.createElement("div", { style: { flex: 1, minWidth: 0, textAlign: right ? "right" : "left" } }, list.slice(0, 6).map(function(sc) {
+        return React.createElement("div", { key: sc.name, style: { fontSize: FS.sm, color: C.slate, lineHeight: 1.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } },
+          right ? [React.createElement("span", { key: "s", style: { fontFamily: MONO, color: C.slateD, marginRight: 6 } }, gp(sc)), sc.name] : [sc.name, React.createElement("span", { key: "s", style: { fontFamily: MONO, color: C.slateD, marginLeft: 6 } }, gp(sc))]);
+      }));
+    };
+    var head = React.createElement("div", { "data-fm": "head", style: _KC_BOX },
+      React.createElement("div", { style: { display: "flex", alignItems: "flex-start", gap: 8 } },
+        teamCol("us"),
+        React.createElement("div", { style: { flexShrink: 0, textAlign: "center", paddingTop: 6 } },
+          React.createElement("div", { "data-fm": "score", style: { display: "flex", alignItems: "flex-start", gap: 8, fontFamily: MONO, color: C.white } },
+            [["us", kc.score.us], null, ["opp", kc.score.opp]].map(function(x, k) {
+              if (!x) return React.createElement("div", { key: "d", style: { fontSize: 26, fontWeight: 800, color: C.slateD, lineHeight: "36px" } }, "\u2013");
+              return React.createElement("div", { key: x[0], style: { textAlign: "center" } },
+                React.createElement("div", { style: { fontSize: 30, fontWeight: 800, letterSpacing: -0.5, lineHeight: "36px", whiteSpace: "nowrap" } }, gp(x[1])),
+                React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, marginTop: 2 } }, "(" + tot(x[1]) + ")"));
+            })),
+          React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 6 } }, status)),
+        teamCol("opp")),
+      (kc.scorers.length > 0 || opList.length > 0) && React.createElement("div", { style: { display: "flex", gap: 16, marginTop: 14, paddingTop: 12, borderTop: "1px solid " + C.border } },
+        scorerCol(kc.scorers, false), scorerCol(opList, true)));
+    var rows = kc.cards.map(function(c) { return { key: c.key, label: c.key === "restarts" ? RESTART() + "s won" : _KC_NAME[c.key] || c.key, u: _kcFig(c, "us"), o: _kcFig(c, "opp"), sub: c.tagged ? c.sub.join(" · ") : "Not tagged" }; });
+    if (kc.donut.tagged) rows.push({ key: "lost", label: _KC_NAME.lost, u: String(kc.donut.us), o: String(kc.donut.opp), sub: "" });
+    var pill = function(v, side, lead) {
+      var on = lead === side, col = side === "us" ? C.us : C.them;
+      return React.createElement("span", { "data-lead": on ? side : undefined, style: { minWidth: 48, padding: "5px 10px", borderRadius: RAD.pill, textAlign: "center", fontFamily: MONO, fontSize: FS.md, fontWeight: 800, background: on ? col : "transparent", boxShadow: on ? inkRing(col) : "none", color: on ? _kcInk(col) : v === "—" ? C.slateD : C.white } }, v);
+    };
+    var top = React.createElement("div", { "data-fm": "top", style: _KC_BOX },
+      React.createElement("div", { style: { textAlign: "center", fontSize: FS.lg, fontWeight: 800, color: C.white, marginBottom: 6 } }, "Top stats"),
+      rows.map(function(r, k) {
+        var lead = _kcLead(r.key, r.u, r.o);
+        return React.createElement("div", { key: r.key, "data-fm-row": r.key, style: { display: "flex", alignItems: "center", gap: 8, padding: "10px 0", borderTop: k ? "1px solid " + C.border : "none" } },
+          pill(r.u, "us", lead),
+          React.createElement("div", { style: { flex: 1, minWidth: 0, textAlign: "center" } },
+            React.createElement("div", { style: { fontSize: FS.md, fontWeight: 600, color: C.white } }, r.label),
+            r.sub && React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, r.sub)),
+          pill(r.o, "opp", lead));
+      }));
+    return /* @__PURE__ */ React.createElement("div", { "data-fm": "panel", style: { display: "flex", flexDirection: "column", gap: 12, width: "100%", maxWidth: 720, margin: "0 auto" } },
+      head, mid || null, top,
+      kc.donut.tagged && React.createElement(KcDonut, { d: kc.donut }));
   }
   // Stand alone pitch map. Every event with a saved spot, drawn in one frame:
   // our team attacks left to right and the opposition is plotted in that same

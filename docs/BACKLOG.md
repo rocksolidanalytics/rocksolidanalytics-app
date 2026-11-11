@@ -219,6 +219,15 @@ the team that scored or was carded, nudged apart when close. Touch or hover show
 who was on top in the line under the legend.
 Test: `tools/e2e/test_momentum.js`.
 
+**Match overview in the FotMob style (KEY view).** The match card is now the two teams either
+side of the score (crest, kit jersey or initial; name; total under each score; Full time / half /
+Live), with the scorers for each side underneath (their named scorers on the right). Momentum
+sits straight under it. The six key figures plus possession lost are one Top stats card: the
+stat name in the middle, a figure each side, and the leading figure in a pill of that team
+colour (fouls and ball lost lead when lower), ringed in white for a dark kit as the bars are. The ball-lost breakdown stays below. Cards have no
+borders, and on an iPad or computer the overview is a centred column 720px wide. DETAIL is
+unchanged. Checks added to `tools/e2e/test_momentum.js`.
+
 ## Done 2026-11-08
 
 **Drawing over video (telestration), step 1.** Game film has a DRAW button under the video. It

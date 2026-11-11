@@ -23,6 +23,12 @@ module.exports = async function(t) {
     t.ok(n + ': 2-pointer, red and black card marked on the right side', mk.two >= 1 && mk.red >= 1 && mk.black >= 1 && /2-pointer/.test(mk.text) && /red card/.test(mk.text), JSON.stringify(mk));
     t.ok(n + ': axis and legend', m && /0'/.test(m.text) && /HT/.test(m.text) && /FT/.test(m.text) && /Ballyvale/.test(m.text), m && m.text);
     t.ok(n + ': fits the card', m && m.w <= w);
+    // FotMob-style overview: teams either side of the score, momentum, then top stats as rows.
+    const fm = await p.evaluate(() => { const q = k => document.querySelector('[data-fm="' + k + '"]'); const order = [...document.querySelectorAll('[data-fm="head"], [data-momentum], [data-fm="top"]')].map(e => e.getAttribute('data-fm') || 'mom'); return { order, score: q('score') && q('score').innerText.replace(/\s+/g, ' '), rows: document.querySelectorAll('[data-fm-row]').length, leads: [...document.querySelectorAll('[data-fm-row] [data-lead]')].map(x => x.closest('[data-fm-row]').getAttribute('data-fm-row') + ':' + x.getAttribute('data-lead')), pw: q('panel').getBoundingClientRect().width }; });
+    t.eq(n + ': header, then momentum, then top stats', fm.order, ['head', 'mom', 'top']);
+    t.ok(n + ': both scores with totals', /\d+-\d\d \(\d+\).*\d+-\d\d \(\d+\)/.test(fm.score), fm.score);
+    t.ok(n + ': top stats rows with the leader marked', fm.rows >= 6 && fm.leads.length >= 3, JSON.stringify(fm));
+    t.ok(n + ': overview kept to a readable column', fm.pw <= 721, String(fm.pw));
     const b = await p.locator('[data-momentum] svg').boundingBox();
     await p.mouse.move(b.x + b.width * 0.3, b.y + b.height * 0.5); await L.wait(p, 200);
     t.ok(n + ': touch shows the minute and who is on top', /\d+' · (even|.+ on top)/.test(await p.evaluate(() => document.querySelector('[data-momentum]').innerText)));

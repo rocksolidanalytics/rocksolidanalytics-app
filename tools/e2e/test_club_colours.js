@@ -18,12 +18,11 @@ module.exports = async function(t) {
     await L.clickTxt(p, '^Matches$'); await L.wait(p, 600);
     await p.getByText('Rathnew').first().click(); await L.wait(p, 1500);
     if (!/HEAD TO HEAD/.test(await L.text(p))) { await L.clickTxt(p, '^KEY$'); await L.wait(p, 500); }
+    // The match overview (FotMob style): the score is white, and the leading figure in each
+    // top stats row sits on a pill of that team colour, ringed in white when the kit is dark.
     const ink = await p.evaluate(() => {
-      const st = el => el ? { c: getComputedStyle(el).color, sh: getComputedStyle(el).textShadow } : null;
-      const all = [...document.querySelectorAll('#root div')];
-      const us = all.find(d => d.children.length === 0 && /^\d+-\d\d$/.test(d.innerText.trim()));
-      const them = all.filter(d => d.children.length === 0 && /^\d+-\d\d$/.test(d.innerText.trim()))[1];
-      return { us: st(us), them: st(them) };
+      const st = el => el ? { c: getComputedStyle(el).backgroundColor, sh: getComputedStyle(el).boxShadow } : null;
+      return { us: st(document.querySelector('[data-fm-row] [data-lead="us"]')), them: st(document.querySelector('[data-fm-row] [data-lead="opp"]')) };
     });
     t.eq(colours.name + ': no page errors', r.errors, []);
     await r.browser.close();
@@ -31,26 +30,26 @@ module.exports = async function(t) {
   }
   const maroon = await look({ name: 'Maroon Test', colour_primary: '#5a1426', colour_secondary: '#ffffff' });
   t.ok('maroon: Dashboard tile in the club colour', /rgb\(90, 20, 38\)/.test(maroon.tile), maroon.tile);
-  t.eq('maroon: our score in the kit colour as it is', maroon.us, '#5a1426');
-  t.ok('maroon: dark, so it gets a white outline', /255, 255, 255/.test(maroon.usLine), maroon.usLine);
+  t.eq('maroon: our lead pills in the kit colour as it is', maroon.us, '#5a1426');
+  t.ok('maroon: dark, so our pills get the white ring', /255, 255, 255/.test(maroon.usLine), maroon.usLine);
   t.eq('maroon: them in our second colour, white', maroon.them, '#ffffff');
   t.ok('maroon: both head-to-head bars ringed, not just ours', maroon.ring.length === 2 && maroon.ring.every(r => /255, 255, 255/.test(r)), JSON.stringify(maroon.ring));
-  t.eq('maroon: white them text has no outline', maroon.themLine, 'none');
+  t.ok('maroon: pills ringed in pairs, as the bars are', /255, 255, 255/.test(maroon.themLine), maroon.themLine);
   t.ok('maroon: small numbers in a lighter maroon, not outlined', maroon.small && maroon.small !== '#5a1426' && maroon.smallLine === 'none', maroon.small + ' ' + maroon.smallLine);
   const wick = await look({ name: 'Wicklow GAA', colour_primary: '#1f4fa0', colour_secondary: '#f7d117' });
-  t.eq('wicklow: our score in Wicklow blue', wick.us, '#1f4fa0');
+  t.eq('wicklow: our lead pills in Wicklow blue', wick.us, '#1f4fa0');
   t.eq('wicklow: them in Wicklow gold', wick.them, '#f7d117');
-  t.eq('wicklow: blue readable enough, so no outline', wick.usLine, 'none');
+  t.eq('wicklow: blue readable enough, so no ring', wick.usLine, 'none');
   t.ok('wicklow: bars without rings', wick.ring.every(r => r === 'none'), JSON.stringify(wick.ring));
   const navy = await look({ name: 'Navy Second', colour_primary: '#d32f2f', colour_secondary: '#0b1c35' });
   t.eq('red and navy: them in navy', navy.them, '#0b1c35');
-  t.ok('red and navy: navy is dark, so them gets the outline', /255, 255, 255/.test(navy.themLine), navy.themLine);
+  t.ok('red and navy: navy is dark, so their pills get the ring', /255, 255, 255/.test(navy.themLine), navy.themLine);
   const same = await look({ name: 'Two Blues', colour_primary: '#1f4fa0', colour_secondary: '#4a9eff' });
   t.ok('two blues: a second colour too close is not used', !['#4a9eff', '#1f4fa0'].includes(same.them), same.them);
   const sky = await look({ name: 'Navy Sky', colour_primary: '#0b1c35', colour_secondary: '#4a9eff' });
   t.eq('navy and sky blue: them in sky blue, the same family but far lighter', sky.them, '#4a9eff');
   const green = await look({ name: 'Green Club', colour_primary: '#34c967', colour_secondary: null });
-  t.eq('light green: no outline needed', green.usLine, 'none');
+  t.eq('light green: no ring needed', green.usLine, 'none');
   t.ok('light green: bars without rings', green.ring.every(r => r === 'none'), JSON.stringify(green.ring));
   const none = await look({ name: 'No Colours', colour_primary: null, colour_secondary: null });
   t.eq('no colours: green for us', none.us, '#34c967');
