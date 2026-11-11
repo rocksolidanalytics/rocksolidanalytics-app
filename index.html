@@ -10589,6 +10589,99 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             React.createElement("span", { style: { fontFamily: MONO, fontSize: FS.xs, fontWeight: 800, color: clr(d.pct), minWidth: 20, textAlign: "right" } }, d.pct));
         })));
   }
+  // Momentum through the match: each team builds pressure with scores, shots and ball won
+  // (kickouts, turnovers, frees), smoothed over about a minute and a half. Above the line is
+  // our team on top, below is the opposition. Goals are marked on their side.
+  function momGain(e) {
+    var et = e.event_type, oc = canonOutcome(e.outcome), other = e.team === "us" ? "opp" : "us";
+    if (et === "Kickout") return (oc === "Won clean" || oc === "Break won") ? e.team : (oc === "Lost clean" || oc === "Break lost") ? other : null;
+    if (et === "Possession lost" || et === "Free conceded") return other;
+    if (et === "Turnover won" || et === "Free won") return e.team;
+    if (et === "Turnover") return (oc === "Turnover won" || oc === "In Contact" || oc === "Interception") ? e.team : null;
+    if (et === "Tackle") return oc === "Dispossession" ? e.team : null;
+    return null;
+  }
+  function momSecs(tt) {
+    var p = String(tt || "").split(":").map(Number);
+    return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p.length === 2 ? p[0] * 60 + p[1] : 0;
+  }
+  // The momentum curve: { ft, ht, pts: [[secs, value -1..1]], goals: [{ secs, team }] }, or null.
+  function momSeries(events, match) {
+    var ev = (events || []).map(function(e) { return { e: e, s: momSecs(e.time_text) }; }).filter(function(x) { return x.s > 0; });
+    if (ev.length < 8) return null;
+    var ht = perStart(match, 2), ft = Math.max(2 * ht, 60);
+    ev.forEach(function(x) { if (x.s > ft) ft = x.s; });
+    var hits = [], goals = [];
+    ev.forEach(function(x) {
+      var e = x.e, et = e.event_type;
+      if (et === "Shot from play" || et === "Scoreable free") {
+        var sc = e.score || 0;
+        hits.push({ s: x.s, team: e.team, w: sc > 0 ? 2 + sc : 1.5 });
+        if (sc === 3) goals.push({ secs: x.s, team: e.team });
+        return;
+      }
+      var g = momGain(e);
+      if (g) hits.push({ s: x.s, team: g, w: 1 });
+    });
+    var SIG = 80, STEP = 15, pts = [], top = 4;
+    for (var t = 0; t <= ft; t += STEP) {
+      var v = 0;
+      hits.forEach(function(h) { var d = (t - h.s) / SIG; if (d > -3 && d < 3) v += (h.team === "us" ? 1 : -1) * h.w * Math.exp(-d * d); });
+      pts.push([t, v]);
+      if (Math.abs(v) > top) top = Math.abs(v);
+    }
+    pts.forEach(function(p) { p[1] = p[1] / top; });
+    return { ft: ft, ht: ht, pts: pts, goals: goals };
+  }
+  function MomentumChart({ events, match, club }) {
+    const [hov, setHov] = useState(null);
+    var m = momSeries(events, match);
+    if (!m) return null;
+    var W = 600, H = 228, L = 14, R = 14, T = 34, B = 62, mid = T + (H - T - B) / 2, amp = (H - T - B) / 2 - 6;
+    function x(s) { return L + (s / m.ft) * (W - L - R); }
+    function y(v) { return mid - v * amp; }
+    var line = m.pts.map(function(p, i) { return (i ? "L" : "M") + x(p[0]).toFixed(1) + " " + y(p[1]).toFixed(1); }).join(" ");
+    var area = line + " L" + x(m.ft).toFixed(1) + " " + mid + " L" + x(0) + " " + mid + " Z";
+    var usN = teamWord((club && club.name) || "Us"), opN = teamWord((match && match.opponent) || "Opp");
+    var cid = "mom" + String((match && match.id) || "x").replace(/[^\w]/g, "");
+    function momMove(ev) {
+      var r = ev.currentTarget.getBoundingClientRect(), sx = ((ev.clientX - r.left) / Math.max(1, r.width)) * W;
+      var s = Math.max(0, Math.min(m.ft, ((sx - L) / (W - L - R)) * m.ft)), best = m.pts[0];
+      m.pts.forEach(function(p) { if (Math.abs(p[0] - s) < Math.abs(best[0] - s)) best = p; });
+      setHov(best);
+    }
+    var hv = hov, hvTxt = hv ? Math.floor(hv[0] / 60) + "' \u00b7 " + (Math.abs(hv[1]) < 0.08 ? "even" : (hv[1] > 0 ? usN : opN) + " on top") : null;
+    var ball = function(g, i) {
+      var cx = x(g.secs), cy = g.team === "us" ? T - 14 : H - B + 18;
+      return React.createElement("g", { key: "g" + i, "data-goal": g.team },
+        React.createElement("circle", { cx: cx, cy: cy, r: 7, fill: C.white }),
+        React.createElement("circle", { cx: cx, cy: cy, r: 2.6, fill: C.bg }),
+        [0, 72, 144, 216, 288].map(function(a) { var rd = a * Math.PI / 180; return React.createElement("circle", { key: a, cx: cx + Math.sin(rd) * 5, cy: cy - Math.cos(rd) * 5, r: 1.3, fill: C.bg }); }));
+    };
+    return React.createElement("div", { "data-momentum": "1", style: { marginBottom: 16, borderRadius: RAD.xl, background: C.bgCard, border: "1px solid " + C.border, padding: "14px 12px 10px" } },
+      React.createElement("div", { style: { maxWidth: 680, margin: "0 auto" } },
+      React.createElement("div", { style: { textAlign: "center", fontSize: FS.lg, fontWeight: 800, color: C.white } }, "Momentum"),
+      React.createElement("div", { style: { position: "relative" } },
+        React.createElement("svg", { viewBox: "0 0 " + W + " " + H, width: "100%", style: { display: "block", touchAction: "pan-y" }, role: "img", "aria-label": "Momentum chart: " + usN + " above the line, " + opN + " below",
+            onPointerMove: momMove, onPointerDown: momMove, onPointerLeave: function() { setHov(null); } },
+          React.createElement("defs", null,
+            React.createElement("clipPath", { id: cid + "u" }, React.createElement("rect", { x: 0, y: 0, width: W, height: mid })),
+            React.createElement("clipPath", { id: cid + "o" }, React.createElement("rect", { x: 0, y: mid, width: W, height: H - mid }))),
+          React.createElement("line", { x1: x(m.ht), y1: T - 4, x2: x(m.ht), y2: H - B + 4, stroke: C.borderB, strokeWidth: 1.5, strokeDasharray: "2 6", strokeLinecap: "round" }),
+          React.createElement("path", { d: area, fill: C.us, clipPath: "url(#" + cid + "u)" }),
+          React.createElement("path", { d: area, fill: C.them, clipPath: "url(#" + cid + "o)" }),
+          React.createElement("line", { x1: L, y1: mid, x2: W - R, y2: mid, stroke: C.bgCard, strokeWidth: 1.5 }),
+          m.goals.map(ball),
+          hv && React.createElement("line", { x1: x(hv[0]), y1: T - 4, x2: x(hv[0]), y2: H - B + 4, stroke: C.white, strokeOpacity: 0.6, strokeWidth: 1 }),
+          React.createElement("line", { x1: L, y1: H - 14, x2: W - R, y2: H - 14, stroke: C.borderB, strokeWidth: 2, strokeDasharray: "2 7", strokeLinecap: "round" }),
+          [[0, "0'", "start"], [m.ht, "HT", "middle"], [m.ft, "FT", "end"]].map(function(a) {
+            return React.createElement("text", { key: a[1], x: x(a[0]), y: H - 10, textAnchor: a[2], fill: C.white, fontSize: 15, fontWeight: 800, fontFamily: "Barlow,system-ui,sans-serif", paintOrder: "stroke", stroke: C.bgCard, strokeWidth: 6 }, a[1]);
+          })),
+        hvTxt && React.createElement("div", { style: { position: "absolute", top: 0, left: Math.min(78, Math.max(4, (x(hv[0]) / W) * 100 - 11)) + "%", padding: "3px 8px", borderRadius: RAD.md, background: C.bg, border: "1px solid " + C.border, fontSize: FS.xs, fontFamily: MONO, color: C.white, whiteSpace: "nowrap", pointerEvents: "none" } }, hvTxt)),
+      React.createElement("div", { style: { display: "flex", justifyContent: "center", gap: 16, marginTop: 4, fontSize: FS.sm, color: C.slate } },
+        React.createElement("span", null, React.createElement("span", { style: { display: "inline-block", width: 10, height: 10, borderRadius: 3, background: C.us, marginRight: 6, verticalAlign: "-1px" } }), usN),
+        React.createElement("span", null, React.createElement("span", { style: { display: "inline-block", width: 10, height: 10, borderRadius: 3, background: C.them, marginRight: 6, verticalAlign: "-1px" } }), opN))));
+  }
   function PulseTimeline({ events, match, club, result }) {
     if (!events || events.length < 5) return null;
     var W = 340, H = 140, pad = { l: 24, r: 6, t: 20, b: 16 };
@@ -11771,6 +11864,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }))),
     dtab === "overview" && isMatch && ovMode === "key" && match && match.status !== "final" && (d._events || []).length >= 30 && React.createElement(HalfTimeCard, { evs: (d._events || []).filter(function(e) { return !e.match_id || e.match_id === match.id; }), usName: club.name, oppName: oppName || match.opponent || "Opposition", title: (d._events || []).some(function(e) { return String(e.period) === "2"; }) ? "TALKING POINTS \u00B7 SO FAR" : "TALKING POINTS \u00B7 1ST HALF" }),
     dtab === "overview" && isMatch && ovMode === "key" && d.callouts && React.createElement(KeyCalloutsPanel, { kc: d.callouts, usName: club.name, oppName: oppName || (match && match.opponent) || "THEM", clock: half === "1" ? "1ST" : half === "2" ? "2ND" : match && match.status !== "final" ? "LIVE" : "FT" }),
+    dtab === "overview" && isMatch && match && d._events && React.createElement(MomentumChart, { events: (d._events || []).filter(function(e) { return e.match_id === match.id; }), match: match, club: club }),
     dtab === "overview" && !(isMatch && ovMode === "key") && React.createElement("div", { className: "rsa-ovgrid", style: { display: "flex", flexDirection: "column", gap: 12 } },
       isMatch && match && React.createElement("div", { style: { padding: "16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid } },
         React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } },

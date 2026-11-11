@@ -205,6 +205,16 @@ columns. Wide screens now go up to 1200px.
 **Still to look at:** the opposition team page, match lists, Game film list, the video
 tagger in landscape, and button sizes in the live tagger on a big screen.
 
+## Done 2026-11-11
+
+**Momentum chart on a match (FotMob style).** The match overview (KEY and DETAIL) opens with
+a Momentum card: a smoothed wave above the line when we are on top and below when the opposition
+is, in the two team colours, with goals marked on their side, a dashed half-time line and
+0' / HT / FT along the bottom. Pressure is built from scores (more for a goal), shots, and ball
+won (kickouts, turnovers, frees, dispossessions), each spread over about a minute and a half and
+scaled to the busiest spell of the match. Touch or hover shows the minute and who was on top.
+Test: `tools/e2e/test_momentum.js`.
+
 ## Done 2026-11-08
 
 **Drawing over video (telestration), step 1.** Game film has a DRAW button under the video. It
