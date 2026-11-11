@@ -243,6 +243,15 @@ score card, tapping a side of the score lists that team's scorers (their named s
 names the opponent instead of "Opposition" and long club names end in an ellipsis instead of
 being cut at 14 letters. The Match pulse no longer prints 30' on top of HT.
 
+**Light mode (Appearance on Home).** A new Appearance card at the bottom of Home picks Dark
+(the default), Light, or Phone (follows the phone setting). It is kept on the device and a change
+reloads the page. Light swaps the shared colours (pale grey page, white cards, near-black text,
+darker green, blue, gold and red so they read on white), sets the browser bar colour, and gives
+the overview cards a faint shadow. Club colours that are too pale to read on white are now
+darkened (they are lightened on dark, as before), and dark-kit outlines become dark on light.
+Both taggers, the pitch map, Game film and shared links follow the setting; the pitch stays green.
+Test: `tools/e2e/test_theme.js`.
+
 ## Done 2026-11-08
 
 **Drawing over video (telestration), step 1.** Game film has a DRAW button under the video. It
