@@ -228,6 +228,14 @@ colour (fouls and ball lost lead when lower), ringed in white for a dark kit as 
 borders, and on an iPad or computer the overview is a centred column 720px wide. DETAIL is
 unchanged. Checks added to `tools/e2e/test_momentum.js`.
 
+**Figtree font across the app (FotMob feel).** FotMob uses GT Walsheim, a paid font; Figtree
+is the closest free one (Google Fonts) and fits a GAA score on one line. The body text, chart
+labels, exported reports and the burned-in export text are now Figtree. Figures and small labels
+(the MONO face, 503 places) follow a page variable, --rsa-mono: Figtree on every screen, but
+Barlow Condensed stays on the live tagger and the video tagger, where narrow text keeps the big
+buttons fitting. Swapping in GT Walsheim later (with a web licence and the font files) is a
+change to that variable and the font link.
+
 ## Done 2026-11-08
 
 **Drawing over video (telestration), step 1.** Game film has a DRAW button under the video. It

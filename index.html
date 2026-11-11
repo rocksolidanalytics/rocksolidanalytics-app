@@ -11,10 +11,12 @@
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: #0A0A0D; }
-  body { font-family: Barlow, system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }
+  body { font-family: Figtree, system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }
   button, input, select, textarea { font-family: inherit; }
   /* Video tagger buttons match the live tagger, whose screen is set in the condensed face. */
   .rsa-vt button { font-family: Barlow Condensed, Roboto Condensed, Arial Narrow, sans-serif; }
+  :root { --rsa-mono: Figtree, system-ui, -apple-system, sans-serif; }
+  .rsa-live, .rsa-vt { --rsa-mono: "Barlow Condensed", "Roboto Condensed", "Arial Narrow", sans-serif; }
   input::placeholder { color: #858C99; }
   button:focus-visible, input:focus-visible { outline: 2px solid #34c967; outline-offset: 2px; }
   @keyframes rsSpin { to { transform: rotate(360deg); } }
@@ -125,7 +127,7 @@
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Barlow+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 <div id="root"></div>
@@ -208,7 +210,9 @@
   // and gets a white outline: usLine/themLine for text, usRing/themRing for bars, usSvg/themSvg
   // for chart marks. Without club colours everything stays green and blue as before.
   Object.assign(C, { acc: C.greenB, accD: C.green, accT: C.bg, accL: C.greenB, acc2: C.greenB, us: C.greenB, them: C.blue, usLine: "none", themLine: "none", usRing: "none", themRing: "none", usSvg: "none", themSvg: "none", usText: C.greenB, themText: C.blue });
-  const MONO = "Barlow Condensed, Roboto Condensed, Arial Narrow, sans-serif";
+  // The figures and small labels face: Figtree like the rest, condensed in the two taggers (set
+  // by the --rsa-mono variable in the page styles, so a tagger screen can switch it).
+  const MONO = "var(--rsa-mono)";
   // Design tokens. Taggers keep their hand-tuned font sizes and do not use FS.
   const FS = { xs: 9, sm: 11, md: 13, lg: 15, xl: 18, h2: 22, h1: 30, hero: 46 };
   const RAD = { sm: 4, md: 8, lg: 12, xl: 16, pill: 999 };
@@ -1176,7 +1180,7 @@
         ctx.setLineDash([]); ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.globalAlpha = 1;
         if (k === "text") {
           var q = teleXY(P[0]);
-          ctx.font = "800 46px Inter, system-ui, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          ctx.font = "800 46px Figtree, system-ui, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
           ctx.lineWidth = 8; ctx.strokeStyle = c === "#111111" ? "#FFFFFF" : "#000000"; ctx.strokeText(s.t || "", q[0], q[1]);
           ctx.fillStyle = c; ctx.fillText(s.t || "", q[0], q[1]);
         } else if (k === "ring") {
@@ -1210,7 +1214,7 @@
     if (!P.length) return null;
     if (k === "text") {
       var q = teleXY(P[0]);
-      kids.push(React.createElement("text", { key: "t", x: q[0], y: q[1], fill: c, stroke: c === "#111111" ? "#FFFFFF" : "#000000", strokeWidth: 8, strokeLinejoin: "round", paintOrder: "stroke", fontSize: 46, fontWeight: 800, fontFamily: "Inter, system-ui, sans-serif", textAnchor: "middle", dominantBaseline: "middle" }, s.t || ""));
+      kids.push(React.createElement("text", { key: "t", x: q[0], y: q[1], fill: c, stroke: c === "#111111" ? "#FFFFFF" : "#000000", strokeWidth: 8, strokeLinejoin: "round", paintOrder: "stroke", fontSize: 46, fontWeight: 800, fontFamily: "Figtree, system-ui, sans-serif", textAnchor: "middle", dominantBaseline: "middle" }, s.t || ""));
     } else if (k === "ring") {
       var a = teleXY(P[0]), b = teleXY(P[P.length - 1]), rx = Math.max(16, Math.hypot(b[0] - a[0], b[1] - a[1]));
       kids.push(React.createElement("ellipse", { key: "u", cx: a[0], cy: a[1], rx: rx, ry: rx * 0.4, fill: "none", stroke: dark, strokeWidth: 14 }));
@@ -4681,9 +4685,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     return React.createElement(React.Fragment, null, React.createElement("svg", { viewBox: `0 0 ${W} ${H}`, style: { width: "100%", maxWidth: 340, display: "block", margin: "0 auto", borderRadius: RAD.lg, border: `1px solid ${C.border}` } }, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("linearGradient", { id: "rspmg", x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0", stopColor: PITCH.glow }), /* @__PURE__ */ React.createElement("stop", { offset: "1", stopColor: PITCH.glowEdge })), /* @__PURE__ */ React.createElement("radialGradient", { id: "rspmv", cx: "50%", cy: "42%", r: "72%" }, /* @__PURE__ */ React.createElement("stop", { offset: "55%", stopColor: C.black, stopOpacity: "0" }), /* @__PURE__ */ React.createElement("stop", { offset: "100%", stopColor: C.black, stopOpacity: "0.42" })), /* @__PURE__ */ React.createElement("filter", { id: "rspmd", x: "-60%", y: "-60%", width: "220%", height: "220%" }, /* @__PURE__ */ React.createElement("feDropShadow", { dx: "0", dy: "0.7", stdDeviation: "0.9", floodColor: C.black, floodOpacity: "0.55" }))), /* @__PURE__ */ React.createElement("rect", { x: "0", y: "0", width: W, height: H, fill: "url(#rspmg)" }), stripes, eff && React.createElement(EffLayer, { pts: _p0.filter(function(p) { return !p.isFree; }).map(function(p) { return { x: p.sx, y: p.sy, hit: p.s > 0 }; }), W: W, H: H, sig: 4.5 * W / GAA_W }), /* @__PURE__ */ React.createElement("rect", { x: "0", y: "0", width: W, height: H, fill: "url(#rspmv)" }), /* @__PURE__ */ React.createElement("rect", { x: "1.5", y: "1.5", width: W - 3, height: H - 3, fill: "none", stroke: LN, strokeWidth: "1.8", rx: "2" }), gaaEndEls(function(a, d) { return [cx + a * W / GAA_W, m(d)]; }, { main: [LN, 1.2], soft: [LN2, 1], faint: [LN2, 0.8], dot: LN }), /* @__PURE__ */ React.createElement("rect", { x: cx - 0.075 * W, y: "0", width: 0.15 * W, height: "5.5", fill: PITCH.lineFaint, stroke: C.white, strokeWidth: "1.6" }), /* @__PURE__ */ React.createElement("g", { filter: "url(#rspmd)" }, (eff ? [] : pts).map((p, i) => {
       const col = p.s === 3 ? C.gold : p.s === 2 ? C.purple : p.s === 1 ? C.greenB : C.red;
       const filled = p.s > 0;
-      if (filled && p.isFree) return tapG(i, React.createElement("g", null, React.createElement("rect", { x: p.sx - 6, y: p.sy - 6, width: 12, height: 12, rx: 2, fill: col, stroke: PITCH.deep, strokeWidth: 1 }), p.num ? React.createElement("text", { x: p.sx, y: p.sy + 3.5, textAnchor: "middle", fill: PITCH.deep, fontSize: 8, fontWeight: 800, fontFamily: "Barlow,sans-serif" }, p.num) : null));
-      if (filled) return tapG(i, React.createElement("g", null, React.createElement("circle", { cx: p.sx, cy: p.sy, r: p.s === 3 ? 7 : 5.5, fill: col, stroke: PITCH.deep, strokeWidth: 1, opacity: 0.92 }), p.num ? React.createElement("text", { x: p.sx, y: p.sy + 3, textAnchor: "middle", fill: PITCH.deep, fontSize: p.s === 3 ? 9 : 7, fontWeight: 800, fontFamily: "Barlow,sans-serif" }, p.num) : null));
-      return tapG(i, React.createElement("g", null, React.createElement("circle", { cx: p.sx, cy: p.sy, r: 5.5, fill: PITCH.missFill, stroke: col, strokeWidth: 1.5 }), React.createElement("line", { x1: p.sx - 3, y1: p.sy - 3, x2: p.sx + 3, y2: p.sy + 3, stroke: col, strokeWidth: 1.5, strokeLinecap: "round" }), React.createElement("line", { x1: p.sx + 3, y1: p.sy - 3, x2: p.sx - 3, y2: p.sy + 3, stroke: col, strokeWidth: 1.5, strokeLinecap: "round" }), p.num ? React.createElement("text", { x: p.sx, y: p.sy - 8, textAnchor: "middle", fill: col, fontSize: 7, fontWeight: 800, fontFamily: "Barlow,sans-serif" }, p.num) : null));
+      if (filled && p.isFree) return tapG(i, React.createElement("g", null, React.createElement("rect", { x: p.sx - 6, y: p.sy - 6, width: 12, height: 12, rx: 2, fill: col, stroke: PITCH.deep, strokeWidth: 1 }), p.num ? React.createElement("text", { x: p.sx, y: p.sy + 3.5, textAnchor: "middle", fill: PITCH.deep, fontSize: 8, fontWeight: 800, fontFamily: "Figtree,sans-serif" }, p.num) : null));
+      if (filled) return tapG(i, React.createElement("g", null, React.createElement("circle", { cx: p.sx, cy: p.sy, r: p.s === 3 ? 7 : 5.5, fill: col, stroke: PITCH.deep, strokeWidth: 1, opacity: 0.92 }), p.num ? React.createElement("text", { x: p.sx, y: p.sy + 3, textAnchor: "middle", fill: PITCH.deep, fontSize: p.s === 3 ? 9 : 7, fontWeight: 800, fontFamily: "Figtree,sans-serif" }, p.num) : null));
+      return tapG(i, React.createElement("g", null, React.createElement("circle", { cx: p.sx, cy: p.sy, r: 5.5, fill: PITCH.missFill, stroke: col, strokeWidth: 1.5 }), React.createElement("line", { x1: p.sx - 3, y1: p.sy - 3, x2: p.sx + 3, y2: p.sy + 3, stroke: col, strokeWidth: 1.5, strokeLinecap: "round" }), React.createElement("line", { x1: p.sx + 3, y1: p.sy - 3, x2: p.sx - 3, y2: p.sy + 3, stroke: col, strokeWidth: 1.5, strokeLinecap: "round" }), p.num ? React.createElement("text", { x: p.sx, y: p.sy - 8, textAnchor: "middle", fill: col, fontSize: 7, fontWeight: 800, fontFamily: "Figtree,sans-serif" }, p.num) : null));
     }))), !eff && React.createElement(MapPick, { p: pick >= 0 ? shots[pick] : null, kind: "shot", mOf: mOf, onClose: function() { setPick(-1); } }), (function() {
       if (eff) return null;
       var seen = {};
@@ -4897,7 +4901,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       /* @__PURE__ */ React.createElement("text", { x: 24, y: H / 2, fill: PITCH.chalk, fontSize: "9", fontFamily: MONO, letterSpacing: "1.5", transform: "rotate(-90 24 " + H / 2 + ")", textAnchor: "middle" }, "ALL RESTARTS THIS WAY")),
     /* @__PURE__ */ React.createElement("g", { filter: "url(#rskod)" }, (function(){var _sc=rsaScatter((pts||[]).map(function(q){return [q.y*W,(1-q.x)*H];}));return (eff ? [] : pts||[]).map(function(p,i2){return {won:p.won,num:p.num,player:p.player,cx:_sc[i2][0],cy:_sc[i2][1]};});})().map(function(p, i2) {
       var col = p.won ? C.greenB : C.red;
-      return React.createElement("g", { key: i2, onClick: function() { setPick(pick === i2 ? -1 : i2); }, style: { cursor: "pointer" } }, pick === i2 && React.createElement("circle", { cx: p.cx, cy: p.cy, r: 10, fill: "none", stroke: C.white, strokeWidth: 2 }), React.createElement("circle", { cx: p.cx, cy: p.cy, r: 11, fill: "transparent" }), React.createElement("circle", { cx: p.cx, cy: p.cy, r: 5.5, fill: col, stroke: PITCH.deep, strokeWidth: 1, opacity: 0.9 }), p.num ? React.createElement("text", { x: p.cx, y: p.cy + 3, textAnchor: "middle", fill: p.won ? PITCH.deep : C.white, fontSize: 7, fontWeight: 800, fontFamily: "Barlow,sans-serif" }, p.num) : null);
+      return React.createElement("g", { key: i2, onClick: function() { setPick(pick === i2 ? -1 : i2); }, style: { cursor: "pointer" } }, pick === i2 && React.createElement("circle", { cx: p.cx, cy: p.cy, r: 10, fill: "none", stroke: C.white, strokeWidth: 2 }), React.createElement("circle", { cx: p.cx, cy: p.cy, r: 11, fill: "transparent" }), React.createElement("circle", { cx: p.cx, cy: p.cy, r: 5.5, fill: col, stroke: PITCH.deep, strokeWidth: 1, opacity: 0.9 }), p.num ? React.createElement("text", { x: p.cx, y: p.cy + 3, textAnchor: "middle", fill: p.won ? PITCH.deep : C.white, fontSize: 7, fontWeight: 800, fontFamily: "Figtree,sans-serif" }, p.num) : null);
     }))), !eff && React.createElement(MapPick, { p: pick >= 0 && pts ? pts[pick] : null, kind: "ko", mOf: mOf, onClose: function() { setPick(-1); } }), (function() {
       if (eff) return null;
       var seen = {};
@@ -7247,7 +7251,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       } catch(ex) { return null; }
     })();
 
-    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb" + (tabO === "land" ? " rsa-tl" : ""), style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", fontFamily: MONO, overflow: "hidden" } }, tabO === "port" && React.createElement("div", { role: "alert", style: { position: "fixed", inset: 0, zIndex: 120, background: C.bg, color: C.white, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18, padding: 32, textAlign: "center" } },
+    return /* @__PURE__ */ React.createElement("div", { className: "rs-wide rsa-fb rsa-live" + (tabO === "land" ? " rsa-tl" : ""), style: { height: "100dvh", background: C.bg, color: C.white, display: "flex", flexDirection: "column", fontFamily: MONO, overflow: "hidden" } }, tabO === "port" && React.createElement("div", { role: "alert", style: { position: "fixed", inset: 0, zIndex: 120, background: C.bg, color: C.white, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18, padding: 32, textAlign: "center" } },
       React.createElement("div", { style: { width: 120, height: 84, border: "4px solid " + C.greenB, borderRadius: 14, transform: "rotate(-90deg)", animation: "rsaTurn 2.4s ease-in-out infinite" } }),
       React.createElement("div", { style: { fontSize: 30, fontWeight: 900, fontFamily: "inherit" } }, "Turn your iPad sideways to tag"),
       React.createElement("div", { style: { fontSize: 17, color: C.slate, lineHeight: 1.5, maxWidth: 520 } }, "The tagger is laid out for landscape. The clock keeps running and every tag is safe."),
@@ -9608,7 +9612,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           if (curDraw) teleCtx(ctx, curDraw, cw, chh);
           var fs = Math.max(15, Math.round(chh * 0.045));
           if (curPos) {
-            ctx.font = "800 " + Math.round(fs * 0.8) + "px Inter, system-ui, sans-serif";
+            ctx.font = "800 " + Math.round(fs * 0.8) + "px Figtree, system-ui, sans-serif";
             ctx.textBaseline = "top";
             var pw = ctx.measureText(curPos).width + fs;
             ctx.fillStyle = C.black + ALPHA.scrim;
@@ -9617,7 +9621,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             ctx.fillText(curPos, fs * 0.5, Math.round(fs * 0.45));
           }
           if (curNote) {
-            ctx.font = "600 " + fs + "px Inter, system-ui, sans-serif";
+            ctx.font = "600 " + fs + "px Figtree, system-ui, sans-serif";
             var lines = wrapLines(curNote, cw - fs * 2.5);
             var lh = Math.round(fs * 1.32), pad = Math.round(fs * 0.7);
             var boxH = lines.length * lh + pad * 2;
@@ -10579,7 +10583,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         angles.map(function(_,i) { var p2 = pt(i,1); return React.createElement("line", { key: "ax"+i, x1: cx, y1: cy, x2: p2[0], y2: p2[1], stroke: C.borderB, strokeWidth: 0.3 }); }),
         React.createElement("polygon", { points: polyPts, fill: C.greenB, fillOpacity: 0.15, stroke: C.greenB, strokeWidth: 1.5 }),
         dims.map(function(d,i) { var p2 = pt(i, Math.max(d.pct,5)/100); return React.createElement("circle", { key: "d"+i, cx: p2[0], cy: p2[1], r: 3, fill: C.greenB }); }),
-        dims.map(function(d,i) { return React.createElement("text", { key: "l"+i, x: labelPos[i][0], y: +labelPos[i][1]+3, textAnchor: "middle", fill: C.slate, fontSize: 8, fontFamily: "Barlow,system-ui,sans-serif" }, d.label); })),
+        dims.map(function(d,i) { return React.createElement("text", { key: "l"+i, x: labelPos[i][0], y: +labelPos[i][1]+3, textAnchor: "middle", fill: C.slate, fontSize: 8, fontFamily: "Figtree,system-ui,sans-serif" }, d.label); })),
       React.createElement("div", { style: { marginTop: 6 } },
         dims.map(function(d) {
           return React.createElement("div", { key: d.key, style: { display: "flex", alignItems: "center", gap: 6, marginBottom: 3 } },
@@ -10671,7 +10675,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var cx = mkX[i], cy = g.team === "us" ? T - 14 : H - B + 18;
       if (g.k === "two") return React.createElement("g", { key: "g" + i, "data-two": g.team },
         React.createElement("rect", { x: cx - 9, y: cy - 7, width: 18, height: 14, rx: 7, fill: C.white }),
-        React.createElement("text", { x: cx, y: cy + 4, textAnchor: "middle", fill: C.bg, fontSize: 11, fontWeight: 800, fontFamily: "Barlow,system-ui,sans-serif" }, "2"));
+        React.createElement("text", { x: cx, y: cy + 4, textAnchor: "middle", fill: C.bg, fontSize: 11, fontWeight: 800, fontFamily: "Figtree,system-ui,sans-serif" }, "2"));
       if (g.k === "red" || g.k === "black") return React.createElement("rect", { key: "g" + i, "data-card": g.k + ":" + g.team, x: cx - 5, y: cy - 7, width: 10, height: 14, rx: 2,
         fill: g.k === "red" ? C.red : C.black, stroke: g.k === "red" ? "none" : C.white, strokeWidth: 1.2, transform: "rotate(10 " + cx + " " + cy + ")" });
       return React.createElement("g", { key: "g" + i, "data-goal": g.team },
@@ -10696,7 +10700,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           hv && React.createElement("line", { x1: x(hv[0]), y1: T - 4, x2: x(hv[0]), y2: H - B + 4, stroke: C.white, strokeOpacity: 0.6, strokeWidth: 1 }),
           React.createElement("line", { x1: L, y1: H - 14, x2: W - R, y2: H - 14, stroke: C.borderB, strokeWidth: 2, strokeDasharray: "2 7", strokeLinecap: "round" }),
           [[0, "0'", "start"], [m.ht, "HT", "middle"], [m.ft, "FT", "end"]].map(function(a) {
-            return React.createElement("text", { key: a[1], x: x(a[0]), y: H - 10, textAnchor: a[2], fill: C.white, fontSize: 15, fontWeight: 800, fontFamily: "Barlow,system-ui,sans-serif", paintOrder: "stroke", stroke: C.bgCard, strokeWidth: 6 }, a[1]);
+            return React.createElement("text", { key: a[1], x: x(a[0]), y: H - 10, textAnchor: a[2], fill: C.white, fontSize: 15, fontWeight: 800, fontFamily: "Figtree,system-ui,sans-serif", paintOrder: "stroke", stroke: C.bgCard, strokeWidth: 6 }, a[1]);
           }))),
       React.createElement("div", { style: { display: "flex", justifyContent: "center", gap: 16, marginTop: 4, fontSize: FS.sm, color: C.slate } },
         React.createElement("span", null, React.createElement("span", { style: { display: "inline-block", width: 10, height: 10, borderRadius: 3, background: C.us, marginRight: 6, verticalAlign: "-1px" } }), usN),
@@ -10767,11 +10771,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     // Half-time line
     var _htS = perStart(match, 2);
     elements.push(React.createElement("line", { key: "ht", x1: mx(_htS), y1: pad.t, x2: mx(_htS), y2: pad.t+ch, stroke: C.borderB, strokeWidth: 0.5, strokeDasharray: "3,2" }));
-    elements.push(React.createElement("text", { key: "htl", x: mx(_htS), y: pad.t+ch+12, textAnchor: "middle", fill: C.slateD, fontSize: 7, fontFamily: "Barlow,system-ui,sans-serif" }, "HT"));
+    elements.push(React.createElement("text", { key: "htl", x: mx(_htS), y: pad.t+ch+12, textAnchor: "middle", fill: C.slateD, fontSize: 7, fontFamily: "Figtree,system-ui,sans-serif" }, "HT"));
     
     // Time labels
     [0,10,20,30,40,50,60].forEach(function(m2, i) {
-      elements.push(React.createElement("text", { key: "t"+i, x: mx(m2*60), y: pad.t+ch+12, textAnchor: "middle", fill: C.slateD, fontSize: 7, fontFamily: "Barlow,system-ui,sans-serif" }, m2+"'"));
+      elements.push(React.createElement("text", { key: "t"+i, x: mx(m2*60), y: pad.t+ch+12, textAnchor: "middle", fill: C.slateD, fontSize: 7, fontFamily: "Figtree,system-ui,sans-serif" }, m2+"'"));
     });
     
     // Event spikes
@@ -10820,12 +10824,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       if (peakWP && peakWP.prob > wpPoints[wpPoints.length-1].prob + 5) {
         var peakX = mx(peakWP.secs), peakY = pad.t + ch - (peakWP.prob / 100) * ch;
         elements.push(React.createElement("circle", { key: "peak", cx: peakX, cy: peakY, r: 3, fill: "none", stroke: C.slate, strokeWidth: 1.5 }));
-        elements.push(React.createElement("text", { key: "peakl", x: peakX, y: peakY - 6, textAnchor: "middle", fill: C.slate, fontSize: 8, fontWeight: 700, fontFamily: "Barlow,system-ui,sans-serif" }, "\u25B2 " + peakWP.prob + "%"));
+        elements.push(React.createElement("text", { key: "peakl", x: peakX, y: peakY - 6, textAnchor: "middle", fill: C.slate, fontSize: 8, fontWeight: 700, fontFamily: "Figtree,system-ui,sans-serif" }, "\u25B2 " + peakWP.prob + "%"));
       }
       // Start and end WP labels
       var first = wpPoints[0], last = wpPoints[wpPoints.length-1];
-      elements.push(React.createElement("text", { key: "wps", x: mx(first.secs)+2, y: pad.t+ch-(first.prob/100)*ch-5, fill: C.slate, fontSize: 8, fontWeight: 700, fontFamily: "Barlow,system-ui,sans-serif" }, first.prob+"%"));
-      elements.push(React.createElement("text", { key: "wpe", x: mx(last.secs)-2, y: pad.t+ch-(last.prob/100)*ch-5, fill: C.slate, fontSize: 8, fontWeight: 700, textAnchor: "end", fontFamily: "Barlow,system-ui,sans-serif" }, last.prob+"%"));
+      elements.push(React.createElement("text", { key: "wps", x: mx(first.secs)+2, y: pad.t+ch-(first.prob/100)*ch-5, fill: C.slate, fontSize: 8, fontWeight: 700, fontFamily: "Figtree,system-ui,sans-serif" }, first.prob+"%"));
+      elements.push(React.createElement("text", { key: "wpe", x: mx(last.secs)-2, y: pad.t+ch-(last.prob/100)*ch-5, fill: C.slate, fontSize: 8, fontWeight: 700, textAnchor: "end", fontFamily: "Figtree,system-ui,sans-serif" }, last.prob+"%"));
     }
     
     // WP axis labels
@@ -10833,7 +10837,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     [0, 50, 100].forEach(function(pct) {
       var y = pad.t + ch - (pct / 100) * ch;
       elements.push(React.createElement("line", { key: "g"+pct, x1: pad.l, y1: y, x2: pad.l+cw, y2: y, stroke: C.borderB, strokeWidth: 0.3, strokeDasharray: pct === 50 ? "2,2" : "none" }));
-      elements.push(React.createElement("text", { key: "a"+pct, x: pad.l-3, y: y+3, fill: C.slateD, fontSize: 7, textAnchor: "end", fontFamily: "Barlow,system-ui,sans-serif" }, pct+"%"));
+      elements.push(React.createElement("text", { key: "a"+pct, x: pad.l-3, y: y+3, fill: C.slateD, fontSize: 7, textAnchor: "end", fontFamily: "Figtree,system-ui,sans-serif" }, pct+"%"));
     });
     
     return React.createElement("div", { style: { padding: "14px 16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid, marginBottom: 12 } },
@@ -11676,10 +11680,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     // Build HTML
     var h3=[];
     h3.push('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+cn+' v '+opp2+'</title>');
-    h3.push('<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet">');
+    h3.push('<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Barlow+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet">');
     h3.push('<style>.sbx{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:10px}.rj{width:120px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}.rj svg{display:block}.rjn{font-size:12px;font-weight:800;line-height:1.2}@media(max-width:620px){.sbx{gap:4px}.rj{width:76px}.rj svg{width:50px;height:50px}.sbx .sb{font-size:28px;padding:12px 0}}</style>');
     h3.push('<style>:root{--cu:'+cU+';--co:'+cO+'}@media print{:root{--cu:'+pU+';--co:'+pO+'}}.msk{display:flex;justify-content:space-between;font-size:13px;font-weight:800;margin-bottom:12px}.msgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 26px}.msg{margin-bottom:14px}.msl{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px;font-size:11.5px}.msl b{min-width:34px;font-weight:800}.msl b.go{text-align:right}.msl span{flex:1;text-align:center;color:#9fb0c6;font-weight:600}.msm .msl{font-size:14px}.msm .msl span{color:#eef2f8;font-weight:800}.msb{display:flex;gap:2px;height:6px}.msb i{display:block;height:100%;border-radius:2px}.msm .msb{height:13px}.msm .msb i{border-radius:3px}.msp{background:#0a1220;border-radius:10px;padding:10px 12px 2px;margin:8px 0 0 12px}.mss{margin-bottom:9px}.fgl{stroke:#1a2437;stroke-width:1}.fht{stroke:#536176;stroke-width:1;stroke-dasharray:3 3}.fax{fill:#536176;font-size:10px;font-family:monospace}.fend{fill:#eef2f8;font-size:13px;font-weight:800}.fdot{stroke:#0d1525;stroke-width:1.5}.fxg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}.fxb{background:#0a1220;border-radius:8px;padding:8px 10px}.fxv{font-size:15px;font-weight:800;margin-top:2px}.scl{min-width:200px}.kpr{display:flex;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px solid #17223844;font-size:12.5px}.kpr:last-child{border-bottom:0}.kpc{min-width:118px;color:#9fb0c6;font-size:11px}.kpn{flex:1;font-weight:700}.kpv{font-weight:800;font-family:monospace}@media print{.kpc{color:#555}}.scr{display:flex;justify-content:space-between;gap:8px;padding:3px 0;font-size:12px}.cdi{display:inline-block;width:8px;height:11px;border-radius:1.5px;vertical-align:-1px;margin-left:2px}.cdy{background:#f5c518}.cdr{background:#e0242b}.cdb{background:#111;box-shadow:0 0 0 1px #888}.dng{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:16px}.dnb{text-align:center}.dnb svg{display:block;margin:0 auto}.dnv{font-size:12px;font-weight:800}.dnv.gu{fill:var(--cu)}.dnv.go{fill:var(--co)}.dnl{font-size:12px;font-weight:800;margin-top:2px}.apm{display:block;width:100%;max-width:340px;height:auto;margin:8px auto 4px}.apk{display:flex;justify-content:center;gap:14px;font-size:10.5px;color:#9fb0c6;margin-bottom:6px}.apk svg{vertical-align:middle;margin-right:4px}.apf{fill:#163d27}.apl{fill:rgba(255,255,255,.55);font-size:9.5px;font-weight:700;letter-spacing:1.5px}.apt{fill:#0d1525;stroke-width:1.5}.apn{fill:#eef2f8;font-size:11px;font-weight:800}@media print{.apf{fill:#e6efe8}.apl{fill:#555}.apt{fill:#fff}.apn{fill:#111}}.msgc{column-count:2;column-gap:26px}.msgc .msg{break-inside:avoid}@media(max-width:620px){.msgrid{grid-template-columns:1fr}.msgc{column-count:1}}@media print{.fgl{stroke:#ddd}.fend{fill:#111}.fdot{stroke:#f5f5f5}.fxb{background:#ececec}}@media print{.msp{background:#ececec}.msm .msl span{color:#111}.msl span{color:#444}}</style>');
-    h3.push('<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Barlow,system-ui,sans-serif;background:#070c18;color:#eef2f8;padding:20px;max-width:800px;margin:0 auto}h1{font-size:24px;font-weight:900}h2{font-size:11px;letter-spacing:2px;color:#34c967;margin:24px 0 10px;font-weight:800}.card{background:#0d1525;border-radius:12px;padding:14px 16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.3)}.row{display:flex;gap:12px;flex-wrap:wrap}.col{flex:1;min-width:180px}.sb{font-size:36px;font-weight:900;text-align:center;padding:12px}.gu{color:var(--cu)}.go{color:var(--co)}.m{font-size:11px;color:#536176;font-family:monospace}.tbl{width:100%;border-collapse:collapse;font-size:12px}.tbl th{text-align:left;padding:6px 8px;border-bottom:2px solid #172238;color:#536176;font-size:10px;letter-spacing:1px}.tbl td{padding:5px 8px;border-bottom:1px solid #17223844}.bar2{height:14px;border-radius:3px;display:inline-block;vertical-align:middle}@media print{body{background:#fff;color:#111;padding:10px}.card{background:#f5f5f5;box-shadow:none;border:1px solid #ddd}h2{color:#1e7a3e}}</style></head><body>');
+    h3.push('<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Figtree,system-ui,sans-serif;background:#070c18;color:#eef2f8;padding:20px;max-width:800px;margin:0 auto}h1{font-size:24px;font-weight:900}h2{font-size:11px;letter-spacing:2px;color:#34c967;margin:24px 0 10px;font-weight:800}.card{background:#0d1525;border-radius:12px;padding:14px 16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.3)}.row{display:flex;gap:12px;flex-wrap:wrap}.col{flex:1;min-width:180px}.sb{font-size:36px;font-weight:900;text-align:center;padding:12px}.gu{color:var(--cu)}.go{color:var(--co)}.m{font-size:11px;color:#536176;font-family:monospace}.tbl{width:100%;border-collapse:collapse;font-size:12px}.tbl th{text-align:left;padding:6px 8px;border-bottom:2px solid #172238;color:#536176;font-size:10px;letter-spacing:1px}.tbl td{padding:5px 8px;border-bottom:1px solid #17223844}.bar2{height:14px;border-radius:3px;display:inline-block;vertical-align:middle}@media print{body{background:#fff;color:#111;padding:10px}.card{background:#f5f5f5;box-shadow:none;border:1px solid #ddd}h2{color:#1e7a3e}}</style></head><body>');
 
     // Header
     h3.push('<h1>'+cn+' vs '+opp2+'</h1>');
