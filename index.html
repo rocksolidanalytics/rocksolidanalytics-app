@@ -10713,6 +10713,15 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           hvTxt || ("Marked: " + keys.map(function(k) { return k[1]; }).join(" \u00b7 ")));
       })()));
   }
+  // The flow of a match: the momentum chart, or the match pulse (event spikes and win chance).
+  function FlowCard({ events, match, club, flush }) {
+    const [view, setView] = useState(function() { return statPref("flow", "mom") === "pulse" ? "pulse" : "mom"; });
+    return React.createElement("div", { "data-flow": view, style: { marginBottom: flush ? 0 : 16 } },
+      React.createElement("div", { style: { display: "flex", justifyContent: "center", marginBottom: 10 } },
+        React.createElement(SegPick, { label: "Match flow", opts: [["mom", "MOMENTUM"], ["pulse", "MATCH PULSE"]], value: view, onPick: function(v) { setView(v); saveStatPref("flow", v); } })),
+      view === "pulse" ? React.createElement(PulseTimeline, { events: events, match: match, club: club })
+        : React.createElement(MomentumChart, { flush: true, events: events, match: match, club: club }));
+  }
   function PulseTimeline({ events, match, club, result }) {
     if (!events || events.length < 5) return null;
     var W = 340, H = 140, pad = { l: 24, r: 6, t: 20, b: 16 };
@@ -10775,6 +10784,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     
     // Time labels
     [0,10,20,30,40,50,60].forEach(function(m2, i) {
+      if (Math.abs(mx(m2*60) - mx(_htS)) < 14) return;
       elements.push(React.createElement("text", { key: "t"+i, x: mx(m2*60), y: pad.t+ch+12, textAnchor: "middle", fill: C.slateD, fontSize: 7, fontFamily: "Figtree,system-ui,sans-serif" }, m2+"'"));
     });
     
@@ -11829,6 +11839,8 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     const [dtab, setDtab] = useState(initView && initView.dtab || "overview");
     const [evPick, setEvPick] = useState(null);
     const [ovMode, setOvMode] = useState(function() { return statPref("ov", "key") === "detail" ? "detail" : "key"; });
+    // Whose scorers the match score card lists: tap a side of the score to switch.
+    const [scSide, setScSide] = useState("us");
     const [psort, setPsort] = useState("score");
     if (reportHtml) return React.createElement("div", { className: "rsa-fb", style: { minHeight: "100dvh", background: C.bg } },
       React.createElement("div", { style: { position: "sticky", top: 0, zIndex: 10, background: C.bg, borderBottom: "1px solid " + C.border, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 } },
@@ -11894,26 +11906,45 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       return React.createElement(ReadPoint, { key: i, p: n, first: i === 0, last: i === readNotes.length - 1 });
     }))),
     dtab === "overview" && isMatch && ovMode === "key" && match && match.status !== "final" && (d._events || []).length >= 30 && React.createElement(HalfTimeCard, { evs: (d._events || []).filter(function(e) { return !e.match_id || e.match_id === match.id; }), usName: club.name, oppName: oppName || match.opponent || "Opposition", title: (d._events || []).some(function(e) { return String(e.period) === "2"; }) ? "TALKING POINTS \u00B7 SO FAR" : "TALKING POINTS \u00B7 1ST HALF" }),
-    dtab === "overview" && isMatch && ovMode === "key" && d.callouts && React.createElement(KeyCalloutsPanel, { club: club, match: match, evs: (d._events || []).filter(function(e) { return match && e.match_id === match.id && (half === "1" ? String(e.period) === "1" : half === "2" ? String(e.period) === "2" : true); }), mid: match && d._events ? React.createElement(MomentumChart, { flush: true, events: (d._events || []).filter(function(e) { return e.match_id === match.id; }), match: match, club: club }) : null, kc: d.callouts, usName: club.name, oppName: oppName || (match && match.opponent) || "THEM", clock: half === "1" ? "1ST" : half === "2" ? "2ND" : match && match.status !== "final" ? "LIVE" : "FT" }),
-    dtab === "overview" && isMatch && match && d._events && !(ovMode === "key" && d.callouts) && React.createElement(MomentumChart, { events: (d._events || []).filter(function(e) { return e.match_id === match.id; }), match: match, club: club }),
+    dtab === "overview" && isMatch && ovMode === "key" && d.callouts && React.createElement(KeyCalloutsPanel, { club: club, match: match, evs: (d._events || []).filter(function(e) { return match && e.match_id === match.id && (half === "1" ? String(e.period) === "1" : half === "2" ? String(e.period) === "2" : true); }), mid: match && d._events ? React.createElement(FlowCard, { flush: true, events: (d._events || []).filter(function(e) { return e.match_id === match.id; }), match: match, club: club }) : null, kc: d.callouts, usName: club.name, oppName: oppName || (match && match.opponent) || "THEM", clock: half === "1" ? "1ST" : half === "2" ? "2ND" : match && match.status !== "final" ? "LIVE" : "FT" }),
+    dtab === "overview" && isMatch && match && d._events && !(ovMode === "key" && d.callouts) && React.createElement(FlowCard, { events: (d._events || []).filter(function(e) { return e.match_id === match.id; }), match: match, club: club }),
     dtab === "overview" && !(isMatch && ovMode === "key") && React.createElement("div", { className: "rsa-ovgrid", style: { display: "flex", flexDirection: "column", gap: 12 } },
-      isMatch && match && React.createElement("div", { style: { padding: "16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid } },
-        React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } },
-          React.createElement("div", { style: { textAlign: "center", flex: 1 } },
-            React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1, color: C.usText, fontFamily: MONO, fontWeight: 700, marginBottom: 2 } }, (club.name || "Us").toUpperCase().slice(0,14)),
-            React.createElement("div", { style: { fontSize: FS.h1, fontWeight: 900, color: C.white } }, _evSc ? _evSc.us : (match.our_score || "0-00"))),
-          React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, padding: "0 6px" } }, "v"),
-          React.createElement("div", { style: { textAlign: "center", flex: 1 } },
-            React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1, color: C.themText, fontFamily: MONO, fontWeight: 700, marginBottom: 2 } }, ON.toUpperCase().slice(0,14)),
-            React.createElement("div", { style: { fontSize: FS.h1, fontWeight: 900, color: C.white } }, _evSc ? _evSc.opp : (match.opp_score || "0-00")))),
-        React.createElement("div", { style: { display: "flex", gap: 12, marginTop: 10 } },
-          React.createElement("div", { style: { flex: 1 } },
-            (d.scorers || []).filter(function(s) { return s.total > 0; }).slice(0, 8).map(function(s, idx) {
+      isMatch && match && (function() {
+        // Their scorers from the events of this match (and half, when one is picked).
+        var opMap = {}, opList = [], opUn = { name: "Not named", g: 0, ptot: 0, total: 0 };
+        (d._events || []).forEach(function(e) {
+          var v = e.score || 0;
+          if (e.match_id !== match.id || e.team !== "opp" || v <= 0) return;
+          if ((half === "1" || half === "2") && String(e.period) !== half) return;
+          var nm = String(e.player || "").trim(), o = nm ? (opMap[nm] = opMap[nm] || (opList.push({ name: nm, g: 0, ptot: 0, total: 0 }), opList[opList.length - 1])) : opUn;
+          if (v === 3) o.g++; else o.ptot += v;
+          o.total += v;
+        });
+        opList.sort(function(a, b) { return b.total - a.total; });
+        if (opUn.total > 0) opList.push(opUn);
+        var usList = (d.scorers || []).filter(function(s) { return s.total > 0; });
+        var side = scSide === "opp" ? "opp" : "us", list = side === "opp" ? opList : usList;
+        var sideBtn = function(k, label, score, col) {
+          var on = side === k;
+          return React.createElement("button", { "data-score-side": k, "aria-pressed": on, onClick: function() { setScSide(k); }, "aria-label": "Show " + label + " scorers",
+              style: { textAlign: "center", flex: 1, minWidth: 0, background: "none", border: "none", boxShadow: "none", cursor: "pointer", padding: "4px 0 8px", color: C.white, borderBottom: "3px solid " + (on ? col : "transparent") } },
+            React.createElement("div", { style: { fontSize: FS.sm, letterSpacing: 1, color: k === "us" ? C.usText : C.themText, fontFamily: MONO, fontWeight: 700, marginBottom: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, label.toUpperCase()),
+            React.createElement("div", { style: { fontSize: FS.h1, fontWeight: 900, color: C.white } }, score));
+        };
+        return React.createElement("div", { "data-score-card": "1", style: { padding: "16px", borderRadius: RAD.lg, background: C.bgCard, boxShadow: "0 2px 8px " + C.black + ALPHA.mid } },
+          React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-end" } },
+            sideBtn("us", club.name || "Us", _evSc ? _evSc.us : (match.our_score || "0-00"), C.us),
+            React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, padding: "0 6px 14px" } }, "v"),
+            sideBtn("opp", match.opponent || ON, _evSc ? _evSc.opp : (match.opp_score || "0-00"), C.them)),
+          React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, fontFamily: MONO, letterSpacing: 1, marginTop: 10 } }, (side === "opp" ? (match.opponent || ON) : (club.name || "Us")).toUpperCase() + " SCORERS \u00b7 TAP A SCORE TO SWITCH"),
+          React.createElement("div", { "data-scorers": side, style: { marginTop: 6 } },
+            list.length === 0 ? React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, padding: "2px 0" } }, side === "opp" ? "No opposition scores tagged." : "No scores tagged.")
+            : list.slice(0, 10).map(function(s, idx) {
               return React.createElement("div", { key: idx, style: { display: "flex", justifyContent: "space-between", padding: "2px 0", fontSize: FS.sm } },
-                React.createElement("span", { style: { color: C.white } }, s.name),
-                React.createElement("span", { style: { fontFamily: MONO, color: C.usText, fontWeight: 700 } }, s.g + "-" + (s.ptot < 10 ? "0" : "") + s.ptot));
-            })))),
-      isMatch && match && d._events && React.createElement(PulseTimeline, { events: (d._events || []).filter(function(e) { return e.match_id === match.id; }), match: match, club: club }),
+                React.createElement("span", { style: { color: s.name === "Not named" ? C.slateD : C.white } }, s.name),
+                React.createElement("span", { style: { fontFamily: MONO, color: side === "opp" ? C.themText : C.usText, fontWeight: 700 } }, s.g + "-" + (s.ptot < 10 ? "0" : "") + s.ptot));
+            })));
+      })(),
       d.ratings && match && d.ratings[match.id] && (function() {
         var r = d.ratings[match.id];
         var clr = function(v) { return v >= 70 ? C.greenB : v >= 45 ? C.gold : C.red; };

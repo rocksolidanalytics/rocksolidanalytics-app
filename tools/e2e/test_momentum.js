@@ -33,6 +33,20 @@ module.exports = async function(t) {
     await p.mouse.move(b.x + b.width * 0.3, b.y + b.height * 0.5); await L.wait(p, 200);
     t.ok(n + ': touch shows the minute and who is on top', /\d+' · (even|.+ on top)/.test(await p.evaluate(() => document.querySelector('[data-momentum]').innerText)));
     await p.locator('[data-momentum]').screenshot({ path: require('path').join(__dirname, 'out', 'momentum-' + w + '.png') });
+    // Momentum is the default; the switch shows the match pulse instead, and is remembered.
+    t.eq(n + ': momentum shown by default', await p.evaluate(() => document.querySelector('[data-flow]').getAttribute('data-flow')), 'mom');
+    await L.clickTxt(p, '^MATCH PULSE$'); await L.wait(p, 400);
+    t.ok(n + ': the switch shows the match pulse', await p.evaluate(() => document.querySelector('[data-flow]').getAttribute('data-flow') === 'pulse' && !document.querySelector('[data-momentum]') && /MATCH PULSE/.test(document.querySelector('[data-flow]').innerText)));
+    // DETAIL: tapping their score lists their scorers; tapping ours goes back.
+    await L.clickTxt(p, '^DETAIL$'); await L.wait(p, 600);
+    t.eq(n + ': DETAIL keeps the pulse picked', await p.evaluate(() => document.querySelector('[data-flow]').getAttribute('data-flow')), 'pulse');
+    t.eq(n + ': DETAIL lists our scorers first', await p.evaluate(() => document.querySelector('[data-scorers]').getAttribute('data-scorers')), 'us');
+    await p.click('[data-score-side="opp"]'); await L.wait(p, 300);
+    const opSc = await p.evaluate(() => { const x = document.querySelector('[data-scorers]'); return { side: x.getAttribute('data-scorers'), text: x.innerText }; });
+    t.ok(n + ': tapping their score lists their scorers', opSc.side === 'opp' && /\d+-\d\d/.test(opSc.text), JSON.stringify(opSc));
+    await p.click('[data-score-side="us"]'); await L.wait(p, 300);
+    t.eq(n + ': tapping ours switches back', await p.evaluate(() => document.querySelector('[data-scorers]').getAttribute('data-scorers')), 'us');
+    await L.clickTxt(p, '^MOMENTUM$'); await L.clickTxt(p, '^KEY$'); await L.wait(p, 300);
     t.eq(n + ': no page errors', r.errors, []);
     await r.browser.close();
   }

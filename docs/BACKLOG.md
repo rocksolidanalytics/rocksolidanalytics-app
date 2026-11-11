@@ -236,6 +236,13 @@ Barlow Condensed stays on the live tagger and the video tagger, where narrow tex
 buttons fitting. Swapping in GT Walsheim later (with a web licence and the font files) is a
 change to that variable and the font link.
 
+**Momentum or Match pulse, and their scorers.** A switch above the chart picks Momentum (the
+default) or the Match pulse, on KEY and DETAIL; the device remembers the choice. On the DETAIL
+score card, tapping a side of the score lists that team's scorers (their named scorers, then
+"Not named" for the rest), with a bar in the team colour under the side shown. The card now
+names the opponent instead of "Opposition" and long club names end in an ellipsis instead of
+being cut at 14 letters. The Match pulse no longer prints 30' on top of HT.
+
 ## Done 2026-11-08
 
 **Drawing over video (telestration), step 1.** Game film has a DRAW button under the video. It
