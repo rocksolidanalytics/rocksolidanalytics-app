@@ -5,7 +5,7 @@ module.exports = async function(t) {
   for (const [w, h, n] of [[1180, 820, 'iPad'], [390, 844, 'phone']]) {
     let r = await L.open({ fixtures: L.fixtures({ videoPack: true, matches: [{ id: 'yt', club_id: L.C, opponent: 'Kerry v Mayo', date: '2026-07-26', status: 'scheduled', scouting: true }] }), w, h }), p = r.page;
     await L.fakeYouTube(p);
-    await p.getByText('Video tagger', { exact: true }).click(); await L.wait(p, 800);
+    await p.getByText('Video tagger', { exact: true }).first().click(); await L.wait(p, 800);
     await p.getByText('Kerry v Mayo').first().click(); await L.wait(p, 1000);
     await L.clickTxt(p, 'YouTube / Dropbox'); await L.wait(p, 300);
     await p.fill('input[placeholder^="YouTube link"]', 'https://youtu.be/QyBK5QpmSfw?si=abc'); await L.clickTxt(p, '^Load video$'); await L.wait(p, 2500);

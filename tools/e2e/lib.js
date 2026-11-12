@@ -50,7 +50,7 @@ const wait = (page, ms) => page.waitForTimeout(ms);
 
 // Opens the video tagger on the first match named opp and loads the test clip.
 async function videoTagger(page, opp) {
-  await page.getByText('Video tagger', { exact: true }).click(); await wait(page, 800);
+  await page.getByText('Video tagger', { exact: true }).first().click(); await wait(page, 800);
   await page.getByText(opp).first().click(); await wait(page, 1000);
   const fi = await page.$$('input[type=file]'); await fi[0].setInputFiles(FOOTAGE); await wait(page, 1500);
 }
@@ -80,4 +80,8 @@ const tapLayers = page => page.evaluate(() => [...document.querySelectorAll('#ro
 
 async function shot(page, name) { fs.mkdirSync(OUT, { recursive: true }); await page.screenshot({ path: path.join(OUT, name + '.png') }); }
 
-module.exports = { APP, FOOTAGE, C, fixtures, videoPack, open, clickTxt, buttons, text, wait, videoTagger, seek, fakeYouTube, tapLayers, shot };
+// Home on a phone has tiles; on an iPad or computer the sidebar home has cards. These work on both.
+const lastMatchOpp = page => page.evaluate(() => { const el = document.querySelector('[data-home-last]'); const m = (el ? el.innerText : document.body.innerText).match(el ? /v ([A-Za-z]+)/ : /Last match \u00b7 v ([A-Za-z]+)/); return m && m[1]; });
+const openLastMatch = page => page.evaluate(() => { const el = document.querySelector('[data-home-last]'); if (el) { el.click(); return; } const b = [...document.querySelectorAll('#root button')].find(x => /Last match/.test(x.innerText)); if (!b) throw new Error('no last match'); b.click(); });
+const resumeTagging = page => page.evaluate(() => { const c = document.querySelector('[data-home-tag="resume"] button'); if (c) { c.click(); return; } const b = [...document.querySelectorAll('#root button')].find(x => /Resume Tagging/.test(x.innerText)); if (!b) throw new Error('no resume'); b.click(); });
+module.exports = { lastMatchOpp, openLastMatch, resumeTagging, APP, FOOTAGE, C, fixtures, videoPack, open, clickTxt, buttons, text, wait, videoTagger, seek, fakeYouTube, tapLayers, shot };

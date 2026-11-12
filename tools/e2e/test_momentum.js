@@ -12,9 +12,9 @@ module.exports = async function(t) {
   for (const [w, h] of [[390, 844], [1180, 820]]) {
     const r = await L.open({ fixtures: f, w, h }), p = r.page;
     // The match on the home Last match tile.
-    const opp = ((await L.text(p)).match(/Last match \u00b7 v ([A-Za-z]+)/) || [])[1];
+    const opp = await L.lastMatchOpp(p);
     const goals = goalsOf((f.tables.matches.find(x => x.opponent === opp) || {}).id);
-    await L.clickTxt(p, 'Last match'); await L.wait(p, 2000);
+    await L.openLastMatch(p); await L.wait(p, 2000);
     const n = w + 'x' + h;
     const m = await p.evaluate(() => { const c = document.querySelector('[data-momentum]'); if (!c) return null; c.scrollIntoView(); const s = c.querySelector('svg'); return { paths: s.querySelectorAll('path').length, us: s.querySelectorAll('[data-goal="us"]').length, opp: s.querySelectorAll('[data-goal="opp"]').length, text: c.innerText, w: s.getBoundingClientRect().width }; });
     t.ok(n + ': momentum chart on the match', m && m.paths === 2, JSON.stringify(m));

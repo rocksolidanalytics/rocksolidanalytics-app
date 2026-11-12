@@ -1,54 +1,47 @@
-// Home on a wide screen: tiles in one column, a club panel on the right with slides (last match,
-// season, a player, the app, and leaderboards once there are games enough) that change on their
-// own; the dots jump between them. Phones and an upright iPad keep the old layout.
+// Home on an iPad or a computer: a sidebar to every part of the app, a top bar with the quick
+// actions, the club, last match, tagging and recent playlists in the middle, and the season, top
+// scorers and club details on the right. An upright iPad keeps the sidebar as icons and puts the
+// season under the middle. Phones keep the tiles.
 const L = require('./lib.js');
 module.exports = async function(t) {
-  const panel = p => p.evaluate(() => !!document.querySelector('#root .rsa-homepanel'));
-  const slide = p => p.evaluate(() => { const s = document.querySelector('#root .rsa-slide'); return s ? s.innerText : ''; });
-  let r = await L.open({ fixtures: L.fixtures(), w: 1180, h: 820 }), p = r.page;
-  await L.wait(p, 1500);
-  t.ok('iPad sideways: the panel is shown', await panel(p));
-  t.ok('the banner moves to the panel', await p.evaluate(() => getComputedStyle(document.querySelector('#root .rsa-hw-banner')).display === 'none'));
-  const s1 = await slide(p);
-  t.ok('first slide: the last match', /LAST MATCH/.test(s1) && /SHOTS FROM PLAY/.test(s1) && /TOP SCORER/.test(s1), s1.slice(0, 200));
-  await L.shot(p, 'home_panel_ipad');
-  t.ok('wide home: larger tile text', await p.evaluate(() => getComputedStyle(document.querySelector('#root .rsa-hs')).fontSize === '13px' && getComputedStyle(document.querySelector('#root .rsa-ht')).fontSize === '17px'));
-  await p.click('#root button[aria-label="Show top scorers"]'); await L.wait(p, 300);
-  t.ok('wide home: a short slide sits in the middle of the panel', await p.evaluate(() => { const s = document.querySelector('#root .rsa-slide'), r = s.getBoundingClientRect(), a = s.firstElementChild.getBoundingClientRect(), b = s.lastElementChild.getBoundingClientRect(); return Math.abs((a.top - r.top) - (r.bottom - b.bottom)) < 4 && a.top - r.top > 20; }));
-  await p.click('#root button[aria-label="Show last match"]'); await L.wait(p, 300);
-  const dots = await p.evaluate(() => [...document.querySelectorAll('#root .rsa-homepanel button[aria-label^="Show "]')].map(b => b.getAttribute('aria-label').slice(5)));
-  t.eq('slides in order', dots, ['last match', 'season', 'player spotlight', 'Rock Solid Analytics', 'top scorers', 'work rate']);
-  for (const [lab, re] of [['season', /SEASON .* W-D-L/], ['player spotlight', /PLAYER SPOTLIGHT/], ['Rock Solid Analytics', /Match analysis for every GAA club/], ['top scorers', /Top scorers/], ['work rate', /Work rate/]]) {
-    await p.click('#root button[aria-label="Show ' + lab + '"]'); await L.wait(p, 300);
-    t.ok('dot: ' + lab, re.test(await slide(p)), (await slide(p)).slice(0, 120));
-  }
-  await L.shot(p, 'home_panel_work');
-  await p.evaluate(() => { const b = document.querySelector('#root button[aria-label="Show last match"]'); b.click(); });
-  t.ok('a tapped dot pauses the slides', /paused/.test(await L.text(p)));
-  await r.browser.close();
-
-  r = await L.open({ fixtures: L.fixtures(), w: 1180, h: 820, init: () => { const si = window.setInterval; window.setInterval = (f, ms) => si(f, ms === 8000 ? 400 : ms); } }); p = r.page;
-  await L.wait(p, 1500); const a = await slide(p); await L.wait(p, 900); const b = await slide(p);
-  t.ok('the slides change on their own', a !== b);
-  t.eq('no page errors (iPad)', r.errors, []);
-  await r.browser.close();
-
-  // A club in green and navy, with no turnovers won tagged: navy figures get the white outline,
-  // and tackles take the place of turnovers won.
-  const f = L.fixtures({ club: { colour_primary: '#34c967', colour_secondary: '#0b1c35' } });
-  f.tables.events = f.tables.events.filter(e => e.event_type !== 'Turnover won' && e.event_type !== 'Turnover');
-  r = await L.open({ fixtures: f, w: 1180, h: 820 }); p = r.page; await L.wait(p, 1500);
-  await p.click('#root button[aria-label="Show season"]'); await L.wait(p, 300);
-  const sh = await p.evaluate(() => { const navy = [...document.querySelectorAll('#root .rsa-slide span')].filter(x => /rgb\(11, 28, 53\)/.test(getComputedStyle(x).color)); return navy.length ? [navy.length, getComputedStyle(navy[0]).textShadow] : null; });
-  t.ok('navy figures have the white outline', sh && /255, 255, 255/.test(sh[1]), JSON.stringify(sh));
-  t.ok('tackles shown when no turnovers won are tagged', /TACKLES/.test(await slide(p)) && !/TURNOVERS WON/.test(await slide(p)), (await slide(p)).slice(0, 400));
-  t.eq('no page errors (navy club)', r.errors, []);
-  await r.browser.close();
-
-  for (const [w, h, n] of [[390, 844, 'phone'], [820, 1180, 'upright iPad']]) {
-    r = await L.open({ fixtures: L.fixtures(), w, h }); p = r.page; await L.wait(p, 1200);
-    t.ok(n + ': no panel, banner as before', !(await panel(p)) && /Dashboard/.test(await L.text(p)));
+  const f = L.fixtures();
+  f.tables.playlists = [{ id: 'pl1', club_id: L.C, match_id: null, name: 'Shooting under pressure', token: 'tok_abcdefghijklmnop', created_at: new Date(Date.now() - 7200e3).toISOString(), clips: [{ label: 'Point', video_ts: 20, draw: { at: 20, hold: 4, shapes: [] } }], matches: null }];
+  for (const [w, h, n] of [[1180, 820, 'iPad sideways'], [1440, 900, 'computer'], [820, 1180, 'upright iPad']]) {
+    const r = await L.open({ fixtures: f, w, h }), p = r.page; await L.wait(p, 1800);
+    const m = await p.evaluate(() => {
+      const side = document.querySelector('.rsa-hs-side'), lbl = side && [...side.querySelectorAll('.rsa-hs-lbl')].find(x => x.innerText.trim() === 'Dashboard');
+      const box = s => { const e = document.querySelector(s); if (!e) return null; const b = e.getBoundingClientRect(); return { x: Math.round(b.left), y: Math.round(b.top), w: Math.round(b.width) }; };
+      return { side: !!side, sideW: side && Math.round(side.getBoundingClientRect().width), labels: !!lbl && getComputedStyle(lbl).display !== 'none', last: box('[data-home-last]'), season: box('[data-home-season]'), feed: box('[data-home-feed]'), tag: document.querySelector('[data-home-tag]') && document.querySelector('[data-home-tag]').getAttribute('data-home-tag'), text: document.body.innerText };
+    });
+    t.ok(n + ': sidebar home', m.side && m.last && m.season && m.feed, JSON.stringify(m).slice(0, 200));
+    if (w >= 1000) {
+      t.ok(n + ': sidebar with labels', m.labels && m.sideW > 200, String(m.sideW));
+      t.ok(n + ': season column on the right', m.season.x > m.last.x + m.last.w, JSON.stringify([m.last, m.season]));
+    } else {
+      t.ok(n + ': sidebar as icons only', !m.labels && m.sideW < 90, String(m.sideW));
+      t.ok(n + ': season under the middle', m.season.y > m.feed.y, JSON.stringify([m.feed, m.season]));
+    }
+    t.ok(n + ': last match with its figures and top scorer', /LAST MATCH/.test(m.text) && /SHOTS/.test(m.text) && /Top scorer/.test(m.text));
+    t.eq(n + ': tagging card offers resume', m.tag, 'resume');
+    t.ok(n + ': recent playlists, shared marked, drawings counted', /Shooting under pressure/.test(m.text) && /SHARED/.test(m.text) && /1 drawing/.test(m.text));
+    t.ok(n + ': this season, top scorers, club and appearance', /THIS SEASON/.test(m.text) && /TOP SCORERS/.test(m.text) && /Player join code/.test(m.text) && /PHONE/.test(m.text));
+    if (n === 'iPad sideways') await L.shot(p, 'home_shell_ipad');
     t.eq(n + ': no page errors', r.errors, []);
     await r.browser.close();
   }
+  // The sidebar opens each part of the app.
+  let r = await L.open({ fixtures: f, w: 1180, h: 820 }), p = r.page; await L.wait(p, 1500);
+  await p.click('.rsa-hs-side button[aria-label="Pitch map"]'); await L.wait(p, 1500);
+  t.ok('sidebar: Pitch map opens', /PITCH MAP/i.test(await L.text(p)));
+  await r.browser.close();
+  r = await L.open({ fixtures: f, w: 1180, h: 820 }); p = r.page; await L.wait(p, 1500);
+  await L.openLastMatch(p); await L.wait(p, 1800);
+  t.ok('last match card: opens the match report', /All matches/.test(await L.text(p)));
+  t.eq('no page errors (sidebar)', r.errors, []);
+  await r.browser.close();
+  // Phones keep the tiles.
+  r = await L.open({ fixtures: f, w: 390, h: 844 }); p = r.page; await L.wait(p, 1200);
+  t.ok('phone: tiles as before, no sidebar', !(await p.evaluate(() => !!document.querySelector('.rsa-hs-side'))) && /Last match · v/.test(await L.text(p)));
+  t.eq('no page errors (phone)', r.errors, []);
+  await r.browser.close();
 };

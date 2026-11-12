@@ -4,7 +4,7 @@
 const L = require('./lib.js');
 module.exports = async function(t) {
   let r = await L.open({ fixtures: L.fixtures(), w: 1180, h: 820, touch: true }), p = r.page;
-  await L.clickTxt(p, 'Resume Tagging'); await L.wait(p, 1200); await L.clickTxt(p, 'Top of screen').catch(() => {}); await L.wait(p, 1200);
+  await L.resumeTagging(p); await L.wait(p, 1200); await L.clickTxt(p, 'Top of screen').catch(() => {}); await L.wait(p, 1200);
   t.ok('iPad live tagger: start is a drawn triangle, not the play character', await p.evaluate(() => !!document.querySelector('[data-start-icon]') && !/▶/.test(document.querySelector('.rsa-tl-clk').textContent)));
   await L.clickTxt(p, '^VIEW STATS$'); await L.wait(p, 1200); await L.clickTxt(p, '^DETAILED$'); await L.wait(p, 1000);
   const at = await p.evaluate(() => { const s = document.body.innerText; return ['SHOT MAP', 'SHOT EFFICIENCY BY DISTANCE', 'RESTART MAP', 'RESTART WIN % BY ZONE'].map(k => s.indexOf(k)); });

@@ -262,6 +262,21 @@ began; its result). The season cards view on Defence shows the last 5 games with
 same picker for any other game.
 Test: `tools/e2e/test_game_pick.js` (a nine-game season).
 
+**Home on iPad and computer: sidebar layout (step 1).** From 760px wide and 560px tall (iPad either
+way up, a computer) Home is a new layout (HomeShell); phones keep the tiles, held sideways too. A sidebar reaches every part of
+the app (Home, Dashboard; Video: Game film, Video tagger; Match: New match, Live Stats Pad, Pitch
+map, Opposition, Match information, Import data; Club: Squad, Fan Zone, Tactical pad, Tagging
+template; Help and Sign out at the foot; players see only what they can open). A top bar has the
+date and Live Stats Pad, New match and the club crest (crest and kit). Middle: club banner,
+Dashboard, the last match (score, shots, accuracy, kickouts kept for both sides, top scorer, full
+report) beside a tagging card (resume the live game, or new match; video tagger), then the 4 newest
+playlists (shared marked, drawings counted). Right: this season (record, points scored and
+conceded a game, shot accuracy, kickouts kept), top 3 scorers, and club (join code, free plan,
+matches stored, appearance). An upright iPad shows the sidebar as icons and the right column under
+the middle. The season figures load through one shared hook (useHomeStats) also used by the old
+slide panel, which no longer shows. Test: `tools/e2e/test_home_panel.js` rewritten.
+Next: step 2, the sidebar on the other big-screen pages; step 3, fixtures (Up next) and search.
+
 ## Done 2026-11-11
 
 **Momentum chart on a match (FotMob style).** The match overview (KEY and DETAIL) opens with
