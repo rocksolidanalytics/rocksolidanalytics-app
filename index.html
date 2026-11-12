@@ -12895,13 +12895,31 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     function sdAvg(k) { var v = out.map(function(r) { return r[k] ? r[k].len : null; }).filter(function(x) { return x != null; }); return v.length ? v.reduce(function(a, b) { return a + b; }, 0) / v.length : null; }
     return { matches: out, usAvg: sdAvg("us"), oppAvg: sdAvg("opp") };
   }
+  // A game filter for the season cards instead of a list of every game, which grows season on
+  // season: all games, the last 5, or one game picked from a list. games run oldest to newest.
+  function GamePick({ games, value, onPick, noAll }) {
+    var btn = function(k, l) {
+      var on = value === k;
+      return React.createElement("button", { key: k, "aria-pressed": on, onClick: function() { onPick(k); }, style: { flexShrink: 0, minHeight: 40, padding: "0 14px", borderRadius: RAD.pill, border: "1px solid " + (on ? C.acc : C.border), background: on ? C.acc : C.bgCard, color: on ? C.accT : C.slate, fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, cursor: "pointer", whiteSpace: "nowrap" } }, l);
+    };
+    var one = value !== "all" && value !== "last5";
+    return React.createElement("div", { "data-game-pick": one ? "one" : value, style: { display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", marginBottom: 10 } },
+      !noAll && btn("all", "All games \u00b7 " + games.length), games.length > 5 && btn("last5", "Last 5"),
+      React.createElement("select", { "aria-label": "Pick a game", value: one ? value : "", onChange: function(e) { onPick(e.target.value || (noAll ? "last5" : "all")); }, className: "rsa-field",
+          style: { minHeight: 40, padding: "0 10px", borderRadius: RAD.pill, border: "1px solid " + (one ? C.acc : C.border), background: one ? C.acc : C.bgCard, color: one ? C.accT : C.slate, fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, maxWidth: "100%", cursor: "pointer" } },
+        React.createElement("option", { value: "" }, "One game\u2026"),
+        games.slice().reverse().map(function(g) { return React.createElement("option", { key: g.id, value: g.id }, g.label); })));
+  }
+  function _gpSub(list, pick, idOf) { return pick === "last5" ? list.slice(-5) : pick === "all" ? list : list.filter(function(m) { return String(idOf(m)) === String(pick); }); }
   function DroughtView({ dr, club, oppName, nM, sd }) {
+    const [pick, setPick] = useState("all");
     if (!dr || !dr.matches.length) return null;
     var usN = (club && club.name) || "Us", opN = oppName || "Opposition";
-    function spell(x) { return x ? _tmMin(x.len) + " \u00b7 " + Math.floor(x.start / 60) + "\u2032" : "\u2014"; }
-    if (nM <= 1) {
-      var r = dr.matches[0];
-      return React.createElement("div", null,
+    var picker = nM > 1 ? React.createElement(GamePick, { games: dr.matches.map(function(m) { return { id: m.match_id, label: _tmMatchLbl(m) }; }), value: pick, onPick: setPick }) : null;
+    var one = nM > 1 && pick !== "all" && pick !== "last5";
+    if (nM <= 1 || one) {
+      var r = nM <= 1 ? dr.matches[0] : (_gpSub(dr.matches, pick, function(m) { return m.match_id; })[0] || dr.matches[0]);
+      return React.createElement("div", null, picker,
         React.createElement("div", { style: Object.assign({}, _TM_CARD, { display: "flex", gap: 10 }) },
           [[usN, r.us, C.us], [opN, r.opp, C.them]].map(function(s, i) {
             return React.createElement("div", { key: i, style: { flex: 1, textAlign: "center" } },
@@ -12919,10 +12937,14 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
           })),
         React.createElement("div", { style: _TM_NOTE }, "Longest spell without a score, and below it without a shot. Each half is measured on its own; half-time never counts."));
     }
-    var rows = dr.matches.map(function(m) { return [_tmMatchLbl(m), spell(m.us), spell(m.opp)]; });
-    return React.createElement("div", null,
-      React.createElement("div", { style: Object.assign({}, _TM_CARD, { display: "flex", gap: 10, marginBottom: 12 }) },
-        [[usN, dr.usAvg, dr.usWorst, C.us], [opN, dr.oppAvg, dr.oppWorst, C.them]].map(function(s, i) {
+    var sub = _gpSub(dr.matches, pick, function(m) { return m.match_id; }), ids = {};
+    sub.forEach(function(m) { ids[m.match_id] = 1; });
+    function sAvg(list, k) { var v = list.map(function(r) { return r[k] ? r[k].len : null; }).filter(function(x) { return x != null; }); return v.length ? v.reduce(function(a, b) { return a + b; }, 0) / v.length : null; }
+    function sWorst(k) { var w = null; sub.forEach(function(r) { if (r[k] && (!w || r[k].len > w.len)) w = Object.assign({ opponent: r.opponent }, r[k]); }); return w; }
+    var sdSub = sd ? sd.matches.filter(function(m) { return ids[m.match_id]; }) : [];
+    return React.createElement("div", null, picker,
+      React.createElement("div", { style: Object.assign({}, _TM_CARD, { display: "flex", gap: 10 }) },
+        [[usN, sAvg(sub, "us"), sWorst("us"), C.us, sAvg(sdSub, "us")], [opN, sAvg(sub, "opp"), sWorst("opp"), C.them, sAvg(sdSub, "opp")]].map(function(s, i) {
           return React.createElement("div", { key: i, style: { flex: 1, textAlign: "center" } },
             React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1, color: inkText(s[3]), fontFamily: MONO, fontWeight: 700 } }, s[0].toUpperCase().slice(0, 16)),
             React.createElement("div", { style: { fontSize: FS.h2, fontWeight: 800, fontFamily: MONO, color: C.white, marginTop: 4 } }, s[1] != null ? _tmMin(s[1]) : "\u2014"),
@@ -12930,26 +12952,20 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             s[2] ? React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, fontFamily: MONO, marginTop: 6 } }, "worst " + _tmMin(s[2].len) + " v " + (s[2].opponent || "?")) : null,
             sd && React.createElement("div", { "data-shot-drought": i === 0 ? "us" : "opp", style: { marginTop: 12, paddingTop: 10, borderTop: "1px solid " + C.border } },
               React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1, color: C.slateD, fontFamily: MONO, fontWeight: 700 } }, "WITHOUT A SHOT"),
-              React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, fontFamily: MONO, color: C.white, marginTop: 2 } }, (i === 0 ? sd.usAvg : sd.oppAvg) != null ? _tmMin(i === 0 ? sd.usAvg : sd.oppAvg) : "\u2014"),
+              React.createElement("div", { style: { fontSize: FS.lg, fontWeight: 800, fontFamily: MONO, color: C.white, marginTop: 2 } }, s[4] != null ? _tmMin(s[4]) : "\u2014"),
               React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, fontFamily: MONO, marginTop: 2 } }, "avg longest per game")));
         })),
-      React.createElement("div", { style: _TM_CARD },
-        React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: FS.md, fontFamily: MONO } },
-          React.createElement("thead", null, React.createElement("tr", null,
-            React.createElement("th", { style: Object.assign({}, _TM_TH, { textAlign: "left", padding: "10px 4px" }) }, "GAME"),
-            React.createElement("th", { style: Object.assign({}, _TM_TH, { color: C.usText, padding: "10px 4px" }) }, teamWord(usN).toUpperCase()),
-            React.createElement("th", { style: Object.assign({}, _TM_TH, { color: C.themText, padding: "10px 4px" }) }, "OPP"))),
-          React.createElement("tbody", null, rows.map(function(r, i) {
-            return React.createElement("tr", { key: i, style: { borderBottom: "1px solid " + C.border + ALPHA.mid } },
-              React.createElement("td", { style: Object.assign({}, _TM_LBL, { padding: "10px 4px", whiteSpace: "normal", lineHeight: 1.3 }) }, r[0]),
-              React.createElement("td", { style: Object.assign({}, _TM_TD, { color: C.usText, padding: "10px 4px" }) }, r[1]),
-              React.createElement("td", { style: Object.assign({}, _TM_TD, { color: C.themText, padding: "10px 4px" }) }, r[2]));
-          })))),
-      React.createElement("div", { style: _TM_NOTE }, "Each game: longest spell without a score \u00b7 the minute it started. Each half is measured on its own; half-time never counts."));
+      React.createElement("div", { style: _TM_NOTE }, (pick === "last5" ? "The last " + sub.length + " games. " : "") + "Average of each game's longest spell without a score, and below it without a shot; pick one game to see when it happened. Each half is measured on its own; half-time never counts."));
   }
   // Group 2.4: how long the running scoreline had each side in front.
-  function GameStateView({ gs, club, nM }) {
-    if (!gs || !gs.matches.length) return null;
+  function GameStateView({ gs: gsAll, club, nM }) {
+    const [pick, setPick] = useState("all");
+    if (!gsAll || !gsAll.matches.length) return null;
+    var picker = nM > 1 ? React.createElement(GamePick, { games: gsAll.matches.map(function(m) { return { id: m.match_id, label: _tmMatchLbl(m) }; }), value: pick, onPick: setPick }) : null;
+    var gsSub = _gpSub(gsAll.matches, pick, function(m) { return m.match_id; });
+    var gs = pick === "all" ? gsAll : { matches: gsSub, lead: 0, level: 0, behind: 0 };
+    if (pick !== "all") gsSub.forEach(function(m) { gs.lead += m.lead; gs.level += m.level; gs.behind += m.behind; });
+    var oneM = pick !== "all" && pick !== "last5" ? gsSub[0] : null;
     var tot = gs.lead + gs.level + gs.behind;
     if (tot <= 0) return null;
     function bar(lead, level, behind) {
@@ -12959,8 +12975,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }
     function gsPc(v) { return Math.round(100 * v / tot) + "%"; }
     var usN = (club && club.name) || "Us";
-    return React.createElement("div", null,
-      React.createElement("div", { style: Object.assign({}, _TM_CARD, { marginBottom: nM > 1 ? 12 : 0 }) },
+    return React.createElement("div", null, picker,
+      React.createElement("div", { style: _TM_CARD },
+        oneM && React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: FS.sm, fontFamily: MONO, color: C.slate, marginBottom: 6 } },
+          React.createElement("span", null, _tmMatchLbl(oneM)),
+          React.createElement("span", { style: { color: oneM.margin > 0 ? C.greenB : oneM.margin < 0 ? C.red : C.slate, fontWeight: 700 } }, (oneM.margin > 0 ? "won by " : oneM.margin < 0 ? "lost by " : "drawn") + (oneM.margin ? Math.abs(oneM.margin) : ""))),
         bar(gs.lead, gs.level, gs.behind),
         React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginTop: 10, fontFamily: MONO } },
           [["LEADING", gs.lead, C.greenB], ["LEVEL", gs.level, C.slate], ["BEHIND", gs.behind, C.red]].map(function(s, i) {
@@ -12968,13 +12987,6 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
               React.createElement("div", { style: { fontSize: FS.xl, fontWeight: 800, color: s[2] } }, gsPc(s[1])),
               React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1, color: C.slateD } }, s[0] + " \u00b7 " + Math.round(s[1] / 60) + " MIN"));
           }))),
-      nM > 1 ? React.createElement("div", { style: _TM_CARD }, gs.matches.map(function(m, i) {
-        return React.createElement("div", { key: i, style: { marginBottom: i < gs.matches.length - 1 ? 10 : 0 } },
-          React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: FS.sm, fontFamily: MONO, color: C.slate, marginBottom: 4 } },
-            React.createElement("span", null, _tmMatchLbl(m)),
-            React.createElement("span", { style: { color: m.margin > 0 ? C.greenB : m.margin < 0 ? C.red : C.slate, fontWeight: 700 } }, (m.margin > 0 ? "+" : m.margin < 0 ? "\u2212" : "") + Math.abs(m.margin))),
-          bar(m.lead, m.level, m.behind));
-      })) : null,
       React.createElement("div", { style: _TM_NOTE }, "Time ", usN, " spent ahead, level and behind on the running scoreline, from tagged scores. Half-time is not counted."));
   }
   // Key Callouts panel. Green is us and blue is them; colour only says whose a number is.
@@ -13095,6 +13107,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   }
   // Cards for us and them: totals, then the cards in order (one match) or game by game and by player (a season).
   function CardsView({ evs, matches, isMatch, usName, oppName }) {
+    const [pick, setPick] = useState("last5");
     var cards = (evs || []).map(function(e) { var s = synOf(e); return s.g === "Cards" ? Object.assign({}, e, { _k: s.o }) : null; }).filter(Boolean);
     var KINDS = ["Yellow", "Red", "Black"];
     function tally(list, tm) { var t = { Yellow: 0, Red: 0, Black: 0 }; list.forEach(function(e) { if (e.team === tm && t[e._k] != null) t[e._k]++; }); return t; }
@@ -13129,8 +13142,9 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var players = Object.keys(byP).map(function(k) { return byP[k]; }).sort(function(a, b) { return (b.Red * 3 + b.Black * 2 + b.Yellow) - (a.Red * 3 + a.Black * 2 + a.Yellow); });
     return React.createElement("div", null, head,
       React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 8 } }, (totU / nG).toFixed(1) + " cards a game for " + usName + ", " + (totT / nG).toFixed(1) + " for opponents, over " + nG + " games."),
-      React.createElement("div", { style: lab }, "GAME BY GAME"),
-      games.map(function(m, i) {
+      React.createElement("div", { style: lab }, pick === "last5" ? (games.length > 5 ? "LAST 5 GAMES WITH CARDS" : "GAME BY GAME") : "ONE GAME"),
+      games.length > 5 && React.createElement(GamePick, { noAll: true, games: games.slice().reverse().map(function(m) { return { id: m.id, label: String(m.date || "").slice(5).replace("-", "/") + " " + (m.opponent || "Match") }; }), value: pick, onPick: setPick }),
+      (pick === "last5" ? games.slice(0, 5) : games.filter(function(m) { return String(m.id) === String(pick); })).map(function(m, i) {
         var l = byM[m.id], a = tally(l, "us"), b = tally(l, "opp");
         return React.createElement("div", { key: m.id, style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderTop: i ? "1px solid " + C.border : "none", fontSize: FS.sm } },
           React.createElement("span", { style: { width: 44, fontFamily: MONO, color: C.slateD } }, String(m.date || "").slice(5).replace("-", "/")),

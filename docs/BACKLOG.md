@@ -238,6 +238,14 @@ breakdown has a row of buttons (All, Scoring, Shooting, Restarts, Ball lost, Pos
 to show one heading at a time; All by default and the pick is kept on the device.
 Test: `tools/e2e/test_periods.js`.
 
+**Season cards: a game filter instead of a list of every game.** Lists that grew with every game
+(and would keep growing over 2 or 3 seasons) are gone. The scoring droughts card and the time
+leading / level / behind card open on all games (averages / totals) with buttons for All games and
+Last 5 (from 6 games) and a "One game" picker; one game shows that game alone (when each spell
+began; its result). The season cards view on Defence shows the last 5 games with cards, with the
+same picker for any other game.
+Test: `tools/e2e/test_game_pick.js` (a nine-game season).
+
 ## Done 2026-11-11
 
 **Momentum chart on a match (FotMob style).** The match overview (KEY and DETAIL) opens with
