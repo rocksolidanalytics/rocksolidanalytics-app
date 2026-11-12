@@ -275,7 +275,14 @@ conceded a game, shot accuracy, kickouts kept), top 3 scorers, and club (join co
 matches stored, appearance). An upright iPad shows the sidebar as icons and the right column under
 the middle. The season figures load through one shared hook (useHomeStats) also used by the old
 slide panel, which no longer shows. Test: `tools/e2e/test_home_panel.js` rewritten.
-Next: step 2, the sidebar on the other big-screen pages; step 3, fixtures (Up next) and search.
+Step 2, the same day: the sidebar on the other big-screen pages (Dashboard, Game film, Video
+tagger list, New match, Live Stats Pad, Pitch map, Opposition, Match information, Import data,
+Squad, Fan Zone, Tactical pad, Tagging template, Help). The sidebar is its own component (SideNav)
+and pages sit in a frame (NavFrame) from App, with this page marked; the page actions are one set
+(navGo) shared with Home. The live tagger and the video tagger itself stay full screen; phones
+have no sidebar. Pages in the frame fill its width up to 1280px; Game film keeps the sidebar as icons so the
+video stays about two thirds of the screen. Test: `tools/e2e/test_sidenav.js`.
+Next: step 3, fixtures (Up next) and search.
 
 ## Done 2026-11-11
 

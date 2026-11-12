@@ -93,6 +93,8 @@
   /* Home on an iPad or computer (HomeShell): sidebar, middle column, season column. Upright iPad:
      the sidebar keeps its icons only and the season column moves under the middle. */
   #root > div.rs-wide.rsa-hsw{max-width:none!important;box-shadow:none!important}
+  .rsa-hs-content > div{max-width:1280px}
+  .rsa-hs-compact .rsa-hs-app{grid-template-columns:72px minmax(0,1fr)}.rsa-hs-compact .rsa-hs-lbl{display:none!important}.rsa-hs-compact .rsa-hs-nav{justify-content:center;padding:0!important}.rsa-hs-compact .rsa-hs-brand{justify-content:center;padding:2px 0 16px!important}
   .rsa-hs-app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100dvh}
   .rsa-hs-cols{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start;max-width:1300px}
   .rsa-hs-row2{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;align-items:stretch}
@@ -2044,6 +2046,39 @@
   // Home on an iPad or a computer: a sidebar to every part of the app, a top bar with the quick
   // actions, the club and its last match and tagging in the middle, the season on the right.
   // An upright iPad keeps the sidebar as icons and puts the season under the middle.
+  // The sidebar on an iPad or a computer: every part of the app, the page you are on marked.
+  // go holds the actions (onStats, onGameFilm and so on); active is the label of this page.
+  function SideNav({ go, active, isPlayer }) {
+    var nav = [
+      ["\u2302", "Home", go.onHome], ["\u25a6", "Dashboard", go.onStats],
+      ["VIDEO"], ["\u25b6\ufe0e", "Game film", go.onGameFilm], ["\u25c6", "Video tagger", go.onVideoHub, true],
+      ["MATCH"], ["+", "New match", go.onNewMatch, true], ["\u25c9", "Live Stats Pad", go.onLivePad, true], ["\u25ce", "Pitch map", go.onPitchMap], ["vs", "Opposition", go.onOpposition],
+      ["\u2630", "Match information", go.onLineups, true], ["\u2191", "Import data", go.onImport, true],
+      ["CLUB"], ["\u25c9", "Squad", go.onSquad, true], ["\u2605", "Fan Zone", go.onLive, true], ["\u26ca", "Tactical pad", go.onTactic], ["\u2699", "Tagging template", go.onTemplate, true]
+    ].filter(function(n) { return !(n[3] && isPlayer); });
+    var navBtn = function(n, i) {
+      if (n.length === 1) return React.createElement("div", { key: "l" + i, className: "rsa-hs-lbl", style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, fontWeight: 700, padding: "14px 12px 6px" } }, n[0]);
+      var on = n[1] === active;
+      return React.createElement("button", { key: n[1], onClick: on ? undefined : n[2] || undefined, "aria-label": n[1], title: n[1], "aria-current": on ? "page" : undefined, className: "rsa-hs-nav",
+          style: { width: "100%", display: "flex", alignItems: "center", gap: 12, minHeight: 44, padding: "0 12px", marginBottom: 2, borderRadius: RAD.md, border: "none", boxShadow: on ? "inset 3px 0 0 " + C.acc : "none", background: on ? C.field : "none", color: on ? C.white : C.slate, fontSize: FS.md, fontWeight: 600, cursor: on ? "default" : "pointer", textAlign: "left" } },
+        React.createElement("span", { style: { width: 22, textAlign: "center", fontSize: FS.lg, flexShrink: 0, fontWeight: 700 } }, n[0]),
+        React.createElement("span", { className: "rsa-hs-lbl", style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, n[1]));
+    };
+    return React.createElement("aside", { className: "rsa-hs-side", style: { position: "sticky", top: 0, height: "100dvh", overflowY: "auto", background: RSA_LIGHT ? "#FFFFFF" : "#0E0E11", borderRight: "1px solid " + C.border, padding: "16px 10px", display: "flex", flexDirection: "column", boxSizing: "border-box" } },
+      React.createElement("div", { className: "rsa-hs-brand", style: { display: "flex", alignItems: "center", gap: 10, padding: "2px 10px 16px" } },
+        React.createElement("img", { src: LOGO, alt: "", width: 30, height: 30 }),
+        React.createElement("div", { className: "rsa-hs-lbl", style: { fontSize: FS.md, fontWeight: 800, letterSpacing: -0.2, lineHeight: 1.15 } }, "Rock Solid ", React.createElement("span", { style: { color: C.accL } }, "Analytics"))),
+      nav.map(navBtn),
+      React.createElement("div", { style: { marginTop: "auto", paddingTop: 10, borderTop: "1px solid " + C.border } },
+        navBtn(["?", "Help & support", go.onHelp], 900), navBtn(["\u21aa", "Sign out", go.onSignOut], 901)));
+  }
+  // A big-screen page inside the sidebar frame (the taggers stay full screen). compact keeps the
+  // sidebar to its icons, for pages that need the width (Game film, where the video is the point).
+  function NavFrame({ go, active, isPlayer, children, compact }) {
+    return React.createElement("div", { className: "rs-wide rsa-fb rsa-hsw" + (compact ? " rsa-hs-compact" : ""), style: { minHeight: "100dvh", background: C.bg, color: C.white } },
+      React.createElement("div", { className: "rsa-hs-app" }, React.createElement(SideNav, { go: go, active: active, isPlayer: isPlayer }),
+        React.createElement("div", { className: "rsa-hs-content", "data-nav-page": active, style: { minWidth: 0 } }, children)));
+  }
   function HomeShell(pr) {
     var club = pr.club, isPlayer = pr.isPlayer, st = useHomeStats(club);
     const [pls, setPls] = useState(null);
@@ -2058,29 +2093,7 @@
         React.createElement("div", { style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, fontWeight: 700 } }, t),
         link && React.createElement("button", { onClick: onLink, style: { minHeight: 36, margin: "-8px 0", padding: 0, background: "none", border: "none", boxShadow: "none", color: C.accL, fontSize: FS.sm, fontWeight: 700, cursor: "pointer" } }, link + " \u2192"));
     };
-    // Sidebar: [glyph, label, action, hidden for players]
-    var nav = [
-      ["\u2302", "Home", null], ["\u25a6", "Dashboard", pr.onStats],
-      ["VIDEO"], ["\u25b6\ufe0e", "Game film", pr.onGameFilm], ["\u25c6", "Video tagger", pr.onVideoHub, true],
-      ["MATCH"], ["+", "New match", pr.onNewMatch, true], ["\u25c9", "Live Stats Pad", pr.onLivePad, true], ["\u25ce", "Pitch map", pr.onPitchMap], ["vs", "Opposition", pr.onOpposition],
-      ["\u2630", "Match information", pr.onLineups, true], ["\u2191", "Import data", pr.onImport, true],
-      ["CLUB"], ["\u25c9", "Squad", pr.onSquad, true], ["\u2605", "Fan Zone", pr.onLive, true], ["\u26ca", "Tactical pad", pr.onTactic], ["\u2699", "Tagging template", pr.onTemplate, true]
-    ].filter(function(n) { return !(n[3] && isPlayer); });
-    var navBtn = function(n, i) {
-      if (n.length === 1) return React.createElement("div", { key: "l" + i, className: "rsa-hs-lbl", style: { fontSize: FS.xs, letterSpacing: 1.5, color: C.slateD, fontFamily: MONO, fontWeight: 700, padding: "14px 12px 6px" } }, n[0]);
-      var on = !n[2];
-      return React.createElement("button", { key: n[1], onClick: n[2] || undefined, "aria-label": n[1], title: n[1], "aria-current": on ? "page" : undefined, className: "rsa-hs-nav",
-          style: { width: "100%", display: "flex", alignItems: "center", gap: 12, minHeight: 44, padding: "0 12px", marginBottom: 2, borderRadius: RAD.md, border: "none", boxShadow: on ? "inset 3px 0 0 " + C.acc : "none", background: on ? C.field : "none", color: on ? C.white : C.slate, fontSize: FS.md, fontWeight: 600, cursor: on ? "default" : "pointer", textAlign: "left" } },
-        React.createElement("span", { style: { width: 22, textAlign: "center", fontSize: FS.lg, flexShrink: 0, fontWeight: 700 } }, n[0]),
-        React.createElement("span", { className: "rsa-hs-lbl", style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, n[1]));
-    };
-    var side = React.createElement("aside", { className: "rsa-hs-side", style: { position: "sticky", top: 0, height: "100dvh", overflowY: "auto", background: RSA_LIGHT ? "#FFFFFF" : "#0E0E11", borderRight: "1px solid " + C.border, padding: "16px 10px", display: "flex", flexDirection: "column", boxSizing: "border-box" } },
-      React.createElement("div", { className: "rsa-hs-brand", style: { display: "flex", alignItems: "center", gap: 10, padding: "2px 10px 16px" } },
-        React.createElement("img", { src: LOGO, alt: "", width: 30, height: 30 }),
-        React.createElement("div", { className: "rsa-hs-lbl", style: { fontSize: FS.md, fontWeight: 800, letterSpacing: -0.2, lineHeight: 1.15 } }, "Rock Solid ", React.createElement("span", { style: { color: C.accL } }, "Analytics"))),
-      nav.map(navBtn),
-      React.createElement("div", { style: { marginTop: "auto", paddingTop: 10, borderTop: "1px solid " + C.border } },
-        navBtn(["?", "Help & support", pr.onHelp], 900), navBtn(["\u21aa", "Sign out", pr.onSignOut], 901)));
+    var side = React.createElement(SideNav, { go: pr, active: "Home", isPlayer: isPlayer });
     // Top bar: the quick actions and the club crest (tap to change crest or kit).
     var topBtn = function(label, onClick, col) {
       return React.createElement("button", { onClick: onClick, style: { minHeight: 40, padding: "0 14px", borderRadius: RAD.pill, border: "1px solid " + (col ? col + ALPHA.strong : C.border), background: C.bgCard, color: col || C.slate, fontSize: FS.sm, fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap" } }, label);
@@ -14965,6 +14978,17 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         clearInterval(iv);
       };
     }, []);
+    // Big screen (iPad either way up, a computer): pages get the sidebar frame.
+    const [navBig, setNavBig] = useState(function() { return window.innerWidth >= 760 && window.innerHeight >= 560; });
+    useEffect(function() {
+      function navOnSize() { setNavBig(window.innerWidth >= 760 && window.innerHeight >= 560); }
+      window.addEventListener("resize", navOnSize); return function() { window.removeEventListener("resize", navOnSize); };
+    }, []);
+    var navGo = { onHome: () => setPhase("home"), onSignOut: () => { try { activeClear(); } catch (e) {} db.auth.signOut(); }, onImport: () => setPhase("import"), onGameFilm: () => { setFocusMatch(null); setPhase("gamefilm"); },
+      onLineups: () => setPhase("lineups"), onStats: () => { setStatsOpen(null); setStatsView(null); setPhase("stats"); }, onNewMatch: () => setPhase("newmatch"), onVideoHub: () => setPhase("videohub"),
+      onTemplate: () => { setTplMatch(null); setPhase("template"); }, onLive: () => setPhase("live"), onLivePad: () => setPhase("livepad"), onTactic: () => setPhase("tactic"), onHelp: () => setPhase("help"),
+      onSquad: () => setPhase("squad"), onPitchMap: () => { setFocusMatch(null); setPhase("pitchmap"); }, onOpposition: () => setPhase("opposition") };
+    function withNav(label, el, compact) { return navBig && club ? React.createElement(NavFrame, { go: navGo, active: label, isPlayer: role === "player", compact: !!compact }, el) : el; }
     var liveParam = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("live") : null;
     if (liveParam) return /* @__PURE__ */ React.createElement(PublicLiveMirror, { clubId: liveParam });
     var clipsParam = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("clips") : null;
@@ -14998,18 +15022,18 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       loadCount(c.id);
       setPhase("home");
     } });
-    if (phase === "import") return /* @__PURE__ */ React.createElement(Import, { club, session, back: () => {
+    if (phase === "import") return withNav("Import data", React.createElement(Import, { club, session, back: () => {
       loadCount(club.id);
       setPhase("home");
-    } });
-    if (phase === "lineups") return /* @__PURE__ */ React.createElement(Lineups, { club, session, back: () => setPhase("home"), onVideo: (m) => {
+    } }));
+    if (phase === "lineups") return withNav("Match information", React.createElement(Lineups, { club, session, back: () => setPhase("home"), onVideo: (m) => {
       setTagMatch(m);
       setPhase("video");
     }, onEdit: (m) => {
       setEditMatch(m);
       setPhase("editmatch");
-    } });
-    if (phase === "newmatch") return /* @__PURE__ */ React.createElement(NewMatch, { club, session, back: () => {
+    } }));
+    if (phase === "newmatch") return withNav("New match", React.createElement(NewMatch, { club, session, back: () => {
       loadCount(club.id);
       setPhase("home");
     }, onTag: (m) => {
@@ -15018,7 +15042,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     }, onVideo: (m) => {
       setTagMatch(m);
       setPhase("video");
-    } });
+    } }));
     if (phase === "tagger") return /* @__PURE__ */ React.createElement(Tagger, { club, session, match: tagMatch, back: () => {
       loadCount(club.id);
       setResumeMatch(null);
@@ -15032,37 +15056,35 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       if (!editMatch) return React.createElement("div", { className: "rsa-fb", style: { padding: 40, color: C.gold } }, "editMatch is null - redirecting...", React.createElement("button", { onClick: function() { setPhase("lineups"); }, style: { display: "block", marginTop: 16, minHeight: 44, padding: "0 18px", borderRadius: RAD.lg, border: "1px solid " + C.borderB, background: "none", color: C.white, fontSize: FS.md, fontWeight: 700, cursor: "pointer" } }, "Back"));
       return React.createElement(EditMatchSafe, null, React.createElement(EditMatch, { club: club, match: editMatch, session: session, back: function() { setPhase("lineups"); }, onSaved: function() { setPhase("lineups"); } }));
     }
-    if (phase === "template") return /* @__PURE__ */ React.createElement(TemplateEditor, { club, match: tplMatch, back: () => setPhase(tplMatch ? "editmatch" : "home"), onSaved: () => {
+    if (phase === "template") return withNav("Tagging template", React.createElement(TemplateEditor, { club, match: tplMatch, back: () => setPhase(tplMatch ? "editmatch" : "home"), onSaved: () => {
       db.from("clubs").select("*").eq("id", club.id).maybeSingle().then(function(r) { if (r && r.data && r.data.id === club.id) setClub(r.data); }, function() {});
       setPhase(tplMatch ? "editmatch" : "home");
-    } });
+    } }));
     // Back from clips or a pitch map opened on a match: to that match, else home.
     function backToMatch() {
       var fromStats = !!(focusMatch || statsView);
       setFocusEvs(null);
       if (fromStats) { setStatsOpen(focusMatch); setFocusMatch(null); setPhase("stats"); } else setPhase("home");
     }
-    if (phase === "pitchmap") return /* @__PURE__ */ React.createElement(PitchExplorer, { club, matchId: focusMatch, evIds: focusEvs && focusEvs.ids, pickLabel: focusEvs && focusEvs.label, back: backToMatch });
-    if (phase === "opposition") return /* @__PURE__ */ React.createElement(OppDB, { club, role, back: () => setPhase("home") });
-    if (phase === "videohub") return /* @__PURE__ */ React.createElement(VideoHub, { club, session, role, onPick: (m) => {
+    if (phase === "pitchmap") return withNav("Pitch map", React.createElement(PitchExplorer, { club, matchId: focusMatch, evIds: focusEvs && focusEvs.ids, pickLabel: focusEvs && focusEvs.label, back: backToMatch }));
+    if (phase === "opposition") return withNav("Opposition", React.createElement(OppDB, { club, role, back: () => setPhase("home") }));
+    if (phase === "videohub") return withNav("Video tagger", React.createElement(VideoHub, { club, session, role, onPick: (m) => {
       setTagMatch(m);
       setPhase("video");
-    }, onNew: () => setPhase("newmatch"), back: () => setPhase("home") });
-    if (phase === "live") return /* @__PURE__ */ React.createElement(LiveMirror, { club, back: () => setPhase("home") });
-    if (phase === "tactic") return /* @__PURE__ */ React.createElement(TacticalPad, { club, role, back: () => setPhase("home") });
-    if (phase === "help") return /* @__PURE__ */ React.createElement(HelpCenter, { club, session, back: () => setPhase("home") });
-    if (phase === "squad") return /* @__PURE__ */ React.createElement(SquadScreen, { club, back: () => setPhase("home") });
+    }, onNew: () => setPhase("newmatch"), back: () => setPhase("home") }));
+    if (phase === "live") return withNav("Fan Zone", React.createElement(LiveMirror, { club, back: () => setPhase("home") }));
+    if (phase === "tactic") return withNav("Tactical pad", React.createElement(TacticalPad, { club, role, back: () => setPhase("home") }));
+    if (phase === "help") return withNav("Help & support", React.createElement(HelpCenter, { club, session, back: () => setPhase("home") }));
+    if (phase === "squad") return withNav("Squad", React.createElement(SquadScreen, { club, back: () => setPhase("home") }));
     if (phase === "video") return /* @__PURE__ */ React.createElement(VideoTagger, { club, session, match: tagMatch, back: () => {
       loadCount(club.id);
       setPhase("home");
     } });
-    if (phase === "stats") return /* @__PURE__ */ React.createElement(Stats, { key: "stats-" + (statsOpen || ""), club, openMatch: statsOpen, openView: statsView, back: () => { setStatsOpen(null); setStatsView(null); setPhase("home"); }, onWatch: function(id, ids, label) { setFocusMatch(id); setFocusEvs(ids ? { ids: ids, label: label } : null); setStatsView(null); setPhase("gamefilm"); }, onPitch: function(id, ids, label, view) { setFocusMatch(id); setFocusEvs(ids ? { ids: ids, label: label } : null); setStatsView(view || null); setPhase("pitchmap"); } });
-    if (phase === "livepad") return /* @__PURE__ */ React.createElement(LiveStatsPad, { club, back: function() { setPhase("home"); } });
-    if (phase === "gamefilm") return /* @__PURE__ */ React.createElement(GameFilm, { club, role, matchId: focusMatch, evIds: focusEvs && focusEvs.ids, pickLabel: focusEvs && focusEvs.label, back: backToMatch });
-    return /* @__PURE__ */ React.createElement(Home, { club, onClub: setClub, onSignOut: () => { try { activeClear(); } catch (e) {} db.auth.signOut(); }, onImport: () => setPhase("import"), onGameFilm: () => { setFocusMatch(null); setPhase("gamefilm"); }, onLineups: () => setPhase("lineups"), onStats: () => { setStatsOpen(null); setStatsView(null); setPhase("stats"); }, lastMatch, onLastMatch: function(m) { setStatsOpen(m.id); setStatsView(null); setPhase("stats"); }, onNewMatch: () => setPhase("newmatch"), onVideoHub: () => setPhase("videohub"), onTemplate: () => {
-      setTplMatch(null);
-      setPhase("template");
-    }, onLive: () => setPhase("live"), onLivePad: () => setPhase("livepad"), onResume: function(m) { if (!club || m.club_id !== club.id) { setResumeMatch(null); return; } setTagMatch(m); setPhase("tagger"); }, resumeMatch, onTactic: () => setPhase("tactic"), onHelp: () => setPhase("help"), onSquad: () => setPhase("squad"), onPitchMap: () => { setFocusMatch(null); setPhase("pitchmap"); }, onOpposition: () => setPhase("opposition"), role, matchCount });
+    if (phase === "stats") return withNav("Dashboard", React.createElement(Stats, { key: "stats-" + (statsOpen || ""), club, openMatch: statsOpen, openView: statsView, back: () => { setStatsOpen(null); setStatsView(null); setPhase("home"); }, onWatch: function(id, ids, label) { setFocusMatch(id); setFocusEvs(ids ? { ids: ids, label: label } : null); setStatsView(null); setPhase("gamefilm"); }, onPitch: function(id, ids, label, view) { setFocusMatch(id); setFocusEvs(ids ? { ids: ids, label: label } : null); setStatsView(view || null); setPhase("pitchmap"); } }));
+    if (phase === "livepad") return withNav("Live Stats Pad", React.createElement(LiveStatsPad, { club, back: function() { setPhase("home"); } }));
+    if (phase === "gamefilm") return withNav("Game film", React.createElement(GameFilm, { club, role, matchId: focusMatch, evIds: focusEvs && focusEvs.ids, pickLabel: focusEvs && focusEvs.label, back: backToMatch }), true);
+    return /* @__PURE__ */ React.createElement(Home, Object.assign({}, navGo, { club, onClub: setClub, lastMatch, onLastMatch: function(m) { setStatsOpen(m.id); setStatsView(null); setPhase("stats"); },
+      onResume: function(m) { if (!club || m.club_id !== club.id) { setResumeMatch(null); return; } setTagMatch(m); setPhase("tagger"); }, resumeMatch, role, matchCount }));
   }
   ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(RSABoundary, null, /* @__PURE__ */ React.createElement(App, null)));
 })();
