@@ -230,6 +230,14 @@ tackles, kickouts won, ball lost, xS+-), each player over the games they have ta
 worked out by the same stats code. VS TARGETS is the scorecard as before (Adjust targets link
 kept). Both choices are kept on the device. A single match still shows the plain breakdown.
 
+**Periods: time without a shot, and one heading at a time.** The scoring droughts card adds,
+under each side, the longest spell WITHOUT A SHOT (from play or a scoreable free), measured the
+same way (each half on its own; half-time never counts), with the minute and half it began; over
+several games, the average longest per game. Worked out outside the main stats code. The period
+breakdown has a row of buttons (All, Scoring, Shooting, Restarts, Ball lost, Possession, Tackles)
+to show one heading at a time; All by default and the pick is kept on the device.
+Test: `tools/e2e/test_periods.js`.
+
 ## Done 2026-11-11
 
 **Momentum chart on a match (FotMob style).** The match overview (KEY and DETAIL) opens with
