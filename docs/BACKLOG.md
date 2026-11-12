@@ -4,6 +4,22 @@ Open items first, then decisions, then what has been done, newest first.
 
 ## Open
 
+**Parked until the Christmas break: auto-tagging from video (suggested tags).** Idea agreed
+2026-11-12, not started. Bray Emmets football has 16 matches with video and a timestamp on each
+event: the training set for a separate video model that suggests tags in the Video tagger for an
+analyst to accept or edit (not fully automatic, and not Claude itself being trained).
+- Step 1 (free): timestamp audit. Spot-check ~50 events over 3-4 matches against the video: is
+  video_ts on the moment or a second or two late, and is each throw-in sync right.
+- Step 2 (free): originals from YouTube Studio onto a local drive (16 matches ~30-60 GB); first
+  experiments on Kaggle (~30 free GPU hours a week) or Colab. Hold out ~4 matches for testing.
+  Start with when and what (kickout, shot, score, wide); team, outcome, tackles, player and pitch
+  spot come later and are harder.
+- Step 3 (only if step 2 works): cheap storage (Backblaze B2 / Cloudflare R2, ~EUR 0.50-1 a month
+  for 50 GB), a small Python service, "suggested" tags in the tagger; every accept or fix becomes
+  new training data. Rented GPU runs ~EUR 5-20 each if Kaggle is not enough.
+- Needs: written consent from the club and players for footage used in training (GDPR, minors);
+  footage kept private. Consistent filming (high, wide, fixed, 1080p) helps as much as more games.
+
 **All-Ireland 2026 showcase (replaces the demo)**, agreed 2026-10-22, set up 2026-10-23.
 - Done: two containers, "All-Ireland 2026 - Football" and "All-Ireland 2026 - Hurling"
   (`clubs.showcase`, grade Inter-county, lifetime, no join code; see
