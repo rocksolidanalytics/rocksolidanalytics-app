@@ -218,6 +218,10 @@ the app now ask for the plain text form too. In the in-game stats (DETAILED), sh
 distance moved up to sit with the shot map and expected points, before the restart maps.
 Test: `tools/e2e/test_live_tidy.js`.
 
+**Figtree in the taggers too.** The live tagger and video tagger now use Figtree like the rest
+of the app; Barlow Condensed is no longer loaded at all. Checked on a phone and an iPad on its
+side: no button text spills; on a phone "Turnover won" takes two lines and longer tag rows wrap.
+
 ## Done 2026-11-11
 
 **Momentum chart on a match (FotMob style).** The match overview (KEY and DETAIL) opens with
