@@ -205,6 +205,19 @@ columns. Wide screens now go up to 1200px.
 **Still to look at:** the opposition team page, match lists, Game film list, the video
 tagger in landscape, and button sizes in the live tagger on a big screen.
 
+## Done 2026-11-12
+
+**Match pulse in the momentum style; live tagger tidy-ups.** The Match pulse is redrawn to sit
+beside Momentum: the same borderless card, centred "Match pulse" title, 0' / HT / FT along the
+bottom and team-colour legend. Every event is a thin spike from the dashed 50% line (ours up,
+theirs down; scores tall with a dot, sized goal > 2-pointer > point; misses, kickouts and ball
+lost short), and the chance of winning is one step line across it. Touch shows the minute and
+the chance then. The live tagger start control is a drawn triangle instead of the play
+character, which an iPad shows as a large colour emoji; the other play and pause characters in
+the app now ask for the plain text form too. In the in-game stats (DETAILED), shot efficiency by
+distance moved up to sit with the shot map and expected points, before the restart maps.
+Test: `tools/e2e/test_live_tidy.js`.
+
 ## Done 2026-11-11
 
 **Momentum chart on a match (FotMob style).** The match overview (KEY and DETAIL) opens with

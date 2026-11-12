@@ -12,7 +12,7 @@ module.exports = async function(t) {
     t.eq(n + ' tagger: video id read from the link', await p.evaluate(() => window.__vid), 'QyBK5QpmSfw');
     t.eq(n + ' tagger: YouTube controls off', await p.evaluate(() => window.__ytVars && window.__ytVars.controls), 0);
     t.eq(n + ' tagger: no tap layer before the first play', await L.tapLayers(p), 0);
-    await L.clickTxt(p, '^▶$'); await L.wait(p, 800);
+    await L.clickTxt(p, '^▶\uFE0E?$'); await L.wait(p, 800);
     t.eq(n + ' tagger: tap layer once playing', await L.tapLayers(p), 1);
     await p.evaluate(() => [...document.querySelectorAll('#root div')].find(d => d.style.zIndex === '2' && d.style.cursor === 'pointer' && d.style.inset).click()); await L.wait(p, 400);
     t.eq(n + ' tagger: a tap on the video pauses through the app', await p.evaluate(() => window.__ytCalls), ['play', 'pause']);
