@@ -222,6 +222,14 @@ Test: `tools/e2e/test_live_tidy.js`.
 of the app; Barlow Condensed is no longer loaded at all. Checked on a phone and an iPad on its
 side: no button text spills; on a phone "Turnover won" takes two lines and longer tag rows wrap.
 
+**Players tab: one panel, Averages or vs Targets.** The season Players tab no longer shows the
+scorecard and the breakdown side by side. Two switches above one table: AVERAGES / VS TARGETS,
+and SEASON / LAST 3 GAMES, which now applies to both. Averages are per game (points, shots,
+tackles, kickouts won, ball lost, xS+-), each player over the games they have tagged events in
+(shown after the name), sortable by column; the last 3 games are the 3 latest with tagged events,
+worked out by the same stats code. VS TARGETS is the scorecard as before (Adjust targets link
+kept). Both choices are kept on the device. A single match still shows the plain breakdown.
+
 ## Done 2026-11-11
 
 **Momentum chart on a match (FotMob style).** The match overview (KEY and DETAIL) opens with

@@ -8,6 +8,7 @@ module.exports = async function(t) {
   const press = async (label, dir, n) => { for (let i = 0; i < n; i++) { await p.click('button[aria-label="' + label + ' ' + dir + '"]'); await L.wait(p, 60); } };
   await p.getByText('Dashboard', { exact: true }).first().click(); await L.wait(p, 1500);
   await L.clickTxt(p, '^Players$'); await L.wait(p, 1000);
+  await L.clickTxt(p, '^VS TARGETS$'); await L.wait(p, 500);
   t.ok('season targets are by line when nothing is set', /Tkl\/g\nby line/.test(await L.text(p)));
   let rows = await rowsOf(p);
   t.ok('each tackle cell shows its line target as a whole number', rows.every(x => /^[\d.]+ ≥ \d+$/.test(x.tk)), JSON.stringify(rows.slice(0, 3)));
@@ -51,6 +52,7 @@ module.exports = async function(t) {
   const r2 = await L.open({ fixtures: f, w: 390, h: 844 }), p2 = r2.page;
   await p2.getByText('Dashboard', { exact: true }).first().click(); await L.wait(p2, 1500);
   await L.clickTxt(p2, '^Players$'); await L.wait(p2, 1000);
+  await L.clickTxt(p2, '^VS TARGETS$'); await L.wait(p2, 500);
   await L.clickTxt(p2, '^Adjust targets$'); await L.wait(p2, 300);
   const auto = {};
   for (const [ln, k] of [['Backs', 'back'], ['Forwards', 'fwd']]) { await L.clickTxt(p2, '^' + ln + '$'); await L.wait(p2, 100); auto[k] = await p2.evaluate(k => document.querySelector('div[aria-label="Tackles per game target for ' + k + '"]').innerText.replace(/\s+/g, ' '), k); }

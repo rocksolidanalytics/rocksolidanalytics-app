@@ -15,8 +15,16 @@ module.exports = async function(t) {
   const rowsOf = () => p.evaluate(() => [...document.querySelector('.rsa-sec table tbody').querySelectorAll('tr')].filter(tr => tr.children.length > 2).map(tr => ({ name: tr.children[0].innerText.split(' ·')[0].trim(), cells: [...tr.children].slice(1).map(td => ({ txt: td.innerText.replace(/\s+/g, ' ').trim(), lab: td.getAttribute('aria-label') || '' })) })));
   await p.getByText('Dashboard', { exact: true }).first().click(); await L.wait(p, 1500);
   await L.clickTxt(p, '^Players$'); await L.wait(p, 1000);
+  // One Players panel: Averages (per game) first, with Season / Last 3 games for both views.
+  const av = await p.evaluate(() => { const g = document.querySelector('[data-pl-avg]'); return { on: !!g, pp: g && g.getAttribute('data-pl-avg'), text: g && g.innerText, panel: document.querySelector('[data-players-panel]').getAttribute('data-players-panel') }; });
+  t.ok('players: averages per game shown first, for the season', av.on && av.pp === 'season' && av.panel === 'avg' && /Pts\/g/.test(av.text) && /\d\.\d/.test(av.text), JSON.stringify(av).slice(0, 200));
+  t.eq('players: one table, not two side by side', await p.evaluate(() => /PLAYER BREAKDOWN/.test(document.body.innerText) || /PLAYER SCORECARD/.test(document.body.innerText)), false);
+  await L.clickTxt(p, '^LAST 3 GAMES$'); await L.wait(p, 400);
+  t.eq('players: averages over the last 3 games', await p.evaluate(() => document.querySelector('[data-pl-avg]').getAttribute('data-pl-avg')), 'last3');
+  await L.clickTxt(p, '^SEASON$'); await L.wait(p, 300);
+  await L.clickTxt(p, '^VS TARGETS$'); await L.wait(p, 500);
   let tx = await L.text(p);
-  t.ok('scorecard shown on the season Players tab', /PLAYER SCORECARD/.test(tx));
+  t.ok('scorecard shown under VS TARGETS on the season Players tab', /PLAYERS VS TARGETS/.test(tx));
   t.ok('keepers on their own card', /GOALKEEPERS/.test(tx));
   t.eq('no Scorecard / Targets switch, a small Adjust targets link instead', await L.buttons(p, '^(SCORECARD|TARGETS|Adjust targets)$'), 'Adjust targets');
   const heads = await p.evaluate(() => [...document.querySelector('.rsa-sec table thead').querySelectorAll('tr')[1].children].slice(1).map(th => th.innerText.split('\n')[0]));
