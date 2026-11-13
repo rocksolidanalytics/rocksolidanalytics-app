@@ -1,5 +1,5 @@
-// Opposition page, Their style: kickouts by length and speed (with a restart map), where their
-// tackles happen (a press), and how far out they shoot, each with a one-line read. One match
+// Opposition page, Their style: one verdict per part (kickout strategy, where their scores come
+// from, shooting, how you lose the ball, tackling), then the dashboard restart and shot maps. One match
 // against Kilmacud with a known pattern, every opposition event facing the same way (they attack
 // x = 0 in the first half, so their own goal is at x = 1).
 const L = require('./lib.js');
@@ -31,14 +31,21 @@ module.exports = async function(t) {
   const r = await L.open({ fixtures: f }), p = r.page; await L.wait(p, 1000);
   await L.clickTxt(p, '^vs\\s*Opposition'); await L.wait(p, 1500);
   await p.getByText('Kilmacud').first().click(); await L.wait(p, 1200);
-  const tx = await p.evaluate(() => document.querySelector('[data-opp-style]').innerText);
-  t.ok('kickouts: mostly long, usually quick, with the share kept', /Mostly long \(63%\), usually quick\. They keep 63% of them\./.test(tx), tx.slice(0, 300));
-  t.ok('kickouts: short / medium / long split with kept %', /25% short · 100% kept/.test(tx) && /13% medium · 0% kept/.test(tx) && /63% long · 60% kept/.test(tx), tx);
-  t.ok('kickouts: quick / slow split', /63% quick/.test(tx) && /38% slow/.test(tx), tx);
-  t.ok('lost ball: mostly kicked away against them', /kicked away \(100%\)|In line with your usual|Few turnovers in contact/.test(tx), tx);
-  t.ok('shooting: from distance, with the 2-pointers', /They shoot from distance: 43% of shots from 40m or more\. 1 two-pointer from 3 tries from play\./.test(tx), tx);
-  await L.clickTxt(p, 'RESTART MAP'); await L.wait(p, 400);
-  t.ok('restart map opens with their kickouts', await p.evaluate(() => !!document.querySelector('[data-opp-style] svg')));
+  const tiles = () => p.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-os-tile]')].map(x => [x.getAttribute('data-os-tile'), x.innerText.replace(/\s+/g, ' ')])));
+  const tl = await tiles();
+  t.ok('kickout strategy: long, quick, with the share kept', /Long – Quick/.test(tl.ko) && /63% long · 63% quick · 63% kept/.test(tl.ko), JSON.stringify(tl));
+  t.ok('shooting: distance shooters with the 2-pointer', /Distance shooters/.test(tl.sh) && /43% from 40m\+ · 1 two-pointer/.test(tl.sh), tl.sh);
+  t.ok('lost ball: kicked away', /Kicked away/.test(tl.lo) && /100% of 5/.test(tl.lo), tl.lo);
+  t.ok('tackling by spot: some press', /Some press|High press/.test(tl.tk || ''), tl.tk);
+  t.ok('no bars or long reads left', await p.evaluate(() => !/They keep|Mostly long/.test(document.querySelector('[data-opp-style]').innerText)));
+  // The restart map, as on the dashboard: length buttons, dots or efficiency, and the legend.
+  const koMap = await p.evaluate(() => { const m = document.querySelector('[data-os-map="ko"]'); return m && { svg: !!m.querySelector('svg'), text: m.innerText }; });
+  t.ok('restart map with the dashboard switches', koMap && koMap.svg && /KICKOUT MAP · 8/.test(koMap.text) && /Short/.test(koMap.text) && /Efficiency/.test(koMap.text), JSON.stringify(koMap));
+  await p.locator('[data-os-map="ko"] button', { hasText: /^Long$/ }).click(); await L.wait(p, 300);
+  t.ok('Long button keeps the 5 long kickouts', /KICKOUT MAP · 5/.test(await p.evaluate(() => document.querySelector('[data-os-map="ko"]').innerText)));
+  const shMap = await p.evaluate(() => { const m = document.querySelector('[data-os-map="sh"]'); return m && { svg: !!m.querySelector('svg'), text: m.innerText }; });
+  t.ok('shot map with the dashboard switches', shMap && shMap.svg && /SHOT MAP · 7 SHOTS/.test(shMap.text) && /Efficiency/.test(shMap.text) && /2-pointer/.test(shMap.text), JSON.stringify(shMap));
+  t.ok('shot map only once on the page', await p.evaluate(() => !/THEIR SHOTS/.test(document.body.innerText)));
   await p.locator('[data-opp-style]').screenshot({ path: require('path').join(__dirname, 'out', 'opp_style.png') });
   t.eq('no page errors', r.errors, []);
   await r.browser.close();
@@ -46,11 +53,11 @@ module.exports = async function(t) {
   const r2 = await L.open({ fixtures: f }), p2 = r2.page; await L.wait(p2, 1000);
   await L.clickTxt(p2, '^vs\\s*Opposition'); await L.wait(p2, 1500);
   await p2.getByText('Naomh Mearnog').first().click(); await L.wait(p2, 1200);
-  const tx2 = await p2.evaluate(() => document.querySelector('[data-opp-style]').innerText);
-  t.ok('forwards tackling, when numbers are tagged, as an extra line', /They press high: forwards make 67% of their tackles\. About 7 tackles a game\./.test(tx2), tx2);
-  t.ok('scores: most from turnovers, then their kickout', /Most from turnovers and frees \(60% of 5 points\), then their kickout \(20%\)\./.test(tx2), tx2);
-  t.ok('scores: points off our turnovers by how we lost the ball', /Points off your turnovers: 1 from kick passes · 2 from in contact/.test(tx2), tx2);
-  t.ok('lost ball: 80% in contact, compared with our usual', /80% of the ball you lost (against them )?was in contact/.test(tx2), tx2);
+  const tl2 = await p2.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-os-tile]')].map(x => [x.getAttribute('data-os-tile'), x.innerText.replace(/\s+/g, ' ')])));
+  t.ok('tackling by jersey number: forwards make most, a high press', /High press/.test(tl2.tk || '') && /67% by forwards/.test(tl2.tk || ''), JSON.stringify(tl2));
+  t.ok('scores: most from turnovers, then their own kickout', /Turnovers/.test(tl2.sc) && /60% of 5 pts · then own kickout 20%/.test(tl2.sc), tl2.sc);
+  t.ok('lost ball: in contact, against the usual', /In contact/.test(tl2.lo) && /80% of 5 · usually \d+%/.test(tl2.lo), tl2.lo);
+  t.ok('kickout tile says not enough when few are tagged', /Not enough tagged yet/.test(tl2.ko), tl2.ko);
   await p2.locator('[data-opp-style]').screenshot({ path: require('path').join(__dirname, 'out', 'opp_style2.png') });
   t.eq('no page errors (numbers)', r2.errors, []);
   await r2.browser.close();
