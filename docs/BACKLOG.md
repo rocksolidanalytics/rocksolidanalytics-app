@@ -237,6 +237,14 @@ them, with a one-line read per part (said only once there are 5 or more to go on
   tries from play.
 The events read for the page now include time and order (for kickout speed).
 Test: `tools/e2e/test_opp_style.js`.
+Later the same day, as jersey numbers on their tackles are rarely tagged: the press part became
+HOW YOU LOSE THE BALL AGAINST THEM: your lost possession against them split in contact (and
+fouls), kicked away, hand pass, handling / shots short, against your share in contact in all your
+games ("They turn you over in the tackle" when 10 points higher). Forwards tackling stays as an
+extra line when 5 or more numbered tackles. New part WHERE THEIR SCORES COME FROM, over every game
+against them: points from their kickout, your kickout, turnovers and frees, the throw-in, with the
+points off your turnovers by how you lost the ball. It uses the same trace as the dashboard score
+origins (_srcOf, moved to the top level unchanged).
 
 ## Done 2026-11-12
 

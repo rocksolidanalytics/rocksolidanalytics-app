@@ -4748,6 +4748,39 @@
 function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(function(s){ return s.player === pl; }) : (list || []); }
   function fKo(list, band){ if(!band || band === "all") return list || []; return (list || []).filter(function(p){ var dd = (1 - p.x) * 144; var b = dd < 45 ? "short" : dd <= 65 ? "mid" : "long"; return b === band; }); }
   // Shot outcomes that put the ball dead (restart follows) vs. keep it live.
+  // Where a score came from, read back through the events before it: X won its own kickout
+  // (ownKO), won the other side kickout (oppKO), turned the ball over (toKick, toHand, toContact,
+  // toOther, by how the other side lost it; frees count as toOther), the throw-in, or unclear.
+  function _srcOf(arr, i, X) {
+    var Y = X === "us" ? "opp" : "us";
+    var sawFree = false;
+    for (var j = i - 1; j >= 0; j--) {
+      var e = arr[j], et = e.event_type, oc = e.outcome || "", tm = e.team;
+      if (et === "Kickout" && tm === X && (oc === "Won clean" || oc === "Break won")) return "ownKO";
+      if (et === "Kickout" && tm === Y && (oc === "Lost clean" || oc === "Break lost")) return "oppKO";
+      if (et === "Possession lost" && tm === Y) {
+        var lc = oc.toLowerCase();
+        return lc === "kick pass" ? "toKick" : lc === "hand pass" ? "toHand" : lc === "in contact" ? "toContact" : "toOther";
+      }
+      if (et === "Free conceded" && tm === Y) { sawFree = true; continue; }
+      if (et === "Scoreable free" && tm === X) { sawFree = true; continue; }
+      if (et === "Possession lost" && tm === X) break;
+      if (et === "Free conceded" && tm === X) break;
+      if (et === "Kickout" && tm === X && (oc === "Lost clean" || oc === "Break lost")) break;
+      if (et === "Kickout" && tm === Y && (oc === "Won clean" || oc === "Break won")) break;
+      if ((et === "Shot from play" || et === "Scoreable free") && tm === Y) {
+        if (_scDead(oc)) return "ownKO";
+        if (_scLive(oc)) return "toOther";
+        break;
+      }
+      if (et === "Shot from play" && tm === X) {
+        if (_scLive(oc)) continue;
+        if (_scDead(oc)) return "oppKO";
+        break;
+      }
+    }
+    return sawFree ? "toOther" : (j < 0 ? "throwIn" : "unclear");
+  }
   function _scDead(oc) {
     var s = (oc || "").toLowerCase();
     return s === "point" || s === "goal" || s === "wide" || s === "2 pointer" || s === "2-pointer" || s === "2pointer";
@@ -12455,36 +12488,6 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         }
       });
       var brkPctUs = blocks.map(function(_, bi) { return brkTUs[bi] ? Math.round(100 * brkWUs[bi] / brkTUs[bi]) : null; });
-      function _srcOf(arr, i, X) {
-        var Y = X === "us" ? "opp" : "us";
-        var sawFree = false;
-        for (var j = i - 1; j >= 0; j--) {
-          var e = arr[j], et = e.event_type, oc = e.outcome || "", tm = e.team;
-          if (et === "Kickout" && tm === X && (oc === "Won clean" || oc === "Break won")) return "ownKO";
-          if (et === "Kickout" && tm === Y && (oc === "Lost clean" || oc === "Break lost")) return "oppKO";
-          if (et === "Possession lost" && tm === Y) {
-            var lc = oc.toLowerCase();
-            return lc === "kick pass" ? "toKick" : lc === "hand pass" ? "toHand" : lc === "in contact" ? "toContact" : "toOther";
-          }
-          if (et === "Free conceded" && tm === Y) { sawFree = true; continue; }
-          if (et === "Scoreable free" && tm === X) { sawFree = true; continue; }
-          if (et === "Possession lost" && tm === X) break;
-          if (et === "Free conceded" && tm === X) break;
-          if (et === "Kickout" && tm === X && (oc === "Lost clean" || oc === "Break lost")) break;
-          if (et === "Kickout" && tm === Y && (oc === "Won clean" || oc === "Break won")) break;
-          if ((et === "Shot from play" || et === "Scoreable free") && tm === Y) {
-            if (_scDead(oc)) return "ownKO";
-            if (_scLive(oc)) return "toOther";
-            break;
-          }
-          if (et === "Shot from play" && tm === X) {
-            if (_scLive(oc)) continue;
-            if (_scDead(oc)) return "oppKO";
-            break;
-          }
-        }
-        return sawFree ? "toOther" : (j < 0 ? "throwIn" : "unclear");
-      }
       var shotTypes = [["Goal","Goals",C.red],["Pt2Play","2pt play",C.purple],["Pt2Free","2pt free",C.indigo],["PtPlay","Point play",C.greenB],["PtFree","Point free",C.gold]];
       var stGrid = { us: {}, opp: {} };
       shotTypes.forEach(function(t) { stGrid.us[t[0]] = blocks.map(function(){return 0;}); stGrid.opp[t[0]] = blocks.map(function(){return 0;}); });
@@ -14130,6 +14133,32 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
   // (2-point range is beyond 40m). Each team is turned to face the same way per half, as the
   // kickout maps do.
   var OS_LEN = 144, OS_QUICK = 30;
+  // How a lost ball was lost: in contact (or a foul), kicked away, by hand pass, a handling
+  // error, or a shot dropping short.
+  function osLostKind(oc) {
+    var l = String(oc || "").toLowerCase();
+    return l === "in contact" || l === "foul" ? "contact" : l === "kick pass" ? "kick" : l === "hand pass" || l === "intercepted" ? "hand" : l === "handling" || l === "solo" ? "handling" : l.indexOf("short") >= 0 ? "shot" : "other";
+  }
+  function osLostTally(list) {
+    var t = { n: 0, contact: 0, kick: 0, hand: 0, handling: 0, shot: 0, other: 0 };
+    list.forEach(function(e) { if (e.event_type !== "Possession lost") return; t.n++; t[osLostKind(e.outcome)]++; });
+    return t;
+  }
+  // Their scores by origin, in points: their kickout, your kickout, a turnover or free, the throw-in.
+  function oppScoreSrc(theirs, all) {
+    var mine = {}, out = { pts: 0, ownKO: 0, oppKO: 0, turnover: 0, throwIn: 0, unclear: 0, toKick: 0, toHand: 0, toContact: 0, toOther: 0 };
+    theirs.forEach(function(e) { if ((e.score || 0) > 0) mine[e.match_id] = 1; });
+    Object.keys(mine).forEach(function(mid) {
+      var arr = all.filter(function(e) { return e.match_id === mid; }).sort(function(a, b) { return (a.seq || 0) - (b.seq || 0); });
+      arr.forEach(function(e, i) {
+        if (!((e.score || 0) > 0) || theirs.indexOf(e) < 0) return;
+        var src = _srcOf(arr, i, e.team), v = e.score;
+        out.pts += v;
+        if (src.indexOf("to") === 0) { out.turnover += v; out[src] += v; } else out[src] = (out[src] || 0) + v;
+      });
+    });
+    return out;
+  }
   function oppStyle(theirs, all) {
     var dir = koDir(all), out = { ko: { n: 0, len: { short: { n: 0, w: 0 }, mid: { n: 0, w: 0 }, long: { n: 0, w: 0 } }, quick: { n: 0, w: 0 }, slow: { n: 0, w: 0 }, pts: [] },
       tk: { n: 0, own: 0, mid: 0, att: 0 }, tkNum: { n: 0, back: 0, mid: 0, fwd: 0, all: 0 }, games: 0, sh: { n: 0, close: 0, mid: 0, far: 0, two: 0, twoTry: 0, farSc: 0 } };
@@ -14180,9 +14209,11 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var gm = {}; theirs.forEach(function(e) { gm[e.match_id] = 1; }); out.games = Object.keys(gm).length;
     return out;
   }
-  function OppStyleCard({ theirs, all, card, lab }) {
+  function OppStyleCard({ theirs, all, ours, oursAll, card, lab }) {
     const [showMap, setShowMap] = useState(false);
     var st = useMemo(function() { return oppStyle(theirs, all); }, [theirs, all]);
+    var src = useMemo(function() { return oppScoreSrc(theirs, all); }, [theirs, all]);
+    var lv = useMemo(function() { return { them: osLostTally(ours || []), usual: osLostTally(oursAll || []) }; }, [ours, oursAll]);
     var pc = function(a, b) { return b ? Math.round(100 * a / b) : 0; };
     var k = st.ko, kl = k.len.short.n + k.len.mid.n + k.len.long.n, kt = k.quick.n + k.slow.n;
     // One plain line for each part, said only when there is enough to go on.
@@ -14192,6 +14223,12 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
       var spTxt = kt >= 5 ? (pc(k.quick.n, kt) >= 60 ? ", usually quick" : pc(k.slow.n, kt) >= 60 ? ", usually slow" : ", quick and slow alike") : "";
       return lenTxt + spTxt + ". They keep " + pc(k.len.short.w + k.len.mid.w + k.len.long.w, kl) + "% of them.";
     })() : null;
+    var L1 = lv.them, L0 = lv.usual, cp = pc(L1.contact, L1.n), cu = pc(L0.contact, L0.n);
+    var kinds = [["contact", "in contact"], ["kick", "kicked away"], ["hand", "hand pass"], ["handling", "handling"], ["shot", "shots short"]];
+    var topNon = kinds.slice(1).sort(function(a, b) { return L1[b[0]] - L1[a[0]]; })[0];
+    var lostRead = L1.n >= 5 ? (cp - cu >= 10 ? "They turn you over in the tackle: " + cp + "% of the ball you lost against them was in contact (" + cu + "% against everyone)."
+      : cu - cp >= 10 ? "Few turnovers in contact against them (" + cp + "%, usually " + cu + "%); most ball lost was " + topNon[1] + " (" + pc(L1[topNon[0]], L1.n) + "%)."
+      : "In line with your usual: " + cp + "% of the ball you lost was in contact (" + cu + "% against everyone).") : null;
     var t = st.tk, tn = st.tkNum, byNum = t.n < 5 && tn.n >= 5;
     var perG = st.games ? " About " + Math.round(tn.all / st.games) + " tackles a game." : "";
     var tRead = byNum ? (pc(tn.fwd, tn.n) >= 35 ? "They press high: forwards make " + pc(tn.fwd, tn.n) + "% of their tackles." : pc(tn.fwd, tn.n) >= 20 ? "Some pressing: forwards make " + pc(tn.fwd, tn.n) + "% of their tackles." : "Tackling is left to backs and midfield; forwards make " + pc(tn.fwd, tn.n) + "%.") + perG
@@ -14220,12 +14257,23 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         k.pts.length > 0 && React.createElement("button", { onClick: function() { setShowMap(!showMap); }, style: { marginTop: 10, minHeight: 40, padding: "0 14px", borderRadius: RAD.pill, border: "1px solid " + C.border, background: showMap ? C.acc : C.bgCard, color: showMap ? C.accT : C.slate, fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, cursor: "pointer" } }, showMap ? "HIDE RESTART MAP" : "\u25ce RESTART MAP \u00b7 " + k.pts.length),
         showMap && React.createElement("div", { style: { marginTop: 10, maxWidth: 360 } }, React.createElement(KickoutMap, { pts: k.pts }))),
         "Not enough of their " + restarts_() + " tagged yet (5 with a spot needed)."),
-      sec("Press", tRead, byNum ? React.createElement("div", null, bar([["backs 1\u20137", tn.back, C.slateD], ["midfield 8\u20139", tn.mid, C.gold], ["forwards 10\u201315", tn.fwd, C.red]]),
-          React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, marginTop: 6 } }, "From " + tn.n + " of their " + tn.all + " tackles tagged with a jersey number."))
-        : bar([["their third", t.own, C.slateD], ["middle", t.mid, C.gold], ["your third", t.att, C.red]]), "Not enough of their tackles tagged with a jersey number or a spot yet."),
+      sec("Where their scores come from", src.pts >= 5 ? (function() {
+          var parts = [["ownKO", "their " + restart_()], ["oppKO", "your " + restart_()], ["turnover", "turnovers and frees"], ["throwIn", "throw-ins"]].sort(function(a, b) { return src[b[0]] - src[a[0]]; });
+          return "Most from " + parts[0][1] + " (" + pc(src[parts[0][0]], src.pts) + "% of " + src.pts + " points)" + (src[parts[1][0]] ? ", then " + parts[1][1] + " (" + pc(src[parts[1][0]], src.pts) + "%)." : ".");
+        })() : null, React.createElement("div", null,
+          bar([["their " + restart_(), src.ownKO, C.greenB], ["your " + restart_(), src.oppKO, C.blue], ["turnover", src.turnover, C.gold], ["throw-in", src.throwIn, C.slate]]),
+          src.turnover > 0 && React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 8, lineHeight: 1.5 } }, "Points off your turnovers: ",
+            [["toKick", "kick passes"], ["toHand", "hand passes"], ["toContact", "in contact"], ["toOther", "frees and other"]].filter(function(x) { return src[x[0]]; }).map(function(x) { return src[x[0]] + " from " + x[1]; }).join(" \u00b7 ")),
+          src.unclear > 0 && React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, marginTop: 6 } }, src.unclear + " points could not be traced back.")),
+        "Not enough of their scores tagged yet (5 points needed)."),
+      sec("How you lose the ball against them", lostRead, React.createElement("div", null,
+          bar([["contact", L1.contact, C.red], ["kicked", L1.kick, C.gold], ["hand pass", L1.hand, C.blue], ["handling", L1.handling + L1.shot + L1.other, C.slateD]]),
+          React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, marginTop: 6 } }, L1.n + " balls lost in " + st.games + (st.games === 1 ? " game" : " games") + " against them; " + (L0.n ? (Math.round(10 * L1.n / Math.max(1, st.games)) / 10) + " a game." : "")),
+          (byNum || t.n >= 5) && tRead && React.createElement("div", { style: { fontSize: FS.sm, color: C.slate, marginTop: 8, lineHeight: 1.5 } }, tRead)),
+        "Not enough of your lost possession tagged against them yet."),
       sec("Shooting", sRead, bar([["inside 21m", s.close, C.greenB], ["21\u201340m", s.mid, C.gold], ["40m+", s.far, C.blue, s.far ? s.farSc + " scored" : null]]), "Not enough of their shots tagged with a spot yet."),
       React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.5, paddingTop: 8, borderTop: "1px solid " + C.border } },
-        "From every tagged game against them. " + restarts_().charAt(0).toUpperCase() + restarts_().slice(1) + ": short under 45m, medium to 65m, long beyond; quick when taken within " + OS_QUICK + " seconds of the score or wide before it. Your third is the last third of the pitch they attack. 2-point range is 40m and out."));
+        "From every tagged game against them. Scores are traced back to how the move began. " + restarts_().charAt(0).toUpperCase() + restarts_().slice(1) + ": short under 45m, medium to 65m, long beyond; quick when taken within " + OS_QUICK + " seconds of the score or wide before it. Your third is the last third of the pitch they attack. 2-point range is 40m and out."));
   }
   function OppDB({ club, back, focus, role }) {
     const [raw, setRaw] = useState(null);
@@ -14436,6 +14484,10 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     var mids = {};
     ents.forEach(function(e) { mids[e.m.id] = e; });
     var theirs = raw.evs.filter(function(ev) { var e = mids[ev.match_id]; return e && ev.team === e.side; });
+    // Your own lost ball against them (your matches, not scouted ones), and in all your matches.
+    var oursVs = raw.evs.filter(function(ev) { var e = mids[ev.match_id]; return e && !e.scout && ev.team === "us" && ev.event_type === "Possession lost"; });
+    var notScout = {}; raw.ms.forEach(function(m) { if (!m.scouting) notScout[m.id] = 1; });
+    var oursAllLost = raw.evs.filter(function(ev) { return notScout[ev.match_id] && ev.team === "us" && ev.event_type === "Possession lost"; });
     var nGames = ents.filter(function(e) { return e.done || theirs.some(function(ev) { return ev.match_id === e.m.id; }); }).length || 1;
     var scorers = {};
     theirs.forEach(function(ev) {
@@ -14560,7 +14612,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             stat(kos.length ? Math.round(koWon / kos.length * 100) + "%" : "—", "OWN " + RST() + "S WON"),
             stat(theirs.length ? (lost / nGames).toFixed(1) : "—", "TURNOVERS / GAME")),
           shotPts.length > 0 && React.createElement("div", null, React.createElement("div", { style: Object.assign({}, lab, { marginTop: 4 }) }, "THEIR SHOTS \xB7 ", shotPts.length), React.createElement(PitchMap, { shots: shotPts }))),
-        React.createElement(OppStyleCard, { theirs: theirs, all: raw.evs, card: card, lab: lab }),
+        React.createElement(OppStyleCard, { theirs: theirs, all: raw.evs, ours: oursVs, oursAll: oursAllLost, card: card, lab: lab }),
         React.createElement("div", { style: card },
           React.createElement("div", { style: lab }, "THEIR LINE-UP", sheets ? " \xB7 FROM " + sheets + " TEAM SHEET" + (sheets === 1 ? "" : "S") : ""),
           stList.length === 0 ? React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, lineHeight: 1.5 } }, "No team sheets for ", g.name, " yet. Add theirs under Edit match information and their usual line-up builds up here.") :
