@@ -14123,6 +14123,110 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
     return m ? Number(m[1]) * 3 + Number(m[2]) : null;
   }
   function odGP(g, p) { return g + "-" + (p < 10 ? "0" : "") + p; }
+  // How an opposition plays, from their tagged events in every match against them (or scouted):
+  // their own kickouts by length (short under 45m, medium to 65m, long beyond) and by speed (quick
+  // when taken within 30 seconds of the score or wide before it), where their tackles happen
+  // (their own third, the middle, or up in your third: a press), and how far out they shoot
+  // (2-point range is beyond 40m). Each team is turned to face the same way per half, as the
+  // kickout maps do.
+  var OS_LEN = 144, OS_QUICK = 30;
+  function oppStyle(theirs, all) {
+    var dir = koDir(all), out = { ko: { n: 0, len: { short: { n: 0, w: 0 }, mid: { n: 0, w: 0 }, long: { n: 0, w: 0 } }, quick: { n: 0, w: 0 }, slow: { n: 0, w: 0 }, pts: [] },
+      tk: { n: 0, own: 0, mid: 0, att: 0 }, tkNum: { n: 0, back: 0, mid: 0, fwd: 0, all: 0 }, games: 0, sh: { n: 0, close: 0, mid: 0, far: 0, two: 0, twoTry: 0, farSc: 0 } };
+    function osNorm(e) { return koNorm({ x: e.x, y: e.y }, koOwnGoal(dir, e.match_id, e.period, e.team)); }
+    function osSecs(e) { var p = String(e.time_text || "").split(":").map(Number); return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p.length === 2 ? p[0] * 60 + p[1] : null; }
+    // The score or wide just before each kickout, for its speed.
+    var byM = {};
+    all.forEach(function(e) { (byM[e.match_id] = byM[e.match_id] || []).push(e); });
+    var prevTrig = new Map();
+    Object.keys(byM).forEach(function(k) {
+      var trig = null;
+      byM[k].slice().sort(function(a, b) { return (a.seq || 0) - (b.seq || 0); }).forEach(function(e) {
+        var shot = e.event_type === "Shot from play" || e.event_type === "Scoreable free";
+        if (shot && ((e.score || 0) > 0 || /wide/i.test(e.outcome || ""))) trig = e;
+        else if (e.event_type === "Kickout") { prevTrig.set(e, trig); trig = null; }
+      });
+    });
+    theirs.forEach(function(e) {
+      var et = e.event_type;
+      if (et === "Kickout") {
+        var won = KO_WON.has(e.outcome), k = out.ko;
+        k.n++;
+        if (e.x != null) {
+          var f = osNorm(e), d = (1 - f.x) * OS_LEN, b = d < 45 ? "short" : d <= 65 ? "mid" : "long";
+          k.len[b].n++; if (won) k.len[b].w++;
+          k.pts.push({ x: f.x, y: f.y, won: won, player: e.player || null });
+        }
+        var t = prevTrig.get(e);
+        if (t && String(t.period) === String(e.period)) {
+          var t1 = osSecs(t), t2 = osSecs(e);
+          if (t1 != null && t2 != null && t2 > t1 && t2 - t1 <= 120) { var q = t2 - t1 <= OS_QUICK ? k.quick : k.slow; q.n++; if (won) q.w++; }
+        }
+      } else if (et === "Tackle") {
+        // Tackles have no spot in most tagging, so the jersey number says who made them:
+        // backs 1 to 7, midfield 8 and 9, forwards 10 to 15.
+        out.tkNum.all++;
+        var jn = /^#?(\d+)$/.exec(String(e.player || "").trim()), j = jn ? +jn[1] : 0;
+        if (j >= 1 && j <= 15) { out.tkNum.n++; out.tkNum[j <= 7 ? "back" : j <= 9 ? "mid" : "fwd"]++; }
+        if (e.x != null) { var g = osNorm(e), dd = (1 - g.x) * OS_LEN; out.tk.n++; out.tk[dd < OS_LEN / 3 ? "own" : dd < 2 * OS_LEN / 3 ? "mid" : "att"]++; }
+      } else if ((et === "Shot from play" || et === "Scoreable free") && e.x != null) {
+        var h = osNorm(e), dist = Math.hypot(h.x * OS_LEN, (h.y - 0.5) * GAA_W), s = out.sh;
+        s.n++;
+        if (dist < 21) s.close++; else if (dist < 40) s.mid++; else { s.far++; if ((e.score || 0) > 0) s.farSc++; }
+        if (et === "Shot from play" && (e.score === 2 || /2.?pointer/i.test(e.outcome || ""))) s.two++;
+        if (et === "Shot from play" && dist >= 40) s.twoTry++;
+      }
+    });
+    var gm = {}; theirs.forEach(function(e) { gm[e.match_id] = 1; }); out.games = Object.keys(gm).length;
+    return out;
+  }
+  function OppStyleCard({ theirs, all, card, lab }) {
+    const [showMap, setShowMap] = useState(false);
+    var st = useMemo(function() { return oppStyle(theirs, all); }, [theirs, all]);
+    var pc = function(a, b) { return b ? Math.round(100 * a / b) : 0; };
+    var k = st.ko, kl = k.len.short.n + k.len.mid.n + k.len.long.n, kt = k.quick.n + k.slow.n;
+    // One plain line for each part, said only when there is enough to go on.
+    var koRead = kl >= 5 ? (function() {
+      var top = ["short", "mid", "long"].sort(function(a, b) { return k.len[b].n - k.len[a].n; })[0], p = pc(k.len[top].n, kl);
+      var lenTxt = p >= 50 ? "Mostly " + (top === "mid" ? "medium" : top) + " (" + p + "%)" : "A mix of lengths, " + (top === "mid" ? "medium" : top) + " the most (" + p + "%)";
+      var spTxt = kt >= 5 ? (pc(k.quick.n, kt) >= 60 ? ", usually quick" : pc(k.slow.n, kt) >= 60 ? ", usually slow" : ", quick and slow alike") : "";
+      return lenTxt + spTxt + ". They keep " + pc(k.len.short.w + k.len.mid.w + k.len.long.w, kl) + "% of them.";
+    })() : null;
+    var t = st.tk, tn = st.tkNum, byNum = t.n < 5 && tn.n >= 5;
+    var perG = st.games ? " About " + Math.round(tn.all / st.games) + " tackles a game." : "";
+    var tRead = byNum ? (pc(tn.fwd, tn.n) >= 35 ? "They press high: forwards make " + pc(tn.fwd, tn.n) + "% of their tackles." : pc(tn.fwd, tn.n) >= 20 ? "Some pressing: forwards make " + pc(tn.fwd, tn.n) + "% of their tackles." : "Tackling is left to backs and midfield; forwards make " + pc(tn.fwd, tn.n) + "%.") + perG
+      : t.n >= 5 ? (pc(t.att, t.n) >= 30 ? "They press high: " + pc(t.att, t.n) + "% of their tackles are in your third." : pc(t.att, t.n) >= 15 ? "Some pressing: " + pc(t.att, t.n) + "% of their tackles are in your third." : "They sit deep: most tackles come in their own half (" + pc(t.own + t.mid, t.n) + "%).") : null;
+    var s = st.sh, sRead = s.n >= 5 ? (pc(s.far, s.n) >= 25 ? "They shoot from distance: " + pc(s.far, s.n) + "% of shots from 40m or more." : pc(s.close, s.n) >= 40 ? "They work it in close: " + pc(s.close, s.n) + "% of shots inside 21m." : "Most shots from 21 to 40m (" + pc(s.mid, s.n) + "%).") + (s.twoTry ? " " + s.two + " two-pointer" + (s.two === 1 ? "" : "s") + " from " + s.twoTry + " tries from play." : "") : null;
+    var bar = function(parts) {
+      var tot = parts.reduce(function(a, p) { return a + p[1]; }, 0) || 1;
+      return React.createElement("div", null,
+        React.createElement("div", { style: { display: "flex", height: 12, borderRadius: RAD.sm, overflow: "hidden", background: C.field, gap: 2 } },
+          parts.map(function(p, i) { return p[1] ? React.createElement("div", { key: i, style: { width: (100 * p[1] / tot) + "%", background: p[2] } }) : null; })),
+        React.createElement("div", { style: { display: "flex", justifyContent: "space-between", gap: 6, marginTop: 6, fontSize: FS.xs, fontFamily: MONO, color: C.slate } },
+          parts.map(function(p, i) { return React.createElement("span", { key: i, style: { textAlign: i === 0 ? "left" : i === parts.length - 1 ? "right" : "center", flex: 1 } }, React.createElement("b", { style: { color: C.white } }, pc(p[1], tot) + "%"), " " + p[0] + (p[3] != null ? " \u00b7 " + p[3] : "")); })));
+    };
+    var sec = function(title, read, body, few) {
+      return React.createElement("div", { style: { padding: "12px 0", borderTop: "1px solid " + C.border } },
+        React.createElement("div", { style: { fontSize: FS.sm, fontWeight: 800, color: C.white, marginBottom: 4 } }, title),
+        React.createElement("div", { style: { fontSize: FS.sm, color: read ? C.slate : C.slateD, lineHeight: 1.5, marginBottom: read ? 10 : 0 } }, read || few),
+        read && body);
+    };
+    var won = function(x) { return x.n ? pc(x.w, x.n) + "% kept" : null; };
+    return React.createElement("div", { "data-opp-style": "1", style: card },
+      React.createElement("div", { style: lab }, "THEIR STYLE"),
+      sec(restarts_().charAt(0).toUpperCase() + restarts_().slice(1), koRead, React.createElement("div", null,
+        bar([["short", k.len.short.n, C.teal, won(k.len.short)], ["medium", k.len.mid.n, C.gold, won(k.len.mid)], ["long", k.len.long.n, C.blue, won(k.len.long)]]),
+        kt >= 3 && React.createElement("div", { style: { marginTop: 10 } }, bar([["quick", k.quick.n, C.greenB, won(k.quick)], ["slow", k.slow.n, C.slateD, won(k.slow)]])),
+        k.pts.length > 0 && React.createElement("button", { onClick: function() { setShowMap(!showMap); }, style: { marginTop: 10, minHeight: 40, padding: "0 14px", borderRadius: RAD.pill, border: "1px solid " + C.border, background: showMap ? C.acc : C.bgCard, color: showMap ? C.accT : C.slate, fontSize: FS.sm, fontWeight: 800, fontFamily: MONO, cursor: "pointer" } }, showMap ? "HIDE RESTART MAP" : "\u25ce RESTART MAP \u00b7 " + k.pts.length),
+        showMap && React.createElement("div", { style: { marginTop: 10, maxWidth: 360 } }, React.createElement(KickoutMap, { pts: k.pts }))),
+        "Not enough of their " + restarts_() + " tagged yet (5 with a spot needed)."),
+      sec("Press", tRead, byNum ? React.createElement("div", null, bar([["backs 1\u20137", tn.back, C.slateD], ["midfield 8\u20139", tn.mid, C.gold], ["forwards 10\u201315", tn.fwd, C.red]]),
+          React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, marginTop: 6 } }, "From " + tn.n + " of their " + tn.all + " tackles tagged with a jersey number."))
+        : bar([["their third", t.own, C.slateD], ["middle", t.mid, C.gold], ["your third", t.att, C.red]]), "Not enough of their tackles tagged with a jersey number or a spot yet."),
+      sec("Shooting", sRead, bar([["inside 21m", s.close, C.greenB], ["21\u201340m", s.mid, C.gold], ["40m+", s.far, C.blue, s.far ? s.farSc + " scored" : null]]), "Not enough of their shots tagged with a spot yet."),
+      React.createElement("div", { style: { fontSize: FS.xs, color: C.slateD, lineHeight: 1.5, paddingTop: 8, borderTop: "1px solid " + C.border } },
+        "From every tagged game against them. " + restarts_().charAt(0).toUpperCase() + restarts_().slice(1) + ": short under 45m, medium to 65m, long beyond; quick when taken within " + OS_QUICK + " seconds of the score or wide before it. Your third is the last third of the pitch they attack. 2-point range is 40m and out."));
+  }
   function OppDB({ club, back, focus, role }) {
     const [raw, setRaw] = useState(null);
     const [err, setErr] = useState("");
@@ -14152,7 +14256,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
         }
         try {
           var ms = await odFetch("matches", "id,date,opponent,our_score,opp_score,our_total,opp_total,status,scouting,competition,round");
-          var evs = await odFetch("events", "match_id,team,event_type,outcome,player,score,x,y,period");
+          var evs = await odFetch("events", "match_id,team,event_type,outcome,player,score,x,y,period,time_text,seq");
           var aps = await odFetch("appearances", "match_id,position_slot,player_name,jersey,helmet");
           var cr = await db.from("clubs").select("tag_settings").eq("id", club.id).maybeSingle();
           setTs(cr && cr.data && cr.data.tag_settings || {});
@@ -14456,6 +14560,7 @@ function fShots(list, pl){ return (pl && pl !== "all") ? (list || []).filter(fun
             stat(kos.length ? Math.round(koWon / kos.length * 100) + "%" : "—", "OWN " + RST() + "S WON"),
             stat(theirs.length ? (lost / nGames).toFixed(1) : "—", "TURNOVERS / GAME")),
           shotPts.length > 0 && React.createElement("div", null, React.createElement("div", { style: Object.assign({}, lab, { marginTop: 4 }) }, "THEIR SHOTS \xB7 ", shotPts.length), React.createElement(PitchMap, { shots: shotPts }))),
+        React.createElement(OppStyleCard, { theirs: theirs, all: raw.evs, card: card, lab: lab }),
         React.createElement("div", { style: card },
           React.createElement("div", { style: lab }, "THEIR LINE-UP", sheets ? " \xB7 FROM " + sheets + " TEAM SHEET" + (sheets === 1 ? "" : "S") : ""),
           stList.length === 0 ? React.createElement("div", { style: { fontSize: FS.sm, color: C.slateD, lineHeight: 1.5 } }, "No team sheets for ", g.name, " yet. Add theirs under Edit match information and their usual line-up builds up here.") :

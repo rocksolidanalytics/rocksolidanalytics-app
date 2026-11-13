@@ -221,6 +221,23 @@ columns. Wide screens now go up to 1200px.
 **Still to look at:** the opposition team page, match lists, Game film list, the video
 tagger in landscape, and button sizes in the live tagger on a big screen.
 
+## Done 2026-11-13
+
+**Opposition: Their style.** A new card on each opposition page, from every tagged game against
+them, with a one-line read per part (said only once there are 5 or more to go on):
+- Kickouts: short (under 45m), medium (to 65m), long (beyond) with the share and % kept; quick
+  (taken within 30 seconds of the score or wide before it) or slow; a restart map of their
+  kickouts (all turned to face the same way). E.g. "Mostly long (63%), usually quick."
+- Press: tackles have no spot in most tagging, so by jersey number (backs 1-7, midfield 8-9,
+  forwards 10-15): "They press high" when forwards make 35% or more of their numbered tackles,
+  with tackles a game. If tackles are tagged with a spot it uses where they happen instead.
+  (Bray Emmets data, checked read-only: 196 of 503 opposition tackles carry a jersey number and
+  none a spot; opposition kickouts and shots all carry a spot.)
+- Shooting: share of shots inside 21m, 21-40m and 40m+ (2-point range), with 2-pointers from
+  tries from play.
+The events read for the page now include time and order (for kickout speed).
+Test: `tools/e2e/test_opp_style.js`.
+
 ## Done 2026-11-12
 
 **Match pulse in the momentum style; live tagger tidy-ups.** The Match pulse is redrawn to sit
